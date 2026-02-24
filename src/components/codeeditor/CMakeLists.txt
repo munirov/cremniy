@@ -17,7 +17,7 @@ set(SRC
     src/QStyleSyntaxHighlighter.cpp
     src/QLanguage.cpp
     src/QJSONHighlighter.cpp
-    src/QPythonCompleter.cpp
+    src/QCECompleter.cpp
     src/QFramedTextAttribute.cpp
 )
 
@@ -30,7 +30,7 @@ set(HDR
     include/QCXXHighlighter.hpp
     include/QLanguage.hpp
     include/QJSONHighlighter.hpp
-    include/QPythonCompleter.hpp
+    include/QCECompleter.hpp
     include/QFramedTextAttribute.hpp
     include/QHighlightRule.hpp
     include/QHighlightBlockRule.hpp

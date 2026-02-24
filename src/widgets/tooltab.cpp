@@ -5,7 +5,7 @@
 #include <QSyntaxStyle.hpp>
 
 #include <QCodeEditor.hpp>
-#include <QPythonCompleter.hpp>
+#include <QCECompleter.hpp>
 #include <QSyntaxStyle.hpp>
 #include <QCXXHighlighter.hpp>
 #include <QJSONHighlighter.hpp>
@@ -20,9 +20,9 @@ ToolTab::ToolTab(FileTab *fwparent, QString path) :
     {
 
 
-    m_completers["c"] = new QPythonCompleter(this);
-    m_completers["cpp"] = new QPythonCompleter(this);
-    m_completers["asm"] = new QPythonCompleter(this);
+    m_completers["c"] = new QCECompleter(":/languages/python.xml");
+    m_completers["cpp"] = new QCECompleter(":/languages/python.xml");
+    m_completers["asm"] = new QCECompleter(":/languages/python.xml");
 
     m_highlighters["c"] = new QCXXHighlighter;
     m_highlighters["cpp"] = new QCXXHighlighter;

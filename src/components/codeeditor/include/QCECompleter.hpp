@@ -7,7 +7,7 @@
  * @brief Class, that describes completer with
  * glsl specific types and functions.
  */
-class QPythonCompleter : public QCompleter
+class QCECompleter : public QCompleter
 {
     Q_OBJECT
 
@@ -17,7 +17,7 @@ public:
      * @brief Constructor.
      * @param parent Pointer to parent QObject.
      */
-    explicit QPythonCompleter(QObject* parent=nullptr);
+    explicit QCECompleter(QString langFile, QObject* parent=nullptr);
 };
 
 
