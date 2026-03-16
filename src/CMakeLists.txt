@@ -19,6 +19,14 @@ set(PROJECT_SOURCES
 add_subdirectory(components/codeeditor)
 add_subdirectory(components/hexview)
 
+# Explicitly invoke moc on disassemblerworker.h.
+# AUTOMOC can miss headers that live in subdirectories and are included
+# only indirectly (via another header). qt_wrap_cpp guarantees the
+# meta-object code is always generated and linked.
+qt_wrap_cpp(DISASSEMBLERWORKER_MOC_SRCS
+    widgets/disassemblerworker.h
+)
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(${PROJECT_NAME}
         MANUAL_FINALIZATION
@@ -53,33 +61,29 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         widgets/codeeditortab.h widgets/codeeditortab.cpp
         widgets/hexviewtab.h widgets/hexviewtab.cpp
         widgets/disassemblertab.h widgets/disassemblertab.cpp
+        widgets/disassemblerworker.h widgets/disassemblerworker.cpp
+
+        # Generated moc source for DisassemblerWorker
+        ${DISASSEMBLERWORKER_MOC_SRCS}
 
         include/toolwidget.hpp
         include/tooltab.h
-
 
         utils/utils.h
         utils/utils.cpp
         utils/globalwidgetsmanager.h
 
-
     )
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/widgets
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-${CMAKE_CURRENT_SOURCE_DIR}/utils)
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils)
 else()
     if(ANDROID)
         add_library(${PROJECT_NAME} SHARED
             ${PROJECT_SOURCES}
         )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
         add_executable(${PROJECT_NAME}
             ${PROJECT_SOURCES}
@@ -92,9 +96,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE hexview)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
 if(${QT_VERSION} VERSION_LESS 6.1.0)
   set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.${PROJECT_NAME})
 endif()
@@ -116,4 +117,3 @@ install(TARGETS ${PROJECT_NAME}
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(${PROJECT_NAME})
 endif()
-
