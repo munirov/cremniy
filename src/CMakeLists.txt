@@ -73,6 +73,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         utils/utils.cpp
         utils/globalwidgetsmanager.h
 
+        utils/filecontext.h
+
+        utils/filemanager.h
+        utils/filemanager.cpp
+
     )
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}

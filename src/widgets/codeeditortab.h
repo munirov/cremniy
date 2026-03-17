@@ -22,14 +22,17 @@ public:
     explicit CodeEditorTab(QWidget *parent, QString path);
 
     void saveToFile(QString path) override {
+
         QByteArray data = m_codeEditorWidget->getBData();
         uint newDataHash = qHash(data, 0);
         if (newDataHash == dataHash) return;
         dataHash = newDataHash;
+
         QFile f(path);
         if (!f.open(QFile::WriteOnly)) return;
         f.write(data);
         f.close();
+
         m_codeEditorWidget->document()->setModified(false);
     };
 

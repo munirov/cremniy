@@ -1,6 +1,7 @@
 #ifndef FILESTABWIDGET_H
 #define FILESTABWIDGET_H
 
+#include <filetab.h>
 #include <QTabWidget>
 
 class FilesTabWidget : public QTabWidget
@@ -12,6 +13,10 @@ public:
     void tabSelect(int index);
     void openFile(QString fullPath, QString fileName);
     void saveCurrentFile();
+
+public slots:
+    void removeStar(FileTab* tab);
+    void setupStar(FileTab* tab);
 
 };
 

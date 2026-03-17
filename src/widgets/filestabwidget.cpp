@@ -1,5 +1,4 @@
 #include "filestabwidget.h"
-#include "filetab.h"
 #include <qboxlayout.h>
 
 FilesTabWidget::FilesTabWidget(QWidget *parent) {
@@ -30,11 +29,30 @@ void FilesTabWidget::openFile(QString filePath, QString tabTitle){
         }
     }
 
-    // else file is not opened
+    // else if file is not opened
     FileTab *filetab = new FileTab(this, filePath);
     int new_tab_index = this->addTab(filetab, tabTitle);
     this->setCurrentIndex(new_tab_index);
     filetab->openFile();
+
+    // connects
+
+    connect(filetab, &FileTab::removeStarSignal, this, &FilesTabWidget::removeStar);
+    connect(filetab, &FileTab::setupStarSignal, this, &FilesTabWidget::setupStar);
 }
 
+void FilesTabWidget::removeStar(FileTab* tab){
+    int index = indexOf(tab);
+    if (index != -1) {
+        QFileInfo finfo(tab->filePath);
+        setTabText(index, finfo.fileName());
+    }
+}
 
+void FilesTabWidget::setupStar(FileTab* tab){
+    int index = indexOf(tab);
+    if (index != -1) {
+        QFileInfo finfo(tab->filePath);
+        setTabText(index, finfo.fileName() + "*");
+    }
+}

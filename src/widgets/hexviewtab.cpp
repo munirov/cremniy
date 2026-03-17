@@ -71,10 +71,19 @@ HexViewTab::HexViewTab(QWidget *parent, QString path)
 
     // hexViewWidget: data change
     connect(m_hexViewWidget->hexDocument(),
-            &QHexDocument::dataChanged,
+            &QHexDocument::changed,
             this,
-            [this](const QByteArray&, quint64, QHexChangeReason){
-                emit modifyData(true);
+            [this](){
+
+                QByteArray data = m_hexViewWidget->getBData();
+                uint newDataHash = qHash(data, 0);
+                if (m_dataHash == newDataHash) {
+                    emit dataEqual();
+                }
+                else{
+                    if (!m_hexViewWidget->m_ignoreModification)
+                        emit modifyData(true);
+                }
             });
 }
 

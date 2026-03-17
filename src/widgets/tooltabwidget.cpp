@@ -30,30 +30,68 @@ ToolTabWidget::ToolTabWidget(QWidget *parent, QString path)
     this->addTab(m_hexViewTab, hexIcon, "Hex");
     this->addTab(m_disassemblerTab, disasmIcon, "Disassembler");
 
-    connect(m_codeEditorTab, &CodeEditorTab::modifyData,
-            this, &ToolTabWidget::onTabModified);
-    connect(m_codeEditorTab, &CodeEditorTab::askData,
-            this, &ToolTabWidget::giveData);
-    connect(m_codeEditorTab, &CodeEditorTab::setHexViewTab,
-            this, &ToolTabWidget::setHexViewTab);
-    connect(m_codeEditorTab, &CodeEditorTab::dataEqual,
-            this, &ToolTabWidget::removeStar);
+    // - - Connects - -
 
-    connect(m_hexViewTab, &HexViewTab::modifyData,
-            this, &ToolTabWidget::onTabModified);
-    connect(m_disassemblerTab, &DisassemblerTab::modifyData,
-            this, &ToolTabWidget::onTabModified);
+    // Code Editor Tab
+    connect(m_codeEditorTab, &CodeEditorTab::modifyData, this, &ToolTabWidget::setupStar);
+    connect(m_codeEditorTab, &CodeEditorTab::dataEqual, this, &ToolTabWidget::removeStar);
+    connect(m_codeEditorTab, &CodeEditorTab::askData, this, &ToolTabWidget::giveData);
+    connect(m_codeEditorTab, &CodeEditorTab::setHexViewTab, this, &ToolTabWidget::setHexViewTab);
 
+    // Hex View Tab
+    connect(m_hexViewTab, &HexViewTab::modifyData, this, &ToolTabWidget::setupStar);
+
+    // Disassembler Tab
+    connect(m_disassemblerTab, &DisassemblerTab::modifyData, this, &ToolTabWidget::setupStar);
 }
 
 void ToolTabWidget::removeStar(){
-    QObject* s = sender();
-    int index = -1;
-    if (s == m_codeEditorTab)
-        index = this->indexOf(m_codeEditorTab);
+
+    qDebug() << "ToolTabWidget: removeStar()";
+
+    // remove star at sender
+    QObject* obj = sender();
+    QWidget* widget = qobject_cast<QWidget*>(obj);
+
+    if (!widget) return;
+
+    int index = indexOf(widget);
+    if (index < 0) return;
+
     QString text = tabText(index);
     text.replace("*", "");
     setTabText(index, text);
+
+    // check other tabs
+    if (!tabText(this->indexOf(m_codeEditorTab)).contains("*") &&
+        !tabText(this->indexOf(m_hexViewTab)).contains("*") &&
+        !tabText(this->indexOf(m_disassemblerTab)).contains("*") ){
+        emit removeStarSignal();
+    }
+
+}
+
+void ToolTabWidget::setupStar(bool modified){
+
+    qDebug() << "ToolTabWidget: setupStar()";
+
+    // setup star on tab
+    QObject* obj = sender();
+    QWidget* widget = qobject_cast<QWidget*>(obj);
+
+    if (!widget) return;
+
+    int index = indexOf(widget);
+    if (index < 0) return;
+
+    QString text = tabText(index);
+    if (!text.endsWith("*")){
+        setTabText(index, text + "*");
+    }
+
+    // signal "setup star" to up
+    emit setupStarSignal();
+
 }
 
 void ToolTabWidget::setHexViewTab(){
@@ -74,23 +112,6 @@ void ToolTabWidget::giveData(){
     if (index >= 0){
         emit askData(index);
     }
-}
-
-void ToolTabWidget::onTabModified(bool modified)
-{
-    QObject* obj = sender();
-    QWidget* widget = qobject_cast<QWidget*>(obj);
-
-    if (!widget) return;
-
-    int index = indexOf(widget);
-    if (index < 0) return;
-
-    QString text = tabText(index);
-    if (!text.endsWith("*")){
-        setTabText(index, text + "*");
-    }
-
 }
 
 int ToolTabWidget::saveToFileCurrentTab(QString path){

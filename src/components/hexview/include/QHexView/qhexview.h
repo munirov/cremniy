@@ -51,6 +51,9 @@ class QHexView: public QAbstractScrollArea, public ToolWidget {
 
 public:
     explicit QHexView(QWidget* parent = nullptr);
+
+    bool m_ignoreModification = false;
+
     QRectF headerRect() const;
     QRectF documentRect() const;
     QRectF addressRect() const;
@@ -118,7 +121,9 @@ public:
     void clearMetadata();
 
     void setBData(const QByteArray& data) override  {
+        m_ignoreModification = true;
         m_hexdocument->setData(data);
+        m_ignoreModification = false;
     }
     QByteArray getBData() override {
         return m_hexdocument->read(0, m_hexdocument->length());

@@ -4,9 +4,8 @@
 #include <qdir.h>
 #include <qevent.h>
 
-FileTab::FileTab(FilesTabWidget *ftparent, QString path, QWidget* parent)
+FileTab::FileTab(QWidget* parent, QString path)
     : QWidget(parent),
-    m_filesTabWidget(ftparent),
     filePath(path)
 {
     QVBoxLayout *vlayout = new QVBoxLayout(this);
@@ -26,6 +25,10 @@ void FileTab::openFile(int index, int excluded_index){
     QByteArray data = file.readAll();
     file.close();
     m_tooltabWidget->setDataInTabs(data, index, excluded_index);
+
+    // connects
+    connect(m_tooltabWidget, &ToolTabWidget::removeStarSignal, this, &FileTab::removeStar);
+    connect(m_tooltabWidget, &ToolTabWidget::setupStarSignal, this, &FileTab::setupStar);
 }
 
 void FileTab::saveFile(){
@@ -35,4 +38,12 @@ void FileTab::saveFile(){
 
 void FileTab::giveData(int index){
     openFile(index);
+}
+
+void FileTab::removeStar(){
+    emit removeStarSignal(this);
+}
+
+void FileTab::setupStar(){
+    emit setupStarSignal(this);
 }
