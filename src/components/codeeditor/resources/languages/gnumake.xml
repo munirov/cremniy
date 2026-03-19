@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<root>
+    <section name="Directive">
+        <name>include</name>
+        <name>ifdef</name>
+        <name>ifndef</name>
+        <name>else</name>
+        <name>endif</name>
+        <name>ifeq</name>
+        <name>ifneq</name>
+        <name>define</name>
+        <name>endef</name>
+        <name>override</name>
+        <name>export</name>
+        <name>unexport</name>
+    </section>
+    <section name="BuiltinFunction">
+        <name>subst</name>
+        <name>patsubst</name>
+        <name>strip</name>
+        <name>findstring</name>
+        <name>filter</name>
+        <name>filter-out</name>
+        <name>sort</name>
+        <name>word</name>
+        <name>wordlist</name>
+        <name>words</name>
+        <name>firstword</name>
+        <name>lastword</name>
+        <name>dir</name>
+        <name>notdir</name>
+        <name>suffix</name>
+        <name>basename</name>
+        <name>addsuffix</name>
+        <name>addprefix</name>
+        <name>join</name>
+        <name>foreach</name>
+        <name>if</name>
+        <name>or</name>
+        <name>and</name>
+        <name>call</name>
+        <name>value</name>
+        <name>eval</name>
+        <name>file</name>
+        <name>shell</name>
+        <name>wildcard</name>
+        <name>error</name>
+        <name>warn</name>
+        <name>info</name>
+    </section>
+    <section name="SpecialTarget">
+        <name>.PHONY</name>
+        <name>.SUFFIXES</name>
+        <name>.DEFAULT</name>
+        <name>.PRECIOUS</name>
+        <name>.INTERMEDIATE</name>
+        <name>.SECONDARY</name>
+        <name>.SECONDEXPANSION</name>
+        <name>.DELETE_ON_ERROR</name>
+        <name>.IGNORE</name>
+        <name>.LOW_RESOLUTION_TIME</name>
+        <name>.SILENT</name>
+        <name>.EXPORT_ALL_VARIABLES</name>
+        <name>.NOTPARALLEL</name>
+        <name>.ONESHELL</name>
+    </section>
+</root>
+

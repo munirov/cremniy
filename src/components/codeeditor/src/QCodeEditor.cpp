@@ -66,9 +66,9 @@ void QCodeEditor::initLanguages(){
     m_completers["rs"]  = new QCECompleter(":/languages/rust.xml");
 
     // Build / config
-    m_completers[""]        = new QCECompleter(":/languages/makefile.xml"); // "Makefile" (no extension)
-    m_completers["mk"]      = new QCECompleter(":/languages/makefile.xml");
-    m_completers["make"]    = new QCECompleter(":/languages/makefile.xml");
+    m_completers[""]        = new QCECompleter(":/languages/gnumake.xml"); // "Makefile" (no extension)
+    m_completers["mk"]      = new QCECompleter(":/languages/gnumake.xml");
+    m_completers["make"]    = new QCECompleter(":/languages/gnumake.xml");
     m_completers["cmake"]   = new QCECompleter(":/languages/cmake.xml");
     m_completers["txt"]     = new QCECompleter(":/languages/cmake.xml");    // CMakeLists.txt
 

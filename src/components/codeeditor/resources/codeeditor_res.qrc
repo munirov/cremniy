@@ -8,7 +8,7 @@
         <file>languages/c.xml</file>
         <file>languages/asm.xml</file>
         <file>languages/rust.xml</file>
-        <file>languages/makefile.xml</file>
+        <file>languages/gnumake.xml</file>
         <file>languages/cmake.xml</file>
     </qresource>
 </RCC>
