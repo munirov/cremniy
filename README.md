@@ -85,14 +85,13 @@ English • [Русский](README_ru.md)
 <details>
 <summary><b>🪟 Windows</b></summary>
 
-1. Install [Qt 6](https://www.qt.io/download-qt-installer-oss) — select the **Qt Widgets** component during setup.
-2. Install [CMake](https://cmake.org/download/) (≥ 3.16), or use the version bundled with Qt.
-3. Install a C++17-compatible compiler:
-   - [Visual Studio 2019+](https://visualstudio.microsoft.com/) (MSVC) — select the **"Desktop development with C++"** workload.
-   - Or [MinGW-w64](https://www.mingw-w64.org/).
-
-> [!TIP]
-> If using Visual Studio, make sure the **"Desktop development with C++"** workload is checked during installation.
+1. Install [MSYS2](https://www.msys2.org/)
+2. Install MinGW, CMake, Qt6-base via **MSYS2 terminal**:
+```base
+pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-qt6-base
+```
+3. Add MSYS2 package directory to PATH  
+   MSYS2 packages are located in `C:\msys64\ucrt64\bin` by default.
 
 </details>
 
@@ -122,9 +121,7 @@ brew install cmake qt@6
 
 ---
 
-## Building
-
-### Clone and build
+## Build in Linux
 
 ```bash
 git clone https://github.com/igmunv/cremniy.git
@@ -139,6 +136,29 @@ cmake --build .
 
 ```bash
 cmake ../src -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+```
+
+## Build in Windows
+
+### Install Windows [prerequisites](#prerequisites)
+
+### Build Cremniy
+
+```bash
+git clone https://github.com/igmunv/cremniy.git
+cd cremniy
+
+mkdir build && cd build
+cmake -G "MinGW Makefiles" ..\src
+cmake --build .
+
+```
+
+### Release build
+
+```bash
+cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 

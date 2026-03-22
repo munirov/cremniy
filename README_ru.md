@@ -85,14 +85,13 @@
 <details>
 <summary><b>🪟 Windows</b></summary>
 
-1. Установите [Qt 6](https://www.qt.io/download-qt-installer-oss) — при установке выберите компонент **Qt Widgets**.
-2. Установите [CMake](https://cmake.org/download/) (≥ 3.16) или используйте тот, что идёт в комплекте с Qt.
-3. Установите компилятор с поддержкой C++17:
-   - [Visual Studio 2019+](https://visualstudio.microsoft.com/) (MSVC) — выберите рабочую нагрузку **«Разработка классических приложений на C++»**.
-   - Или [MinGW-w64](https://www.mingw-w64.org/).
-
-> [!TIP]
-> При использовании Visual Studio убедитесь, что рабочая нагрузка **«Разработка классических приложений на C++»** отмечена при установке.
+1. Установить [MSYS2](https://www.msys2.org/)
+2. Установить MinGW, CMake, Qt6-base через **терминал MSYS2**:
+```base
+pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-qt6-base
+```
+3. Добавить папку с пакетами MSYS2 в PATH  
+   По умолчанию MSYS2 пакеты находятся в `C:\msys64\ucrt64\bin`
 
 </details>
 
@@ -122,9 +121,7 @@ brew install cmake qt@6
 
 ---
 
-## Сборка
-
-### Клонирование и сборка
+## Linux cборка
 
 ```bash
 git clone https://github.com/igmunv/cremniy.git
@@ -139,6 +136,29 @@ cmake --build .
 
 ```bash
 cmake ../src -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+```
+
+## Windows сборка
+
+### Установить Windows [зависимости](#зависимости)
+
+### Собрать Cremniy
+
+```bash
+git clone https://github.com/igmunv/cremniy.git
+cd cremniy
+
+mkdir build && cd build
+cmake -G "MinGW Makefiles" ..\src
+cmake --build .
+
+```
+
+### Сборка в режиме Release
+
+```bash
+cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
