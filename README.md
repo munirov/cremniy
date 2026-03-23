@@ -30,6 +30,15 @@ English • [Русский](README_ru.md)
 - 🔐 Information security specialists
 - 📡 Embedded systems developers
 
+Added a theme switcher to the code editor.
+
+Features:
+- Switch between dark and light themes
+- Support for creating custom themes
+
+Location:
+Editor → Settings 
+
 ---
 
 ## Screenshots
