@@ -20,9 +20,6 @@
 
 static QString stripAnsiCodes(const QString &text) {
     if (text.isEmpty()) return text;
-
-    // 1. Регулярка для стандартных CSI (цвета, курсор) и OSC (заголовки окна, как на скрине)
-    // Добавлен захват последовательностей типа \e]0;text\a
     static QRegularExpression ansiRegex(
         "(\x1b\\][0-9];.*?\x07|"       // OSC (Operating System Commands)
         "\x1b\\[[0-9;?]*[A-Za-z])"      // CSI (Control Sequence Introducer)
@@ -30,9 +27,7 @@ static QString stripAnsiCodes(const QString &text) {
 
     QString cleaned = text;
     cleaned.remove(ansiRegex);
-    
-    // Важно: удаляем только невидимые управляющие символы, 
-    // но оставляем \n и \t (не используйте .simplified())
+    // оставляем \n и \t (не используйте .simplified())
     return cleaned;
 }
 
@@ -84,26 +79,20 @@ bool TerminalWidget::eventFilter(QObject *obj, QEvent *event) {
         QTextCursor cursor = m_display->textCursor();
 
         // Ctrl+C
-        // 2. ФИКС Ctrl+C: Копирование ИЛИ Прерывание процесса
         if ((keyEvent->key() == Qt::Key_C) && (keyEvent->modifiers() & Qt::ControlModifier)) {
             if (cursor.hasSelection()) {
                 return false; // Копируем, если выделено
             } else {
                 if (m_process->state() == QProcess::Running) {
 #ifdef Q_OS_WIN
-                    // На Windows используем системное событие Break
                     GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, 0);
-                    // Проталкиваем Enter, чтобы шелл проснулся
                     m_process->write("\r\n");
 #else
-                    // На Linux шлем SIGINT ВСЕЙ ГРУППЕ ПРОЦЕССОВ (через отрицательный PID)
-                    // Это убьет и bash, и его дочерний ping
                     qint64 pid = m_process->processId();
                     if (pid > 0) {
                         kill(-pid, SIGINT);
                     }
 #endif
-                    // Визуальный фидбек
                     m_display->moveCursor(QTextCursor::End);
                     m_display->insertPlainText("^C\n");
                     m_lastPromptPos = m_display->toPlainText().length();
@@ -118,8 +107,6 @@ bool TerminalWidget::eventFilter(QObject *obj, QEvent *event) {
             m_display->setTextCursor(cursor);
             return true;
         }
-
-        // Защита логов
         bool isModifierOnly = (keyEvent->modifiers() != Qt::NoModifier && keyEvent->text().isEmpty());
         bool isNavigation = (keyEvent->key() == Qt::Key_Left || keyEvent->key() == Qt::Key_Right || 
                              keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down ||
@@ -150,9 +137,8 @@ bool TerminalWidget::eventFilter(QObject *obj, QEvent *event) {
     }
     return QWidget::eventFilter(obj, event);
 }
-// ИСТОРИЯ: Загрузка
+
 void TerminalWidget::loadHistory() {
-    // Используем AppDataLocation. На Win это AppData/Local/cremniy/Cremniy
     QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/terminal_history.txt";
     QFile file(path);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -166,7 +152,6 @@ void TerminalWidget::loadHistory() {
     m_historyIndex = m_history.size();
 }
 
-// ИСТОРИЯ: Сохранение
 void TerminalWidget::saveHistory() {
     QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir().mkpath(dataDir);
@@ -174,7 +159,6 @@ void TerminalWidget::saveHistory() {
     
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
-        // Сохраняем последние 100 команд
         int start = qMax(0, m_history.size() - 100);
         for (int i = start; i < m_history.size(); ++i) {
             out << m_history[i] << "\n";
@@ -216,7 +200,7 @@ void TerminalWidget::handleEnter() {
     if (!cmd.trimmed().isEmpty()) {
         if (m_history.isEmpty() || m_history.last() != cmd) {
             m_history.append(cmd);
-            saveHistory(); // Сохраняем СРАЗУ после каждой команды
+            saveHistory();
         }
     }
     m_historyIndex = m_history.size();
@@ -230,7 +214,7 @@ void TerminalWidget::onProcessError(QProcess::ProcessError error) {
 }
 
 TerminalWidget::~TerminalWidget() {
-    saveHistory(); // Сохраняем историю перед закрытием
+    saveHistory();
     
     if (m_process->state() == QProcess::Running) {
         m_process->terminate();
