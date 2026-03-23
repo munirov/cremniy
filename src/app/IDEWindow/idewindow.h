@@ -8,6 +8,7 @@
 #include <qmenubar.h>
 #include <qsplitter.h>
 #include <qstatusbar.h>
+#include "widgets/terminal/terminalwidget.h"
 
 class IDEWindow : public QMainWindow
 {
@@ -51,6 +52,8 @@ private slots:
      * Открывает калькулятор для перевода чисел в разные систмы счислений
     */
     void on_Open_ReverseCalculator();
+
+    void on_Toggle_Terminal(bool checked);
 
 private:
 
@@ -97,11 +100,18 @@ private:
     QStatusBar* m_statusBar;
     QWidget* m_mainWidget;
     QHBoxLayout* m_mainLayout;
-    QSplitter* m_mainSplitter;
+    QSplitter* m_verticalSplitter;  // splitter (вверх вниз)
+    QSplitter* m_mainSplitter; 
 
     // - - General Widgets - -
     FilesTabWidget* m_filesTabWidget;
     FileTreeView* m_filesTreeView;
+
+    // - - Terminal Widget - -
+    TerminalWidget* m_terminal;
+
+    // - - Terminal View Actions - -
+    QAction* m_view_toggleTerminal;
 
 };
 #endif // IDEWINDOW_H
