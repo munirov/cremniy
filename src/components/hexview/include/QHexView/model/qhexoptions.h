@@ -24,7 +24,9 @@ enum : unsigned int {
 
     Separators = HSeparator | VSeparator,
     Styled     = StyledHeader | StyledAddress,
+    MacOSFix   = 1 << 11,
 };
+
 // clang-format on
 
 } // namespace QHexFlags
@@ -48,6 +50,8 @@ struct QHexOptions {
     unsigned int address_width{0};
     unsigned int group_length{1};
     int scroll_steps{1};
+    qreal fixed_cell_width{14.0};
+
 
     // Colors & Styles
     QHash<quint8, QHexCharFormat> byte_colors;

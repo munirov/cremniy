@@ -67,6 +67,7 @@ public:
     QByteArray selectedBytes() const;
     QByteArray visibleBytes() const;
     QByteArray getLine(qint64 line) const;
+    void setFixedCellWidth(qreal width);
     unsigned int addressWidth() const;
     unsigned int lineLength() const;
     bool isModified() const;
@@ -231,6 +232,7 @@ private:
     QHexDocument* m_hexdocument{nullptr};
     QHexMetadata* m_hexmetadata{nullptr};
     QHexDelegate* m_hexdelegate{nullptr};
+    qreal m_fixedCellWidth{0.0};
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
     HexFindDialog *m_hexdlgfind{nullptr}, *m_hexdlgreplace{nullptr};
 #endif
