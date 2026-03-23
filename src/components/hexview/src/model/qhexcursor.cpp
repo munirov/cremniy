@@ -21,7 +21,10 @@ QHexView* QHexCursor::hexView() const {
 }
 
 QHexCursor::Mode QHexCursor::mode() const { return m_mode; }
-qint64 QHexCursor::offset() const { return this->positionToOffset(m_position); }
+
+qint64 QHexCursor::offset() const { 
+    return this->positionToOffset(m_position); 
+}
 
 qint64 QHexCursor::address() const {
     return m_options->base_address + this->offset();
@@ -75,13 +78,17 @@ qint64 QHexCursor::selectionLength() const {
 QHexPosition QHexCursor::position() const { return m_position; }
 
 QByteArray QHexCursor::selectedBytes() const {
-    return this->hexView()->selectedBytes();
+    QHexView* view = this->hexView();
+    if (!view) return QByteArray();
+    return view->selectedBytes();
 }
 
-bool QHexCursor::hasSelection() const { return m_position != m_selection; }
+bool QHexCursor::hasSelection() const { 
+    return m_position.isValid() && m_selection.isValid() && m_position != m_selection; 
+}
 
 bool QHexCursor::isSelected(qint64 line, qint64 column) const {
-    if(!this->hasSelection())
+    if(!this->hasSelection() || line < 0 || column < 0)
         return false;
 
     auto selstart = this->selectionStart(), selend = this->selectionEnd();
@@ -119,6 +126,7 @@ void QHexCursor::move(qint64 line, qint64 column) {
 }
 
 void QHexCursor::move(QHexPosition pos) {
+    // Fix for macOS - validate position
     if(pos.line >= 0)
         m_selection.line = pos.line;
     if(pos.column >= 0)
@@ -135,6 +143,7 @@ void QHexCursor::select(qint64 line, qint64 column) {
 }
 
 void QHexCursor::select(QHexPosition pos) {
+    // Fix for macOS - validate position
     if(pos.line >= 0)
         m_position.line = pos.line;
     if(pos.column >= 0)
@@ -154,19 +163,42 @@ void QHexCursor::selectSize(qint64 length) {
 qint64 QHexCursor::replace(const QVariant& oldvalue, const QVariant& newvalue,
                            qint64 offset, QHexFindMode mode,
                            unsigned int options, QHexFindDirection fd) const {
-    return this->hexView()->replace(oldvalue, newvalue, offset, mode, options,
-                                    fd);
-}
-qint64 QHexCursor::find(const QVariant& value, qint64 offset, QHexFindMode mode,
-                        unsigned int options, QHexFindDirection fd) const {
-    return this->hexView()->find(value, offset, mode, options, fd);
+    QHexView* view = this->hexView();
+    if (!view) return -1;
+    return view->replace(oldvalue, newvalue, offset, mode, options, fd);
 }
 
-void QHexCursor::cut(bool hex) { this->hexView()->cut(hex); }
-void QHexCursor::copy(bool hex) const { this->hexView()->copy(hex); }
-void QHexCursor::paste(bool hex) { this->hexView()->paste(hex); }
-void QHexCursor::selectAll() { this->hexView()->selectAll(); }
-void QHexCursor::removeSelection() { this->hexView()->removeSelection(); }
+qint64 QHexCursor::find(const QVariant& value, qint64 offset, QHexFindMode mode,
+                        unsigned int options, QHexFindDirection fd) const {
+    QHexView* view = this->hexView();
+    if (!view) return -1;
+    return view->find(value, offset, mode, options, fd);
+}
+
+void QHexCursor::cut(bool hex) { 
+    QHexView* view = this->hexView();
+    if (view) view->cut(hex); 
+}
+
+void QHexCursor::copy(bool hex) const { 
+    QHexView* view = this->hexView();
+    if (view) view->copy(hex); 
+}
+
+void QHexCursor::paste(bool hex) { 
+    QHexView* view = this->hexView();
+    if (view) view->paste(hex); 
+}
+
+void QHexCursor::selectAll() { 
+    QHexView* view = this->hexView();
+    if (view) view->selectAll(); 
+}
+
+void QHexCursor::removeSelection() { 
+    QHexView* view = this->hexView();
+    if (view) view->removeSelection(); 
+}
 
 void QHexCursor::clearSelection() {
     m_position = m_selection;
@@ -174,9 +206,11 @@ void QHexCursor::clearSelection() {
 }
 
 qint64 QHexCursor::positionToOffset(QHexPosition pos) const {
+    if (!m_options) return 0;
     return QHexUtils::positionToOffset(m_options, pos);
 }
 
 QHexPosition QHexCursor::offsetToPosition(qint64 offset) const {
+    if (!m_options) return QHexPosition::invalid();
     return QHexUtils::offsetToPosition(m_options, offset);
 }

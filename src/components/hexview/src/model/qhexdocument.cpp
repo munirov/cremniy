@@ -58,8 +58,13 @@ qsizetype QHexDocument::findChange(qint64 offset) const {
     return -1;
 }
 
-bool QHexDocument::accept(qint64 idx) const { return m_buffer->accept(idx); }
-bool QHexDocument::isEmpty() const { return m_buffer->isEmpty(); }
+bool QHexDocument::accept(qint64 idx) const { 
+    // Fix for macOS - ensure proper bounds checking
+    if (!m_buffer) return false;
+    return idx >= 0 && idx < m_buffer->length() && m_buffer->accept(idx); 
+}
+
+bool QHexDocument::isEmpty() const { return !m_buffer || m_buffer->isEmpty(); }
 bool QHexDocument::isModified() const { return !m_undostack->isClean(); }
 bool QHexDocument::canUndo() const { return m_undostack->canUndo(); }
 bool QHexDocument::canRedo() const { return m_undostack->canRedo(); }
@@ -113,7 +118,12 @@ qint64 QHexDocument::length() const {
     return m_buffer ? m_buffer->length() : 0;
 }
 
-uchar QHexDocument::at(int offset) const { return m_buffer->at(offset); }
+uchar QHexDocument::at(int offset) const { 
+    // Fix for macOS - add bounds checking
+    if (!m_buffer || offset < 0 || offset >= m_buffer->length()) 
+        return 0x00;
+    return m_buffer->at(offset); 
+}
 
 QHexDocument* QHexDocument::fromFile(QString filename, QObject* parent) {
     QFile f(filename);
@@ -145,6 +155,10 @@ void QHexDocument::replace(qint64 offset, uchar b) {
 }
 
 void QHexDocument::insert(qint64 offset, const QByteArray& data) {
+    // Fix for macOS - validate offset
+    if (!m_buffer || offset < 0 || offset > m_buffer->length()) 
+        return;
+
     if(m_trackchanges) {
         m_changes.push_back({
             QHexChangeReason::Insert,
@@ -164,6 +178,10 @@ void QHexDocument::insert(qint64 offset, const QByteArray& data) {
 }
 
 void QHexDocument::replace(qint64 offset, const QByteArray& data) {
+    // Fix for macOS - validate offset
+    if (!m_buffer || offset < 0 || offset >= m_buffer->length()) 
+        return;
+
     m_undostack->push(
         new QHexViewReplaceCommand(m_buffer, m_changes, this, offset, data));
 
@@ -183,23 +201,33 @@ void QHexDocument::replace(qint64 offset, const QByteArray& data) {
 }
 
 void QHexDocument::remove(qint64 offset, int len) {
-    QByteArray data = m_buffer->read(offset, len);
+    // Fix for macOS - validate parameters
+    if (!m_buffer || offset < 0 || len <= 0 || offset >= m_buffer->length()) 
+        return;
+    
+    int actualLen = qMin(len, static_cast<int>(m_buffer->length() - offset));
+    QByteArray data = m_buffer->read(offset, actualLen);
     m_undostack->push(
-        new QHexViewRemoveCommand(m_buffer, m_changes, this, offset, len));
+        new QHexViewRemoveCommand(m_buffer, m_changes, this, offset, actualLen));
 
     if(m_trackchanges)
-        this->removeChange(offset, len);
+        this->removeChange(offset, actualLen);
 
     Q_EMIT changed();
     Q_EMIT dataChanged(data, offset, QHexChangeReason::Remove);
 }
 
 QByteArray QHexDocument::read(qint64 offset, int len) const {
-    return m_buffer->read(offset, len);
+    // Fix for macOS - validate parameters
+    if (!m_buffer || offset < 0 || offset >= m_buffer->length() || len <= 0)
+        return QByteArray();
+    
+    int actualLen = qMin(len, static_cast<int>(m_buffer->length() - offset));
+    return m_buffer->read(offset, actualLen);
 }
 
 bool QHexDocument::saveTo(QIODevice* device) {
-    if(!device->isWritable())
+    if(!device || !device->isWritable() || !m_buffer)
         return false;
     m_buffer->write(device);
     return true;

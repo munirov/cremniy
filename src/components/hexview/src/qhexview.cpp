@@ -135,6 +135,9 @@ QHexView::QHexView(QWidget* parent)
         f.setStyleHint(QFont::TypeWriter);
     }
 
+    // Fix for macOS Retina displays - ensure proper font rendering
+    f.setStyleStrategy(QFont::PreferAntialias);
+    
     this->setFont(f);
     this->setMouseTracking(true);
     this->setFocusPolicy(Qt::StrongFocus);
@@ -645,14 +648,16 @@ void QHexView::checkState() {
                    ? this->verticalScrollBar()->width()
                    : 0;
 
-    qreal pad = vw + this->cellWidth();
+    // Fix for macOS high DPI scaling
+    qreal scaleFactor = this->devicePixelRatioF();
+    qreal pad = vw + this->cellWidth() * scaleFactor;
 
-    this->setMaximumWidth(m_autowidth ? qCeil(this->endColumnX()) + qCeil(pad)
+    this->setMaximumWidth(m_autowidth ? qCeil(this->endColumnX() * scaleFactor) + qCeil(pad)
                                       : this->maximumWidth());
 
     this->horizontalScrollBar()->setRange(
         0,
-        qMax<int>(0, qCeil(this->endColumnX()) - this->width() + qCeil(pad)));
+        qMax<int>(0, qCeil(this->endColumnX() * scaleFactor) - this->width() + qCeil(pad)));
     this->horizontalScrollBar()->setPageStep(this->width());
 }
 
@@ -670,14 +675,16 @@ void QHexView::calcColumns() {
     m_hexcolumns.clear();
     m_hexcolumns.reserve(m_options.line_length);
 
-    qreal x = this->hexColumnX() + this->cellWidth(); // Pad to align
-    qreal cw = this->cellWidth() * 2;
+    // Fix for macOS high DPI - use device pixel ratio
+    qreal scaleFactor = this->devicePixelRatioF();
+    qreal x = this->hexColumnX() * scaleFactor + this->cellWidth() * scaleFactor; // Pad to align
+    qreal cw = this->cellWidth() * 2 * scaleFactor;
 
     for(unsigned int i = 0u; i < m_options.line_length;) {
         for(unsigned int j = 0u; j < m_options.group_length; i++, j++, x += cw)
             m_hexcolumns.push_back(QRectF{x, 0, cw, 0});
 
-        x += this->cellWidth();
+        x += this->cellWidth() * scaleFactor;
     }
 }
 
@@ -1142,17 +1149,24 @@ qreal QHexView::getNCellsWidth(int n) const { return n * this->cellWidth(); }
 
 qreal QHexView::cellWidth() const {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-    return m_fontmetrics.horizontalAdvance(" ");
+    // Fix for macOS - use devicePixelRatio for accurate width calculation
+    qreal scaleFactor = this->devicePixelRatioF();
+    return m_fontmetrics.horizontalAdvance(" ") * scaleFactor;
 #else
-    return m_fontmetrics.width(" ");
+    qreal scaleFactor = this->devicePixelRatioF();
+    return m_fontmetrics.width(" ") * scaleFactor;
 #endif
 }
 
 qreal QHexView::lineWidth() const {
-    return this->endColumnX() + this->cellWidth();
+    qreal scaleFactor = this->devicePixelRatioF();
+    return (this->endColumnX() + this->cellWidth()) * scaleFactor;
 }
 
-qreal QHexView::lineHeight() const { return m_fontmetrics.height(); }
+qreal QHexView::lineHeight() const { 
+    qreal scaleFactor = this->devicePixelRatioF();
+    return m_fontmetrics.height() * scaleFactor; 
+}
 
 qint64 QHexView::positionFromLineCol(qint64 line, qint64 col,
                                      qint64& adjcol) const {
@@ -1665,6 +1679,10 @@ void QHexView::paintEvent(QPaintEvent*) {
     QPainter painter(this->viewport());
     painter.translate(-this->horizontalScrollBar()->value(), 0);
     painter.setFont(this->font());
+
+    // Fix for macOS high DPI scaling
+    qreal scaleFactor = this->devicePixelRatioF();
+    painter.scale(scaleFactor, scaleFactor);
 
     if(m_hexdelegate)
         m_hexdelegate->paint(&painter, this);
