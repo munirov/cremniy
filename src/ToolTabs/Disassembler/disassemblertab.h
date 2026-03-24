@@ -3,6 +3,7 @@
 
 #include "core/ToolTab.h"
 #include "disassemblerworker.h"
+#include "utils/themecolors.h"
 #include <QWidget>
 #include <QThread>
 #include <QHash>
@@ -20,6 +21,7 @@ class QStackedWidget;
 class QSplitter;
 class QTimer;
 class DisasmTextHighlighter;
+class DisasmSyntaxDelegate;
 class QListWidget;
 
 
@@ -60,6 +62,7 @@ public slots:
     void setFile(QString filepath) override;
     void setTabData() override;
     void saveTabData() override {};
+    void applyTheme(const ThemeColors &colors);
 
 private slots:
 

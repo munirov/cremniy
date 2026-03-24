@@ -27,7 +27,14 @@ ThemeColors::ThemeColors()
       menuBorder("#cccccc"),
       accentColor("#4a90e2"),
       borderColor("#cccccc"),
-      disabledTextColor("#999999")
+      disabledTextColor("#999999"),
+      syntaxAddrColor("#4aa3ff"),
+      syntaxBytesColor("#21c55d"),
+      syntaxMnemonicColor("#ef4444"),
+      syntaxRegColor("#22c55e"),
+      syntaxImmColor("#fb7185"),
+      syntaxSymColor("#3b82f6"),
+      syntaxCommentColor("#34d399")
 {
 }
 
@@ -64,6 +71,14 @@ ThemeColors ThemeColors::dark()
     colors.accentColor = "#2626d5";
     colors.borderColor = "#1f1f1f";
     colors.disabledTextColor = "#666666";
+    // Синтаксис-подсветка для темной темы
+    colors.syntaxAddrColor = "#2f7bff";
+    colors.syntaxBytesColor = "#21c55d";
+    colors.syntaxMnemonicColor = "#ef4444";
+    colors.syntaxRegColor = "#22c55e";
+    colors.syntaxImmColor = "#fb7185";
+    colors.syntaxSymColor = "#3b82f6";
+    colors.syntaxCommentColor = "#34d399";
     return colors;
 }
 
@@ -95,6 +110,13 @@ QJsonObject ThemeColors::toJson() const
     obj["accentColor"] = accentColor.name();
     obj["borderColor"] = borderColor.name();
     obj["disabledTextColor"] = disabledTextColor.name();
+    obj["syntaxAddrColor"] = syntaxAddrColor.name();
+    obj["syntaxBytesColor"] = syntaxBytesColor.name();
+    obj["syntaxMnemonicColor"] = syntaxMnemonicColor.name();
+    obj["syntaxRegColor"] = syntaxRegColor.name();
+    obj["syntaxImmColor"] = syntaxImmColor.name();
+    obj["syntaxSymColor"] = syntaxSymColor.name();
+    obj["syntaxCommentColor"] = syntaxCommentColor.name();
     return obj;
 }
 
@@ -126,5 +148,12 @@ ThemeColors ThemeColors::fromJson(const QJsonObject &obj)
     colors.accentColor = QColor(obj["accentColor"].toString("#4a90e2"));
     colors.borderColor = QColor(obj["borderColor"].toString("#cccccc"));
     colors.disabledTextColor = QColor(obj["disabledTextColor"].toString("#999999"));
+    colors.syntaxAddrColor = QColor(obj["syntaxAddrColor"].toString("#4aa3ff"));
+    colors.syntaxBytesColor = QColor(obj["syntaxBytesColor"].toString("#21c55d"));
+    colors.syntaxMnemonicColor = QColor(obj["syntaxMnemonicColor"].toString("#ef4444"));
+    colors.syntaxRegColor = QColor(obj["syntaxRegColor"].toString("#22c55e"));
+    colors.syntaxImmColor = QColor(obj["syntaxImmColor"].toString("#fb7185"));
+    colors.syntaxSymColor = QColor(obj["syntaxSymColor"].toString("#3b82f6"));
+    colors.syntaxCommentColor = QColor(obj["syntaxCommentColor"].toString("#34d399"));
     return colors;
 }

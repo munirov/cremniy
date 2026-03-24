@@ -717,8 +717,8 @@ void QHexView::drawSeparators(QPainter* p) const {
 
     if(!m_options.hasFlag(QHexFlags::NoHeader) &&
        m_options.hasFlag(QHexFlags::HSeparator)) {
-        QLineF l(0, this->lineHeight(), this->lineWidth() - 1,
-         this->lineHeight());
+        QLineF l(0, m_fontmetrics.lineSpacing(), this->lineWidth() - 1,
+                 m_fontmetrics.lineSpacing());
         if(!m_hexdelegate || !m_hexdelegate->paintSeparator(p, l, this))
             p->drawLine(l);
     }

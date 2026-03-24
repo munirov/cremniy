@@ -29,7 +29,9 @@
 
 #include "utils/appsettings.h"
 #include "utils/globalwidgetsmanager.h"
+#include "utils/thememanager.h"
 #include "disasm/disasmtexthighlighter.h"
+#include "disasm/disasmsyntaxdelegate.h"
 #include "core/ToolTabFactory.h"
 
 static bool registered = [](){
@@ -302,8 +304,6 @@ void DisassemblerTab::setupUi()
     m_toolbar = new QWidget(this);
     m_toolbar->setObjectName("dasmToolbar");
     m_toolbar->setFixedHeight(36);
-    m_toolbar->setStyleSheet(
-        "QWidget#dasmToolbar { background: #262626; border-bottom: 1px solid #1f1f1f; }");
     auto *toolLayout = new QHBoxLayout(m_toolbar);
     toolLayout->setContentsMargins(6, 0, 6, 0);
     toolLayout->setSpacing(6);
@@ -320,7 +320,6 @@ void DisassemblerTab::setupUi()
     toolLayout->addSpacing(8);
 
     QLabel *secLabel = new QLabel(tr("Section:"), m_toolbar);
-    secLabel->setStyleSheet("color: #888888;");
     toolLayout->addWidget(secLabel);
 
     m_sectionCombo = new QComboBox(m_toolbar);
@@ -356,17 +355,11 @@ void DisassemblerTab::setupUi()
     m_progressBar->setTextVisible(false);
     m_progressBar->setFixedHeight(3);
     m_progressBar->setVisible(false);
-    m_progressBar->setStyleSheet(
-        "QProgressBar { background: #1f1f1f; border: none; }"
-        "QProgressBar::chunk { background: #2626d5; }");
     mainLayout->addWidget(m_progressBar);
 
     // ── Splitter: disasm table (top) + log panel (bottom) ────────────────────
     m_splitter = new QSplitter(Qt::Vertical, this);
     m_splitter->setHandleWidth(4);
-    m_splitter->setStyleSheet(
-        "QSplitter::handle { background: #1f1f1f; }"
-        "QSplitter::handle:hover { background: #2626d5; }");
     mainLayout->addWidget(m_splitter, 1);
 
     // ── Top: stack (listing / placeholder) ───────────────────────────────────
@@ -380,33 +373,23 @@ void DisassemblerTab::setupUi()
 
     m_placeholderLbl = new QLabel(topWidget);
     m_placeholderLbl->setAlignment(Qt::AlignCenter);
-    m_placeholderLbl->setStyleSheet("color: #555555; font-size: 14px;");
     m_stack->addWidget(m_placeholderLbl);
 
     // Functions panel + listing
     m_topSplitter = new QSplitter(Qt::Horizontal, topWidget);
     m_topSplitter->setHandleWidth(4);
-    m_topSplitter->setStyleSheet(
-        "QSplitter::handle { background: #1f1f1f; }"
-        "QSplitter::handle:hover { background: #2626d5; }");
 
     m_funcPanel = new QWidget(m_topSplitter);
     auto *funcLayout = new QVBoxLayout(m_funcPanel);
     funcLayout->setContentsMargins(6, 6, 6, 6);
     funcLayout->setSpacing(6);
     auto *funcTitle = new QLabel(tr("Functions"), m_funcPanel);
-    funcTitle->setStyleSheet("color:#60a5fa; font-weight:600;");
     funcLayout->addWidget(funcTitle);
     m_funcFilterEdit = new QLineEdit(m_funcPanel);
     m_funcFilterEdit->setPlaceholderText(tr("Filter…"));
     funcLayout->addWidget(m_funcFilterEdit);
     m_funcList = new QListWidget(m_funcPanel);
     m_funcList->setObjectName("disasmFuncList");
-    m_funcList->setStyleSheet(
-        "QListWidget { background:#1a1a1a; border:1px solid #262626; color:#21c55d;"
-        "  font-family:'JetBrains Mono','Consolas',monospace; font-size:12px; }"
-        "QListWidget::item { padding: 4px 6px; }"
-        "QListWidget::item:selected { background:#2d2d50; color:#ffffff; }");
     funcLayout->addWidget(m_funcList, 1);
     m_funcPanel->setLayout(funcLayout);
 
@@ -435,11 +418,6 @@ void DisassemblerTab::setupUi()
     m_disasmView->setReadOnly(true);
     m_disasmView->setLineWrapMode(QPlainTextEdit::NoWrap);
     m_disasmView->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
-    m_disasmView->setStyleSheet(
-        "QPlainTextEdit { background: #1f1f1f; border: none; padding: 6px;"
-        "  font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 12px;"
-        "  color: #60a5fa; }"
-        "QPlainTextEdit::selection { background: #2d2d50; color: #ffffff; }");
     m_disasmView->setContextMenuPolicy(Qt::CustomContextMenu);
     m_disasmHighlighter = new DisasmTextHighlighter(m_disasmView->document());
 
@@ -684,29 +662,20 @@ void DisassemblerTab::setupUi()
     // Log header bar
     QWidget *logHeader = new QWidget(m_logPanel);
     logHeader->setFixedHeight(24);
-    logHeader->setStyleSheet("background: #1a1a1a; border-top: 1px solid #333333;");
     auto *logHeaderLayout = new QHBoxLayout(logHeader);
     logHeaderLayout->setContentsMargins(8, 0, 8, 0);
     QLabel *logTitle = new QLabel(tr("Diagnostic Log"), logHeader);
-    logTitle->setStyleSheet("color: #666666; font-size: 11px;");
     logHeaderLayout->addWidget(logTitle);
     logHeaderLayout->addStretch();
     QPushButton *clearBtn = new QPushButton(tr("Clear"), logHeader);
     clearBtn->setFixedHeight(18);
     clearBtn->setFixedWidth(44);
-    clearBtn->setStyleSheet(
-        "QPushButton { font-size: 10px; padding: 0; border: 1px solid #333333; color: #888888; }"
-        "QPushButton:hover { color: #cccccc; border-color: #555555; }");
     logHeaderLayout->addWidget(clearBtn);
     logLayout->addWidget(logHeader);
 
     m_logView = new QPlainTextEdit(m_logPanel);
     m_logView->setReadOnly(true);
     m_logView->setMaximumBlockCount(5000);
-    m_logView->setStyleSheet(
-        "QPlainTextEdit { background: #141414; color: #888888;"
-        "  font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 11px;"
-        "  border: none; }");
     logLayout->addWidget(m_logView, 1);
     m_splitter->addWidget(m_logPanel);
 
@@ -718,9 +687,6 @@ void DisassemblerTab::setupUi()
     // ── Status bar ─────────────────────────────────────────────────────────────
     m_statusLabel = new QLabel(this);
     m_statusLabel->setFixedHeight(20);
-    m_statusLabel->setStyleSheet(
-        "color: #555555; font-size: 11px; padding: 0 6px;"
-        "background: #262626; border-top: 1px solid #1f1f1f;");
     mainLayout->addWidget(m_statusLabel);
 
     showPlaceholder(tr("Press \"Disassemble\" to analyse the file"));
@@ -771,6 +737,8 @@ void DisassemblerTab::setupUi()
         if (m_running) cancelDisassembly();
         startDisassembly();
     });
+    
+    applyTheme(ThemeColors::dark());
 }
 
 void DisassemblerTab::updateBackendUiHint()
@@ -1171,6 +1139,82 @@ void DisassemblerTab::applyFilter()
         m_stack->setCurrentWidget(m_topSplitter);
     }
     m_statusLabel->setText(tr("%1 line(s) shown").arg(shown));
+}
+
+void DisassemblerTab::applyTheme(const ThemeColors &colors)
+{
+    m_toolbar->setStyleSheet(
+        QString("QWidget#dasmToolbar { background: %1; border-bottom: 1px solid %2; }")
+            .arg(colors.backgroundColor.name(), colors.borderColor.name()));
+    
+    for (QWidget *child : m_toolbar->findChildren<QLabel *>()) {
+        child->setStyleSheet(QString("color: %1;").arg(colors.disabledTextColor.name()));
+    }
+    
+    m_progressBar->setStyleSheet(
+        QString("QProgressBar { background: %1; border: none; }"
+                "QProgressBar::chunk { background: %2; }")
+            .arg(colors.backgroundColor.name(), colors.accentColor.name()));
+    
+    m_splitter->setStyleSheet(
+        QString("QSplitter::handle { background: %1; }"
+                "QSplitter::handle:hover { background: %2; }")
+            .arg(colors.backgroundColor.name(), colors.accentColor.name()));
+    
+    m_topSplitter->setStyleSheet(
+        QString("QSplitter::handle { background: %1; }"
+                "QSplitter::handle:hover { background: %2; }")
+            .arg(colors.backgroundColor.name(), colors.accentColor.name()));
+    
+    m_placeholderLbl->setStyleSheet(
+        QString("color: %1; font-size: 14px;").arg(colors.disabledTextColor.name()));
+    
+    m_funcList->setStyleSheet(
+        QString("QListWidget { background:%1; border:1px solid %2; color:%3;"
+                " outline: none; }"
+                "QListWidget::item:hover { background:%4; }"
+                "QListWidget::item:selected { background:%5; color:%6; }")
+            .arg(colors.listBackground.name(), colors.borderColor.name(), colors.listTextColor.name(),
+                 colors.listHoverBackground.name(), colors.listSelectedBackground.name(),
+                 colors.textColor.name()));
+    
+    for (QWidget *child : m_funcList->findChildren<QLabel *>()) {
+        child->setStyleSheet(QString("color: %1; font-weight:600;").arg(colors.accentColor.name()));
+    }
+    
+    m_disasmView->setStyleSheet(
+        QString("QPlainTextEdit { background: %1; border: none; padding: 6px;"
+                " color: %2; }"
+                "QPlainTextEdit::selection { background: %3; color: %4; }")
+            .arg(colors.backgroundColor.name(), colors.accentColor.name(),
+                 colors.listSelectedBackground.name(), colors.textColor.name()));
+    
+    m_logView->setStyleSheet(
+        QString("QPlainTextEdit { background: %1; color: %2;}")
+            .arg(colors.backgroundColor.name(), colors.disabledTextColor.name()));
+    
+    m_statusLabel->setStyleSheet(
+        QString("color: %1; font-size: 11px; padding: 0 6px;"
+                "background: %2; border-top: 1px solid %3;")
+            .arg(colors.disabledTextColor.name(), colors.backgroundColor.name(),
+                 colors.borderColor.name()));
+    
+    DisasmSyntaxColors syntaxColors;
+    syntaxColors.addr = colors.syntaxAddrColor;
+    syntaxColors.bytes = colors.syntaxBytesColor;
+    syntaxColors.mnemonic = colors.syntaxMnemonicColor;
+    syntaxColors.reg = colors.syntaxRegColor;
+    syntaxColors.imm = colors.syntaxImmColor;
+    syntaxColors.bracket = colors.accentColor;
+    syntaxColors.sym = colors.syntaxSymColor;
+    syntaxColors.comment = colors.syntaxCommentColor;
+    
+    if (m_disasmHighlighter) {
+        m_disasmHighlighter->setColors(colors.syntaxAddrColor, colors.syntaxBytesColor,
+                                       colors.syntaxMnemonicColor, colors.syntaxRegColor,
+                                       colors.syntaxImmColor, colors.syntaxSymColor,
+                                       colors.syntaxCommentColor);
+    }
 }
 
 #include "moc_disassemblertab.cpp"

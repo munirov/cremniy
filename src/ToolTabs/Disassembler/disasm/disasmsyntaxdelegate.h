@@ -3,6 +3,18 @@
 #define DISASMSYNTAXDELEGATE_H
 
 #include <QStyledItemDelegate>
+#include <QColor>
+
+struct DisasmSyntaxColors {
+    QColor addr;
+    QColor bytes;
+    QColor mnemonic;
+    QColor reg;
+    QColor imm;
+    QColor bracket;
+    QColor sym;
+    QColor comment;
+};
 
 class DisasmSyntaxDelegate final : public QStyledItemDelegate
 {
@@ -16,9 +28,12 @@ public:
 
     QSize sizeHint(const QStyleOptionViewItem &option,
                    const QModelIndex &index) const override;
+    
+    void setColors(const DisasmSyntaxColors &colors);
 
 private:
-    static QString htmlForCell(int column, const QString &text, bool selected);
+    DisasmSyntaxColors m_colors;
+    QString htmlForCell(int column, const QString &text, bool selected) const;
 };
 
 #endif // DISASMSYNTAXDELEGATE_H

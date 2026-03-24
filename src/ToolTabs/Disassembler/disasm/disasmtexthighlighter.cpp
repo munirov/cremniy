@@ -6,25 +6,33 @@
 DisasmTextHighlighter::DisasmTextHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
 {
-    // Restrict to red/green/blue for text (no gray/black).
-    m_addr.setForeground(QColor("#2f7bff"));      // blue
+    setColors(QColor("#2f7bff"), QColor("#21c55d"), QColor("#ef4444"),
+              QColor("#22c55e"), QColor("#fb7185"), QColor("#3b82f6"),
+              QColor("#34d399"));
+}
+
+void DisasmTextHighlighter::setColors(const QColor &addr, const QColor &bytes, const QColor &mnemonic,
+                                      const QColor &reg, const QColor &imm, const QColor &sym,
+                                      const QColor &comment)
+{
+    m_addr.setForeground(addr);
     m_addr.setFontWeight(QFont::DemiBold);
 
-    m_bytes.setForeground(QColor("#21c55d"));     // green
+    m_bytes.setForeground(bytes);
     m_bytes.setFontWeight(QFont::DemiBold);
 
-    m_mnemonic.setForeground(QColor("#ef4444"));  // red
+    m_mnemonic.setForeground(mnemonic);
     m_mnemonic.setFontWeight(QFont::DemiBold);
 
-    m_reg.setForeground(QColor("#22c55e"));       // green
+    m_reg.setForeground(reg);
     m_reg.setFontWeight(QFont::DemiBold);
 
-    m_imm.setForeground(QColor("#fb7185"));       // red-ish
+    m_imm.setForeground(imm);
 
-    m_sym.setForeground(QColor("#3b82f6"));       // blue
+    m_sym.setForeground(sym);
     m_sym.setFontWeight(QFont::DemiBold);
 
-    m_comment.setForeground(QColor("#34d399"));   // green
+    m_comment.setForeground(comment);
 }
 
 void DisasmTextHighlighter::highlightBlock(const QString &t)

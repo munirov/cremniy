@@ -43,6 +43,15 @@ struct ThemeColors {
     QColor borderColor;
     QColor disabledTextColor;
     
+    // Синтаксис-подсветка (для дизассемблера и редакторов)
+    QColor syntaxAddrColor;
+    QColor syntaxBytesColor;
+    QColor syntaxMnemonicColor;
+    QColor syntaxRegColor;
+    QColor syntaxImmColor;
+    QColor syntaxSymColor;
+    QColor syntaxCommentColor;
+    
     // Методы
     ThemeColors();
     static ThemeColors light();

@@ -9,6 +9,21 @@
 DisasmSyntaxDelegate::DisasmSyntaxDelegate(QObject *parent)
     : QStyledItemDelegate(parent)
 {
+    m_colors = {
+        QColor("#2f7bff"),
+        QColor("#21c55d"),
+        QColor("#ef4444"),
+        QColor("#22c55e"),
+        QColor("#fb7185"),
+        QColor("#60a5fa"),
+        QColor("#3b82f6"),
+        QColor("#34d399")
+    };
+}
+
+void DisasmSyntaxDelegate::setColors(const DisasmSyntaxColors &colors)
+{
+    m_colors = colors;
 }
 
 static QString wrapSpan(const QString &s, const QString &color, bool bold = false)
@@ -42,19 +57,17 @@ static QString highlightWithRegex(const QString &src,
     return out;
 }
 
-QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool selected)
+QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool selected) const
 {
-    // Palette: strictly avoid black/gray for *text*.
-    // Use only red/green/blue for syntax highlighting (white when selected for readability).
-    const QString cText   = selected ? "#ffffff" : "#4aa3ff"; // blue base text
-    const QString cAddr   = selected ? "#ffffff" : "#2f7bff"; // blue
-    const QString cBytes  = selected ? "#ffffff" : "#21c55d"; // green
-    const QString cMnem   = selected ? "#ffffff" : "#ef4444"; // red
-    const QString cReg    = selected ? "#ffffff" : "#22c55e"; // green
-    const QString cImm    = selected ? "#ffffff" : "#fb7185"; // red-ish
-    const QString cBrack  = selected ? "#ffffff" : "#60a5fa"; // blue
-    const QString cSym    = selected ? "#ffffff" : "#3b82f6"; // blue
-    const QString cComm   = selected ? "#ffffff" : "#34d399"; // green
+    const QString cText   = selected ? "#ffffff" : m_colors.addr.name();
+    const QString cAddr   = selected ? "#ffffff" : m_colors.addr.name();
+    const QString cBytes  = selected ? "#ffffff" : m_colors.bytes.name();
+    const QString cMnem   = selected ? "#ffffff" : m_colors.mnemonic.name();
+    const QString cReg    = selected ? "#ffffff" : m_colors.reg.name();
+    const QString cImm    = selected ? "#ffffff" : m_colors.imm.name();
+    const QString cBrack  = selected ? "#ffffff" : m_colors.bracket.name();
+    const QString cSym    = selected ? "#ffffff" : m_colors.sym.name();
+    const QString cComm   = selected ? "#ffffff" : m_colors.comment.name();
 
     const QString base = text.toHtmlEscaped();
 
