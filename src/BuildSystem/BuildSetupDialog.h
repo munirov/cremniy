@@ -13,6 +13,7 @@ public:
     BuildConfig result() const;
 
 private:
+    QLineEdit* m_qtPathEdit;
     QLineEdit* m_buildEdit;
     QLineEdit* m_runEdit;
     QLineEdit* m_cleanEdit;

@@ -6,9 +6,10 @@ struct BuildConfig {
     QString build;
     QString run;
     QString clean;
+    QString qtPath;
 
     bool isEmpty() const {
-        return build.isEmpty() && run.isEmpty() && clean.isEmpty();
+        return build.isEmpty() && run.isEmpty() && clean.isEmpty() && qtPath.isEmpty();
     }
 };
 
@@ -26,7 +27,10 @@ public:
     // Возвращает true и заполняет out, если найдены CMakeLists.txt или Makefile.
     static bool autoDetect(const QString& projectDir, BuildConfig& out);
     static BuildConfig defaultCMakeTemplate(const QString& projectDir);
+    static QString detectQtPrefixPath();
+    static void applyQtPathToCMakeConfig(BuildConfig& cfg);
 
 private:
     static QString detectCMakeProjectName(const QString& cmakeListsPath);
+    static QString detectQtCmakePackageDir(const QString& qtPrefixPath);
 };

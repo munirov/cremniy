@@ -1,4 +1,7 @@
 #include "BuildManager.h"
+#include <QDir>
+#include <QFileInfo>
+#include <QProcessEnvironment>
 #include <QStringList>
 
 BuildManager::BuildManager(QObject* parent) : QObject(parent) {
@@ -54,6 +57,25 @@ void BuildManager::startCommand(const QString& cmd) {
     }
 
     m_process.setWorkingDirectory(m_projectDir);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+
+    const QString qtPath = m_config.qtPath.trimmed();
+    if (!qtPath.isEmpty()) {
+        const QString normalizedQtPath = QDir::fromNativeSeparators(qtPath);
+        env.insert("CMAKE_PREFIX_PATH", normalizedQtPath);
+
+        const QString qt6Dir = QDir(normalizedQtPath).filePath("lib/cmake/Qt6");
+        const QString qt5Dir = QDir(normalizedQtPath).filePath("lib/cmake/Qt5");
+        if (QFileInfo::exists(QDir(qt6Dir).filePath("Qt6Config.cmake"))) {
+            env.insert("QT_DIR", QDir::fromNativeSeparators(qt6Dir));
+            env.insert("Qt6_DIR", QDir::fromNativeSeparators(qt6Dir));
+        } else if (QFileInfo::exists(QDir(qt5Dir).filePath("Qt5Config.cmake"))) {
+            env.insert("QT_DIR", QDir::fromNativeSeparators(qt5Dir));
+            env.insert("Qt5_DIR", QDir::fromNativeSeparators(qt5Dir));
+        }
+    }
+
+    m_process.setProcessEnvironment(env);
     emit processStarted(cmd);
     emit outputLine("$ " + cmd);
 
