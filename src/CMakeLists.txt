@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Test)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -61,6 +61,17 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         core/ToolTabFactory.h
         core/FileDataBuffer.h
         core/FileDataBuffer.cpp
+        core/UTF8Decoder.h
+        core/UTF8Decoder.cpp
+        core/LineIndex.h
+        core/LineIndex.cpp
+        core/LineCache.h
+        core/LineCache.cpp
+
+        widgets/CustomCodeEditor.h
+        widgets/CustomCodeEditor.cpp
+        widgets/LineNumberArea.h
+        widgets/LineNumberArea.cpp
 
         ui/MenuBar/menubarbuilder.h ui/MenuBar/menubarbuilder.cpp
         ui/MenuBar/menufactory.h ui/MenuBar/menufactory.cpp
@@ -110,6 +121,7 @@ endforeach()
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     Qt${QT_VERSION_MAJOR}::Widgets
 )
+
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt)
 
 if(WIN32 AND QT_VERSION_MAJOR EQUAL 6 AND WINDEPLOYQT_EXECUTABLE)

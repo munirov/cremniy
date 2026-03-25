@@ -1,5 +1,6 @@
 #include "binarytab.h"
 #include "verticaltabstyle.h"
+#include "FormatPages/RAW/rawpage.h"
 #include <qapplication.h>
 #include <qboxlayout.h>
 #include <qstackedwidget.h>
@@ -93,6 +94,9 @@ BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
     // TabList: select tab
     connect(pageList, &QListWidget::currentRowChanged,
                      pageView, &QStackedWidget::setCurrentIndex);
+
+    m_findShortcut = new QShortcut(QKeySequence::Find, this);
+    connect(m_findShortcut, &QShortcut::activated, this, &BinaryTab::openFindDialog);
 }
 
 
@@ -175,4 +179,20 @@ void BinaryTab::saveTabData() {
     setModifyIndicator(false);
     emit dataEqual();
     emit refreshDataAllTabsSignal();
+}
+
+void BinaryTab::openFindDialog()
+{
+    if (auto* rawPage = dynamic_cast<RAWPage*>(pageView->currentWidget())) {
+        rawPage->showFind();
+        return;
+    }
+
+    for (int pageIndex = 0; pageIndex < pageView->count(); ++pageIndex) {
+        if (auto* rawPage = dynamic_cast<RAWPage*>(pageView->widget(pageIndex))) {
+            pageView->setCurrentIndex(pageIndex);
+            rawPage->showFind();
+            return;
+        }
+    }
 }

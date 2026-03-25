@@ -64,3 +64,8 @@ void RAWPage::setSelection(qint64 pos, qint64 length) {
     m_hexViewWidget->hexCursor()->selectSize(length);
 }
 
+void RAWPage::showFind()
+{
+    m_hexViewWidget->showFind();
+}
+

@@ -8,6 +8,7 @@
 #include <QList>
 #include <QMap>
 #include <QMutex>
+#include <QVector>
 
 class FileDataBuffer : public QObject
 {
@@ -30,6 +31,12 @@ public:
 
     // Полностью заменить рабочую копию данных, не сбрасывая dirty-state
     void replaceData(const QByteArray& data);
+
+    // Отменить/повторить последнее изменение
+    void undo();
+    void redo();
+    bool canUndo() const;
+    bool canRedo() const;
 
     // Изменить один байт
     void setByte(qint64 pos, char byte);
@@ -95,6 +102,13 @@ private:
     void resetOverlayLocked();
     void closeFileLocked();
     uint computeCurrentHashLocked() const;
+    void applyDataSnapshotLocked(const QByteArray& data);
+    void pushHistoryLocked(const QByteArray& before, const QByteArray& after);
+
+    struct HistoryEntry {
+        QByteArray before;
+        QByteArray after;
+    };
 
     mutable QMutex m_mutex;
     mutable QFile m_file;
@@ -111,6 +125,9 @@ private:
     uint m_originalHash = 0;
     qint64 m_selectionPos = -1;
     qint64 m_selectionLength = 0;
+    QVector<HistoryEntry> m_undoStack;
+    QVector<HistoryEntry> m_redoStack;
+    int m_maxHistoryEntries = 100;
 };
 
 #endif // FILEDATABUFFER_H
