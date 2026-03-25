@@ -1,5 +1,6 @@
 #include "codeeditortab.h"
 #include "QCodeEditor.hpp"
+#include <QStyle>
 #include <qboxlayout.h>
 #include <qfileinfo.h>
 #include <qlabel.h>
@@ -7,6 +8,11 @@
 #include <qstackedlayout.h>
 #include "filemanager.h"
 #include "utils.h"
+#include <QLineEdit>
+#include <QShortcut>
+#include <QKeySequence>
+#include <QTextCursor>
+#include <QHBoxLayout>
 
 #include "core/ToolTabFactory.h"
 
@@ -63,8 +69,32 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     btnLayout->addWidget(anywayOpenBtn);
     overlayLayout->addLayout(btnLayout);
 
-    // - - Create and Init Stacked Layout Widget - -
+    // - - Create Search Bar Widget - -
+    m_searchWidget = new QWidget(this);
+    m_searchWidget->setObjectName("searchWidget");
 
+    
+    QHBoxLayout* searchLayout = new QHBoxLayout(m_searchWidget);
+    searchLayout->setContentsMargins(6, 6, 6, 6);
+    searchLayout->setSpacing(5);
+
+    m_searchLineEdit = new QLineEdit(this);
+    m_searchLineEdit->setPlaceholderText("Find...");
+    
+    m_findPrevBtn = new QPushButton("▲ Prev", this);
+    m_findNextBtn = new QPushButton("▼ Next", this);
+    m_closeSearchBtn = new QPushButton("✕", this);
+    
+    m_closeSearchBtn->setFixedWidth(30);
+
+    searchLayout->addWidget(m_searchLineEdit);
+    searchLayout->addWidget(m_findPrevBtn);
+    searchLayout->addWidget(m_findNextBtn);
+    searchLayout->addWidget(m_closeSearchBtn);
+    
+    m_searchWidget->hide();
+
+    // - - Create and Init Stacked Layout Widget - -
     auto stack = new QStackedLayout;
     stack->setStackingMode(QStackedLayout::StackAll);
     stack->addWidget(m_codeEditorWidget);
@@ -72,9 +102,39 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
 
     m_overlayWidget->hide();
 
-    this->setLayout(stack);
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+    mainLayout->addLayout(stack);
+    mainLayout->addWidget(m_searchWidget); 
 
-    // - - Connects - -
+    this->setLayout(mainLayout);
+
+    // - - Search Bar Connects & Shortcuts - -
+
+    // Ctrl+F
+    QShortcut* searchShortcut = new QShortcut(QKeySequence("Ctrl+F"), this);
+    searchShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(searchShortcut, &QShortcut::activated, this, &CodeEditorTab::showSearchBar);
+
+    // Esc
+    QShortcut* escapeShortcut = new QShortcut(QKeySequence("Esc"), m_searchWidget);
+    escapeShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(escapeShortcut, &QShortcut::activated, this, &CodeEditorTab::hideSearchBar);
+
+    connect(m_closeSearchBtn, &QPushButton::clicked, this, &CodeEditorTab::hideSearchBar);
+
+    connect(m_searchLineEdit, &QLineEdit::returnPressed, this, [this]() {
+        performSearch(false);
+    });
+
+    connect(m_findNextBtn, &QPushButton::clicked, this, [this]() { performSearch(false); });
+    connect(m_findPrevBtn, &QPushButton::clicked, this, [this]() { performSearch(true); });
+
+    connect(m_searchLineEdit, &QLineEdit::textChanged, this, [this]() {
+        performSearch(false);
+    });
+
 
     // Trigger: Menu Bar: View->wordWrap - setWordWrapMode
     // connect(GlobalWidgetsManager::instance().get_IDEWindow_menuBar_view_wordWrap(),
@@ -244,6 +304,55 @@ void CodeEditorTab::saveTabData() {
     emit refreshDataAllTabsSignal();
 }
 
+
+void CodeEditorTab::showSearchBar()
+{
+    // Если открыта панель "Binary File", поиск не нужен
+    if (!m_overlayWidget->isHidden()) return; 
+
+    m_searchWidget->show();
+    m_searchLineEdit->setFocus();
+    m_searchLineEdit->selectAll(); // Выделяем текст, если там уже что-то было
+}
+
+void CodeEditorTab::hideSearchBar()
+{
+    m_searchWidget->hide();
+    m_codeEditorWidget->setFocus(); // Возвращаем фокус в редактор
+}
+
+void CodeEditorTab::performSearch(bool backward)
+{
+    QString query = m_searchLineEdit->text();
+    if (query.isEmpty()) {
+        m_searchLineEdit->setStyleSheet(""); // Сброс стиля
+        return;
+    }
+
+    QTextDocument::FindFlags flags;
+    if (backward) flags |= QTextDocument::FindBackward;
+    
+    // Выполняем поиск
+    bool found = m_codeEditorWidget->find(query, flags);
+
+    if (!found) {
+        QTextCursor cursor = m_codeEditorWidget->textCursor();
+        cursor.movePosition(backward ? QTextCursor::End : QTextCursor::Start);
+        m_codeEditorWidget->setTextCursor(cursor);
+        
+        found = m_codeEditorWidget->find(query, flags);
+    }
+
+    if (!found) {
+        m_searchLineEdit->setProperty("state", "error");
+    } else {
+        m_searchLineEdit->setProperty("state", "normal");
+    }
+    // Обновляем виджет, чтобы Qt применил новые стили из QSS
+    m_searchLineEdit->style()->unpolish(m_searchLineEdit);
+    m_searchLineEdit->style()->polish(m_searchLineEdit);
+}
+
 QByteArray CodeEditorTab::editorDataWithBom() const
 {
     QByteArray data = m_codeEditorWidget->getBData();
@@ -289,4 +398,5 @@ void CodeEditorTab::applyBufferedSelection()
     m_codeEditorWidget->setTextCursor(cursor);
 
     m_updatingSelection = false;
+
 }

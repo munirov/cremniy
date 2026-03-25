@@ -103,14 +103,15 @@ void QCodeEditor::initDocumentLayoutHandlers()
 
 void QCodeEditor::initFont()
 {
-    QFont fnt = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    QFont fnt("Consolas", 12);
+    
     fnt.setFixedPitch(true);
-    fnt.setPointSize(12);
+    fnt.setStyleHint(QFont::Monospace);
 
     setFont(fnt);
 
     QFontMetrics fm(fnt);
-    double tabWidth = fm.horizontalAdvance(' ') * 4; // 4 пробела
+    double tabWidth = fm.horizontalAdvance(' ') * 4; 
 
     QTextOption opt = document()->defaultTextOption();
     opt.setTabStopDistance(tabWidth);
@@ -119,7 +120,6 @@ void QCodeEditor::initFont()
     document()->markContentsDirty(0, document()->characterCount());
     viewport()->update();
 }
-
 void QCodeEditor::performConnections()
 {
     connect(this,

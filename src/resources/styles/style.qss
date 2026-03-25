@@ -300,3 +300,45 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     background: none;
     width: 16px;
 }
+
+QWidget#searchWidget {
+    background-color: #2b2b2b;
+    border-top: 1px solid #333333;
+}
+
+QWidget#searchWidget QLineEdit {
+    background-color: #1f1f1f;
+    color: #ffffff;
+    border: 1px solid #333333;
+    border-radius: 3px;
+    padding: 3px 6px;
+}
+
+QWidget#searchWidget QLineEdit:focus {
+    border: 1px solid #2626d5; /* Использовал синий цвет из ваших табов */
+}
+
+/* Состояние, когда текст не найден */
+QWidget#searchWidget QLineEdit[state="error"] {
+    background-color: #4a2020;
+    border: 1px solid #ff5555;
+}
+
+QWidget#searchWidget QPushButton {
+    background-color: #333333;
+    color: #ffffff;
+    border: 1px solid #1f1f1f;
+    border-radius: 3px;
+    padding: 4px 10px;
+}
+
+QWidget#searchWidget QPushButton:hover {
+    background-color: #162033;
+    border: 1px solid #2c4c7c;
+}
+
+QWidget#searchWidget QPushButton:pressed {
+    background-color: #162033;
+    border: 2px solid #2c4c7c;
+    font-weight: bold;
+}
