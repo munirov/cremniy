@@ -11,6 +11,7 @@ class QSpinBox;
 class QCompleter;
 class QStyleSyntaxHighlighter;
 class QCodeEditor;
+class FileDataBuffer;
 
 class ToolsTabWidget : public QTabWidget
 {
@@ -22,6 +23,7 @@ public:
 
 private:
     void loadStyle(QString path, QString name);
+    FileDataBuffer* m_sharedBuffer = nullptr;
 
 public slots:
     void saveCurrentTabData();

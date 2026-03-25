@@ -5,6 +5,15 @@
 #include <QJsonObject>
 #include <QProcess>
 
+static QString normalizeHexBytes(QString s)
+{
+    s.remove(' ');
+    s.remove('\t');
+    s.remove('\n');
+    s.remove('\r');
+    return s.trimmed();
+}
+
 static bool parseU64FromJson(const QJsonValue &v, quint64 *out)
 {
     if (!out) return false;
@@ -214,6 +223,8 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
         const QString perm = o.value("perm").toString(); // e.g. "r-x"
         quint64 vaddr = 0;
         parseU64FromJson(o.value("vaddr"), &vaddr);
+        quint64 paddr = 0;
+        parseU64FromJson(o.value("paddr"), &paddr);
         quint64 vsize = 0;
         parseU64FromJson(o.value("vsize"), &vsize);
         if (vsize == 0)
@@ -232,6 +243,10 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
 
         DisasmSection sec;
         sec.name = name;
+        sec.vaddr = vaddr;
+        sec.fileOffset = paddr;
+        sec.size = vsize;
+        sec.hasFileMapping = true;
 
         // pDj returns array of objects: {offset, bytes, opcode, ...}
         // Use address of section as start.
@@ -280,6 +295,9 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
 
             // radare2 provides fields like "bytes" (hex string) and "opcode" (full asm)
             insn.bytes = io.value("bytes").toString();
+            insn.size = normalizeHexBytes(insn.bytes).size() / 2;
+            if (gotAddr)
+                insn.fileOffset = static_cast<qint64>(paddr + (off - vaddr));
 
             const QString opcode = io.value("opcode").toString();
             if (!opcode.isEmpty()) {

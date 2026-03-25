@@ -32,8 +32,8 @@
 #include "core/ToolTabFactory.h"
 
 static bool registered = [](){
-    ToolTabFactory::instance().registerTab("3", [](){
-        return new DisassemblerTab();
+    ToolTabFactory::instance().registerTab("3", [](FileDataBuffer* buffer){
+        return new DisassemblerTab(buffer);
     });
     return true;
 }();
@@ -239,8 +239,8 @@ QString DisassemblerTab::formatLine(const LineInfo &li) const
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-DisassemblerTab::DisassemblerTab(QWidget *parent)
-    : ToolTab{parent}
+DisassemblerTab::DisassemblerTab(FileDataBuffer* buffer, QWidget *parent)
+    : ToolTab{buffer, parent}
 {
     setupUi();
 
@@ -288,6 +288,75 @@ void DisassemblerTab::setFile(QString filepath){
 void DisassemblerTab::setTabData()
 {
     startDisassembly();
+}
+
+void DisassemblerTab::saveTabData()
+{
+    if (!m_dataBuffer->isModified())
+        return;
+
+    if (!m_dataBuffer->saveToFile(m_fileContext->filePath()))
+        return;
+
+    setModifyIndicator(false);
+    emit dataEqual();
+}
+
+void DisassemblerTab::onSelectionChanged(qint64 pos, qint64 length)
+{
+    if (m_updatingSelection) return;
+
+    m_updatingSelection = true;
+
+    if (m_lines.isEmpty()) {
+        m_updatingSelection = false;
+        return;
+    }
+
+    int bestVisibleLine = -1;
+    const qint64 selEnd = pos + qMax<qint64>(length, 1);
+    for (int visLine = 0; visLine < m_visibleLineMap.size(); ++visLine) {
+        const int idx = m_visibleLineMap[visLine];
+        if (idx < 0 || idx >= m_lines.size())
+            continue;
+
+        const LineInfo &li = m_lines[idx];
+        if (li.fileOffset < 0 || li.size <= 0)
+            continue;
+
+        const qint64 lineStart = li.fileOffset;
+        const qint64 lineEnd = li.fileOffset + li.size;
+        if (pos < lineEnd && selEnd > lineStart) {
+            bestVisibleLine = visLine;
+            break;
+        }
+    }
+
+    if (bestVisibleLine >= 0) {
+        QTextCursor cursor = m_disasmView->textCursor();
+        cursor.movePosition(QTextCursor::Start);
+        cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, bestVisibleLine);
+        cursor.select(QTextCursor::LineUnderCursor);
+        m_disasmView->setTextCursor(cursor);
+        m_disasmView->ensureCursorVisible();
+    }
+
+    m_updatingSelection = false;
+}
+
+void DisassemblerTab::onDataChanged()
+{
+    if (!m_refreshDebounce) {
+        m_refreshDebounce = new QTimer(this);
+        m_refreshDebounce->setSingleShot(true);
+        connect(m_refreshDebounce, &QTimer::timeout, this, [this]() {
+            if (!m_running)
+                startDisassembly();
+        });
+    }
+
+    if (!m_running)
+        m_refreshDebounce->start(150);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -442,6 +511,26 @@ void DisassemblerTab::setupUi()
     m_disasmView->setContextMenuPolicy(Qt::CustomContextMenu);
     m_disasmHighlighter = new DisasmTextHighlighter(m_disasmView->document());
 
+    // Обработчик выделения в дизассемблере - уведомляем буфер
+    connect(m_disasmView, &QPlainTextEdit::selectionChanged, this, [this]() {
+        if (m_updatingSelection) return; // Предотвращаем рекурсию
+        
+        QTextCursor cursor = m_disasmView->textCursor();
+        if (!cursor.hasSelection()) return;
+        
+        int visLine = cursor.blockNumber();
+        if (visLine < 0 || visLine >= m_visibleLineMap.size()) return;
+        
+        int idx = m_visibleLineMap[visLine];
+        if (idx < 0 || idx >= m_lines.size()) return;
+        
+        const LineInfo& li = m_lines[idx];
+        if (li.address.isEmpty()) return;
+        
+        if (li.fileOffset >= 0 && li.size > 0)
+            m_dataBuffer->setSelection(li.fileOffset, li.size);
+    });
+
     connect(m_disasmView, &QPlainTextEdit::customContextMenuRequested, this, [this](const QPoint &pos) {
         if (!m_disasmView) return;
         const QTextCursor c = m_disasmView->cursorForPosition(pos);
@@ -466,9 +555,8 @@ void DisassemblerTab::setupUi()
         if (canPatchAtLine) {
             menu.addSeparator();
             menu.addAction(tr("Hex patch here…"), [this, li]() {
-                quint64 off = 0;
-                if (!parseHexU64(li.address, &off)) {
-                    QMessageBox::warning(this, tr("Patch"), tr("Can't parse line address/offset."));
+                if (li.fileOffset < 0) {
+                    QMessageBox::warning(this, tr("Patch"), tr("No file offset mapping for this instruction."));
                     return;
                 }
 
@@ -489,34 +577,20 @@ void DisassemblerTab::setupUi()
                     return;
                 }
 
-                QFile f(m_fileContext->filePath());
-                if (!f.open(QIODevice::ReadWrite)) {
-                    QMessageBox::warning(this, tr("Patch"), tr("Failed to open file for writing."));
-                    return;
-                }
-                if (!f.seek(static_cast<qint64>(off))) {
-                    QMessageBox::warning(this, tr("Patch"), tr("Failed to seek to offset 0x%1.").arg(QString::number(off, 16)));
-                    return;
-                }
-                const qint64 wr = f.write(newBytes);
-                f.close();
-                if (wr != newBytes.size()) {
-                    QMessageBox::warning(this, tr("Patch"), tr("Failed to write all bytes."));
-                    return;
-                }
+                m_dataBuffer->setBytes(li.fileOffset, newBytes);
+                setModifyIndicator(m_dataBuffer->isModified());
+                emit modifyData();
 
                 appendLog(QString("[hexpatch] wrote %1 bytes at 0x%2")
                               .arg(newBytes.size())
-                              .arg(QString::number(off, 16)));
-                // Re-analyze to reflect changes in listing.
+                              .arg(QString::number(li.fileOffset, 16)));
                 if (m_running) cancelDisassembly();
                 startDisassembly();
             });
 
             menu.addAction(tr("Patch bytes…"), [this, idx, li]() {
-                quint64 off = 0;
-                if (!parseHexU64(li.address, &off)) {
-                    QMessageBox::warning(this, tr("Patch"), tr("Can't parse instruction address/offset."));
+                if (li.fileOffset < 0) {
+                    QMessageBox::warning(this, tr("Patch"), tr("No file offset mapping for this instruction."));
                     return;
                 }
 
@@ -549,29 +623,18 @@ void DisassemblerTab::setupUi()
                     return;
                 }
 
-                QFile f(m_fileContext->filePath());
-                if (!f.open(QIODevice::ReadWrite)) {
-                    QMessageBox::warning(this, tr("Patch"), tr("Failed to open file for writing."));
-                    return;
-                }
-                if (!f.seek(static_cast<qint64>(off))) {
-                    QMessageBox::warning(this, tr("Patch"), tr("Failed to seek to offset 0x%1.").arg(QString::number(off, 16)));
-                    return;
-                }
-                const qint64 wr = f.write(newBytes);
-                f.close();
-                if (wr != newBytes.size()) {
-                    QMessageBox::warning(this, tr("Patch"), tr("Failed to write all bytes."));
-                    return;
-                }
+                m_dataBuffer->setBytes(li.fileOffset, newBytes);
+                setModifyIndicator(m_dataBuffer->isModified());
+                emit modifyData();
 
                 // Update cached bytes and refresh view.
                 m_lines[idx].bytes = normalizeBytes(text);
                 m_lines[idx].bytesL = m_lines[idx].bytes.toLower();
+                m_lines[idx].size = newBytes.size();
                 applyFilter();
                 appendLog(QString("[patch] wrote %1 bytes at 0x%2")
                               .arg(newBytes.size())
-                              .arg(QString::number(off, 16)));
+                              .arg(QString::number(li.fileOffset, 16)));
             });
         }
 
@@ -891,6 +954,8 @@ void DisassemblerTab::onSectionFound(const DisasmSection &section)
             li.bytes = insn.bytes;
             li.mnemonic = insn.mnemonic;
             li.operands = insn.operands;
+            li.fileOffset = insn.fileOffset;
+            li.size = insn.size;
             li.addrL  = insn.address.toLower();
             li.bytesL = insn.bytes.toLower();
             li.mnemL  = insn.mnemonic.toLower();

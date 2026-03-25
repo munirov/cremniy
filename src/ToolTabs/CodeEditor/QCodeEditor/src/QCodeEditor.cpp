@@ -218,32 +218,8 @@ void QCodeEditor::updateStyle()
 
 void QCodeEditor::onSelectionChanged()
 {
-    auto selected = textCursor().selectedText();
-
-    auto cursor = textCursor();
-
-    // Cursor is null if setPlainText was called.
-    if (cursor.isNull())
-    {
-        return;
-    }
-
-    cursor.movePosition(QTextCursor::MoveOperation::Left);
-    cursor.select(QTextCursor::SelectionType::WordUnderCursor);
-
-    QSignalBlocker blocker(this);
-    m_framedAttribute->clear(cursor);
-
-    if (selected.size() > 1 &&
-        cursor.selectedText() == selected)
-    {
-        auto backup = textCursor();
-
-        // Perform search selecting
-        handleSelectionQuery(cursor);
-
-        setTextCursor(backup);
-    }
+    // Do not mutate the document on pure selection changes.
+    // Linked views rely on the editor text remaining byte-stable.
 }
 
 void QCodeEditor::resizeEvent(QResizeEvent* e)

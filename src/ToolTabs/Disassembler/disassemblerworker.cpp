@@ -3,8 +3,64 @@
 #include "disasm/backends/radare2backend.h"
 
 #include <QProcess>
+#include <QProcessEnvironment>
 #include <QRegularExpression>
 #include <QStandardPaths>
+
+namespace {
+struct ObjdumpSectionHeader {
+    QString name;
+    quint64 size = 0;
+    quint64 vma = 0;
+    quint64 fileOffset = 0;
+    bool valid = false;
+};
+
+static QHash<QString, DisasmSection> parseObjdumpSectionHeaders(const QString &objdumpExe,
+                                                                const QString &filePath,
+                                                                const QProcessEnvironment &env)
+{
+    QHash<QString, DisasmSection> sections;
+
+    QProcess proc;
+    proc.setProcessEnvironment(env);
+    proc.setProcessChannelMode(QProcess::SeparateChannels);
+    proc.start(objdumpExe, {"-h", filePath});
+    if (!proc.waitForStarted(5000))
+        return sections;
+    if (!proc.waitForFinished(10000) || proc.exitCode() != 0)
+        return sections;
+
+    static const QRegularExpression re(
+        R"(^\s*\d+\s+(\S+)\s+([0-9a-fA-F]+)\s+([0-9a-fA-F]+)\s+[0-9a-fA-F]+\s+([0-9a-fA-F]+)\s+)");
+
+    const QStringList lines = QString::fromUtf8(proc.readAllStandardOutput()).split('\n');
+    for (const QString &line : lines) {
+        const auto match = re.match(line);
+        if (!match.hasMatch())
+            continue;
+
+        bool okSize = false;
+        bool okVma = false;
+        bool okOff = false;
+        const quint64 size = match.captured(2).toULongLong(&okSize, 16);
+        const quint64 vma = match.captured(3).toULongLong(&okVma, 16);
+        const quint64 off = match.captured(4).toULongLong(&okOff, 16);
+        if (!okSize || !okVma || !okOff)
+            continue;
+
+        DisasmSection sec;
+        sec.name = match.captured(1);
+        sec.vaddr = vma;
+        sec.fileOffset = off;
+        sec.size = size;
+        sec.hasFileMapping = true;
+        sections.insert(sec.name, sec);
+    }
+
+    return sections;
+}
+} // namespace
 
 DisassemblerWorker::DisassemblerWorker(QObject *parent)
     : QObject{parent}
@@ -152,6 +208,8 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
 
     emit logLine("[disasm] objdump started (pid " + QString::number(proc.processId()) + ")");
 
+    const QHash<QString, DisasmSection> sectionHeaders = parseObjdumpSectionHeaders(objdumpExe, filePath, env);
+
     QByteArray output;
     while (!proc.waitForFinished(200)) {
         if (m_cancelled) {
@@ -195,7 +253,7 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
     emit logLine("[disasm] --- end raw output ---");
 
     // ── parse ─────────────────────────────────────────────────────────────
-    QVector<DisasmSection> sections = parseSections(output);
+    QVector<DisasmSection> sections = parseSections(output, sectionHeaders);
 
     emit logLine(QString("[disasm] sections parsed: %1").arg(sections.size()));
     for (const auto &s : sections)
@@ -224,7 +282,7 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
 //     1004:^I48 83 ec 08          ^Isub    $0x8,%rsp
 //     1008:^I48 8b 05 d9 2f 00 00 ^Imov    0x2fd9(%rip),%rax   # 3fe8 <sym>
 
-QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw)
+QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, const QHash<QString, DisasmSection> &sectionMap)
 {
     QVector<DisasmSection> sections;
 
@@ -250,7 +308,14 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw)
 
         QRegularExpressionMatch m = reSectionHdr.match(line);
         if (m.hasMatch()) {
-            sections.append(DisasmSection{ m.captured(1), {} });
+            const QString name = m.captured(1);
+            if (sectionMap.contains(name)) {
+                DisasmSection sec = sectionMap.value(name);
+                sec.instructions.clear();
+                sections.append(sec);
+            } else {
+                sections.append(DisasmSection{ name, {} });
+            }
             curSection = &sections.last();
             continue;
         }
@@ -273,6 +338,24 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw)
             insn.bytes    = m.captured(2).trimmed();
             insn.mnemonic = m.captured(3);
             insn.operands = m.captured(4).trimmed();
+
+            QString bytes = insn.bytes;
+            bytes.remove(' ');
+            bytes.remove('\t');
+            bytes.remove('\n');
+            bytes.remove('\r');
+            insn.size = bytes.trimmed().size() / 2;
+
+            if (curSection->hasFileMapping) {
+                bool okAddr = false;
+                const quint64 addr = insn.address.toULongLong(&okAddr, 16);
+                if (okAddr && addr >= curSection->vaddr) {
+                    const quint64 delta = addr - curSection->vaddr;
+                    if (delta < curSection->size)
+                        insn.fileOffset = static_cast<qint64>(curSection->fileOffset + delta);
+                }
+            }
+
             curSection->instructions.append(insn);
         }
     }

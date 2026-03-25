@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -59,6 +59,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         core/ToolTab.h
         core/ToolTabFactory.cpp
         core/ToolTabFactory.h
+        core/FileDataBuffer.h
+        core/FileDataBuffer.cpp
 
         ui/MenuBar/menubarbuilder.h ui/MenuBar/menubarbuilder.cpp
         ui/MenuBar/menufactory.h ui/MenuBar/menufactory.cpp
