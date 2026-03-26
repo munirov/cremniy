@@ -65,6 +65,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         core/ToolTab.h
         core/ToolTabFactory.cpp
         core/ToolTabFactory.h
+            utils/ProjectsHistoryManager.cpp
+            utils/ProjectsHistoryManager.h
 
 
     )

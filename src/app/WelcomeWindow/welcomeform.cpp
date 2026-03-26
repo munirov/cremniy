@@ -1,21 +1,19 @@
 #include "welcomeform.h"
 #include "app/IDEWindow/idewindow.h"
-#include "widgets/tooltabwidget.h"
 #include <qboxlayout.h>
 #include <qdir.h>
 #include <qlineedit.h>
-#include <qmessagebox.h>
 #include <qpushbutton.h>
 #include <QListView>
 #include <QFileDialog>
 #include <QStackedWidget>
 #include <QLabel>
 #include <QComboBox>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QJsonArray>
 #include <qstandardpaths.h>
 #include <qstringlistmodel.h>
+
+#include "projectshistorymanager.h"
 
 WelcomeForm::WelcomeForm(QWidget *parent)
     : QWidget(parent)
@@ -229,25 +227,9 @@ void WelcomeForm::L2CreateProject(QString name, QString path, QString language){
 
 
 void WelcomeForm::SetProjectHistoryList(){
-    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir(dataDir).mkpath(".");
-    QFile history_file(dataDir+"/"+"history_open_projects.dat");
-    QStringList lines;
-    if (history_file.open(QIODevice::ReadOnly)) {
-        QByteArray data = history_file.readAll();
-        QString text = QString::fromUtf8(data);
-        lines = text.split(QRegularExpression("[\r\n]+"), Qt::SkipEmptyParts);
-        history_file.close();
-    }
-
-    QStringList filtered;
-    for (const QString& l : lines) {
-        if (!QDir(l).exists()) continue;
-        filtered << l;
-    }
-    lines = filtered;
+    const QStringList history = utils::ProjectsHistoryManager::loadProjectsHistory();
 
     QStringListModel *model = new QStringListModel(this);
-    model->setStringList(lines);
+    model->setStringList(history);
     history_project_list->setModel(model);
 }

@@ -57,7 +57,7 @@ private:
     /**
      * @brief Сохранить текущий путь проекта в истории
     */
-    void SaveProjectInCache(const QString project_path);
+    void SaveProjectInCache(const QString& project_path);
 
     // - - Menu Bars - -
     QMenu* m_fileMenu;
