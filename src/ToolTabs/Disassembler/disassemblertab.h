@@ -28,7 +28,7 @@ class DisassemblerTab : public ToolTab
     Q_OBJECT
 
 public:
-    explicit DisassemblerTab(QWidget *parent = nullptr);
+    explicit DisassemblerTab(FileDataBuffer* buffer, QWidget *parent = nullptr);
     ~DisassemblerTab();
 
     QString toolName() const override { return "Disassembler"; };
@@ -43,6 +43,8 @@ public:
         QString bytes;
         QString mnemonic;
         QString operands;
+        qint64 fileOffset = -1;
+        qint64 size = 0;
 
         // Cached lowercase for fast search
         QString addrL;
@@ -59,7 +61,12 @@ public slots:
     // From Parrent Class: ToolTab
     void setFile(QString filepath) override;
     void setTabData() override;
-    void saveTabData() override {};
+    void saveTabData() override;
+
+protected slots:
+    // Обработчик изменения выделения из буфера
+    void onSelectionChanged(qint64 pos, qint64 length) override;
+    void onDataChanged() override;
 
 private slots:
 
@@ -94,6 +101,7 @@ private:
     QThread            *m_thread  = nullptr;
     DisassemblerWorker *m_worker  = nullptr;
     bool                m_running = false;
+    bool                m_updatingSelection = false; // Флаг для предотвращения рекурсии
 
     QVector<DisasmSection> m_sections;
     QVector<DisasmFunction> m_functions;
@@ -120,13 +128,13 @@ private:
     QLineEdit      *m_funcFilterEdit = nullptr;
     QListWidget    *m_funcList       = nullptr;
     QPlainTextEdit *m_disasmView     = nullptr;
-    FileContext *m_fileContext = nullptr;
     DisasmTextHighlighter *m_disasmHighlighter = nullptr;
     QLabel         *m_placeholderLbl = nullptr;
     QWidget        *m_logPanel       = nullptr;
     QPlainTextEdit *m_logView        = nullptr;
 
     int m_currentSectionIndex = -1;
+    QTimer *m_refreshDebounce = nullptr;
 };
 
 #endif // DISASSEMBLERTAB_H
