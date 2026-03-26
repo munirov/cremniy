@@ -1,5 +1,7 @@
 <div align="center">
 
+[![Community](https://img.shields.io/badge/Community-Telegram-blue?logo=telegram&style=flat-square)](https://t.me/cremniy_com)
+
 English • [Русский](CONTRIBUTING_ru.md)
 	
 </div>
@@ -37,7 +39,8 @@ Before submitting a pull request:
 1. Fork the repository
 2. Create a new branch
 3. Make your changes
-4. Open a pull request with a clear description
+4. Sync your branch with the `main` branch and resolve any conflicts that may occur
+5. Open a pull request with a clear description
 
 ## Recognition
 

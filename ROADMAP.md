@@ -18,13 +18,17 @@
 
 <br>
 
-- [ ] [Поиск строки в коде](https://github.com/igmunv/cremniy/issues/27)
+- [ ] [Реализация кастомного QPlainText для Code Editor](https://github.com/igmunv/cremniy/issues/56)
+- [ ] [Оптимизировать хранение данных у QHexView](https://github.com/igmunv/cremniy/issues/57)
+- [ ] [Передалать сохранение проекта в историю](https://github.com/igmunv/cremniy/issues/62?reload=1)
+- [ ] [Улучшение дизайна Disassembler](https://github.com/igmunv/cremniy/issues/55)
 - [ ] [Основы базовой архитектуры для обеспечения расширяемости](https://github.com/igmunv/cremniy/issues/29)
 - [ ] [Сборка и запуск проекта пользователя](https://github.com/igmunv/cremniy/issues/6)
-- [ ] [Реализовать связанные представления для байтов, инструкций и кода](https://github.com/igmunv/cremniy/issues/47)
 - [ ] [Отображение чисел в разных системах счисления при наведении](https://github.com/igmunv/cremniy/issues/28)
 - [ ] [Работа с Git](https://github.com/igmunv/cremniy/issues/42)
 - [ ] [Модуль контекстной помощи по инструкциям процессора](https://github.com/igmunv/cremniy/issues/21)
+- [x] [Реализовать связанные представления для байтов, инструкций и кода](https://github.com/igmunv/cremniy/issues/47)
+- [x] [Поиск строки в коде](https://github.com/igmunv/cremniy/issues/27)
 - [x] [Терминал](https://github.com/igmunv/cremniy/issues/31)
 - [x] [Вкладки форматов в HEX-редакторе](https://github.com/igmunv/cremniy/issues/13)
 - [x] [Добавить поддержку языков](https://github.com/igmunv/cremniy/issues/4)
