@@ -20,9 +20,13 @@ private:
 
     ProjectsHistoryManager() = default;
 
+    static void formatedDataRawAndSave(const QStringList & formatedList);
+    static QStringList loadRawProjectsHistory();
+
 public:
     static QStringList loadProjectsHistory();
     static void saveProjectsHistory(const QString & projectsHistory);
+    static void checkDirectoryExists();
 };
 
 } // utils
