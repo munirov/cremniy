@@ -62,6 +62,9 @@ CMakeLists.txt.user*
 *.vcxproj
 *vcxproj.*
 
+# IDEA Clion generated files
+.idea
+
 # MinGW generated files
 *.Debug
 *.Release

@@ -57,6 +57,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         utils/filecontext.h
         utils/filemanager.h
         utils/filemanager.cpp
+        utils/projectshistorymanager.cpp
+        utils/projectshistorymanager.h
 
         core/ToolTab.h
         core/ToolTabFactory.cpp
@@ -77,6 +79,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ui/filestabwidget.h
         ui/toolstabwidget.cpp
         ui/toolstabwidget.h
+
 
 
     )
