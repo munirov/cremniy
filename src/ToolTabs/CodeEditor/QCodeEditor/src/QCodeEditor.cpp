@@ -183,36 +183,18 @@ void QCodeEditor::setSyntaxStyle(QSyntaxStyle* style)
 
 void QCodeEditor::updateStyle()
 {
-    if (m_highlighter)
-    {
-        m_highlighter->rehighlight();
-    }
+    if (m_highlighter) m_highlighter->rehighlight();
 
-    if (m_syntaxStyle)
-    {
+    // ЗАКОММЕНТИРУЙ ИЛИ УДАЛИ ЭТОТ БЛОК, чтобы не ломать QSS фон
+    /*
+    if (m_syntaxStyle) {
         auto currentPalette = palette();
-
-        // Setting text format/color
-        currentPalette.setColor(
-            QPalette::ColorRole::Text,
-            m_syntaxStyle->getFormat("Text").foreground().color()
-        );
-
-        // Setting common background
-        currentPalette.setColor(
-            QPalette::Base,
-            m_syntaxStyle->getFormat("Text").background().color()
-        );
-
-        // Setting selection color
-        currentPalette.setColor(
-            QPalette::Highlight,
-            m_syntaxStyle->getFormat("Selection").background().color()
-        );
-
+        currentPalette.setColor(QPalette::ColorRole::Text, m_syntaxStyle->getFormat("Text").foreground().color());
+        currentPalette.setColor(QPalette::Base, m_syntaxStyle->getFormat("Text").background().color());
+        currentPalette.setColor(QPalette::Highlight, m_syntaxStyle->getFormat("Selection").background().color());
         setPalette(currentPalette);
     }
-
+    */
     updateExtraSelection();
 }
 
@@ -373,9 +355,12 @@ void QCodeEditor::highlightCurrentLine(QList<QTextEdit::ExtraSelection>& extraSe
     if (!isReadOnly())
     {
         QTextEdit::ExtraSelection selection{};
-
-        selection.format = m_syntaxStyle->getFormat("CurrentLine");
-        selection.format.setForeground(QBrush());
+        
+        // Берем системный цвет выделения (Highlight) из QSS/Палитры и делаем его полупрозрачным
+        QColor lineColor = palette().color(QPalette::Highlight);
+        lineColor.setAlpha(40); // Прозрачность, чтобы текст было видно
+        
+        selection.format.setBackground(lineColor);
         selection.format.setProperty(QTextFormat::FullWidthSelection, true);
         selection.cursor = textCursor();
         selection.cursor.clearSelection();
