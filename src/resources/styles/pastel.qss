@@ -1,0 +1,268 @@
+/* =========================================
+   CREMNIY IDE - MODERN DARK THEME
+   ========================================= */
+
+/* Общий стиль (Мягкие темные тона, нет чистого черного или белого) */
+QWidget {
+    background-color: #1e1e2e; /* Главный фон */
+    color: #cdd6f4;            /* Мягкий белый текст */
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 12px;
+}
+
+/* Зоны с контентом (редактор, хекс, деревья) делаем чуть темнее */
+QHexView, QListView, QTreeView, QTableView {
+    background-color: #181825;
+    border: none;
+    alternate-background-color: #1e1e2e;
+}
+
+QHexView {
+    font-size: 16px;
+}
+
+/* ================= КНОПКИ ================= */
+QPushButton {
+    background-color: #313244;
+    border: 1px solid #45475a;
+    border-radius: 4px; /* Легкое скругление */
+    padding: 6px 12px;
+    color: #cdd6f4;
+}
+
+QPushButton:hover {
+    background-color: #45475a;
+    border: 1px solid #89b4fa; /* Приятный пастельно-синий акцент */
+}
+
+QPushButton:pressed {
+    background-color: #585b70;
+    border: 1px solid #89b4fa;
+    /* Убрано font-weight: bold, чтобы текст не "прыгал" при клике */
+}
+
+/* Зеленые кнопки (успех) */
+QPushButton[state="green"] {
+    border: 1px solid #a6e3a1;
+    color: #a6e3a1;
+}
+QPushButton::hover[state="green"] {
+    background-color: #2a3b32; 
+    border: 1px solid #a6e3a1;
+}
+QPushButton::pressed[state="green"] {
+    background-color: #384e42; 
+    border: 1px solid #a6e3a1;
+}
+
+/* ================= COMBOBOX ================= */
+QComboBox {
+    background-color: #313244;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+QComboBox:hover {
+    border: 1px solid #89b4fa;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none; /* Если есть иконка стрелки, можно добавить сюда */
+}
+
+/* ================= ПОЛЯ ВВОДА ================= */
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background-color: #181825;
+    border: 1px solid #313244;
+    border-radius: 4px;
+    selection-background-color: #585b70;
+    padding: 4px;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+    border: 1px solid #89b4fa; /* Подсветка фокуса */
+}
+
+/* ================= ВКЛАДКИ (TABS) ================= */
+QTabWidget::pane {
+    border: 1px solid #313244;
+    top: -1px; /* Скрываем двойную линию под табами */
+}
+
+/* Общие настройки для табов файлов и тулзов */
+#filesTabWidget QTabBar::tab, #toolTabWidget QTabBar::tab {
+    background: #181825;
+    border: 1px solid transparent;
+    border-right: 1px solid #313244; /* Разделитель табов */
+    padding: 6px 12px;
+    color: #a6adc8;
+}
+
+#toolTabWidget QTabBar::tab {
+    min-width: 100px;
+    max-width: 200px;
+}
+
+#filesTabWidget QTabBar::tab {
+    min-width: 150px;
+}
+
+#filesTabWidget QTabBar::tab:hover:!selected, 
+#toolTabWidget QTabBar::tab:hover:!selected {
+    background-color: #313244;
+    color: #cdd6f4;
+}
+
+/* Выделенный таб: вместо жуткого градиента делаем плоский фон + полоску акцента */
+#filesTabWidget QTabBar::tab:selected, 
+#toolTabWidget QTabBar::tab:selected {
+    background: #1e1e2e;
+    color: #89b4fa;
+    border-bottom: 2px solid #89b4fa; 
+}
+
+#filesTabWidget QTabBar::close-button {
+    image: url(:/icons/close.png);
+    subcontrol-position: right;
+}
+
+/* ================= БОКОВОЕ МЕНЮ HEX (ВЕРТИКАЛЬНЫЕ ТАБЫ) ================= */
+QListWidget#hexTabsList {
+    background: #181825;
+    border-right: 1px solid #313244;
+    min-width: 120px;
+    max-width: 200px;
+    padding-top: 5px;
+}
+
+QListWidget#hexTabsList::item {
+    background: transparent;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 2px 6px;
+    color: #a6adc8;
+}
+
+QListWidget#hexTabsList::item:hover {
+    background: #313244;
+    color: #cdd6f4;
+}
+
+/* Активный пункт: полоска слева */
+QListWidget#hexTabsList::item:selected {
+    background: #313244;
+    border-left: 3px solid #89b4fa;
+    color: #89b4fa;
+}
+
+QListWidget#hexTabsList::item:focus { outline: none; }
+
+#hexViewTab QWidget { background: #1e1e2e; }
+
+/* ================= ДЕРЕВО ФАЙЛОВ ================= */
+QTreeView::item {
+    padding: 4px;
+}
+
+QTreeView::item:selected {
+    background-color: #313244;
+    color: #89b4fa;
+    border-radius: 4px;
+}
+
+QTreeView::item:hover:!selected {
+    background-color: #313244;
+    border-radius: 4px;
+}
+
+/* ================= МЕНЮ БАР И КОНТЕКСТНОЕ МЕНЮ ================= */
+QMenuBar {
+    background-color: #1e1e2e;
+    border-bottom: 1px solid #313244;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 6px 10px;
+}
+
+QMenuBar::item:selected, QMenuBar::item:hover {
+    background-color: #313244;
+    border-radius: 4px;
+}
+
+QMenu {
+    background-color: #181825;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 6px 24px 6px 24px;
+    border-radius: 4px;
+}
+
+QMenu::item:selected {
+    background-color: #313244;
+    color: #89b4fa;
+}
+
+QMenu::indicator {
+    width: 12px; height: 12px;
+    margin-left: 5px;
+    border-radius: 2px;
+    border: 1px solid #45475a;
+}
+QMenu::indicator:checked { background-color: #a6e3a1; border-color: #a6e3a1; }
+QMenu::indicator:unchecked { background-color: #181825; }
+
+/* ================= СКРОЛЛБАРЫ (Современные, тонкие) ================= */
+QScrollBar:vertical {
+    background: #1e1e2e;
+    width: 12px;
+    margin: 0px;
+}
+QScrollBar::handle:vertical {
+    background: #45475a;
+    min-height: 20px;
+    border-radius: 6px;
+    margin: 2px;
+}
+QScrollBar::handle:vertical:hover { background: #585b70; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; height: 0px; }
+
+QScrollBar:horizontal {
+    background: #1e1e2e;
+    height: 12px;
+    margin: 0px;
+}
+QScrollBar::handle:horizontal {
+    background: #45475a;
+    min-width: 20px;
+    border-radius: 6px;
+    margin: 2px;
+}
+QScrollBar::handle:horizontal:hover { background: #585b70; }
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal { background: none; width: 0px; }
+
+/* ================= ПОИСК (SEARCH WIDGET) ================= */
+QWidget#searchWidget {
+    background-color: #181825;
+    border-top: 1px solid #313244;
+    padding: 4px;
+}
+
+QWidget#searchWidget QLineEdit[state="error"] {
+    background-color: #3a1f2b; /* Мягкий бордовый фон ошибки */
+    border: 1px solid #f38ba8; /* Мягкий красный */
+    color: #f38ba8;
+}

@@ -1,0 +1,178 @@
+/* =========================================
+   CREMNIY IDE - LUNA DARK THEME
+   ========================================= */
+
+/* 
+   Palette reference:
+   Base: #181d26 (Deep night blue)
+   Mantle (Panels): #202631
+   Crust (Inputs): #11141a
+   Text: #e0e6ed (Lunar silver)
+   Borders: #303a4b
+   Luna Blue Accent: #245edb (XP inspired bright blue)
+*/
+
+QWidget {
+    background-color: #181d26;
+    color: #e0e6ed;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 12px;
+}
+
+QHexView {
+    background-color: #11141a;
+    font-size: 16px;
+    border: none;
+}
+
+QPushButton {
+    background-color: #202631;
+    border: 1px solid #303a4b;
+    border-radius: 2px;
+    padding: 6px 12px;
+    color: #e0e6ed;
+}
+
+QPushButton:hover {
+    background-color: #2a3342;
+    border: 1px solid #245edb;
+}
+
+QPushButton:pressed {
+    background-color: #11141a;
+    border: 1px solid #245edb;
+}
+
+QComboBox {
+    background-color: #202631;
+    border: 1px solid #303a4b;
+    border-radius: 2px;
+    padding: 2px 4px;
+}
+
+QComboBox:hover {
+    border: 1px solid #245edb;
+}
+
+QComboBox::drop-down {
+    border: 0px;           
+    width: 0px;             
+}
+
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background-color: #11141a;
+    border: 1px solid #303a4b;
+    selection-background-color: #245edb;
+    selection-color: #ffffff;
+    padding: 2px;
+    color: #e0e6ed;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+    border: 1px solid #245edb;
+    background-color: #151a23;
+}
+
+QListView, QTreeView, QTableView {
+    background-color: #202631;
+    border: 1px solid #181d26;
+    alternate-background-color: #1d232c;
+    outline: none;
+}
+
+QTreeView::item:selected, QListView::item:selected {
+    background-color: #245edb;
+    color: #ffffff;
+}
+
+QTreeView::item:hover:!selected, QListView::item:hover:!selected {
+    background-color: #2a3342;
+    opacity: 0.7;
+}
+
+QTabWidget::pane {
+    border: 1px solid #303a4b;
+    top: -1px;
+}
+
+#filesTabWidget QTabBar::tab, #toolTabWidget QTabBar::tab {
+    background: #181d26;
+    border: 1px solid #303a4b;
+    color: #8c9baf;
+    padding: 5px 10px;
+}
+
+#filesTabWidget QTabBar::tab:hover, #toolTabWidget QTabBar::tab:hover {
+    background-color: #202631;
+}
+
+#filesTabWidget QTabBar::tab:selected, #toolTabWidget QTabBar::tab:selected {
+    background: #202631;
+    border-top: 3px solid #245edb; /* Яркий синий акцент сверху */
+    border-bottom: 1px solid #202631;
+    color: #ffffff;
+}
+
+QListWidget#hexTabsList {
+    background: #181d26;
+    border: none;
+    border-right: 1px solid #303a4b;
+}
+
+QListWidget#hexTabsList::item:selected {
+    background: #202631;
+    border-left: 3px solid #245edb;
+    color: #245edb;
+}
+
+QMenuBar {
+    background-color: #181d26;
+    border-bottom: 1px solid #303a4b;
+}
+
+QMenuBar::item:selected {      
+    background-color: #202631;
+}
+
+QMenu {
+    background: #181d26;
+    border: 1px solid #303a4b;
+}
+
+QMenu::item:selected {
+    background: #245edb;
+    color: #ffffff;
+}
+
+QPushButton[state="green"] {
+    border: 1px solid #4caf50;
+    color: #4caf50;
+}
+QPushButton::hover[state="green"] {
+    background-color: #1b2e20; 
+}
+
+QWidget#searchWidget QLineEdit[state="error"] {
+    background-color: #3b1c22; 
+    border: 1px solid #e57373;
+}
+
+QScrollBar:vertical {
+    background: #181d26;
+    width: 12px;
+}
+
+QScrollBar::handle:vertical {
+    background: #303a4b;
+    border-radius: 6px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #4a5970;
+}
+
+QWidget#searchWidget {
+    background-color: #202631;
+    border-top: 1px solid #303a4b;
+}
