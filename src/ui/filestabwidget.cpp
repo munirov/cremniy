@@ -119,18 +119,22 @@ bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
   default:
     break;
   }
-
   return QTabWidget::eventFilter(obj, event);
 }
 
 void FilesTabWidget::closeTab(int index) {
-  if (index >= 0 && index < count()) {
-    QWidget *w = widget(index);
-    removeTab(index);
-    if (w) {
-      w->deleteLater();
+    if (index < 0 || index >= count()) {
+        return;
     }
-  }
+
+    FileTab *tab = qobject_cast<FileTab *>(widget(index));
+    if (tab && tab->isFileUnsaved()) {
+        tab->saveFile();
+    }
+
+    removeTab(index);
+    if (tab)
+        tab->deleteLater();
 }
 
 void FilesTabWidget::switchTab(int page) {
