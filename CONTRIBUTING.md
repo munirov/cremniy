@@ -34,12 +34,18 @@ If you have an idea for a new feature, feel free to open an Issue and describe i
 
 ## Pull requests
 
-Before submitting a pull request:
+### Requirements
+
+- A pull request must address **a single specific task** or a group of closely related tasks
+- Do not combine unrelated changes in a single PR (e.g., new features, refactoring, and bug fixes at the same time)
+- Large changes should be split into multiple separate PRs
+
+### Submission
 
 1. Fork the repository
 2. Create a new branch
 3. Make your changes
-4. Sync your branch with the `main` branch and resolve any conflicts that may occur
+4. Sync your branch with the `main` branch and resolve any conflicts if needed
 5. Open a pull request with a clear description
 
 ## Recognition
