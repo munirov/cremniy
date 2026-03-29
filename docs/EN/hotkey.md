@@ -16,6 +16,8 @@ On macOS, use `Cmd` instead of `Ctrl` for standard sequences!
 | Ctrl+Space | Code Editor: trigger completion |
 | ALT+MWheel UP/DOWN | Code Editor: switch between tabs |
 | ALT+Arrow LEFT/RIGHT | Code Editor: switch between tabs |
+| Ctrl+W | Code Editor: close current tab |
+| Mouse Middle Button | Code Editor: close current tab |
 | Tab | Code Editor: insert 4 spaces |
 | Shift+Tab | Code Editor: decrease indent (up to 4 spaces) |
 | Enter | Code Editor: auto-indent (including `{}`) |
