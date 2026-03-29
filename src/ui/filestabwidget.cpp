@@ -116,6 +116,19 @@ bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
       }
     }
   }
+  
+if (event->type() == QEvent::KeyPress) {
+    QKeyEvent *key = static_cast<QKeyEvent *>(event);
+    if (key->modifiers() == Qt::ControlModifier && key->key() == Qt::Key_W) {
+        int index = currentIndex();
+        if (index != -1) {
+            QWidget *w = widget(index);
+            removeTab(index);
+            w->deleteLater();
+        }
+        return true;
+    }
+}
   return QTabWidget::eventFilter(obj, event);
 }
 
