@@ -8,14 +8,14 @@
 QVector<ThemeService::BuiltinTheme> ThemeService::builtinThemes()
 {
     return {
-        {QObject::tr("Cremniy Dark"), QStringLiteral(":/styles/style.qss")},
+        {QObject::tr("Cremniy Dark"), QStringLiteral(":/styles/dark.qss")},
         {QObject::tr("Cremniy Light"), QStringLiteral(":/styles/light.qss")},
     };
 }
 
 QString ThemeService::defaultResourcePath()
 {
-    return QStringLiteral(":/styles/style.qss");
+    return QStringLiteral(":/styles/dark.qss");
 }
 
 bool ThemeService::applyStylesheet(const QString &pathOrQrc, QString *error)

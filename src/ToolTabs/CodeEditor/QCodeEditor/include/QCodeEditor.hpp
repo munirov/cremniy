@@ -2,11 +2,13 @@
 
 // Qt
 #include "QStyleSyntaxHighlighter.hpp"
+#include <QApplication>
 #include <QTextEdit> // Required for inheritance
 #include <qplaintextedit.h>
 #include <qtimer.h>
 #include <toolwidget.hpp>
 #include <QScrollBar>
+#include <QEvent>
 
 class QCompleter;
 class QLineNumberArea;
@@ -64,11 +66,9 @@ public:
 
             double delta = e->angleDelta().y() > 0 ? 1.1 : 1/1.1;
             scaleFactor *= delta;
-            QFont f = font();
-            f.setPointSizeF(12 * scaleFactor);
-            setFont(f);
+            applyScaledEditorFont();
 
-            QFontMetrics fm(f);
+            QFontMetrics fm(font());
             double tabWidth = fm.horizontalAdvance(' ') * 4;
 
             QTextOption opt = document()->defaultTextOption();
@@ -239,6 +239,7 @@ protected:
      * 4. Auto parenthesis
      */
     void keyPressEvent(QKeyEvent* e) override;
+    void changeEvent(QEvent* e) override;
 
     /**
      * @brief Method, that's called on focus into widget.
@@ -339,5 +340,9 @@ private:
     bool m_autoParentheses;
     bool m_replaceTab;
     QString m_tabReplace;
+    double m_baseFontPointSize = -1.0;
+    bool m_syncingFontSize = false;
+
+    void applyScaledEditorFont();
 };
 

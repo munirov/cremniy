@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>styles/style.qss</file>
-        <file>styles/light.qss</file>
+        <file>styles/dark.qss</file>
         <file>icons/icon.png</file>
         <file>icons/binary.png</file>
         <file>icons/dasm.png</file>

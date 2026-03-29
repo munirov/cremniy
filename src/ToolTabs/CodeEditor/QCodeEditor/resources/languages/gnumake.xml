@@ -1,7 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <root>
+    <!-- Комментарии -->
+    <section name="Comment">
+        <pattern>#.*</pattern>
+    </section>
+
+    <!-- Переменные (определение: VAR = ...) -->
+    <section name="Variable">
+        <pattern>\b[A-Z_][A-Z0-9_]*\s*(?=[+?:]?=)</pattern>
+    </section>
+
+    <!-- Использование переменных ($(VAR) или $@) -->
+    <section name="VariableUsage">
+        <pattern>\$\([A-Z_][A-Z0-9_]*\)</pattern>
+        <pattern>\$\{[A-Z_][A-Z0-9_]*\}</pattern>
+        <pattern>\$[@%&lt;?^|*]</pattern> <!-- Автоматические переменные $@, $< и т.д. -->
+    </section>
+
+    <!-- Таргеты (все что перед двоеточием в начале строки) -->
+    <section name="Target">
+        <pattern>^[a-zA-Z0-9._/-]+(?=\s*:)</pattern>
+    </section>
+
+    <!-- Директивы -->
     <section name="Directive">
         <name>include</name>
+        <name>-include</name>
         <name>ifdef</name>
         <name>ifndef</name>
         <name>else</name>
@@ -13,7 +37,10 @@
         <name>override</name>
         <name>export</name>
         <name>unexport</name>
+        <name>vpath</name>
     </section>
+
+    <!-- Встроенные функции -->
     <section name="BuiltinFunction">
         <name>subst</name>
         <name>patsubst</name>
@@ -34,20 +61,25 @@
         <name>addsuffix</name>
         <name>addprefix</name>
         <name>join</name>
+        <name>wildcard</name>
+        <name>realpath</name>
+        <name>abspath</name>
+        <name>error</name>
+        <name>warning</name>
+        <name>shell</name>
+        <name>origin</name>
+        <name>flavor</name>
         <name>foreach</name>
         <name>if</name>
         <name>or</name>
         <name>and</name>
         <name>call</name>
-        <name>value</name>
         <name>eval</name>
+        <name>value</name>
         <name>file</name>
-        <name>shell</name>
-        <name>wildcard</name>
-        <name>error</name>
-        <name>warn</name>
-        <name>info</name>
     </section>
+
+    <!-- Специальные цели -->
     <section name="SpecialTarget">
         <name>.PHONY</name>
         <name>.SUFFIXES</name>
@@ -63,6 +95,6 @@
         <name>.EXPORT_ALL_VARIABLES</name>
         <name>.NOTPARALLEL</name>
         <name>.ONESHELL</name>
+        <name>.POSIX</name>
     </section>
 </root>
-

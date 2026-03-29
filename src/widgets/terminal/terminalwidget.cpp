@@ -18,28 +18,13 @@
 #include <unistd.h>
 #endif
 
-static QString stripAnsiCodes(const QString &text) {
-    if (text.isEmpty()) return text;
-    static QRegularExpression ansiRegex(
-        "(\x1b\\][0-9];.*?\x07|"       // OSC (Operating System Commands)
-        "\x1b\\[[0-9;?]*[A-Za-z])"      // CSI (Control Sequence Introducer)
-    );
-
-    QString cleaned = text;
-    cleaned.remove(ansiRegex);
-    // оставляем \n и \t (не используйте .simplified())
-    return cleaned;
-}
-
 TerminalWidget::TerminalWidget(QWidget *parent) : QWidget(parent) {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    m_display = new QPlainTextEdit(this);
-    m_display->setStyleSheet(
-        "background-color: #1e1e1e; color: #cccccc; "
-        "font-family: 'Consolas', 'DejaVu Sans Mono', monospace; font-size: 10pt;"
-    );
+    m_display = new QAnsiTextEdit(this); 
+    m_display->setObjectName("terminalDisplay");
+    m_display->setStyleSheet("font-family: 'Consolas', 'DejaVu Sans Mono', monospace; font-size: 10pt;");
     layout->addWidget(m_display);
 
     m_process = new QProcess(this);
@@ -55,8 +40,11 @@ TerminalWidget::TerminalWidget(QWidget *parent) : QWidget(parent) {
 
 void TerminalWidget::setupShell() {
 #ifdef Q_OS_WIN
-    // Используем полный путь на всякий случай
-    m_process->start("powershell.exe", QStringList() << "-NoLogo" << "-NoExit" << "-Command" << "chcp 65001; clear");
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("TERM", "xterm-256color");
+    env.insert("COLORTERM", "truecolor");
+    m_process->setProcessEnvironment(env);
+    m_process->start("powershell.exe", QStringList() << "-NoLogo" << "-NoExit" << "-Command" << "$env:TERM='xterm-256color'; [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; chcp 65001; clear");
 #else
     m_process->start("/bin/bash", QStringList() << "-i");
 #endif
@@ -67,7 +55,10 @@ void TerminalWidget::onReadyRead() {
     QString output = QString::fromUtf8(data); 
     
     m_display->moveCursor(QTextCursor::End);
-    m_display->insertPlainText(stripAnsiCodes(output));
+    
+    // Вместо insertPlainText используем метод из QAnsiTextEdit
+    // В этой библиотеке метод обычно называется insertAnsiText
+    m_display->appendAnsiText(output); 
     
     m_lastPromptPos = m_display->toPlainText().length();
     m_display->moveCursor(QTextCursor::End);
@@ -177,7 +168,7 @@ void TerminalWidget::showHistory(int direction) {
         replaceCurrentCommand(""); 
         return;
     }
-
+    
     replaceCurrentCommand(m_history[m_historyIndex]);
 }
 

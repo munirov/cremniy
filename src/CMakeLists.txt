@@ -42,9 +42,13 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
         widgets/terminal/terminalwidget.cpp
         widgets/terminal/terminalwidget.h
+        widgets/terminal/QAnsiTextEdit/src/QAnsiTextEdit.cpp
+        widgets/terminal/QAnsiTextEdit/src/QAnsiTextEdit.h
 
         utils/iconprovider.cpp
         utils/iconprovider.h
+        utils/themeservice.h
+        utils/themeservice.cpp
 
         resources/cremniy_res.qrc
 
@@ -52,13 +56,13 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         utils/utils.cpp
         utils/appsettings.h
         utils/appsettings.cpp
-        utils/themeservice.h
-        utils/themeservice.cpp
         utils/instructionhelpservice.h
         utils/instructionhelpservice.cpp
         utils/filecontext.h
         utils/filemanager.h
         utils/filemanager.cpp
+        utils/projectshistorymanager.cpp
+        utils/projectshistorymanager.h
 
         core/ToolTab.h
         core/ToolTabFactory.cpp
@@ -79,6 +83,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ui/filestabwidget.h
         ui/toolstabwidget.cpp
         ui/toolstabwidget.h
+
 
 
     )

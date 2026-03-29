@@ -7,6 +7,8 @@
 #include <QProcess>
 #include <QStringList>
 
+#include "QAnsiTextEdit/src/QAnsiTextEdit.h"
+
 class TerminalWidget : public QWidget {
     Q_OBJECT
 public:
@@ -29,7 +31,7 @@ private:
     
     bool eventFilter(QObject *obj, QEvent *event) override;
 
-    QPlainTextEdit *m_display;
+    QAnsiTextEdit *m_display;
     QProcess *m_process;
     
     int m_lastPromptPos = 0;

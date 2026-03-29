@@ -57,7 +57,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     overlayLayout->setAlignment(Qt::AlignCenter);
 
     QLabel* title = new QLabel("Binary file detected");
-    title->setStyleSheet("color: white; font-size: 20px;");
+    title->setStyleSheet("font-size: 20px; font-weight: bold;");
     title->setAlignment(Qt::AlignCenter);
     title->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     overlayLayout->addWidget(title);

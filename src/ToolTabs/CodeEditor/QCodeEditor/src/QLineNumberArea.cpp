@@ -57,10 +57,12 @@ void QLineNumberArea::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
 
-    painter.fillRect(
-        event->rect(),
-        m_syntaxStyle->getFormat("Text").background().color()
-        );
+    // 1. Берем цвет фона из QSS/Палитры редактора (Base - это цвет фона текстового поля)
+    QColor bgColor = m_codeEditParent->palette().color(QPalette::Base);
+    
+    // Можно слегка затемнить/осветлить фон панели номеров строк для красоты
+    // Но для начала просто зальем его основным цветом фона
+    painter.fillRect(event->rect(), bgColor);
 
     QTextBlock block = m_codeEditParent->firstVisibleBlock();
     int blockNumber = block.blockNumber();
@@ -71,8 +73,16 @@ void QLineNumberArea::paintEvent(QPaintEvent* event)
 
     int bottom = top + m_codeEditParent->blockBoundingRect(block).height();
 
-    auto currentLine = m_syntaxStyle->getFormat("CurrentLineNumber").foreground().color();
-    auto otherLines  = m_syntaxStyle->getFormat("LineNumber").foreground().color();
+    // 2. Берем базовый цвет текста из QSS
+    QColor textColor = m_codeEditParent->palette().color(QPalette::Text);
+    
+    // 3. Текущая строка - 100% непрозрачность текста
+    QColor currentLine = textColor;
+    
+    // 4. Остальные строки - делаем полупрозрачными (alpha 100 из 255), 
+    // чтобы они не отвлекали внимание от кода
+    QColor otherLines = textColor;
+    otherLines.setAlpha(100); 
 
     painter.setFont(m_codeEditParent->font());
 
@@ -82,8 +92,7 @@ void QLineNumberArea::paintEvent(QPaintEvent* event)
         {
             QString number = QString::number(blockNumber + 1);
 
-            bool isCurrentLine =
-                m_codeEditParent->textCursor().blockNumber() == blockNumber;
+            bool isCurrentLine = m_codeEditParent->textCursor().blockNumber() == blockNumber;
 
             painter.setPen(isCurrentLine ? currentLine : otherLines);
 
@@ -94,7 +103,7 @@ void QLineNumberArea::paintEvent(QPaintEvent* event)
                 m_codeEditParent->fontMetrics().height(),
                 Qt::AlignRight,
                 number
-                );
+            );
         }
 
         block = block.next();

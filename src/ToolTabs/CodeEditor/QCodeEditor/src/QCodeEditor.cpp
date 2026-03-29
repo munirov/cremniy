@@ -9,6 +9,8 @@
 
 
 // Qt
+#include <QApplication>
+#include <QFontInfo>
 #include <QTextBlock>
 #include <QPaintEvent>
 #include <QFontDatabase>
@@ -103,14 +105,19 @@ void QCodeEditor::initDocumentLayoutHandlers()
 
 void QCodeEditor::initFont()
 {
-    QFont fnt("Consolas", 12);
-    
+    QFont fnt = QApplication::font();
+    fnt.setFamily(QStringLiteral("JetBrains Mono"));
+    if (!QFontInfo(fnt).exactMatch())
+        fnt.setFamily(QStringLiteral("Consolas"));
     fnt.setFixedPitch(true);
     fnt.setStyleHint(QFont::Monospace);
+    if (m_baseFontPointSize <= 0.0)
+    {
+        m_baseFontPointSize = fnt.pointSizeF() > 0.0 ? fnt.pointSizeF() : 12.0;
+    }
+    applyScaledEditorFont();
 
-    setFont(fnt);
-
-    QFontMetrics fm(fnt);
+    QFontMetrics fm(font());
     double tabWidth = fm.horizontalAdvance(' ') * 4; 
 
     QTextOption opt = document()->defaultTextOption();
@@ -119,6 +126,28 @@ void QCodeEditor::initFont()
 
     document()->markContentsDirty(0, document()->characterCount());
     viewport()->update();
+}
+
+void QCodeEditor::applyScaledEditorFont()
+{
+    if (m_syncingFontSize)
+    {
+        return;
+    }
+
+    QFont f = font();
+    f.setFamily(QStringLiteral("JetBrains Mono"));
+    if (!QFontInfo(f).exactMatch())
+        f.setFamily(QStringLiteral("Consolas"));
+    f.setFixedPitch(true);
+    f.setStyleHint(QFont::Monospace);
+
+    const double baseSize = (m_baseFontPointSize > 0.0) ? m_baseFontPointSize : 12.0;
+    f.setPointSizeF(baseSize * scaleFactor);
+
+    m_syncingFontSize = true;
+    setFont(f);
+    m_syncingFontSize = false;
 }
 void QCodeEditor::performConnections()
 {
@@ -183,36 +212,18 @@ void QCodeEditor::setSyntaxStyle(QSyntaxStyle* style)
 
 void QCodeEditor::updateStyle()
 {
-    if (m_highlighter)
-    {
-        m_highlighter->rehighlight();
-    }
+    if (m_highlighter) m_highlighter->rehighlight();
 
-    if (m_syntaxStyle)
-    {
+    // ЗАКОММЕНТИРУЙ ИЛИ УДАЛИ ЭТОТ БЛОК, чтобы не ломать QSS фон
+    /*
+    if (m_syntaxStyle) {
         auto currentPalette = palette();
-
-        // Setting text format/color
-        currentPalette.setColor(
-            QPalette::ColorRole::Text,
-            m_syntaxStyle->getFormat("Text").foreground().color()
-        );
-
-        // Setting common background
-        currentPalette.setColor(
-            QPalette::Base,
-            m_syntaxStyle->getFormat("Text").background().color()
-        );
-
-        // Setting selection color
-        currentPalette.setColor(
-            QPalette::Highlight,
-            m_syntaxStyle->getFormat("Selection").background().color()
-        );
-
+        currentPalette.setColor(QPalette::ColorRole::Text, m_syntaxStyle->getFormat("Text").foreground().color());
+        currentPalette.setColor(QPalette::Base, m_syntaxStyle->getFormat("Text").background().color());
+        currentPalette.setColor(QPalette::Highlight, m_syntaxStyle->getFormat("Selection").background().color());
         setPalette(currentPalette);
     }
-
+    */
     updateExtraSelection();
 }
 
@@ -373,9 +384,12 @@ void QCodeEditor::highlightCurrentLine(QList<QTextEdit::ExtraSelection>& extraSe
     if (!isReadOnly())
     {
         QTextEdit::ExtraSelection selection{};
-
-        selection.format = m_syntaxStyle->getFormat("CurrentLine");
-        selection.format.setForeground(QBrush());
+        
+        // Берем системный цвет выделения (Highlight) из QSS/Палитры и делаем его полупрозрачным
+        QColor lineColor = palette().color(QPalette::Highlight);
+        lineColor.setAlpha(40); // Прозрачность, чтобы текст было видно
+        
+        selection.format.setBackground(lineColor);
         selection.format.setProperty(QTextFormat::FullWidthSelection, true);
         selection.cursor = textCursor();
         selection.cursor.clearSelection();
@@ -506,10 +520,8 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
         (e->key() == Qt::Key_Plus || e->key() == Qt::Key_Equal || e->key() == Qt::Key_Minus)) {
       double delta = (e->key() == Qt::Key_Minus) ? 1 / 1.1 : 1.1;
       scaleFactor *= delta;
-      QFont f = font();
-      f.setPointSizeF(12 * scaleFactor);
-      setFont(f);
-      QFontMetrics fm(f);
+      applyScaledEditorFont();
+      QFontMetrics fm(font());
       double tabWidth = fm.horizontalAdvance(' ') * 4;
       QTextOption opt = document()->defaultTextOption();
       opt.setTabStopDistance(tabWidth);
@@ -622,6 +634,16 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
     }
 
     proceedCompleterEnd(e);
+}
+
+void QCodeEditor::changeEvent(QEvent* e)
+{
+    QPlainTextEdit::changeEvent(e);
+
+    if ((e->type() == QEvent::StyleChange || e->type() == QEvent::FontChange) && !m_syncingFontSize)
+    {
+        applyScaledEditorFont();
+    }
 }
 
 void QCodeEditor::setAutoIndentation(bool enabled)

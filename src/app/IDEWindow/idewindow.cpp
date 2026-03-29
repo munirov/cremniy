@@ -5,8 +5,8 @@
 #include <qheaderview.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
-#include <QStandardPaths>
 #include <QApplication>
+#include "projectshistorymanager.h"
 #include "app/WelcomeWindow/welcomeform.h"
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
@@ -119,29 +119,8 @@ void IDEWindow::on_Toggle_Terminal(bool checked) {
     m_terminal->setVisible(checked);
 }
 
-void IDEWindow::SaveProjectInCache(const QString project_path){
-    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir(dataDir).mkpath(".");
-    QFile history_file(dataDir+"/"+"history_open_projects.dat");
-    QStringList lines;
-    if (history_file.open(QIODevice::ReadOnly)) {
-        QByteArray data = history_file.readAll();
-        QString text = QString::fromUtf8(data);
-        lines = text.split(QRegularExpression("[\r\n]+"), Qt::SkipEmptyParts);
-        history_file.close();
-    }
-    lines.removeAll(project_path);
-    lines.prepend(project_path);
-    while (lines.size() > 15)
-        lines.removeLast();
-    if (!history_file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
-    QTextStream out(&history_file);
-    for (const QString& l : lines){
-        if (!QDir(l).exists()) continue;
-        out << l << "\n";
-    }
-
-    history_file.close();
+void IDEWindow::SaveProjectInCache(const QString & project_path){
+    utils::ProjectsHistoryManager::saveProjectsHistory(project_path);
 }
 
 void IDEWindow::on_ClosingProject() {

@@ -2,13 +2,13 @@
 QWidget {
     background-color: #262626;
     color: #ffffff;
+    /* Только семейство: размер берётся из QApplication::font (dpi, настройки ОС). */
     font-family: "JetBrains Mono", "Consolas", monospace;
-    font-size: 12px;
 }
 
 QHexView {
     background-color: #1f1f1f;
-    font-size: 16px;
+    font-size: 1.2em;
     border: none;
 }
 
@@ -149,7 +149,6 @@ QListWidget#hexTabsList {
     border: none;
     min-width: 120px;
     max-width: 200px;
-    font-size: 12px;
     padding-top: 5px;
     padding-bottom: 5px;
 }
