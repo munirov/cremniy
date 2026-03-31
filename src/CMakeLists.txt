@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.16)
 
 project(cremniy VERSION 0.1 LANGUAGES CXX)
 
+set(CREMNIY_CODEEDITOR_DIR "${CMAKE_SOURCE_DIR}/../external/cremniy-codeeditor")
+
+if(NOT EXISTS "${CREMNIY_CODEEDITOR_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR
+        "Missing external/cremniy-codeeditor. Initialize submodules before configuring: git submodule update --init --recursive")
+endif()
+
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -82,7 +89,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
     )
     target_include_directories(${PROJECT_NAME} PRIVATE
-        ${CMAKE_SOURCE_DIR}/../external/cremniy-codeeditor/include
+        ${CREMNIY_CODEEDITOR_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/widgets
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -102,7 +109,7 @@ else()
     endif()
 endif()
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/../external/cremniy-codeeditor ${CMAKE_BINARY_DIR}/external/cremniy-codeeditor)
+add_subdirectory(${CREMNIY_CODEEDITOR_DIR} ${CMAKE_BINARY_DIR}/external/cremniy-codeeditor)
 
 
 # - - Tool Tabs - -
