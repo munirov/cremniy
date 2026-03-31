@@ -205,7 +205,7 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
         bool isDir = model->isDir(index);
 
         if (isDir){
-            menu.addAction("Open", [this, path]() {
+            menu.addAction(tr("Open"), [this, path]() {
                 QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_exclusionProxy->sourceModel());
                 if (!model)
                     return;
@@ -219,7 +219,7 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
 
             });
 
-            menu.addAction("Rename", [this, path]() {
+            menu.addAction(tr("Rename"), [this, path]() {
                 QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_exclusionProxy->sourceModel());
                 if (!model)
                     return;
@@ -232,28 +232,28 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
                 // Включаем редактирование индекса
                 m_filesTreeView->edit(proxyIdx);
             });
-            menu.addAction("Delete", [path, this]() {
+            menu.addAction(tr("Delete"), [path, this]() {
                 QDir dir(path);
-                QString dialogTitle = QString("Are you sure you want to delete the folder \"%1\"?").arg(dir.dirName());
-                auto res = QMessageBox::question(this, "Delete", dialogTitle, QMessageBox::Ok | QMessageBox::Cancel);
+                QString dialogTitle = QString(tr("Are you sure you want to delete the folder \"%1\"?")).arg(dir.dirName());
+                auto res = QMessageBox::question(this, tr("Delete"), dialogTitle, QMessageBox::Ok | QMessageBox::Cancel);
                 if (res == QMessageBox::Ok) dir.removeRecursively();
             });
             menu.addSeparator();
-            menu.addAction("Create File", [path,this]() {
+            menu.addAction(tr("Create File"), [path,this]() {
                 FileCreateDialog fcd(this,path,false);
                 fcd.exec();
 
             });
-            menu.addAction("Create Folder", [path,this]() {
+            menu.addAction(tr("Create Folder"), [path,this]() {
                 FileCreateDialog fcd(this,path,true);
                 fcd.exec();
             });
         }
         else{
-            menu.addAction("Open", [this, path, fileName]() {
+            menu.addAction(tr("Open"), [this, path, fileName]() {
                 m_filesTabWidget->openFile(path, fileName);
             });
-            menu.addAction("Rename", [this, path]() {
+            menu.addAction(tr("Rename"), [this, path]() {
                 QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_exclusionProxy->sourceModel());
                 if (!model)
                     return;
@@ -265,9 +265,9 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
                 QModelIndex proxyIdx = m_exclusionProxy->mapFromSource(srcIndex);
                 m_filesTreeView->edit(proxyIdx);
             });
-            menu.addAction("Delete", [path,this]() {
-                QString dialogTitle = QString("Are you sure you want to delete the file \"%1\"?").arg(QFileInfo(path).fileName());
-                auto res = QMessageBox::question(this, "Delete", dialogTitle, QMessageBox::Ok | QMessageBox::Cancel);
+            menu.addAction(tr("Delete"), [path,this]() {
+                QString dialogTitle = QString(tr("Are you sure you want to delete the file \"%1\"?")).arg(QFileInfo(path).fileName());
+                auto res = QMessageBox::question(this, tr("Delete"), dialogTitle, QMessageBox::Ok | QMessageBox::Cancel);
                 if (res == QMessageBox::Ok) QFile(path).remove();
             });
         }
@@ -275,11 +275,11 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
 
     else{
         QString path = model->rootPath();
-        menu.addAction("Create File", [path,this]() {
+        menu.addAction(tr("Create File"), [path,this]() {
             FileCreateDialog fcd(this,path,false);
             fcd.exec();
         });
-        menu.addAction("Create Folder", [path,this]() {
+        menu.addAction(tr("Create Folder"), [path,this]() {
             FileCreateDialog fcd(this,path,true);
             fcd.exec();
         });

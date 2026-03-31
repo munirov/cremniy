@@ -9,7 +9,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.8.2 REQUIRED COMPONENTS Widgets Test Svg)
+find_package(Qt6 6.8.2 REQUIRED COMPONENTS Widgets LinguistTools Test Svg)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -124,6 +124,31 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Modules/Windows/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ui/MenuBar/Menus/)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Svg)
+
+set(TS_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_ru.ts
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_en.ts
+)
+
+qt6_add_translation(QM_FILES ${TS_FILES})
+
+add_custom_target(translations ALL DEPENDS ${QM_FILES})
+add_dependencies(${PROJECT_NAME} translations)
+
+set(TRANSLATIONS_DIR
+        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.app/Contents/Resources/translations"
+)
+
+file(MAKE_DIRECTORY ${TRANSLATIONS_DIR})
+
+foreach(QM_FILE ${QM_FILES})
+    get_filename_component(QM_FILENAME ${QM_FILE} NAME)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QM_FILE}"
+            "${TRANSLATIONS_DIR}/${QM_FILENAME}"
+    )
+endforeach()
 
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt)
 
