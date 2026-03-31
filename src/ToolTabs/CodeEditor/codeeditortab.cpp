@@ -56,7 +56,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     auto overlayLayout = new QVBoxLayout(m_overlayWidget);
     overlayLayout->setAlignment(Qt::AlignCenter);
 
-    QLabel* title = new QLabel("Binary file detected");
+    QLabel* title = new QLabel(tr("Binary file detected"));
     title->setStyleSheet("color: white; font-size: 20px;");
     title->setAlignment(Qt::AlignCenter);
     title->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -66,7 +66,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     QHBoxLayout *btnLayout = new QHBoxLayout();
     btnLayout->setAlignment(Qt::AlignCenter);
 
-    QPushButton* anywayOpenBtn = new QPushButton("Open anyway");
+    QPushButton* anywayOpenBtn = new QPushButton(tr("Open anyway"));
 
     btnLayout->addWidget(anywayOpenBtn);
     overlayLayout->addLayout(btnLayout);
@@ -81,10 +81,10 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     searchLayout->setSpacing(5);
 
     m_searchLineEdit = new QLineEdit(this);
-    m_searchLineEdit->setPlaceholderText("Find...");
+    m_searchLineEdit->setPlaceholderText(tr("Find..."));
     
-    m_findPrevBtn = new QPushButton("▲ Prev", this);
-    m_findNextBtn = new QPushButton("▼ Next", this);
+    m_findPrevBtn = new QPushButton(tr("▲ Prev"), this);
+    m_findNextBtn = new QPushButton(tr("▼ Next"), this);
     m_closeSearchBtn = new QPushButton("✕", this);
     
     m_closeSearchBtn->setFixedWidth(30);

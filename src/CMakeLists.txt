@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Test)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Test)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -110,6 +110,35 @@ foreach(dir ${TOOLTAB_DIRS})
     if(IS_DIRECTORY ${dir})
         add_subdirectory(${dir})
     endif()
+endforeach()
+
+set(TS_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_ru.ts
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_en.ts
+)
+
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt6_add_translation(QM_FILES ${TS_FILES})
+else()
+    qt5_add_translation(QM_FILES ${TS_FILES})
+endif()
+
+add_custom_target(translations ALL DEPENDS ${QM_FILES})
+add_dependencies(${PROJECT_NAME} translations)
+
+set(TRANSLATIONS_DIR
+        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.app/Contents/Resources/translations"
+)
+
+file(MAKE_DIRECTORY ${TRANSLATIONS_DIR})
+
+foreach(QM_FILE ${QM_FILES})
+    get_filename_component(QM_FILENAME ${QM_FILE} NAME)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QM_FILE}"
+            "${TRANSLATIONS_DIR}/${QM_FILENAME}"
+    )
 endforeach()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
