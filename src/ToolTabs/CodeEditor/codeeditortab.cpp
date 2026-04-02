@@ -54,7 +54,6 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
     rootLayout->addWidget(m_searchBar);
 
     m_codeEditorWidget = new CustomCodeEditor(this);
-    m_codeEditorWidget->setBuffer(m_dataBuffer);
 
     m_overlayWidget = new QWidget(this);
     auto overlayLayout = new QVBoxLayout(m_overlayWidget);
@@ -191,8 +190,12 @@ void CodeEditorTab::setFile(QString filepath)
 
 void CodeEditorTab::setTabData()
 {
+    static constexpr qint64 kLargeTextFileThreshold = 2 * 1024 * 1024;
+
+    qDebug() << "CodeEditorTab::setTabData this=" << this << " buffer=" << m_dataBuffer;
     const QByteArray probeData = m_dataBuffer->read(0, 4096);
     const bool binary = isBinary(probeData);
+    qDebug() << "CodeEditorTab::setTabData binary=" << binary << " forceSetData=" << forceSetData << " probeSize=" << probeData.size();
 
     if (binary && !forceSetData) {
         m_codeEditorWidget->hide();
@@ -200,6 +203,17 @@ void CodeEditorTab::setTabData()
     } else {
         m_overlayWidget->hide();
         m_codeEditorWidget->show();
+        const bool largeFileMode = m_dataBuffer->isLargeFile() || m_dataBuffer->size() >= kLargeTextFileThreshold;
+        if (m_largeFileMode != largeFileMode) {
+            m_largeFileMode = largeFileMode;
+            if (m_largeFileMode) {
+                m_codeEditorWidget->setWordWrapEnabled(false);
+                m_codeEditorWidget->setSyntaxHighlighter(nullptr);
+            } else {
+                m_codeEditorWidget->setWordWrapEnabled(true);
+                m_codeEditorWidget->setFileExt(CustomCodeEditor::syntaxKeyForPath(m_fileContext->filePath()));
+            }
+        }
         m_codeEditorWidget->setBuffer(m_dataBuffer);
         forceSetData = false;
     }
@@ -209,7 +223,9 @@ void CodeEditorTab::setTabData()
         emit modifyData();
     } else {
         setModifyIndicator(false);
+        qDebug() << "CodeEditorTab::setTabData emit dataEqual this=" << this;
         emit dataEqual();
+        qDebug() << "CodeEditorTab::setTabData dataEqual returned this=" << this;
     }
 }
 

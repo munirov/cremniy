@@ -18,6 +18,20 @@ static bool registered = [](){
     return true;
 }();
 
+namespace {
+void syncCurrentFormatPage(QStackedWidget* pageView, FileDataBuffer* dataBuffer)
+{
+    if (!pageView || !dataBuffer)
+        return;
+
+    auto* currentPage = dynamic_cast<FormatPage*>(pageView->currentWidget());
+    if (!currentPage)
+        return;
+
+    currentPage->setSharedBuffer(dataBuffer);
+}
+}
+
 BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
     : ToolTab{buffer, parent}
 {
@@ -94,8 +108,9 @@ BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
     connect(pageList, &QListWidget::currentRowChanged,
             this, [this](int row) {
                 pageView->setCurrentIndex(row);
-                if (m_pageDataDirty)
-                    setTabData();
+                if (row >= 0)
+                    syncCurrentFormatPage(pageView, m_dataBuffer);
+                m_pageDataDirty = false;
             });
 
     m_findShortcut = new QShortcut(QKeySequence::Find, this);
@@ -123,11 +138,10 @@ void BinaryTab::setTabData(){
     qDebug() << "HexViewTab: setTabData(): start";
 
     m_syncingBufferData = true;
-    for (int pageIndex = 0; pageIndex < pageView->count(); pageIndex++){
-        FormatPage* fpage = dynamic_cast<FormatPage*>(pageView->widget(pageIndex));
-        qDebug() << "HexViewTab: setTabData(): start set page data for " << fpage->pageName();
-        fpage->setSharedBuffer(m_dataBuffer);
-        qDebug() << "HexViewTab: setTabData(): success set page data for " << fpage->pageName();
+    if (auto* currentPage = dynamic_cast<FormatPage*>(pageView->currentWidget()); currentPage) {
+        qDebug() << "HexViewTab: setTabData(): start set page data for " << currentPage->pageName();
+        currentPage->setSharedBuffer(m_dataBuffer);
+        qDebug() << "HexViewTab: setTabData(): success set page data for " << currentPage->pageName();
     }
     m_syncingBufferData = false;
     m_pageDataDirty = false;

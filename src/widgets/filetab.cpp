@@ -7,6 +7,7 @@ FileTab::FileTab(QWidget* parent, QString path)
     : QWidget(parent),
     filePath(path)
 {
+    qDebug() << "FileTab ctor: this=" << this << " parent=" << parent << " path=" << path;
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     m_tooltabWidget = new ToolsTabWidget(this, path);
     m_tooltabWidget->setObjectName("toolTabWidget");
@@ -23,10 +24,13 @@ FileTab::FileTab(QWidget* parent, QString path)
 }
 
 void FileTab::removeStar(){
+    qDebug() << "FileTab::removeStar this=" << this << " filePath=" << filePath;
     emit removeStarSignal(this);
+    qDebug() << "FileTab::removeStar returned this=" << this;
 }
 
 void FileTab::setupStar(){
+    qDebug() << "FileTab::setupStar this=" << this << " filePath=" << filePath;
     emit setupStarSignal(this);
 }
 

@@ -14,6 +14,8 @@ void FilesTabWidget::tabSelect(int index){
 // Create new tab and open file if he is not open already
 void FilesTabWidget::openFile(QString filePath, QString tabTitle){
 
+    qDebug() << "FilesTabWidget::openFile path=" << filePath << " title=" << tabTitle << " currentCount=" << count();
+
     // check already open
     for (int i = 0; i < this->count(); ++i)
     {
@@ -29,6 +31,7 @@ void FilesTabWidget::openFile(QString filePath, QString tabTitle){
     FileTab *filetab = new FileTab(this, filePath);
     int new_tab_index = this->addTab(filetab, tabTitle);
     this->setCurrentIndex(new_tab_index);
+    qDebug() << "FilesTabWidget::openFile created filetab=" << filetab << " index=" << new_tab_index;
 
     // - - Connects - -
     connect(filetab, &FileTab::removeStarSignal, this, &FilesTabWidget::removeStar);
@@ -37,14 +40,17 @@ void FilesTabWidget::openFile(QString filePath, QString tabTitle){
 
 void FilesTabWidget::removeStar(FileTab* tab){
     int index = indexOf(tab);
+    qDebug() << "FilesTabWidget::removeStar tab=" << tab << " index=" << index << " count=" << count();
     if (index != -1) {
         QFileInfo finfo(tab->filePath);
         setTabText(index, finfo.fileName());
+        qDebug() << "FilesTabWidget::removeStar updated title for" << finfo.fileName();
     }
 }
 
 void FilesTabWidget::setupStar(FileTab* tab){
     int index = indexOf(tab);
+    qDebug() << "FilesTabWidget::setupStar tab=" << tab << " index=" << index << " count=" << count();
     if (index != -1) {
         QFileInfo finfo(tab->filePath);
         setTabText(index, finfo.fileName() + "*");

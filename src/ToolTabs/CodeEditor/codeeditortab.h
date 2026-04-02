@@ -39,6 +39,7 @@ private:
      * Используется при нажатии пользователем на кнопку "Open Anyway" на странице "Binary File Detected"
     */
     bool forceSetData = false;
+    bool m_largeFileMode = false;
     bool m_updatingSelection = false;
     QString m_lastSearchText;
     QShortcut* m_findShortcut = nullptr;
