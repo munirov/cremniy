@@ -9,7 +9,7 @@ static bool registered = [](){
     return true;
 }();
 
-ReferencesMenu::ReferencesMenu() : BaseMenu("References") {
+ReferencesMenu::ReferencesMenu() : BaseMenu(tr("References")) {
     QList<QString> groups = ModuleManager::instance().getReferenceGroups();
     for (QString group : groups){
 
