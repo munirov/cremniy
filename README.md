@@ -123,7 +123,7 @@ cd cremniy
 
 makepkg -si
 ```
-Note: If the build process fails due to connection issues or mirror errors, please try running the command again.
+Note: If `makepkg -si` fails, please try running the command again.
 
 #### Release build
 
