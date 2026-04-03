@@ -2,6 +2,22 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="ru_RU">
 <context>
+    <name>BuildMenu</name>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/Build/buildmenu.cpp" line="11"/>
+        <source>Build</source>
+        <translation>Сборка</translation>
+    </message>
+</context>
+<context>
+    <name>ClickableLineEdit</name>
+    <message>
+        <location filename="../../../widgets/clickablelineedit.h" line="18"/>
+        <source>Choose Directory</source>
+        <translation>Выбрать директорию</translation>
+    </message>
+</context>
+<context>
     <name>CodeEditorTab</name>
     <message>
         <location filename="../../../ToolTabs/CodeEditor/codeeditortab.cpp" line="59"/>
@@ -371,6 +387,94 @@ Check the Log panel for details.</source>
     </message>
 </context>
 <context>
+    <name>EditMenu</name>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/Edit/editmenu.cpp" line="10"/>
+        <source>Edit</source>
+        <translation>Редактировать</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/Edit/editmenu.cpp" line="12"/>
+        <source>Settings</source>
+        <translation>Настройки</translation>
+    </message>
+</context>
+<context>
+    <name>FileCreateDialog</name>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="15"/>
+        <source>Create folder</source>
+        <translation>Создать директорию</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="16"/>
+        <source>Enter folder name...</source>
+        <translation>Введите название директории</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="20"/>
+        <source>Enter file name...</source>
+        <translation>Введите название файла</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="31"/>
+        <source>Create</source>
+        <translation>Создать</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="40"/>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="41"/>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="51"/>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="60"/>
+        <source>Error</source>
+        <translation>Ошибка</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="40"/>
+        <source>Enter folder name!</source>
+        <translation>Введите название директории!</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="41"/>
+        <source>Enter file name!</source>
+        <translation>Введите название файла!</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="51"/>
+        <source>Failed to create directory!</source>
+        <translation>Не удалось создать директорию!</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="60"/>
+        <source>Failed to create file!</source>
+        <translation>Не удалось создать файл!</translation>
+    </message>
+</context>
+<context>
+    <name>FileMenu</name>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="11"/>
+        <source>File</source>
+        <translation>Файл</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="13"/>
+        <source>New Project</source>
+        <translation>Создать проект</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="14"/>
+        <source>Open Project</source>
+        <translation>Открыть проект</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="15"/>
+        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="16"/>
+        <source>Save File</source>
+        <translation>Сохранить файл</translation>
+    </message>
+</context>
+<context>
     <name>HexFindDialog</name>
     <message>
         <location filename="../../../ToolTabs/Binary/QHexView/src/dialogs/hexfinddialog.cpp" line="42"/>
@@ -593,6 +697,24 @@ Check the Log panel for details.</source>
         <location filename="../../../utils/appsettings.cpp" line="157"/>
         <source>Failed to apply settings</source>
         <translation>Не удалось применить настройки</translation>
+    </message>
+</context>
+<context>
+    <name>ReferencesMenu</name>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/References/referencesmenu.cpp" line="11"/>
+        <source>References</source>
+        <translation>Ссылки</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/References/referencesmenu.cpp" line="12"/>
+        <source>ASCII characters</source>
+        <translation>ASCII символы</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/References/referencesmenu.cpp" line="13"/>
+        <source>Keyboard Scancodes</source>
+        <translation>Сканкоды клавиатуры</translation>
     </message>
 </context>
 <context>
@@ -943,6 +1065,37 @@ e asm.bits=64</translation>
         <location filename="../../../dialogs/settingsdialog.cpp" line="376"/>
         <source>The objdump backend uses &apos;file -b &lt;path&gt;&apos; for arch detection</source>
         <translation>В бэкенде objdump для определения архитектуры используется команда `&apos;file -b &lt;path&gt;`.</translation>
+    </message>
+</context>
+<context>
+    <name>ToolsMenu</name>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="11"/>
+        <source>Tools</source>
+        <translation>Инструменты</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="12"/>
+        <source>Reverse Calculator</source>
+        <translation>Обратный калькулятор</translation>
+    </message>
+</context>
+<context>
+    <name>ViewMenu</name>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/View/viewmenu.cpp" line="11"/>
+        <source>View</source>
+        <translation>Вид</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/View/viewmenu.cpp" line="12"/>
+        <source>Word Wrap</source>
+        <translation type="unfinished">ВТФ</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/View/viewmenu.cpp" line="16"/>
+        <source>Show terminal</source>
+        <translation>Показать терминал</translation>
     </message>
 </context>
 <context>

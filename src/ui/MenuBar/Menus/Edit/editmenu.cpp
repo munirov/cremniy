@@ -10,12 +10,12 @@ static bool registered = []() {
 EditMenu::EditMenu() : BaseMenu("Edit") {
 
   m_settings = new QAction("Settings", this);
-  
+
     m_settings->setShortcuts({
         QKeySequence(Qt::CTRL | Qt::Key_Comma),
         QKeySequence("Ctrl+б"),
     });
-    
+
   this->addSeparator();
   this->addAction(m_settings);
 }

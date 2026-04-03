@@ -14,7 +14,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override {
         QString dir = QFileDialog::getExistingDirectory(
             this,
-            "Choose Directory",
+            tr("Choose Directory"),
             QDir::homePath(),
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
             );

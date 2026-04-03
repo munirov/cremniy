@@ -11,9 +11,9 @@ static bool registered = []() {
   return true;
 }();
 
-ToolsMenu::ToolsMenu() : BaseMenu("Tools") {
-    QMenu* tabModulesMenu = new QMenu("Tabs");
-    QMenu* windowModulesMenu = new QMenu("Windows");
+ToolsMenu::ToolsMenu() : BaseMenu(tr("Tools")) {
+    QMenu* tabModulesMenu = new QMenu(tr("Tabs"));
+    QMenu* windowModulesMenu = new QMenu(tr("Windows"));
 
     // Modules: Tabs
     const QList<QString>& tabGroups = ModuleManager::instance().getGroups<TabBase>();
