@@ -497,12 +497,19 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
   const int defaultIndent = tabStopWidth() / fontMetrics().averageCharWidth();
 #endif
 
+  const bool isEnter = 
+        (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter);
+  const bool hasShift = 
+        (e->modifiers() & Qt::ShiftModifier);
+  const bool hasCtrl = 
+        (e->modifiers() & Qt::ControlModifier);
+
   auto completerSkip = proceedCompleterBegin(e);
 
   if (!completerSkip) {
 
     // Ctrl+Plus / Ctrl+Minus zoom
-    if ((e->modifiers() & Qt::ControlModifier) &&
+    if (hasCtrl &&
         (e->key() == Qt::Key_Plus || e->key() == Qt::Key_Equal || e->key() == Qt::Key_Minus)) {
       double delta = (e->key() == Qt::Key_Minus) ? 1 / 1.1 : 1.1;
       scaleFactor *= delta;
@@ -537,10 +544,62 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
         indentationLevel * fontMetrics().averageCharWidth() / tabStopWidth();
 #endif
 
+    if (isEnter && hasCtrl) {
+        // Ctrl+Enter -> move text after the cursor to a new line
+        // and keep the cursor on the current line
+        QTextCursor editCursor = textCursor();
+        const int originalPosition = editCursor.position();
+
+        QString indentText;
+        if (m_autoIndentation) {
+            if (m_replaceTab)
+                indentText = QString(indentationLevel, ' ');
+            else
+                indentText = QString(tabCounts, '\t');
+        }
+
+        editCursor.beginEditBlock();
+
+        editCursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+        const QString tail = editCursor.selectedText();
+
+        editCursor.removeSelectedText();
+        editCursor.insertText("\n" + indentText + tail);
+
+        editCursor.endEditBlock();
+
+        QTextCursor restored(document());
+        restored.setPosition(originalPosition, QTextCursor::MoveAnchor);
+        setTextCursor(restored);
+        return;
+    }
+
+    if (isEnter && hasShift) {
+        // Shift+Enter -> insert a new line at the cursor position
+        // and move the cursor to the new line
+        QTextCursor cursor = textCursor();
+
+        QString indentText;
+        if (m_autoIndentation) {
+            if (m_replaceTab)
+                indentText = QString(indentationLevel, ' ');
+            else
+                indentText = QString(tabCounts, '\t');
+        }
+
+        cursor.beginEditBlock();
+        cursor.movePosition(QTextCursor::EndOfLine);
+        cursor.insertText("\n" + indentText);
+        cursor.endEditBlock();
+
+        setTextCursor(cursor);
+        return;
+    }
+
     // Have Qt Edior like behaviour, if {|} and enter is pressed indent the two
     // parenthesis
     if (m_autoIndentation && 
-       (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) &&
+       isEnter &&
         charUnderCursor() == '}' && charUnderCursor(-1) == '{') 
     {
       int charsBack = 0;
