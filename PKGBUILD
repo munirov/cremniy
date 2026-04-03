@@ -7,7 +7,7 @@ arch=('x86_64')
 url="https://github.com/munirov/cremniy"
 license=('GPL3')
 depends=('qt6-base')
-makedepends=('cmake' 'git' 'gcc')
+makedepends=('cmake')
 source=("src_repo::git+https://github.com/munirov/cremniy.git")
 md5sums=('SKIP')
 
