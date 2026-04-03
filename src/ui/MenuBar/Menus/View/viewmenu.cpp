@@ -8,12 +8,12 @@ static bool registered = [](){
     return true;
 }();
 
-ViewMenu::ViewMenu() : BaseMenu("View") {
-    m_wordWrap = new QAction("Word Wrap", this);
+ViewMenu::ViewMenu() : BaseMenu(tr("View")) {
+    m_wordWrap = new QAction(tr("Word Wrap"), this);
     m_wordWrap->setCheckable(true);
     m_wordWrap->setChecked(true);
 
-    m_terminal = new QAction("Show terminal", this);
+    m_terminal = new QAction(tr("Show terminal"), this);
     m_terminal->setCheckable(true);
     m_terminal->setChecked(true);
 

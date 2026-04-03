@@ -80,8 +80,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ui/toolstabwidget.cpp
         ui/toolstabwidget.h
 
-
-
+        utils/locale/LanguageManager.cpp
+        utils/locale/LanguageManager.h
     )
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -112,6 +112,22 @@ foreach(dir ${TOOLTAB_DIRS})
     endif()
 endforeach()
 
+set(APP_LANGUAGES
+        en
+        ru
+)
+
+list(JOIN APP_LANGUAGES ";" APP_LANGUAGES_STR)
+
+configure_file(
+        ${CMAKE_SOURCE_DIR}/config.h.in
+        ${CMAKE_BINARY_DIR}/config.h
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${CMAKE_BINARY_DIR}
+)
+
 set(TS_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_ru.ts
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_en.ts
@@ -126,9 +142,15 @@ endif()
 add_custom_target(translations ALL DEPENDS ${QM_FILES})
 add_dependencies(${PROJECT_NAME} translations)
 
-set(TRANSLATIONS_DIR
-        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.app/Contents/Resources/translations"
-)
+if (APPLE)
+    set(TRANSLATIONS_DIR
+            "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.app/Contents/Resources/translations"
+    )
+else ()
+    set(TRANSLATIONS_DIR
+            "${CMAKE_BINARY_DIR}/Resources/translations"
+    )
+endif ()
 
 file(MAKE_DIRECTORY ${TRANSLATIONS_DIR})
 

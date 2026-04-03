@@ -8,8 +8,8 @@ static bool registered = []() {
   return true;
 }();
 
-ToolsMenu::ToolsMenu() : BaseMenu("Tools") {
-  m_reverseCalculator = new QAction("Reverse Calculator", this);
+ToolsMenu::ToolsMenu() : BaseMenu(tr("Tools")) {
+  m_reverseCalculator = new QAction(tr("Reverse Calculator"), this);
   m_reverseCalculator->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R));
   this->addAction(m_reverseCalculator);
 }

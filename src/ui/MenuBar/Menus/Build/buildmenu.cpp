@@ -8,6 +8,6 @@ static bool registered = [](){
     return true;
 }();
 
-BuildMenu::BuildMenu() : BaseMenu("Build") {
+BuildMenu::BuildMenu() : BaseMenu(tr("Build")) {
 
 }

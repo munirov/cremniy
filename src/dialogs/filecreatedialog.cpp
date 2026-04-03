@@ -12,12 +12,12 @@ FileCreateDialog::FileCreateDialog(QWidget *parent, QString path, bool _is_dir):
     lineEdit = new QLineEdit(this);
 
     if (is_dir) {
-        setWindowTitle("Create folder");
-        lineEdit->setPlaceholderText("Enter folder name...");
+        setWindowTitle(tr("Create folder"));
+        lineEdit->setPlaceholderText(tr("Enter folder name..."));
     }
     else {
         setWindowTitle("Create file");
-        lineEdit->setPlaceholderText("Enter file name...");
+        lineEdit->setPlaceholderText(tr("Enter file name..."));
     }
 
     setFixedSize(300, 100); // маленькое окно
@@ -28,7 +28,7 @@ FileCreateDialog::FileCreateDialog(QWidget *parent, QString path, bool _is_dir):
     layout->addWidget(lineEdit);
 
     // кнопка
-    QPushButton *button = new QPushButton("Create", this);
+    QPushButton *button = new QPushButton(tr("Create"), this);
     layout->addWidget(button);
 
     connect(button, &QPushButton::clicked, this, &FileCreateDialog::onCreateClicked);
@@ -37,8 +37,8 @@ FileCreateDialog::FileCreateDialog(QWidget *parent, QString path, bool _is_dir):
 void FileCreateDialog::onCreateClicked() {
     QString fileName = lineEdit->text();
     if(fileName.isEmpty()) {
-        if (is_dir) QMessageBox::warning(this, "Error", "Enter folder name!");
-        else QMessageBox::warning(this, "Error", "Enter file name!");
+        if (is_dir) QMessageBox::warning(this, tr("Error"), tr("Enter folder name!"));
+        else QMessageBox::warning(this, tr("Error"), tr("Enter file name!"));
         return;
     }
 
@@ -48,7 +48,7 @@ void FileCreateDialog::onCreateClicked() {
     if (is_dir) {
         QDir dir;
         if (!dir.mkpath(fullPath)) {
-            QMessageBox::critical(this, "Error", "Failed to create directory!");
+            QMessageBox::critical(this, tr("Error"), tr("Failed to create directory!"));
         }
     }
     else {
@@ -57,7 +57,7 @@ void FileCreateDialog::onCreateClicked() {
             file.close();
             accept(); // закрыть диалог
         } else {
-            QMessageBox::critical(this, "Error", "Failed to create file!");
+            QMessageBox::critical(this, tr("Error"), tr("Failed to create file!"));
         }
     }
 

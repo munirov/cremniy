@@ -15,7 +15,8 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QStandardPaths>
-#include <QVBoxLayout>
+
+#include "locale/LanguageManager.h"
 
 static QString resolvedExecutable(const QString &userPath, const QString &exeName)
 {
@@ -139,6 +140,17 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         form->addRow(tr("radare2 pre-commands"), m_r2PreCommands);
     }
 
+
+    // LANGUAGE
+    auto * languageSwitcherBox = new QComboBox(this);
+
+    languageSwitcherBox->setPlaceholderText(tr("Choose:"));
+    for (auto const & locale : LanguageManager::instance().supportedLanguages())
+        languageSwitcherBox->addItem(QLocale(locale).nativeTerritoryName(), QVariant::fromValue(locale));
+
+    languageSwitcherBox->setMinimumWidth(250);
+    form->addRow(tr("Language"), languageSwitcherBox);
+
     root->addLayout(form);
 
     // buttons
@@ -168,6 +180,11 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     connect(m_syntaxCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
     connect(m_r2AnalysisCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
     connect(m_r2PreCommands, &QPlainTextEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
+
+    connect(languageSwitcherBox, &QComboBox::currentIndexChanged, this, [languageSwitcherBox](int index) {
+        auto locale = languageSwitcherBox->currentData().value<QString>();
+        LanguageManager::instance().setLocale(locale);
+    });
 
     loadFromSettings();
     updateUiEnabledState();
