@@ -9,6 +9,7 @@ class ViewMenu : public BaseMenu
 private:
     QAction* m_wordWrap;
     QAction* m_terminal;
+    QAction* m_fileTree;
 public:
     ViewMenu();
     void setupConnections(IDEWindow* ideWind);

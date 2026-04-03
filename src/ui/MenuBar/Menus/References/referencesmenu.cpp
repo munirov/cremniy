@@ -1,5 +1,6 @@
 #include "referencesmenu.h"
 #include "ui/MenuBar/menufactory.h"
+#include "ui/MenuBar/Menus/References/referencewindowfactory.h"
 
 static bool registered = [](){
     MenuFactory::instance().registerMenu("6", [](){
@@ -9,9 +10,13 @@ static bool registered = [](){
 }();
 
 ReferencesMenu::ReferencesMenu() : BaseMenu("References") {
-    m_asciiChars = new QAction("ASCII characters", this);
-    m_keybScancodes = new QAction("Keyboard Scancodes", this);
+    auto& RefWinFactory = ReferenceWindowFactory::instance();
+    qDebug() << RefWinFactory.availableRefWins();
+    for (const QString& RefWinID : RefWinFactory.availableRefWins()){
+        ReferenceWindow* refWin = RefWinFactory.create(RefWinID);
+        QAction* act = new QAction(refWin->RefWinName(), this);
+        this->addAction(act);
+        connect(act, &QAction::triggered, refWin, &ReferenceWindow::showWindow);
+    }
 
-    this->addAction(m_asciiChars);
-    this->addAction(m_keybScancodes);
 }
