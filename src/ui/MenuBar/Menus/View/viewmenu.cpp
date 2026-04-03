@@ -11,16 +11,16 @@ static bool registered = [](){
     return true;
 }();
 
-ViewMenu::ViewMenu() : BaseMenu("View") {
-    m_wordWrap = new QAction("Word Wrap", this);
+ViewMenu::ViewMenu() : BaseMenu(tr("View")) {
+    m_wordWrap = new QAction(tr("Word Wrap"), this);
     m_wordWrap->setCheckable(true);
     m_wordWrap->setChecked(true);
 
-    m_tabReplace = new QAction("Insert spaces instead of tab", this);
+    m_tabReplace = new QAction(tr("Insert spaces instead of tab"), this);
     m_tabReplace->setCheckable(true);
     m_tabReplace->setChecked(false);
 
-    auto* tabWidthMenu = new QMenu("Tab Width", this);
+    auto* tabWidthMenu = new QMenu(tr("Tab Width"), this);
     QActionGroup* tabWidthGroup = new QActionGroup(this);
     tabWidthGroup->setExclusive(true);
     m_tabWidth2 = tabWidthMenu->addAction("2");
@@ -32,7 +32,7 @@ ViewMenu::ViewMenu() : BaseMenu("View") {
     }
     m_tabWidth4->setChecked(true);
 
-    m_terminal = new QAction("Show terminal", this);
+    m_terminal = new QAction(tr("Show terminal"), this);
     m_terminal->setCheckable(true);
     m_terminal->setChecked(false);
     m_terminal->setShortcuts({
@@ -40,7 +40,7 @@ ViewMenu::ViewMenu() : BaseMenu("View") {
         QKeySequence("Ctrl+ё"),
     });
 
-    m_fileTree = new QAction("File Tree", this);
+    m_fileTree = new QAction(tr("File Tree"), this);
     m_fileTree->setCheckable(true);
     m_fileTree->setChecked(true);
     m_fileTree->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_B));

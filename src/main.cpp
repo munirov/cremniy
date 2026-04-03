@@ -4,10 +4,14 @@
 #include <QIcon>
 
 #include "app/WelcomeWindow/welcomeform.h"
+#include "locale/LanguageManager.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    QCoreApplication::setOrganizationName("Munirov");
+    LanguageManager::instance().setLocale("en");
+
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");
     a.setWindowIcon(QIcon(":/icons/icon.svg"));
