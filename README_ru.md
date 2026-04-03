@@ -128,9 +128,9 @@ cmake --build build --config Release
 git clone https://github.com/igmunv/cremniy.git
 cd cremniy
 
-mkdir build && cd build
-cmake -G "MinGW Makefiles" ..\src
-cmake --build .
+
+cmake -G "MinGW Makefiles" -B build
+cmake --build build
 
 ```
 
