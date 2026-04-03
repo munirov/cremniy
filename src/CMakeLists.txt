@@ -80,6 +80,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ui/toolstabwidget.cpp
         ui/toolstabwidget.h
 
+        ui/MenuBar/Menus/References/referencewindow.h
+        ui/MenuBar/Menus/References/Windows/AsciiChars/asciicharsref.cpp
+        ui/MenuBar/Menus/References/Windows/AsciiChars/asciicharsref.h
+        ui/MenuBar/Menus/References/referencewindowfactory.h ui/MenuBar/Menus/References/referencewindowfactory.cpp
+
 
 
     )

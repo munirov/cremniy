@@ -34,8 +34,8 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_terminal = new TerminalWidget(this);
     m_terminal->setVisible(false);
 
-    QWidget* leftWidget = new QWidget();
-    QVBoxLayout* leftLayout = new QVBoxLayout(leftWidget);
+    m_leftSidebar = new QWidget();
+    QVBoxLayout* leftLayout = new QVBoxLayout(m_leftSidebar);
     leftLayout->setContentsMargins(0,0,0,0);
 
     m_filesTabWidget = new FilesTabWidget();
@@ -43,7 +43,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_filesTreeView = new FileTreeView();
     leftLayout->addWidget(m_filesTreeView);
 
-    m_mainSplitter->addWidget(leftWidget);
+    m_mainSplitter->addWidget(m_leftSidebar);
     m_mainSplitter->addWidget(m_filesTabWidget);
     m_mainSplitter->setSizes({200, 1000});
 
@@ -54,7 +54,6 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_mainLayout->addWidget(m_verticalSplitter);
     setCentralWidget(m_mainWidget);
 
-    leftLayout->addWidget(m_filesTreeView);
 
     // - - Tunning Widgets/Layouts - -
 
@@ -114,6 +113,10 @@ void IDEWindow::on_Toggle_Terminal(bool checked) {
     if(checked) {
         m_terminal->setFocus();
     }
+}
+
+void IDEWindow::on_Toggle_FileTree(bool checked) {
+    m_leftSidebar->setVisible(checked);
 }
 
 void IDEWindow::on_ClosingProject() {

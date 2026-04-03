@@ -21,12 +21,19 @@ ViewMenu::ViewMenu() : BaseMenu("View") {
         QKeySequence("Ctrl+`"),
         QKeySequence("Ctrl+ё"),
     });
-    
+
+    m_fileTree = new QAction("File Tree", this);
+    m_fileTree->setCheckable(true);
+    m_fileTree->setChecked(true);
+    m_fileTree->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_B));
+
     this->addAction(m_wordWrap);
     this->addSeparator();
     this->addAction(m_terminal);
+    this->addAction(m_fileTree);
 }
 
 void ViewMenu::setupConnections(IDEWindow* ideWind){
     connect(m_terminal, &QAction::triggered, ideWind, &IDEWindow::on_Toggle_Terminal);
+    connect(m_fileTree, &QAction::triggered, ideWind, &IDEWindow::on_Toggle_FileTree);
 }
