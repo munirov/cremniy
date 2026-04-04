@@ -200,25 +200,64 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
                 m_updatingSelection = true;
                 
                 QTextCursor cursor = m_codeEditorWidget->textCursor();
-                if (cursor.hasSelection()) {
-                    int charStart = cursor.selectionStart();
-                    int charEnd = cursor.selectionEnd();
-                    
-                    // Преобразуем позицию символа в позицию байта
-                    QString text = m_codeEditorWidget->toPlainText();
-                    QByteArray utf8Data = text.toUtf8();
-                    
-                    // Получаем байтовую позицию начала выделения
-                    QString beforeSelection = text.left(charStart);
-                    qint64 byteStart = beforeSelection.toUtf8().size();
-                    
-                    // Получаем длину выделения в байтах
-                    QString selectedText = text.mid(charStart, charEnd - charStart);
-                    qint64 byteLength = selectedText.toUtf8().size();
-                    
-                    // Уведомляем буфер о выделении
-                    m_dataBuffer->setSelection(byteStart, byteLength);
+                const int charStart = cursor.hasSelection() ? cursor.selectionStart() : cursor.position();
+                const int charEnd = cursor.hasSelection() ? cursor.selectionEnd() : cursor.position();
+                
+                // Преобразуем позицию символа в позицию байта (с учетом CRLF -> LF в редакторе)
+                const QString text = m_codeEditorWidget->toPlainText();
+                const qint64 normStart = text.left(charStart).toUtf8().size();
+                const qint64 normEnd = normStart + text.mid(charStart, charEnd - charStart).toUtf8().size();
+
+                QByteArray rawData = m_dataBuffer->data();
+                qint64 baseOffset = 0;
+                if (m_hasUtf8Bom && rawData.startsWith(kUtf8Bom)) {
+                    rawData.remove(0, kUtf8Bom.size());
+                    baseOffset = kUtf8Bom.size();
                 }
+
+                qint64 rawStart = -1;
+                qint64 rawEnd = -1;
+                qint64 rawIndex = 0;
+                qint64 normIndex = 0;
+
+                if (normStart == 0)
+                    rawStart = 0;
+                if (normEnd == 0)
+                    rawEnd = 0;
+
+                while (rawIndex < rawData.size()) {
+                    if (normIndex == normStart && rawStart < 0)
+                        rawStart = rawIndex;
+                    if (normIndex == normEnd && rawEnd < 0)
+                        rawEnd = rawIndex;
+
+                    if (rawData[rawIndex] == '\r') {
+                        if (rawIndex + 1 < rawData.size() && rawData[rawIndex + 1] == '\n') {
+                            rawIndex += 2;
+                        } else {
+                            rawIndex += 1;
+                        }
+                        normIndex += 1;
+                        continue;
+                    }
+
+                    rawIndex += 1;
+                    normIndex += 1;
+                }
+
+                if (rawStart < 0)
+                    rawStart = rawData.size();
+                if (rawEnd < 0)
+                    rawEnd = rawData.size();
+
+                rawStart += baseOffset;
+                rawEnd += baseOffset;
+
+                const qint64 byteStart = rawStart;
+                const qint64 byteLength = qMax<qint64>(0, rawEnd - rawStart);
+
+                // Уведомляем буфер о выделении
+                m_dataBuffer->setSelection(byteStart, byteLength);
                 
                 m_updatingSelection = false;
             });
@@ -375,22 +414,74 @@ void CodeEditorTab::applyBufferedSelection()
     qint64 length = m_pendingSelectionLength;
 
     if (m_hasUtf8Bom && data.startsWith(kUtf8Bom)) {
-        if (pos < kUtf8Bom.size()) {
-            length = qMax<qint64>(0, length - (kUtf8Bom.size() - pos));
-            pos = kUtf8Bom.size();
-        }
-        pos -= qMin<qint64>(pos, static_cast<qint64>(kUtf8Bom.size()));
         data.remove(0, kUtf8Bom.size());
+        pos = qMax<qint64>(0, pos - kUtf8Bom.size());
+        length = qBound<qint64>(0, length, data.size() - pos);
     }
 
     pos = qBound<qint64>(0, pos, data.size());
     length = qBound<qint64>(0, length, data.size() - pos);
 
-    const QByteArray beforeSelection = data.left(pos);
+    // Map raw byte offsets to the normalized text representation used by QPlainTextEdit.
+    // QPlainTextEdit collapses CRLF and CR to a single '\n', so we must mirror that.
+    const qint64 rawEnd = pos + length;
+    qint64 normPos = -1;
+    qint64 normEnd = -1;
+    qint64 rawIndex = 0;
+    qint64 normIndex = 0;
+
+    if (pos == 0)
+        normPos = 0;
+    if (rawEnd == 0)
+        normEnd = 0;
+
+    while (rawIndex < data.size()) {
+        if (rawIndex == pos && normPos < 0)
+            normPos = normIndex;
+        if (rawIndex == rawEnd && normEnd < 0)
+            normEnd = normIndex;
+
+        if (data[rawIndex] == '\r') {
+            if (rawIndex + 1 < data.size() && data[rawIndex + 1] == '\n') {
+                rawIndex += 2;
+            } else {
+                rawIndex += 1;
+            }
+            normIndex += 1;
+            continue;
+        }
+
+        rawIndex += 1;
+        normIndex += 1;
+    }
+
+    if (normPos < 0)
+        normPos = normIndex;
+    if (normEnd < 0)
+        normEnd = normIndex;
+
+    qint64 normLength = qMax<qint64>(0, normEnd - normPos);
+
+    QByteArray normalized;
+    normalized.reserve(data.size());
+    for (qint64 i = 0; i < data.size(); ++i) {
+        if (data[i] == '\r') {
+            if (i + 1 < data.size() && data[i + 1] == '\n')
+                ++i;
+            normalized.append('\n');
+        } else {
+            normalized.append(data[i]);
+        }
+    }
+
+    normPos = qBound<qint64>(0, normPos, normalized.size());
+    normLength = qBound<qint64>(0, normLength, normalized.size() - normPos);
+
+    const QByteArray beforeSelection = normalized.left(normPos);
     const QString beforeText = QString::fromUtf8(beforeSelection);
     const int charStart = beforeText.length();
 
-    const QByteArray selectedBytes = data.mid(pos, length);
+    const QByteArray selectedBytes = normalized.mid(normPos, normLength);
     const QString selectedText = QString::fromUtf8(selectedBytes);
     const int charLength = selectedText.length();
 
