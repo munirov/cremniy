@@ -53,6 +53,8 @@ private:
      * @param backward Искать в обратном направлении (назад)
      */
     void performSearch(bool backward = false);
+    
+    qint64 charOffsetToRawByte(int charOffset) const;
 
 public:
     explicit CodeEditorTab(FileDataBuffer* buffer, QWidget *parent = nullptr);

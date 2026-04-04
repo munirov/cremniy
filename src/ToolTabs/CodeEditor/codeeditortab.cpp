@@ -193,75 +193,60 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
 
     // SelectionChanged: уведомляем буфер о выделении
     connect(m_codeEditorWidget, &QPlainTextEdit::selectionChanged,
-            this, [this](){
-                if (m_updatingSelection) return; // Предотвращаем рекурсию
-                
-                // Устанавливаем флаг перед отправкой сигнала
-                m_updatingSelection = true;
-                
-                QTextCursor cursor = m_codeEditorWidget->textCursor();
-                const int charStart = cursor.hasSelection() ? cursor.selectionStart() : cursor.position();
-                const int charEnd = cursor.hasSelection() ? cursor.selectionEnd() : cursor.position();
-                
-                // Преобразуем позицию символа в позицию байта (с учетом CRLF -> LF в редакторе)
-                const QString text = m_codeEditorWidget->toPlainText();
-                const qint64 normStart = text.left(charStart).toUtf8().size();
-                const qint64 normEnd = normStart + text.mid(charStart, charEnd - charStart).toUtf8().size();
+        this, [this]() {
+            if (m_updatingSelection) return; // Предотвращаем рекурсию
+            m_updatingSelection = true; // Устанавливаем флаг перед отправкой сигнала
 
-                QByteArray rawData = m_dataBuffer->data();
-                qint64 baseOffset = 0;
-                if (m_hasUtf8Bom && rawData.startsWith(kUtf8Bom)) {
-                    rawData.remove(0, kUtf8Bom.size());
-                    baseOffset = kUtf8Bom.size();
-                }
+            QTextCursor cursor = m_codeEditorWidget->textCursor();
+            const int charStart = cursor.hasSelection() ? cursor.selectionStart() : cursor.position();
+            const int charEnd   = cursor.hasSelection() ? cursor.selectionEnd()   : cursor.position();
 
-                qint64 rawStart = -1;
-                qint64 rawEnd = -1;
-                qint64 rawIndex = 0;
-                qint64 normIndex = 0;
+            // Преобразуем позиции символов в байтовые смещения
+            const qint64 byteStart  = charOffsetToRawByte(charStart);
+            const qint64 byteEnd    = charOffsetToRawByte(charEnd);
+            const qint64 byteLength = qMax<qint64>(0, byteEnd - byteStart);
+            
+            // Уведомляем буфер о выделении
+            m_dataBuffer->setSelection(byteStart, byteLength);
 
-                if (normStart == 0)
-                    rawStart = 0;
-                if (normEnd == 0)
-                    rawEnd = 0;
+            m_updatingSelection = false;
+        });
 
-                while (rawIndex < rawData.size()) {
-                    if (normIndex == normStart && rawStart < 0)
-                        rawStart = rawIndex;
-                    if (normIndex == normEnd && rawEnd < 0)
-                        rawEnd = rawIndex;
+}
 
-                    if (rawData[rawIndex] == '\r') {
-                        if (rawIndex + 1 < rawData.size() && rawData[rawIndex + 1] == '\n') {
-                            rawIndex += 2;
-                        } else {
-                            rawIndex += 1;
-                        }
-                        normIndex += 1;
-                        continue;
-                    }
+qint64 CodeEditorTab::charOffsetToRawByte(int charOffset) const
+{
+    QByteArray rawData = m_dataBuffer->data();
+    qint64 baseOffset = 0;
 
-                    rawIndex += 1;
-                    normIndex += 1;
-                }
+    if (m_hasUtf8Bom && rawData.startsWith(kUtf8Bom)) {
+        rawData.remove(0, kUtf8Bom.size());
+        baseOffset = kUtf8Bom.size();
+    }
 
-                if (rawStart < 0)
-                    rawStart = rawData.size();
-                if (rawEnd < 0)
-                    rawEnd = rawData.size();
+    const QString text = m_codeEditorWidget->toPlainText();
+    const qint64 normTarget = text.left(charOffset).toUtf8().size();
 
-                rawStart += baseOffset;
-                rawEnd += baseOffset;
+    if (normTarget == 0)
+        return baseOffset;
 
-                const qint64 byteStart = rawStart;
-                const qint64 byteLength = qMax<qint64>(0, rawEnd - rawStart);
+    qint64 rawIndex = 0;
+    qint64 normIndex = 0;
 
-                // Уведомляем буфер о выделении
-                m_dataBuffer->setSelection(byteStart, byteLength);
-                
-                m_updatingSelection = false;
-            });
+    while (rawIndex < rawData.size()) {
+        if (normIndex == normTarget)
+            return rawIndex + baseOffset;
 
+        if (rawData[rawIndex] == '\r') {
+            rawIndex += (rawIndex + 1 < rawData.size() && rawData[rawIndex + 1] == '\n') ? 2 : 1;
+            normIndex += 1;
+        } else {
+            rawIndex += 1;
+            normIndex += 1;
+        }
+    }
+
+    return rawData.size() + baseOffset;
 }
 
 // - - override functions - -
