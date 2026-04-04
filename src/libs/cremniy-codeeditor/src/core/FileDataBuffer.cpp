@@ -135,6 +135,9 @@ void FileDataBuffer::removeBytes(qint64 pos, qint64 length)
 
 void FileDataBuffer::undo()
 {
+    qint64 selectionPos = 0;
+    qint64 selectionLength = 0;
+
     QMutexLocker locker(&m_mutex);
     endHistoryGroupLocked();
     if (m_undoStack.isEmpty())
@@ -142,13 +145,24 @@ void FileDataBuffer::undo()
 
     const HistoryEntry entry = m_undoStack.takeLast();
     m_redoStack.append(entry);
+
     applyDataSnapshotLocked(entry.before);
+    m_selectionPos = entry.selectionBefore.pos;
+    m_selectionLength = entry.selectionBefore.length;
+
+    selectionPos = m_selectionPos;
+    selectionLength = m_selectionLength;
+
     locker.unlock();
     emit dataChanged();
+    emit selectionChanged(selectionPos, selectionLength);
 }
 
 void FileDataBuffer::redo()
 {
+    qint64 selectionPos = 0;
+    qint64 selectionLength = 0;
+
     QMutexLocker locker(&m_mutex);
     endHistoryGroupLocked();
     if (m_redoStack.isEmpty())
@@ -156,9 +170,17 @@ void FileDataBuffer::redo()
 
     const HistoryEntry entry = m_redoStack.takeLast();
     m_undoStack.append(entry);
+
     applyDataSnapshotLocked(entry.after);
+    m_selectionPos = entry.selectionAfter.pos;
+    m_selectionLength = entry.selectionAfter.length;
+
+    selectionPos = m_selectionPos;
+    selectionLength = m_selectionLength;
+
     locker.unlock();
     emit dataChanged();
+    emit selectionChanged(selectionPos, selectionLength);
 }
 
 bool FileDataBuffer::canUndo() const
@@ -173,6 +195,20 @@ bool FileDataBuffer::canRedo() const
     return !m_redoStack.isEmpty();
 }
 
+void FileDataBuffer::setPendingHistorySelectionBefore(qint64 pos, qint64 length)
+{
+    QMutexLocker locker(&m_mutex);
+    m_pendingSelectionBefore = {pos, length};
+    m_hasPendingSelectionBefore = true;
+}
+
+void FileDataBuffer::setPendingHistorySelectionAfter(qint64 pos, qint64 length)
+{
+    QMutexLocker locker(&m_mutex);
+    m_pendingSelectionAfter = {pos, length};
+    m_hasPendingSelectionAfter = true;
+}
+
 void FileDataBuffer::beginHistoryGroup()
 {
     QMutexLocker locker(&m_mutex);
@@ -182,6 +218,8 @@ void FileDataBuffer::beginHistoryGroup()
     m_historyGroupActive = true;
     m_historyGroupBefore.clear();
     m_historyGroupAfter.clear();
+    m_historyGroupSelectionBefore = {};
+    m_historyGroupSelectionAfter = {};
 }
 
 void FileDataBuffer::endHistoryGroup()
@@ -196,7 +234,12 @@ void FileDataBuffer::endHistoryGroupLocked()
         return;
 
     if (!m_historyGroupBefore.isEmpty() || !m_historyGroupAfter.isEmpty()) {
-        m_undoStack.append({m_historyGroupBefore, m_historyGroupAfter});
+        m_undoStack.append({
+            m_historyGroupBefore, 
+            m_historyGroupAfter, 
+            m_historyGroupSelectionBefore, 
+            m_historyGroupSelectionAfter
+        });
         if (m_undoStack.size() > m_maxHistoryEntries)
             m_undoStack.remove(0, m_undoStack.size() - m_maxHistoryEntries);
         m_redoStack.clear();
@@ -205,6 +248,8 @@ void FileDataBuffer::endHistoryGroupLocked()
     m_historyGroupActive = false;
     m_historyGroupBefore.clear();
     m_historyGroupAfter.clear();
+    m_historyGroupSelectionBefore = {};
+    m_historyGroupSelectionAfter = {};
 }
 
 void FileDataBuffer::setByte(qint64 pos, char byte)
@@ -578,18 +623,44 @@ void FileDataBuffer::applyDataSnapshotLocked(const QByteArray& data)
 
 void FileDataBuffer::pushHistoryLocked(const QByteArray& before, const QByteArray& after)
 {
+    SelectionState selectionBefore;
+    SelectionState selectionAfter;
+
+    if (m_hasPendingSelectionBefore) {
+        selectionBefore = m_pendingSelectionBefore;
+    } else {
+        selectionBefore = {m_selectionPos, m_selectionLength};
+    }
+
+    if (m_hasPendingSelectionAfter) {
+        selectionAfter = m_pendingSelectionAfter;
+    } else {
+        selectionAfter = {m_selectionPos, m_selectionLength};
+    }
+
     if (m_historyGroupActive) {
-        if (m_historyGroupBefore.isEmpty() && m_historyGroupAfter.isEmpty())
+        if (m_historyGroupBefore.isEmpty() && m_historyGroupAfter.isEmpty()) {
             m_historyGroupBefore = before;
+            m_historyGroupSelectionBefore = selectionBefore;
+        }
+
         m_historyGroupAfter = after;
+        m_historyGroupSelectionAfter = selectionAfter;
         m_redoStack.clear();
+
+        m_hasPendingSelectionBefore = false;
+        m_hasPendingSelectionAfter = false;
+
         return;
     }
 
-    m_undoStack.append({before, after});
+    m_undoStack.append({before, after, selectionBefore, selectionAfter});
     if (m_undoStack.size() > m_maxHistoryEntries)
         m_undoStack.remove(0, m_undoStack.size() - m_maxHistoryEntries);
     m_redoStack.clear();
+
+    m_hasPendingSelectionBefore = false;
+    m_hasPendingSelectionAfter = false;
 }
 
 uint FileDataBuffer::computeCurrentHashLocked() const
