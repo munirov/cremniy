@@ -45,3 +45,13 @@ void FileTab::saveFile(){
     emit removeStarSignal(this);
     emit saveFileSignal();
 }
+
+void FileTab::navigateToCodeLine(int lineNumber, bool selectWholeLine)
+{
+    m_tooltabWidget->activateCodeEditorAtLine(lineNumber, selectWholeLine);
+}
+
+void FileTab::navigateToSearchHit(int lineNumber, const QString &needle)
+{
+    m_tooltabWidget->activateCodeEditorSearchHit(lineNumber, needle);
+}

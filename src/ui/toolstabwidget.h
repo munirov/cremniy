@@ -19,6 +19,8 @@ class ToolsTabWidget : public QTabWidget
 public:
     ToolsTabWidget(QWidget *parent, QString path);
     int saveToFileCurrentTab(QString path);
+    void activateCodeEditorAtLine(int lineNumber, bool selectWholeLine = false);
+    void activateCodeEditorSearchHit(int lineNumber, const QString &needle);
     void setDataInTabs(QByteArray &data, int index = -1, int excluded_index = -1);
 
 private:

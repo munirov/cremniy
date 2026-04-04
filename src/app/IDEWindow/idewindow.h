@@ -10,6 +10,8 @@
 #include <qstatusbar.h>
 #include "widgets/terminal/terminalwidget.h"
 
+class ProjectSearchDialog;
+
 class IDEWindow : public QMainWindow
 {
     Q_OBJECT
@@ -55,7 +57,7 @@ private:
     // - - Terminal Widget - -
     TerminalWidget* m_terminal;
     QString m_projectPath;
-
+    ProjectSearchDialog *m_projectSearchDialog = nullptr;
 
 public slots:
 
@@ -110,6 +112,9 @@ public slots:
      * @brief Отображение дерева файлов
     */
     void on_Toggle_FileTree(bool checked);
+
+    void showProjectSearch();
+    void openSearchResult(const QString &path, int lineNumber, const QString &query);
 
 signals:
     void saveFileSignal();

@@ -79,6 +79,8 @@ public slots:
     void setTabData() override;
     void saveTabData() override;
 
+    void goToLine(int lineNumber, bool selectWholeLine = false);
+    void goToSearchHit(int lineNumber, const QString &needle);
 };
 
 #endif // CODEEDITORTAB_H

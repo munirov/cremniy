@@ -24,6 +24,8 @@ public slots:
     void removeStar();
     void setupStar();
     void saveFile();
+    void navigateToCodeLine(int lineNumber, bool selectWholeLine = false);
+    void navigateToSearchHit(int lineNumber, const QString &needle);
 
 signals:
     void removeStarSignal(FileTab* tab);

@@ -342,3 +342,102 @@ QWidget#searchWidget QPushButton:pressed {
     border: 2px solid #2c4c7c;
     font-weight: bold;
 }
+
+/* ProjectSearchDialog */
+QDialog#ProjectSearchDialog {
+    background-color: #262626;
+    color: #e8e8e8;
+}
+
+QDialog#ProjectSearchDialog QLabel#projectSearchFieldLabel {
+    color: #c8c8c8;
+    font-weight: 600;
+    padding-bottom: 4px;
+}
+
+QDialog#ProjectSearchDialog QLineEdit#projectSearchQuery {
+    background-color: #1f1f1f;
+    color: #f0f0f0;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 8px 10px;
+    selection-background-color: #3d5a80;
+    selection-color: #ffffff;
+}
+
+QDialog#ProjectSearchDialog QLineEdit#projectSearchQuery:focus {
+    border: 1px solid #4a6fa8;
+    background-color: #1f1f1f;
+}
+
+QDialog#ProjectSearchDialog QLineEdit#projectSearchQuery:hover {
+    background-color: #162033;
+    border: 1px solid #2c4c7c;
+}
+
+QDialog#ProjectSearchDialog QTreeWidget {
+    background-color: #1f1f1f;
+    color: #e8e8e8;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    outline: none;
+    show-decoration-selected: 1;
+}
+
+QDialog#ProjectSearchDialog QTreeWidget::item {
+    padding: 4px 8px;
+    border: none;
+}
+
+QDialog#ProjectSearchDialog QTreeWidget::item:selected {
+    background-color: #2a3d5c;
+    color: #ffffff;
+}
+
+QDialog#ProjectSearchDialog QTreeWidget::item:hover:!selected {
+    background-color: #2a2d33;
+    color: #f0f0f0;
+}
+
+QDialog#ProjectSearchDialog QHeaderView::section {
+    background-color: #262626;
+    color: #c0c0c0;
+    padding: 6px 8px;
+    border: none;
+    border-bottom: 1px solid #2c4c7c;
+    border-right: 1px solid #1f1f1f;
+}
+
+QDialog#ProjectSearchDialog QLabel#projectSearchStatus {
+    color: #a8a8a8;
+    background: transparent;
+    border: none;
+    padding: 0px;
+    margin: 0px;
+}
+
+QDialog#ProjectSearchDialog QPushButton#projectSearchPrimary {
+    background-color: #2a3d5c;
+    border: 1px solid #3d5a80;
+    color: #f0f4fc;
+    padding: 6px 14px;
+    border-radius: 4px;
+}
+
+QDialog#ProjectSearchDialog QPushButton#projectSearchPrimary:hover {
+    background-color: #344d73;
+    border: 1px solid #4a6fa8;
+    color: #ffffff;
+}
+
+QDialog#ProjectSearchDialog QPushButton#projectSearchPrimary:pressed {
+    background-color: #243550;
+    border: 1px solid #2c4c7c;
+    font-weight: bold;
+}
+
+QDialog#ProjectSearchDialog QPushButton#projectSearchPrimary:disabled {
+    background-color: #2a2a2a;
+    color: #777777;
+    border-color: #333333;
+}
