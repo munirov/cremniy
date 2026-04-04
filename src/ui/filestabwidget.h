@@ -18,11 +18,16 @@ protected:
 public slots:
   void removeStar(FileTab *tab);
   void setupStar(FileTab *tab);
+  void updatePinnedState(FileTab *tab);
   void saveFileSlot();
   void closeTab(int index);
+  void onTabMoved(int from, int to);
   
 private:
   void switchTab(int page);
+  void setPinnedTabText(int index, FileTab *tab);
+  int pinnedCount() const;
+  bool m_adjustingTabMove = false;
 };
 
 #endif // FILESTABWIDGET_H

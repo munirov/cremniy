@@ -2,6 +2,7 @@
 #define BINARYTAB_H
 
 #include "core/ToolTab.h"
+#include <QShortcut>
 #include <QWidget>
 #include <qfileinfo.h>
 #include <qstackedwidget.h>
@@ -15,6 +16,10 @@ private:
     QStackedWidget* pageView;
     bool m_updatingSelection = false; // Флаг для предотвращения рекурсии
     bool m_syncingBufferData = false;
+    bool m_pageDataDirty = true;
+    QShortcut* m_findShortcut = nullptr;
+
+    void openFindDialog();
 
 protected slots:
     // Обработчик изменения выделения из буфера

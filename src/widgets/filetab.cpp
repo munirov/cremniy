@@ -22,6 +22,14 @@ FileTab::FileTab(QWidget* parent, QString path)
 
 }
 
+void FileTab::setPinned(bool pinned){
+    if (m_pinned == pinned) {
+        return;
+    }
+    m_pinned = pinned;
+    emit pinnedChanged(this);
+}
+
 void FileTab::removeStar(){
     m_modified = false;
     emit removeStarSignal(this);

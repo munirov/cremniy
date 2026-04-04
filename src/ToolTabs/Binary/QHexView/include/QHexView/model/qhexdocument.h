@@ -6,6 +6,7 @@
 #include <QUndoStack>
 
 class QHexCursor;
+class FileDataBuffer;
 
 class QHexDocument: public QObject {
     Q_OBJECT
@@ -62,6 +63,8 @@ public:
                                     QObject* parent = nullptr);
     static QHexDocument* fromBuffer(QHexBuffer* buffer,
                                     QObject* parent = nullptr);
+    static QHexDocument* fromSharedBuffer(FileDataBuffer* buffer,
+                                          QObject* parent = nullptr);
     static QHexDocument* fromLargeFile(QString filename,
                                        QObject* parent = nullptr);
     static QHexDocument* fromMappedFile(QString filename,

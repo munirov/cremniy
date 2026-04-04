@@ -162,6 +162,10 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
     // ── arch detection ────────────────────────────────────────────────────
     QString effectiveArch = arch.isEmpty() ? detectArch(filePath) : arch;
 
+    if (effectiveArch.isEmpty()) {
+        effectiveArch = "i386:x86-64";
+    }
+
     emit logLine("[disasm] file      : " + filePath);
     emit logLine("[disasm] arch-hint : " + (effectiveArch.isEmpty() ? "(auto)" : effectiveArch));
 
@@ -174,14 +178,14 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
 
     QStringList args;
     args << "-d";
-    if (!effectiveArch.isEmpty()) {
-        args << "-m" << effectiveArch;
-        if (effectiveArch.contains("i386") || effectiveArch.contains("x86")) {
-            if (AppSettings::asmSyntax() == AppSettings::AsmSyntax::Att)
-                args << "-M" << "att";
-            else
-                args << "-M" << "intel";
-        }
+    if (filePath.endsWith(".bin", Qt::CaseInsensitive)) {
+        args << "-D" << "-b" << "binary" << "-m" << effectiveArch;
+    } else {
+        args << "-d";
+        if (!effectiveArch.isEmpty()) args << "-m" << effectiveArch;
+    }
+   if (effectiveArch.contains("i386") || effectiveArch.contains("x86")) {
+        args << "-M" << (AppSettings::asmSyntax() == AppSettings::AsmSyntax::Att ? "att" : "intel");
     }
     args << filePath;
 
@@ -282,83 +286,99 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
 //     1004:^I48 83 ec 08          ^Isub    $0x8,%rsp
 //     1008:^I48 8b 05 d9 2f 00 00 ^Imov    0x2fd9(%rip),%rax   # 3fe8 <sym>
 
+// ---------------------------------------------------------------------------
+// Parser
+// ---------------------------------------------------------------------------
 QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, const QHash<QString, DisasmSection> &sectionMap)
 {
     QVector<DisasmSection> sections;
 
+    // Секция: разрешаем пробелы в начале и перед двоеточием
     static const QRegularExpression reSectionHdr(
-        R"(^Disassembly of section\s+(\S+):$)",
+        R"(^\s*Disassembly of section\s+(\S+)\s*:)", 
         QRegularExpression::MultilineOption);
 
+    // Метка функции: разрешаем любые пробелы
     static const QRegularExpression reFuncLabel(
-        R"(^([0-9a-fA-F]+)\s+<([^>]+)>:$)",
+        R"(^\s*([0-9a-fA-F]+)\s+<([^>]+)>:)",
         QRegularExpression::MultilineOption);
 
-    // bytes field: one or more "XX " groups padded with spaces, then TAB before mnemonic
+    // ИНСТРУКЦИЯ (Самое важное): заменяем \t на \s+ (любые пробельные символы)
+    // Группа 1: Адрес
+    // Группа 2: Байты (шестнадцатеричные пары)
+    // Группа 3: Мнемоника
+    // Группа 4: Операнды
     static const QRegularExpression reInsn(
-        R"(^\s+([0-9a-fA-F]+):\t((?:[0-9a-fA-F]{2} )+)\s+\t(\S+)(?:[ \t]+([^#\n]*))?)",
+        R"(^\s*([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}\s+)+)\s*(\S+)(?:[ \t]+([^#\n]*))?)",
         QRegularExpression::MultilineOption);
 
     const QString text = QString::fromUtf8(raw);
     const QStringList lines = text.split('\n');
-    DisasmSection *curSection = nullptr;
+    int curSectionIdx = -1;
 
     for (const QString &line : lines) {
         if (m_cancelled) break;
+        if (line.trimmed().isEmpty()) continue;
 
+        // 1. Поиск заголовка секции
         QRegularExpressionMatch m = reSectionHdr.match(line);
         if (m.hasMatch()) {
             const QString name = m.captured(1);
             if (sectionMap.contains(name)) {
-                DisasmSection sec = sectionMap.value(name);
-                sec.instructions.clear();
-                sections.append(sec);
+                sections.append(sectionMap.value(name));
             } else {
                 sections.append(DisasmSection{ name, {} });
             }
-            curSection = &sections.last();
+            curSectionIdx = sections.size() - 1;
             continue;
         }
 
-        if (!curSection) continue;
-
-        m = reFuncLabel.match(line);
-        if (m.hasMatch()) {
-            DisasmInstruction lbl;
-            lbl.address  = m.captured(1);
-            lbl.mnemonic = "<" + m.captured(2) + ">";
-            curSection->instructions.append(lbl);
-            continue;
-        }
-
+        // 2. Поиск инструкции (проверяем ПЕРЕД меткой функции, так как они похожи)
         m = reInsn.match(line);
         if (m.hasMatch()) {
+            if (curSectionIdx == -1) {
+                sections.append(DisasmSection{ ".text (auto)", {} });
+                curSectionIdx = sections.size() - 1;
+            }
+
             DisasmInstruction insn;
             insn.address  = m.captured(1);
             insn.bytes    = m.captured(2).trimmed();
             insn.mnemonic = m.captured(3);
             insn.operands = m.captured(4).trimmed();
 
-            QString bytes = insn.bytes;
-            bytes.remove(' ');
-            bytes.remove('\t');
-            bytes.remove('\n');
-            bytes.remove('\r');
-            insn.size = bytes.trimmed().size() / 2;
+            // Считаем размер в байтах (каждые 2 символа + пробел = 1 байт)
+            QString b = insn.bytes;
+            b.remove(' ');
+            insn.size = b.size() / 2;
 
-            if (curSection->hasFileMapping) {
+            DisasmSection &cur = sections[curSectionIdx];
+            if (cur.hasFileMapping) {
                 bool okAddr = false;
                 const quint64 addr = insn.address.toULongLong(&okAddr, 16);
-                if (okAddr && addr >= curSection->vaddr) {
-                    const quint64 delta = addr - curSection->vaddr;
-                    if (delta < curSection->size)
-                        insn.fileOffset = static_cast<qint64>(curSection->fileOffset + delta);
+                if (okAddr && addr >= cur.vaddr) {
+                    const quint64 delta = addr - cur.vaddr;
+                    if (delta < cur.size)
+                        insn.fileOffset = static_cast<qint64>(cur.fileOffset + delta);
                 }
             }
+            cur.instructions.append(insn);
+            continue;
+        }
 
-            curSection->instructions.append(insn);
+        // 3. Поиск метки функции (например, <main>:)
+        m = reFuncLabel.match(line);
+        if (m.hasMatch()) {
+            if (curSectionIdx == -1) {
+                sections.append(DisasmSection{ ".text (auto)", {} });
+                curSectionIdx = sections.size() - 1;
+            }
+            DisasmInstruction lbl;
+            lbl.address  = m.captured(1);
+            lbl.mnemonic = "<" + m.captured(2) + ">";
+            sections[curSectionIdx].instructions.append(lbl);
+            continue;
         }
     }
-
     return sections;
 }

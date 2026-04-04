@@ -8,9 +8,10 @@
 #include <QApplication>
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
+#include "widgets/CustomCodeEditor.h"
 
 IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), m_projectPath(ProjectPath)
 {
 
     // - - Window Settings - -
@@ -20,6 +21,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     // - - Menu Bar - -
     MenuBarBuilder* menuBarBuilder = new MenuBarBuilder(menuBar(), this);
 
+    menuBar()->setNativeMenuBar(false);
     // - - Widgets - -
     m_statusBar = statusBar();
 
@@ -31,7 +33,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     m_verticalSplitter = new QSplitter(Qt::Vertical, m_mainWidget);
 
-    m_terminal = new TerminalWidget(this);
+    m_terminal = new TerminalWidget(this, ProjectPath);
     m_terminal->setVisible(false);
 
     m_leftSidebar = new QWidget();
@@ -112,6 +114,33 @@ void IDEWindow::on_Toggle_Terminal(bool checked) {
     m_terminal->setVisible(checked);
     if(checked) {
         m_terminal->setFocus();
+    }
+}
+
+void IDEWindow::on_SetWordWrap(bool checked)
+{
+    const auto editors = findChildren<CustomCodeEditor*>();
+    for (CustomCodeEditor* editor : editors) {
+        if (editor)
+            editor->setWordWrapEnabled(checked);
+    }
+}
+
+void IDEWindow::on_SetTabReplace(bool checked)
+{
+    const auto editors = findChildren<CustomCodeEditor*>();
+    for (CustomCodeEditor* editor : editors) {
+        if (editor)
+            editor->setTabReplace(checked);
+    }
+}
+
+void IDEWindow::on_SetTabWidth(int width)
+{
+    const auto editors = findChildren<CustomCodeEditor*>();
+    for (CustomCodeEditor* editor : editors) {
+        if (editor)
+            editor->setTabDisplaySize(width);
     }
 }
 

@@ -5,11 +5,18 @@
 #include <QMouseEvent>
 #include <QTabBar>
 #include <QWheelEvent>
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QIcon>
+#include <QPainter>
+#include <QFontMetrics>
+#include <QPixmap>
 #include <qboxlayout.h>
 #include <qfileinfo.h>
 
 FilesTabWidget::FilesTabWidget(QWidget *parent) {
     connect(this, &QTabWidget::currentChanged, this, &FilesTabWidget::tabSelect);
+    connect(tabBar(), &QTabBar::tabMoved, this, &FilesTabWidget::onTabMoved);
     tabBar()->installEventFilter(this);
     QCoreApplication::instance()->installEventFilter(this);
 }
@@ -40,21 +47,36 @@ void FilesTabWidget::openFile(QString filePath, QString tabTitle) {
     // - - Connects - -
     connect(filetab, &FileTab::removeStarSignal, this, &FilesTabWidget::removeStar);
     connect(filetab, &FileTab::setupStarSignal, this, &FilesTabWidget::setupStar);
+    connect(filetab, &FileTab::pinnedChanged, this, &FilesTabWidget::updatePinnedState);
 }
 
 void FilesTabWidget::removeStar(FileTab *tab) {
     int index = indexOf(tab);
     if (index != -1) {
-        QFileInfo finfo(tab->filePath);
-        setTabText(index, finfo.fileName());
+        setPinnedTabText(index, tab);
     }
 }
 
 void FilesTabWidget::setupStar(FileTab *tab) {
     int index = indexOf(tab);
     if (index != -1) {
-        QFileInfo finfo(tab->filePath);
-        setTabText(index, finfo.fileName() + "*");
+        setPinnedTabText(index, tab);
+    }
+}
+
+void FilesTabWidget::updatePinnedState(FileTab *tab) {
+    int index = indexOf(tab);
+    if (index != -1) {
+        if (tab->isPinned()) {
+            const int targetIndex = 0;
+            if (index != targetIndex) {
+                m_adjustingTabMove = true;
+                tabBar()->moveTab(index, targetIndex);
+                m_adjustingTabMove = false;
+                index = targetIndex;
+            }
+        }
+        setPinnedTabText(index, tab);
     }
 }
 
@@ -116,6 +138,26 @@ bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
         break;
     }
 
+    case QEvent::ContextMenu: {
+        if (obj == tabBar()) {
+            auto *ce = static_cast<QContextMenuEvent *>(event);
+            int index = tabBar()->tabAt(ce->pos());
+            if (index >= 0) {
+                FileTab *tab = qobject_cast<FileTab *>(widget(index));
+                if (tab) {
+                    QMenu menu(this);
+                    QAction *pinAction = menu.addAction(tab->isPinned() ? tr("Unpin") : tr("Pin"));
+                    QAction *chosen = menu.exec(ce->globalPos());
+                    if (chosen == pinAction) {
+                        tab->setPinned(!tab->isPinned());
+                        return true;
+                    }
+                }
+            }
+        }
+        break;
+    }
+
     default:
         break;
     }
@@ -128,6 +170,9 @@ void FilesTabWidget::closeTab(int index) {
     }
 
     FileTab *tab = qobject_cast<FileTab *>(widget(index));
+    if (tab && tab->isPinned()) {
+        return;
+    }
     if (tab && tab->isFileUnsaved()) {
         const auto replay = QMessageBox::question(this, "Save File", "Do you want to save this file?",
                                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
@@ -154,4 +199,77 @@ void FilesTabWidget::switchTab(int page) {
     else if (newIdx >= count())
         newIdx = 0;
     setCurrentIndex(newIdx);
+}
+
+void FilesTabWidget::onTabMoved(int from, int to) {
+    if (m_adjustingTabMove) {
+        return;
+    }
+
+    FileTab *tab = qobject_cast<FileTab *>(widget(to));
+    if (!tab) {
+        return;
+    }
+
+    const int pinned = pinnedCount();
+    const bool isPinned = tab->isPinned();
+    const bool toPinnedZone = to < pinned;
+    const bool fromPinnedZone = from < pinned;
+
+    if (isPinned) {
+        if (fromPinnedZone && toPinnedZone) {
+            return;
+        }
+        m_adjustingTabMove = true;
+        tabBar()->moveTab(to, from);
+        m_adjustingTabMove = false;
+        return;
+    }
+
+    if (!isPinned && toPinnedZone) {
+        m_adjustingTabMove = true;
+        tabBar()->moveTab(to, pinned);
+        m_adjustingTabMove = false;
+    }
+}
+
+void FilesTabWidget::setPinnedTabText(int index, FileTab *tab) {
+    static const QIcon pinIcon = []() {
+        QFont font;
+        font.setPixelSize(12);
+        QFontMetrics fm(font);
+        const int size = fm.height();
+        QPixmap pix(size, size);
+        pix.fill(Qt::transparent);
+        QPainter painter(&pix);
+        painter.setFont(font);
+        painter.setPen(Qt::black);
+        painter.drawText(QRect(0, 0, size, size), Qt::AlignCenter, QStringLiteral("📌"));
+        painter.end();
+        return QIcon(pix);
+    }();
+
+    QFileInfo finfo(tab->filePath);
+    QString text = finfo.fileName();
+    if (tab->isFileUnsaved()) {
+        text += "*";
+    }
+    if (tab->isPinned()) {
+        QIcon themed = QIcon::fromTheme(QStringLiteral("emblem-pinned"));
+        setTabIcon(index, themed.isNull() ? pinIcon : themed);
+    } else {
+        setTabIcon(index, QIcon());
+    }
+    setTabText(index, text);
+}
+
+int FilesTabWidget::pinnedCount() const {
+    int countPinned = 0;
+    for (int i = 0; i < count(); ++i) {
+        FileTab *tab = qobject_cast<FileTab *>(widget(i));
+        if (tab && tab->isPinned()) {
+            ++countPinned;
+        }
+    }
+    return countPinned;
 }

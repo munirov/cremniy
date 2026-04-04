@@ -31,7 +31,9 @@ static QString stripAnsiCodes(const QString &text) {
     return cleaned;
 }
 
-TerminalWidget::TerminalWidget(QWidget *parent) : QWidget(parent) {
+TerminalWidget::TerminalWidget(QWidget *parent, const QString &workingDirectory)
+    : QWidget(parent), m_workingDirectory(workingDirectory)
+{
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
@@ -55,6 +57,11 @@ TerminalWidget::TerminalWidget(QWidget *parent) : QWidget(parent) {
 }
 
 void TerminalWidget::setupShell() {
+    QString workingDirectory = m_workingDirectory;
+    if (!workingDirectory.isEmpty() && QDir(workingDirectory).exists()) {
+        m_process->setWorkingDirectory(workingDirectory);
+    }
+
 #ifdef Q_OS_WIN
     // Используем полный путь на всякий случай
     m_process->start("powershell.exe", QStringList() << "-NoLogo" << "-NoExit" << "-Command" << "chcp 65001; clear");
@@ -216,9 +223,14 @@ void TerminalWidget::onProcessError(QProcess::ProcessError error) {
 
 TerminalWidget::~TerminalWidget() {
     saveHistory();
+
+    if (m_process) {
+        // Prevent QProcess from delivering signals into a partially destroyed widget.
+        disconnect(m_process, nullptr, this, nullptr);
+    }
     
-    if (m_process->state() != QProcess::NotRunning) {
+    if (m_process && m_process->state() != QProcess::NotRunning) {
         m_process->kill();
-        m_process->setParent(nullptr);
+        m_process->waitForFinished(500);
     }
 }

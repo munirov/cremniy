@@ -54,6 +54,7 @@ private:
 
     // - - Terminal Widget - -
     TerminalWidget* m_terminal;
+    QString m_projectPath;
 
 
 public slots:
@@ -87,14 +88,28 @@ public slots:
 
     /**
      * @brief Отображение терминала
-    */
+     */
     void on_Toggle_Terminal(bool checked);
+
+    /**
+     * @brief Переключение переноса строк в редакторах кода
+     */
+    void on_SetWordWrap(bool checked);
+
+    /**
+     * @brief Переключение вставки пробелов вместо tab в редакторах кода
+     */
+    void on_SetTabReplace(bool checked);
+
+    /**
+     * @brief Изменение визуальной ширины tab в редакторах кода
+     */
+    void on_SetTabWidth(int width);
 
     /**
      * @brief Отображение дерева файлов
     */
     void on_Toggle_FileTree(bool checked);
-
 
 signals:
     void saveFileSignal();

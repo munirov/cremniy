@@ -1,289 +1,235 @@
 #include "codeeditortab.h"
-#include "QCodeEditor.hpp"
-#include <QStyle>
-#include <qboxlayout.h>
-#include <qfileinfo.h>
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qstackedlayout.h>
+#include "core/ToolTabFactory.h"
 #include "filemanager.h"
 #include "utils.h"
 
+#include <QBoxLayout>
+#include <QFileInfo>
+#include <QInputDialog>
+#include <QLabel>
 #include <QLineEdit>
-#include <QShortcut>
-#include <QKeySequence>
-#include <QTextCursor>
-#include <QHBoxLayout>
+#include <QPushButton>
+#include <QStackedLayout>
+#include <QVBoxLayout>
 
-
-#include "core/ToolTabFactory.h"
-
-static bool registered = [](){
-    ToolTabFactory::instance().registerTab("1", [](FileDataBuffer* buffer){
+static bool registered = []() {
+    ToolTabFactory::instance().registerTab("1", [](FileDataBuffer* buffer) {
         return new CodeEditorTab(buffer);
     });
     return true;
 }();
 
-namespace {
-const QByteArray kUtf8Bom("\xEF\xBB\xBF", 3);
-}
-
-CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
-    : ToolTab{buffer, parent}
+CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
+    : ToolTab(buffer, parent)
 {
-    m_selectionSyncTimer = new QTimer(this);
-    m_selectionSyncTimer->setSingleShot(true);
-    connect(m_selectionSyncTimer, &QTimer::timeout, this, [this]() {
-        applyBufferedSelection();
-    });
+    auto* rootLayout = new QVBoxLayout(this);
+    rootLayout->setContentsMargins(0, 0, 0, 0);
+    rootLayout->setSpacing(0);
 
-    // - - Create "Code Editor" Page - -
+    m_searchBar = new QWidget(this);
+    auto* searchLayout = new QHBoxLayout(m_searchBar);
+    searchLayout->setContentsMargins(8, 6, 8, 6);
+    searchLayout->setSpacing(6);
+    m_searchBar->setStyleSheet("background-color: #252525; border-bottom: 1px solid #3a3a3a;");
 
-    m_codeEditorWidget = new QCodeEditor(this);
+    auto* searchLabel = new QLabel("Find:", m_searchBar);
+    m_searchEdit = new QLineEdit(m_searchBar);
+    m_searchEdit->setPlaceholderText("Search in file");
+    m_searchPrevButton = new QPushButton("Prev", m_searchBar);
+    m_searchNextButton = new QPushButton("Next", m_searchBar);
+    m_matchCaseCheckBox = new QCheckBox("Match case", m_searchBar);
+    m_searchStatusLabel = new QLabel("0/0", m_searchBar);
+    m_searchCloseButton = new QPushButton("x", m_searchBar);
+    m_searchCloseButton->setFixedWidth(28);
 
-    QTextOption opt = m_codeEditorWidget->document()->defaultTextOption();
-    opt.setTabStopDistance(20);
-    m_codeEditorWidget->document()->setDefaultTextOption(opt);
+    searchLayout->addWidget(searchLabel);
+    searchLayout->addWidget(m_searchEdit, 1);
+    searchLayout->addWidget(m_searchPrevButton);
+    searchLayout->addWidget(m_searchNextButton);
+    searchLayout->addWidget(m_matchCaseCheckBox);
+    searchLayout->addWidget(m_searchStatusLabel);
+    searchLayout->addWidget(m_searchCloseButton);
+    m_searchBar->hide();
+    rootLayout->addWidget(m_searchBar);
 
-    m_codeEditorWidget->document()->markContentsDirty(0, m_codeEditorWidget->document()->characterCount());
-    m_codeEditorWidget->viewport()->update();
-
-    // - - Create "Binary File Detected" Page - -
+    m_codeEditorWidget = new CustomCodeEditor(this);
 
     m_overlayWidget = new QWidget(this);
-
     auto overlayLayout = new QVBoxLayout(m_overlayWidget);
     overlayLayout->setAlignment(Qt::AlignCenter);
 
-    QLabel* title = new QLabel("Binary file detected");
+    QLabel* title = new QLabel("Binary file detected", m_overlayWidget);
     title->setStyleSheet("color: white; font-size: 20px;");
     title->setAlignment(Qt::AlignCenter);
     title->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     overlayLayout->addWidget(title);
     overlayLayout->addSpacing(15);
 
-    QHBoxLayout *btnLayout = new QHBoxLayout();
+    auto* btnLayout = new QHBoxLayout();
     btnLayout->setAlignment(Qt::AlignCenter);
-
-    QPushButton* anywayOpenBtn = new QPushButton("Open anyway");
-
+    auto* anywayOpenBtn = new QPushButton("Open anyway", m_overlayWidget);
     btnLayout->addWidget(anywayOpenBtn);
     overlayLayout->addLayout(btnLayout);
 
-    // - - Create Search Bar Widget - -
-    m_searchWidget = new QWidget(this);
-    m_searchWidget->setObjectName("searchWidget");
-
-    
-    QHBoxLayout* searchLayout = new QHBoxLayout(m_searchWidget);
-    searchLayout->setContentsMargins(6, 6, 6, 6);
-    searchLayout->setSpacing(5);
-
-    m_searchLineEdit = new QLineEdit(this);
-    m_searchLineEdit->setPlaceholderText("Find...");
-    
-    m_findPrevBtn = new QPushButton("▲ Prev", this);
-    m_findNextBtn = new QPushButton("▼ Next", this);
-    m_closeSearchBtn = new QPushButton("✕", this);
-    
-    m_closeSearchBtn->setFixedWidth(30);
-
-    searchLayout->addWidget(m_searchLineEdit);
-    searchLayout->addWidget(m_findPrevBtn);
-    searchLayout->addWidget(m_findNextBtn);
-    searchLayout->addWidget(m_closeSearchBtn);
-    
-    m_searchWidget->hide();
-
-    // - - Create and Init Stacked Layout Widget - -
-    auto stack = new QStackedLayout;
+    auto* stackHost = new QWidget(this);
+    auto* stack = new QStackedLayout(stackHost);
     stack->setStackingMode(QStackedLayout::StackAll);
     stack->addWidget(m_codeEditorWidget);
     stack->addWidget(m_overlayWidget);
+    rootLayout->addWidget(stackHost);
 
     m_overlayWidget->hide();
 
-    QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(0);
-    mainLayout->addLayout(stack);
-    mainLayout->addWidget(m_searchWidget); 
-
-    this->setLayout(mainLayout);
-
-    // - - Search Bar Connects & Shortcuts - -
-
-    // Ctrl+F
-    QShortcut* searchShortcut = new QShortcut(QKeySequence("Ctrl+F"), this);
-    searchShortcut->setContext(Qt::WidgetWithChildrenShortcut);
-    connect(searchShortcut, &QShortcut::activated, this, &CodeEditorTab::showSearchBar);
-
-    // Esc
-    QShortcut* escapeShortcut = new QShortcut(QKeySequence("Esc"), m_searchWidget);
-    escapeShortcut->setContext(Qt::WidgetWithChildrenShortcut);
-    connect(escapeShortcut, &QShortcut::activated, this, &CodeEditorTab::hideSearchBar);
-
-    connect(m_closeSearchBtn, &QPushButton::clicked, this, &CodeEditorTab::hideSearchBar);
-
-    connect(m_searchLineEdit, &QLineEdit::returnPressed, this, [this]() {
-        performSearch(false);
-    });
-
-    connect(m_findNextBtn, &QPushButton::clicked, this, [this]() { performSearch(false); });
-    connect(m_findPrevBtn, &QPushButton::clicked, this, [this]() { performSearch(true); });
-
-    connect(m_searchLineEdit, &QLineEdit::textChanged, this, [this]() {
-        performSearch(false);
-    });
-
-
-    // Trigger: Menu Bar: View->wordWrap - setWordWrapMode
-    // connect(GlobalWidgetsManager::instance().get_IDEWindow_menuBar_view_wordWrap(),
-    //         &QAction::changed,
-    //         this, [this]{
-    //             if (GlobalWidgetsManager::instance().get_IDEWindow_menuBar_view_wordWrap()->isChecked())
-    //                 m_codeEditorWidget->setWordWrapMode(QTextOption::WordWrap);
-    //             else
-    //                 m_codeEditorWidget->setWordWrapMode(QTextOption::NoWrap);
-    //         });
-
-    // Clicked: Open File Anyway Button
-    connect(anywayOpenBtn, &QPushButton::clicked, this, [this]{
+    connect(anywayOpenBtn, &QPushButton::clicked, this, [this]() {
         forceSetData = true;
-        this->setTabData();
+        setTabData();
     });
 
-    // ContentsChanged: синхронизируем рабочую копию буфера и dirty-state
-    connect(m_codeEditorWidget->document(),
-            &QTextDocument::contentsChanged,
-            this,
-            [this](){
-                if (m_codeEditorWidget->m_ignoreModification || m_syncingBufferData)
-                    return;
+    connect(m_searchEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
+        m_lastSearchText = text;
+        updateSearchUi();
+    });
+    connect(m_searchEdit, &QLineEdit::returnPressed, this, [this]() { findNext(true); });
+    connect(m_searchPrevButton, &QPushButton::clicked, this, [this]() { findNext(false); });
+    connect(m_searchNextButton, &QPushButton::clicked, this, [this]() { findNext(true); });
+    connect(m_searchCloseButton, &QPushButton::clicked, this, &CodeEditorTab::closeSearchBar);
+    connect(m_matchCaseCheckBox, &QCheckBox::stateChanged, this, [this](int) {
+        updateSearchUi();
+    });
 
-                const QByteArray data = editorDataWithBom();
-                const QByteArray currentBufferData = m_dataBuffer->data();
-
-                if (data == currentBufferData) {
-                    m_codeEditorWidget->document()->setModified(m_dataBuffer->isModified());
-
-                    if (m_dataBuffer->isModified()) {
-                        setModifyIndicator(true);
-                        emit modifyData();
-                    } else {
-                        setModifyIndicator(false);
-                        emit dataEqual();
-                    }
-                    return;
-                }
-
-                m_syncingBufferData = true;
-                m_dataBuffer->replaceData(data);
-                m_syncingBufferData = false;
-
-                if (m_dataBuffer->isModified()) {
-                    setModifyIndicator(true);
-                    emit modifyData();
-                } else {
-                    setModifyIndicator(false);
-                    emit dataEqual();
-                }
-            });
-
-    // SelectionChanged: уведомляем буфер о выделении
-    connect(m_codeEditorWidget, &QPlainTextEdit::selectionChanged,
-        this, [this]() {
-            if (m_updatingSelection) return; // Предотвращаем рекурсию
-            m_updatingSelection = true; // Устанавливаем флаг перед отправкой сигнала
-
-            QTextCursor cursor = m_codeEditorWidget->textCursor();
-            const int charStart = cursor.hasSelection() ? cursor.selectionStart() : cursor.position();
-            const int charEnd   = cursor.hasSelection() ? cursor.selectionEnd()   : cursor.position();
-
-            // Преобразуем позиции символов в байтовые смещения
-            const qint64 byteStart  = charOffsetToRawByte(charStart);
-            const qint64 byteEnd    = charOffsetToRawByte(charEnd);
-            const qint64 byteLength = qMax<qint64>(0, byteEnd - byteStart);
-            
-            // Уведомляем буфер о выделении
-            m_dataBuffer->setSelection(byteStart, byteLength);
-
-            m_updatingSelection = false;
-        });
-
-}
-
-qint64 CodeEditorTab::charOffsetToRawByte(int charOffset) const
-{
-    QByteArray rawData = m_dataBuffer->data();
-    qint64 baseOffset = 0;
-
-    if (m_hasUtf8Bom && rawData.startsWith(kUtf8Bom)) {
-        rawData.remove(0, kUtf8Bom.size());
-        baseOffset = kUtf8Bom.size();
-    }
-
-    const QString text = m_codeEditorWidget->toPlainText();
-    const qint64 normTarget = text.left(charOffset).toUtf8().size();
-
-    if (normTarget == 0)
-        return baseOffset;
-
-    qint64 rawIndex = 0;
-    qint64 normIndex = 0;
-
-    while (rawIndex < rawData.size()) {
-        if (normIndex == normTarget)
-            return rawIndex + baseOffset;
-
-        if (rawData[rawIndex] == '\r') {
-            rawIndex += (rawIndex + 1 < rawData.size() && rawData[rawIndex + 1] == '\n') ? 2 : 1;
-            normIndex += 1;
+    connect(m_codeEditorWidget, &CustomCodeEditor::contentsChanged, this, [this]() {
+        if (m_dataBuffer->isModified()) {
+            setModifyIndicator(true);
+            emit modifyData();
         } else {
-            rawIndex += 1;
-            normIndex += 1;
+            setModifyIndicator(false);
+            emit dataEqual();
         }
+    });
+
+    connect(m_codeEditorWidget, &CustomCodeEditor::modificationChanged, this, [this](bool modified) {
+        setModifyIndicator(modified);
+        if (modified)
+            emit modifyData();
+        else
+            emit dataEqual();
+    });
+
+    m_findShortcut = new QShortcut(QKeySequence::Find, this);
+    m_findNextShortcut = new QShortcut(QKeySequence(Qt::Key_F3), this);
+    m_findPreviousShortcut = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F3), this);
+    m_goToLineShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_G), this);
+
+    connect(m_findShortcut, &QShortcut::activated, this, &CodeEditorTab::openFindDialog);
+    connect(m_findNextShortcut, &QShortcut::activated, this, [this]() { findNext(true); });
+    connect(m_findPreviousShortcut, &QShortcut::activated, this, [this]() { findNext(false); });
+    connect(m_goToLineShortcut, &QShortcut::activated, this, &CodeEditorTab::openGoToLineDialog);
+}
+
+void CodeEditorTab::openFindDialog()
+{
+    m_searchBar->show();
+    m_searchEdit->setFocus();
+    m_searchEdit->selectAll();
+    updateSearchUi();
+}
+
+void CodeEditorTab::findNext(bool forward)
+{
+    if (m_lastSearchText.isEmpty()) {
+        openFindDialog();
+        return;
     }
 
-    return rawData.size() + baseOffset;
+    const Qt::CaseSensitivity caseSensitivity = m_matchCaseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    m_codeEditorWidget->findText(m_lastSearchText, forward, caseSensitivity);
+    updateSearchUi();
 }
 
-// - - override functions - -
+void CodeEditorTab::openGoToLineDialog()
+{
+    bool ok = false;
+    const int line = QInputDialog::getInt(this,
+                                          tr("Go to line"),
+                                          tr("Line number:"),
+                                          1,
+                                          1,
+                                          static_cast<int>(qMax<qint64>(1, m_codeEditorWidget->lineCount())),
+                                          1,
+                                          &ok);
+    if (!ok)
+        return;
 
-// - public slots -
+    m_codeEditorWidget->goToLine(line);
+}
 
-void CodeEditorTab::setFile(QString filepath){
+void CodeEditorTab::updateSearchUi()
+{
+    const Qt::CaseSensitivity caseSensitivity = m_matchCaseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    const int total = m_codeEditorWidget->countMatches(m_searchEdit->text(), caseSensitivity);
+    const int current = m_codeEditorWidget->currentMatchIndex(m_searchEdit->text(), caseSensitivity);
+    m_searchStatusLabel->setText(QString("%1/%2").arg(current).arg(total));
+
+    const bool hasQuery = !m_searchEdit->text().isEmpty();
+    m_searchPrevButton->setEnabled(hasQuery && total > 0);
+    m_searchNextButton->setEnabled(hasQuery && total > 0);
+}
+
+void CodeEditorTab::closeSearchBar()
+{
+    m_searchBar->hide();
+    m_codeEditorWidget->setFocus();
+}
+
+void CodeEditorTab::setFile(QString filepath)
+{
     m_fileContext = new FileContext(filepath);
-    QFileInfo fileInfo(filepath);
-    QString ext = (fileInfo.suffix()).toLower();
-    m_codeEditorWidget->setFileExt(ext);
+    m_codeEditorWidget->setFileExt(CustomCodeEditor::syntaxKeyForPath(filepath));
 }
 
-void CodeEditorTab::setTabData(){
+void CodeEditorTab::setTabData()
+{
+    static constexpr qint64 kLargeTextFileThreshold = 2 * 1024 * 1024;
 
-    qDebug() << "CodeEditorTab: setTabData";
-
+    qDebug() << "CodeEditorTab::setTabData this=" << this << " buffer=" << m_dataBuffer;
     const QByteArray probeData = m_dataBuffer->read(0, 4096);
+    const bool binary = isBinary(probeData);
+    qDebug() << "CodeEditorTab::setTabData binary=" << binary << " forceSetData=" << forceSetData << " probeSize=" << probeData.size();
 
-    if (isBinary(probeData) && !forceSetData){
+    if (binary && !forceSetData) {
         m_codeEditorWidget->hide();
         m_overlayWidget->show();
-    }
-    else{
-        QByteArray data = m_dataBuffer->data();
-        m_hasUtf8Bom = data.startsWith(kUtf8Bom);
-        if (m_hasUtf8Bom)
-            data.remove(0, kUtf8Bom.size());
-
-        m_codeEditorWidget->show();
+    } else {
         m_overlayWidget->hide();
-        m_syncingBufferData = true;
-        m_codeEditorWidget->setBData(data);
-        m_syncingBufferData = false;
+        m_codeEditorWidget->show();
+        const bool largeFileMode = m_dataBuffer->isLargeFile() || m_dataBuffer->size() >= kLargeTextFileThreshold;
+        if (m_largeFileMode != largeFileMode) {
+            m_largeFileMode = largeFileMode;
+            if (m_largeFileMode) {
+                m_codeEditorWidget->setWordWrapEnabled(false);
+                m_codeEditorWidget->setSyntaxHighlighter(nullptr);
+            } else {
+                m_codeEditorWidget->setWordWrapEnabled(true);
+                m_codeEditorWidget->setFileExt(CustomCodeEditor::syntaxKeyForPath(m_fileContext->filePath()));
+            }
+        }
+        m_codeEditorWidget->setBuffer(m_dataBuffer);
         forceSetData = false;
     }
 
+    if (m_dataBuffer->isModified()) {
+        setModifyIndicator(true);
+        emit modifyData();
+    } else {
+        setModifyIndicator(false);
+        qDebug() << "CodeEditorTab::setTabData emit dataEqual this=" << this;
+        emit dataEqual();
+        qDebug() << "CodeEditorTab::setTabData dataEqual returned this=" << this;
+    }
+}
+
+void CodeEditorTab::onDataChanged()
+{
     if (m_dataBuffer->isModified()) {
         setModifyIndicator(true);
         emit modifyData();
@@ -293,188 +239,23 @@ void CodeEditorTab::setTabData(){
     }
 }
 
-void CodeEditorTab::onDataChanged()
-{
-    if (m_syncingBufferData)
-        return;
-
-    setTabData();
-}
-
 void CodeEditorTab::onSelectionChanged(qint64 pos, qint64 length)
 {
+    Q_UNUSED(pos);
+    Q_UNUSED(length);
     if (m_updatingSelection)
         return;
-
-    m_pendingSelectionPos = pos;
-    m_pendingSelectionLength = length;
-    m_selectionSyncTimer->start(35);
 }
 
-void CodeEditorTab::saveTabData() {
-    qDebug() << "CodeEditorTab: saveTabData";
-
-    if (!m_codeEditorWidget->m_ignoreModification && !m_syncingBufferData)
-        m_dataBuffer->replaceData(editorDataWithBom());
-
+void CodeEditorTab::saveTabData()
+{
     if (!m_dataBuffer->isModified())
         return;
 
     if (!m_dataBuffer->saveToFile(m_fileContext->filePath()))
         return;
 
-    m_codeEditorWidget->document()->setModified(false);
-
     setModifyIndicator(false);
     emit dataEqual();
     emit refreshDataAllTabsSignal();
-}
-
-
-void CodeEditorTab::showSearchBar()
-{
-    // Если открыта панель "Binary File", поиск не нужен
-    if (!m_overlayWidget->isHidden()) return; 
-
-    m_searchWidget->show();
-    m_searchLineEdit->setFocus();
-    m_searchLineEdit->selectAll(); // Выделяем текст, если там уже что-то было
-}
-
-void CodeEditorTab::hideSearchBar()
-{
-    m_searchWidget->hide();
-    m_codeEditorWidget->setFocus(); // Возвращаем фокус в редактор
-}
-
-void CodeEditorTab::performSearch(bool backward)
-{
-    QString query = m_searchLineEdit->text();
-    if (query.isEmpty()) {
-        m_searchLineEdit->setStyleSheet(""); // Сброс стиля
-        return;
-    }
-
-    QTextDocument::FindFlags flags;
-    if (backward) flags |= QTextDocument::FindBackward;
-    
-    // Выполняем поиск
-    bool found = m_codeEditorWidget->find(query, flags);
-
-    if (!found) {
-        QTextCursor cursor = m_codeEditorWidget->textCursor();
-        cursor.movePosition(backward ? QTextCursor::End : QTextCursor::Start);
-        m_codeEditorWidget->setTextCursor(cursor);
-        
-        found = m_codeEditorWidget->find(query, flags);
-    }
-
-    if (!found) {
-        m_searchLineEdit->setProperty("state", "error");
-    } else {
-        m_searchLineEdit->setProperty("state", "normal");
-    }
-    // Обновляем виджет, чтобы Qt применил новые стили из QSS
-    m_searchLineEdit->style()->unpolish(m_searchLineEdit);
-    m_searchLineEdit->style()->polish(m_searchLineEdit);
-}
-
-QByteArray CodeEditorTab::editorDataWithBom() const
-{
-    QByteArray data = m_codeEditorWidget->getBData();
-    if (m_hasUtf8Bom)
-        data.prepend(kUtf8Bom);
-    return data;
-}
-
-void CodeEditorTab::applyBufferedSelection()
-{
-    if (m_updatingSelection)
-        return;
-
-    m_updatingSelection = true;
-
-    QByteArray data = m_dataBuffer->data();
-    qint64 pos = m_pendingSelectionPos;
-    qint64 length = m_pendingSelectionLength;
-
-    if (m_hasUtf8Bom && data.startsWith(kUtf8Bom)) {
-        data.remove(0, kUtf8Bom.size());
-        pos = qMax<qint64>(0, pos - kUtf8Bom.size());
-        length = qBound<qint64>(0, length, data.size() - pos);
-    }
-
-    pos = qBound<qint64>(0, pos, data.size());
-    length = qBound<qint64>(0, length, data.size() - pos);
-
-    // Map raw byte offsets to the normalized text representation used by QPlainTextEdit.
-    // QPlainTextEdit collapses CRLF and CR to a single '\n', so we must mirror that.
-    const qint64 rawEnd = pos + length;
-    qint64 normPos = -1;
-    qint64 normEnd = -1;
-    qint64 rawIndex = 0;
-    qint64 normIndex = 0;
-
-    if (pos == 0)
-        normPos = 0;
-    if (rawEnd == 0)
-        normEnd = 0;
-
-    while (rawIndex < data.size()) {
-        if (rawIndex == pos && normPos < 0)
-            normPos = normIndex;
-        if (rawIndex == rawEnd && normEnd < 0)
-            normEnd = normIndex;
-
-        if (data[rawIndex] == '\r') {
-            if (rawIndex + 1 < data.size() && data[rawIndex + 1] == '\n') {
-                rawIndex += 2;
-            } else {
-                rawIndex += 1;
-            }
-            normIndex += 1;
-            continue;
-        }
-
-        rawIndex += 1;
-        normIndex += 1;
-    }
-
-    if (normPos < 0)
-        normPos = normIndex;
-    if (normEnd < 0)
-        normEnd = normIndex;
-
-    qint64 normLength = qMax<qint64>(0, normEnd - normPos);
-
-    QByteArray normalized;
-    normalized.reserve(data.size());
-    for (qint64 i = 0; i < data.size(); ++i) {
-        if (data[i] == '\r') {
-            if (i + 1 < data.size() && data[i + 1] == '\n')
-                ++i;
-            normalized.append('\n');
-        } else {
-            normalized.append(data[i]);
-        }
-    }
-
-    normPos = qBound<qint64>(0, normPos, normalized.size());
-    normLength = qBound<qint64>(0, normLength, normalized.size() - normPos);
-
-    const QByteArray beforeSelection = normalized.left(normPos);
-    const QString beforeText = QString::fromUtf8(beforeSelection);
-    const int charStart = beforeText.length();
-
-    const QByteArray selectedBytes = normalized.mid(normPos, normLength);
-    const QString selectedText = QString::fromUtf8(selectedBytes);
-    const int charLength = selectedText.length();
-
-    QTextCursor cursor = m_codeEditorWidget->textCursor();
-    cursor.setPosition(charStart);
-    cursor.setPosition(charStart + charLength, QTextCursor::KeepAnchor);
-    m_codeEditorWidget->setTextCursor(cursor);
-
-    m_updatingSelection = false;
-
 }

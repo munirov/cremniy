@@ -10,7 +10,7 @@
 class TerminalWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit TerminalWidget(QWidget *parent = nullptr);
+    explicit TerminalWidget(QWidget *parent = nullptr, const QString &workingDirectory = QString());
     ~TerminalWidget();
 
 private slots:
@@ -31,6 +31,7 @@ private:
 
     QPlainTextEdit *m_display;
     QProcess *m_process;
+    QString m_workingDirectory;
     
     int m_lastPromptPos = 0;
     

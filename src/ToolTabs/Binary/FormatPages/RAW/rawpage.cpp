@@ -1,5 +1,6 @@
 #include "rawpage.h"
 #include "formatpagefactory.h"
+#include "core/FileDataBuffer.h"
 
 static bool registered = [](){
     FormatPageFactory::instance().registerPage("1", [](){
@@ -21,6 +22,13 @@ RAWPage::RAWPage(QWidget *parent)
             &QHexDocument::changed,
             this,
             [this](){
+                if (m_sharedBuffer) {
+                    if (m_sharedBuffer->isModified())
+                        emit modifyData();
+                    else
+                        emit dataEqual();
+                    return;
+                }
 
                 QByteArray data = m_hexViewWidget->getBData();
                 uint newDataHash = qHash(data, 0);
@@ -38,33 +46,19 @@ RAWPage::RAWPage(QWidget *parent)
     // Отслеживаем изменение выделения в hex view
     connect(m_hexViewWidget->hexCursor(), &QHexCursor::positionChanged,
             this, [this](){
-                if (m_ignoreSelectionSignals)
-                    return;
-
-                if (m_hexViewWidget->hexCursor()->getSelectFromFormatPage())
-                    return;
-                auto cursor = m_hexViewWidget->hexCursor();
-                if (cursor->hasSelection()) {
-                    qint64 start = cursor->selectionStartOffset();
-                    qint64 length = cursor->selectionLength();
-                    if (length <= 0)
-                        return;
-
+                if (m_hexViewWidget->hexCursor()->hasSelection()) {
+                    qint64 start = m_hexViewWidget->hexCursor()->selectionStartOffset();
+                    qint64 length = m_hexViewWidget->hexCursor()->selectionLength();
                     emit selectionChanged(start, length);
-                    return;
+                } else {
+                    emit selectionChanged(m_hexViewWidget->hexCursor()->offset(), 0);
                 }
-
-                const qint64 caretOffset = cursor->offset();
-                if (caretOffset < 0)
-                    return;
-
-                emit selectionChanged(caretOffset, 0);
             });
 
 }
 
 void RAWPage::setPageData(QByteArray& data) {
-    QSignalBlocker blocker(m_hexViewWidget->hexCursor());
+    m_sharedBuffer = nullptr;
     m_hexViewWidget->setBData(data);
     m_dataHash = qHash(data, 0);
     emit dataEqual();
@@ -79,7 +73,21 @@ void RAWPage::setSelection(qint64 pos, qint64 length) {
     m_hexViewWidget->hexCursor()->setSelectFromFormatPage(true);
     m_hexViewWidget->hexCursor()->move(pos);
     m_hexViewWidget->hexCursor()->selectSize(length);
-    m_hexViewWidget->setSelectFromFormatPage(false);
-    m_hexViewWidget->hexCursor()->setSelectFromFormatPage(false);
 }
 
+bool RAWPage::showFind()
+{
+    m_hexViewWidget->showFind();
+    return true;
+}
+
+void RAWPage::setSharedBuffer(FileDataBuffer* buffer)
+{
+    if (!buffer || m_sharedBuffer == buffer)
+        return;
+
+    m_sharedBuffer = buffer;
+    m_hexViewWidget->setSharedBuffer(buffer);
+    m_dataHash = buffer->currentHash();
+    emit dataEqual();
+}
