@@ -21,6 +21,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     // - - Menu Bar - -
     MenuBarBuilder* menuBarBuilder = new MenuBarBuilder(menuBar(), this);
 
+    menuBar()->setNativeMenuBar(false);
     // - - Widgets - -
     m_statusBar = statusBar();
 
