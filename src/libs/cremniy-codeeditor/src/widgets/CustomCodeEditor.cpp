@@ -1569,10 +1569,6 @@ void CustomCodeEditor::contextMenuEvent(QContextMenuEvent* event)
     QAction* deleteAction = menu.addAction(tr("Delete"));
     menu.addSeparator();
     QAction* selectAllAction = menu.addAction(tr("Select All"));
-    menu.addSeparator();
-    QAction* wordWrapAction = menu.addAction(tr("Word Wrap"));
-    wordWrapAction->setCheckable(true);
-    wordWrapAction->setChecked(m_wordWrapEnabled);
 
     const bool hasEditorSelection = hasSelection();
     const QMimeData* mimeData = QApplication::clipboard()->mimeData();
@@ -1601,8 +1597,6 @@ void CustomCodeEditor::contextMenuEvent(QContextMenuEvent* event)
         deleteForward();
     else if (chosen == selectAllAction)
         selectAll();
-    else if (chosen == wordWrapAction)
-        setWordWrapEnabled(wordWrapAction->isChecked());
 
     event->accept();
 }
