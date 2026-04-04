@@ -1721,11 +1721,6 @@ void CustomCodeEditor::onBufferSelectionChanged(qint64 pos, qint64 length)
     if (m_updatingSelection)
         return;
 
-    // Ignore zero-length selection echoes while this editor is actively
-    // applying its own edit; other views may still be catching up.
-    if (m_applyingBufferEdit && length == 0)
-        return;
-
     updateSelection(pos, length);
     m_cursorBytePos = clampToUtf8Boundary(length > 0 ? pos + length : pos);
     clampCursorToBuffer();
@@ -2486,8 +2481,11 @@ void CustomCodeEditor::undo()
     m_applyingBufferEdit = true;
     m_buffer->undo();
     m_applyingBufferEdit = false;
-    clearSelection();
+
     clampCursorToBuffer();
+    ensureCursorVisible();
+    emit cursorPositionChanged();
+    viewport()->update();
 }
 
 void CustomCodeEditor::redo()
@@ -2498,8 +2496,11 @@ void CustomCodeEditor::redo()
     m_applyingBufferEdit = true;
     m_buffer->redo();
     m_applyingBufferEdit = false;
-    clearSelection();
+
     clampCursorToBuffer();
+    ensureCursorVisible();
+    emit cursorPositionChanged();
+    viewport()->update();
 }
 
 void CustomCodeEditor::deleteBackward()
@@ -2833,12 +2834,17 @@ void CustomCodeEditor::replaceRange(qint64 start, qint64 length, const QByteArra
     length = qBound<qint64>(0, length, bufferSize - start);
     const QByteArray removedBytes = length > 0 ? m_buffer->read(start, length) : QByteArray();
 
+    const qint64 beforePos = hasSelection() ? m_selectionStart : m_cursorBytePos;
+    const qint64 beforeLength = hasSelection() ? m_selectionLength : 0;
+    m_buffer->setPendingHistorySelectionBefore(beforePos, beforeLength);
+
     logEditRange("replaceRange", start, length, removedBytes, replacement);
 
     m_cursorBytePos = start + replacement.size();
     m_selectionStart = m_cursorBytePos;
     m_selectionLength = 0;
     m_selectionAnchor = -1;
+    m_buffer->setPendingHistorySelectionAfter(m_cursorBytePos, 0);
 
     m_applyingBufferEdit = true;
     if (length == 0) {
