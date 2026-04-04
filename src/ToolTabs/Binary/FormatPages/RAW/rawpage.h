@@ -9,6 +9,7 @@ class RAWPage : public FormatPage
 
 private:
     QHexView* m_hexViewWidget;
+    bool m_ignoreSelectionSignals = false;
 
 public:
     explicit RAWPage(QWidget *parent = nullptr);

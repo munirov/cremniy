@@ -69,7 +69,6 @@ QByteArray RAWPage::getPageData() const {
 }
 
 void RAWPage::setSelection(qint64 pos, qint64 length) {
-    // Устанавливаем выделение в hex view
     m_hexViewWidget->setSelectFromFormatPage(true);
     m_hexViewWidget->hexCursor()->setSelectFromFormatPage(true);
     m_hexViewWidget->hexCursor()->move(pos);
@@ -92,4 +91,3 @@ void RAWPage::setSharedBuffer(FileDataBuffer* buffer)
     m_dataHash = buffer->currentHash();
     emit dataEqual();
 }
-
