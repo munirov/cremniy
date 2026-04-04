@@ -15,6 +15,8 @@
 class HexFindDialog;
 #endif
 
+class FileDataBuffer;
+
 struct QHexCopyFormat {
     QString prefix;
     QString suffix;
@@ -50,7 +52,14 @@ class QHexView: public QAbstractScrollArea, public ToolWidget {
     };
 
 public:
+    struct PerfStats {
+        double lastPaintMs = 0.0;
+        double avgPaintMs = 0.0;
+        int sampleCount = 0;
+    };
+
     explicit QHexView(QWidget* parent = nullptr);
+    static PerfStats perfStats();
 
     bool m_ignoreModification = false;
 
@@ -98,6 +107,7 @@ public:
     void setDocument(QHexDocument* doc);
     void setData(const QByteArray& ba);
     void setData(QHexBuffer* buffer);
+    void setSharedBuffer(FileDataBuffer* buffer);
     void setTrackChanges(bool b);
     void setCursorMode(QHexCursor::Mode mode);
     void setByteColor(quint8 b, const QHexCharFormat& cf);
@@ -138,6 +148,7 @@ public Q_SLOTS:
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
     void showFind();
     void showReplace();
+    void showGoto();
 #endif
     void invertByteOrder();
     void undo();
@@ -204,6 +215,7 @@ private:
 protected:
     bool event(QEvent* e) override;
     void showEvent(QShowEvent* e) override;
+    void scrollContentsBy(int dx, int dy) override;
     void paintEvent(QPaintEvent*) override;
     void resizeEvent(QResizeEvent* e) override;
     void focusInEvent(QFocusEvent* e) override;
@@ -239,6 +251,7 @@ private:
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
     HexFindDialog *m_hexdlgfind{nullptr}, *m_hexdlgreplace{nullptr};
 #endif
+    static PerfStats s_perfStats;
 
     friend class QHexDelegate;
     friend class QHexCursor;

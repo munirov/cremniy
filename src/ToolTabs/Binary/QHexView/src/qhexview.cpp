@@ -3,11 +3,15 @@
 #include <QContextMenuEvent>
 #include <QFontDatabase>
 #include <QMenu>
+#include <QHexView/model/buffer/qfiledatabuffer.h>
 #include <QHexView/model/buffer/qmemorybuffer.h>
 #include <QHexView/model/qhexcursor.h>
 #include <QHexView/model/qhexutils.h>
 #include <QHexView/qhexview.h>
 #include <QMouseEvent>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QElapsedTimer>
 #include <QPainter>
 #include <QPalette>
 #include <QScrollBar>
@@ -20,6 +24,8 @@
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
 #include <QHexView/dialogs/hexfinddialog.h>
 #endif
+
+QHexView::PerfStats QHexView::s_perfStats;
 
 #if defined(QHEXVIEW_DEBUG)
 #include <QDebug>
@@ -139,9 +145,6 @@ QHexView::QHexView(QWidget* parent)
     this->setMouseTracking(true);
     this->setFocusPolicy(Qt::StrongFocus);
     this->viewport()->setCursor(Qt::IBeamCursor);
-
-    connect(this->verticalScrollBar(), &QScrollBar::valueChanged, this,
-            [this](int) { this->viewport()->update(); });
 
     m_hexmetadata = new QHexMetadata(&m_options, this);
     connect(m_hexmetadata, &QHexMetadata::changed, this,
@@ -279,6 +282,19 @@ void QHexView::setDocument(QHexDocument* doc) {
 
 void QHexView::setData(const QByteArray& ba) { m_hexdocument->setData(ba); }
 void QHexView::setData(QHexBuffer* buffer) { m_hexdocument->setData(buffer); }
+void QHexView::setSharedBuffer(FileDataBuffer* buffer) {
+    if (!buffer)
+        return;
+
+    if (auto* sharedBuffer = dynamic_cast<QFileDataBuffer*>(m_hexdocument->m_buffer)) {
+        if (sharedBuffer->sharedBuffer() == buffer)
+            return;
+    }
+
+    m_ignoreModification = true;
+    m_hexdocument->setData(new QFileDataBuffer(buffer, m_hexdocument));
+    m_ignoreModification = false;
+}
 void QHexView::setTrackChanges(bool b) { m_hexdocument->setTrackChanges(b); }
 
 void QHexView::setCursorMode(QHexCursor::Mode mode) {
@@ -355,6 +371,49 @@ void QHexView::showReplace() {
     if(!m_hexdlgreplace)
         m_hexdlgreplace = new HexFindDialog(HexFindDialog::Type::Replace, this);
     m_hexdlgreplace->show();
+}
+
+void QHexView::showGoto() {
+    if(!m_hexdocument)
+        return;
+
+    bool ok = false;
+    const QString text = QInputDialog::getText(
+        this, tr("Go to"),
+        tr("Address or offset (0x... for hex address, decimal for offset):"),
+        QLineEdit::Normal, QString(), &ok);
+    if(!ok || text.trimmed().isEmpty())
+        return;
+
+    const QString value = text.trimmed();
+    bool parseOk = false;
+    quint64 target = 0;
+    bool absoluteAddress = false;
+
+    if(value.startsWith(QStringLiteral("0x"), Qt::CaseInsensitive)) {
+        target = value.mid(2).toULongLong(&parseOk, 16);
+        absoluteAddress = true;
+    } else {
+        target = value.toULongLong(&parseOk, 10);
+    }
+
+    if(!parseOk) {
+        QMessageBox::warning(this, tr("Go to"),
+                             tr("Invalid address or offset: %1").arg(value));
+        return;
+    }
+
+    const quint64 targetOffset = absoluteAddress ? target - this->baseAddress() : target;
+    if((absoluteAddress && target < this->baseAddress()) ||
+       targetOffset >= static_cast<quint64>(m_hexdocument->length())) {
+        QMessageBox::warning(this, tr("Go to"),
+                             tr("Target is outside the current document."));
+        return;
+    }
+
+    m_hexcursor->move(static_cast<qint64>(targetOffset));
+    ensureVisible();
+    viewport()->update();
 }
 #endif
 
@@ -1016,7 +1075,15 @@ int QHexView::visibleLines(bool absolute) const {
 }
 
 qint64 QHexView::getLastColumn(qint64 line) const {
-    return this->getLine(line).size() - 1;
+    if(!m_hexdocument || !m_options.line_length)
+        return 0;
+
+    const qint64 startOffset = line * static_cast<qint64>(m_options.line_length);
+    const qint64 remaining = m_hexdocument->length() - startOffset;
+    if(remaining <= 0)
+        return 0;
+
+    return qMin<qint64>(m_options.line_length, remaining) - 1;
 }
 qint64 QHexView::lastLine() const { return qMax<qint64>(0, this->lines() - 1); }
 
@@ -1596,6 +1663,8 @@ bool QHexView::keyPressAction(QKeyEvent* e) {
             this->copy(m_currentarea != QHexArea::Ascii);
         else if(!m_readonly && e->matches(QKeySequence::Paste))
             this->paste(m_currentarea != QHexArea::Ascii);
+        else if(e->modifiers() == Qt::ControlModifier && e->key() == Qt::Key_G)
+            this->showGoto();
         else
             return false;
 
@@ -1673,9 +1742,47 @@ void QHexView::showEvent(QShowEvent* e) {
     this->checkAndUpdate(true);
 }
 
+void QHexView::scrollContentsBy(int dx, int dy) {
+    if(!m_hexdocument) {
+        QAbstractScrollArea::scrollContentsBy(dx, dy);
+        return;
+    }
+
+    if(dx != 0) {
+        viewport()->update();
+        return;
+    }
+
+    const QRect docRect = this->documentRect().toAlignedRect();
+    if(docRect.isEmpty()) {
+        viewport()->update();
+        return;
+    }
+
+    const int pixelDy = dy * static_cast<int>(this->lineHeight());
+    if(pixelDy == 0) {
+        viewport()->update(docRect);
+        return;
+    }
+
+    viewport()->scroll(0, -pixelDy, docRect);
+
+    const int updateHeight = qMin(docRect.height(), qAbs(pixelDy));
+    if(pixelDy > 0) {
+        viewport()->update(QRect(docRect.left(), docRect.bottom() - updateHeight + 1,
+                                 docRect.width(), updateHeight));
+    } else {
+        viewport()->update(QRect(docRect.left(), docRect.top(),
+                                 docRect.width(), updateHeight));
+    }
+}
+
 void QHexView::paintEvent(QPaintEvent*) {
     if(!m_hexdocument)
         return;
+
+    QElapsedTimer timer;
+    timer.start();
 
     QPainter painter(this->viewport());
     painter.translate(-this->horizontalScrollBar()->value(), 0);
@@ -1685,6 +1792,14 @@ void QHexView::paintEvent(QPaintEvent*) {
         m_hexdelegate->paint(&painter, this);
     else
         this->paint(&painter);
+
+    const double elapsedMs = timer.nsecsElapsed() / 1000000.0;
+    s_perfStats.lastPaintMs = elapsedMs;
+    s_perfStats.sampleCount = qMin(s_perfStats.sampleCount + 1, 120);
+    if(s_perfStats.sampleCount <= 1)
+        s_perfStats.avgPaintMs = elapsedMs;
+    else
+        s_perfStats.avgPaintMs = ((s_perfStats.avgPaintMs * (s_perfStats.sampleCount - 1)) + elapsedMs) / s_perfStats.sampleCount;
 
     // DEBUG: Render hex-columns area
     // int i = 0;
@@ -1699,6 +1814,8 @@ void QHexView::paintEvent(QPaintEvent*) {
     //     painter.fillRect(r, c);
     // }
 }
+
+QHexView::PerfStats QHexView::perfStats() { return s_perfStats; }
 
 void QHexView::resizeEvent(QResizeEvent* e) {
     this->checkState();

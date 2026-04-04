@@ -307,9 +307,16 @@ void HexFindDialog::find() {
     if(!this->prepareOptions(q, mode, fd))
         return;
 
+    qint64 startOffset = m_startoffset;
+    if(startOffset < 0) {
+        if(fd == QHexFindDirection::Backward)
+            startOffset = qMax<qint64>(0, this->hexView()->hexDocument()->length() - 1);
+        else
+            startOffset = 0;
+    }
+
     auto offset = this->hexView()->hexCursor()->find(
-        q, m_startoffset > -1 ? m_startoffset : this->hexView()->offset(), mode,
-        m_findoptions, fd);
+        q, startOffset, mode, m_findoptions, fd);
     this->checkResult(q, offset, fd);
 }
 

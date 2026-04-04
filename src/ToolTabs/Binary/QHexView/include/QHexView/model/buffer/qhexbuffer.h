@@ -26,4 +26,8 @@ public:
     virtual void write(QIODevice* iodevice) = 0;
     virtual qint64 indexOf(const QByteArray& ba, qint64 from) = 0;
     virtual qint64 lastIndexOf(const QByteArray& ba, qint64 from) = 0;
+
+Q_SIGNALS:
+    void dataReloaded();
+    void dataChangedExternally(qint64 offset, qint64 length);
 };

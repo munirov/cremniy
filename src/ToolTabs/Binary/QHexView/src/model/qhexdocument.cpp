@@ -1,5 +1,6 @@
 #include <QBuffer>
 #include <QFile>
+#include <QHexView/model/buffer/qfiledatabuffer.h>
 #include <QHexView/model/buffer/qdevicebuffer.h>
 #include <QHexView/model/buffer/qmappedfilebuffer.h>
 #include <QHexView/model/buffer/qmemorybuffer.h>
@@ -84,6 +85,26 @@ void QHexDocument::setData(QHexBuffer* buffer) {
     m_buffer = buffer;
     if(oldbuffer)
         oldbuffer->deleteLater();
+
+    connect(m_buffer, &QHexBuffer::dataReloaded, this, [this]() {
+        m_changes.clear();
+        m_undostack->clear();
+        Q_EMIT canUndoChanged(false);
+        Q_EMIT canRedoChanged(false);
+        Q_EMIT changed();
+        Q_EMIT reset();
+    });
+
+    connect(m_buffer, &QHexBuffer::dataChangedExternally, this,
+            [this](qint64 offset, qint64 length) {
+                m_changes.clear();
+                m_undostack->clear();
+                Q_EMIT canUndoChanged(false);
+                Q_EMIT canRedoChanged(false);
+                Q_EMIT changed();
+                Q_EMIT dataChanged(m_buffer->read(offset, static_cast<int>(length)),
+                                   offset, QHexChangeReason::Replace);
+            });
 
     Q_EMIT canUndoChanged(false);
     Q_EMIT canRedoChanged(false);
@@ -259,6 +280,12 @@ void QHexDocument::restoreChanges() {
 
 QHexDocument* QHexDocument::fromBuffer(QHexBuffer* buffer, QObject* parent) {
     return new QHexDocument(buffer, parent);
+}
+
+QHexDocument* QHexDocument::fromSharedBuffer(FileDataBuffer* buffer,
+                                            QObject* parent) {
+    return buffer ? QHexDocument::fromBuffer(new QFileDataBuffer(buffer), parent)
+                  : nullptr;
 }
 
 QHexDocument* QHexDocument::fromLargeFile(QString filename, QObject* parent) {

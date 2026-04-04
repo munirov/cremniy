@@ -18,6 +18,8 @@ public:
     void setPageData(QByteArray& data) override;
     QByteArray getPageData() const override;
     void setSelection(qint64 pos, qint64 length) override;
+    bool showFind() override;
+    void setSharedBuffer(FileDataBuffer* buffer) override;
 
 };
 
