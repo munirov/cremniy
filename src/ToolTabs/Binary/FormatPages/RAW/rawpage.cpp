@@ -43,24 +43,29 @@ RAWPage::RAWPage(QWidget *parent)
 
                 if (m_hexViewWidget->hexCursor()->getSelectFromFormatPage())
                     return;
+                auto cursor = m_hexViewWidget->hexCursor();
+                if (cursor->hasSelection()) {
+                    qint64 start = cursor->selectionStartOffset();
+                    qint64 length = cursor->selectionLength();
+                    if (length <= 0)
+                        return;
 
-                if (!m_hexViewWidget->hexCursor()->hasSelection())
+                    emit selectionChanged(start, length);
+                    return;
+                }
+
+                const qint64 caretOffset = cursor->offset();
+                if (caretOffset < 0)
                     return;
 
-                qint64 start = m_hexViewWidget->hexCursor()->selectionStartOffset();
-                qint64 length = m_hexViewWidget->hexCursor()->selectionLength();
-                if (length <= 0)
-                    return;
-
-                emit selectionChanged(start, length);
+                emit selectionChanged(caretOffset, 0);
             });
 
 }
 
 void RAWPage::setPageData(QByteArray& data) {
-    m_ignoreSelectionSignals = true;
+    QSignalBlocker blocker(m_hexViewWidget->hexCursor());
     m_hexViewWidget->setBData(data);
-    m_ignoreSelectionSignals = false;
     m_dataHash = qHash(data, 0);
     emit dataEqual();
 }
@@ -70,11 +75,11 @@ QByteArray RAWPage::getPageData() const {
 }
 
 void RAWPage::setSelection(qint64 pos, qint64 length) {
-    // Устанавливаем выделение в hex view
     m_hexViewWidget->setSelectFromFormatPage(true);
     m_hexViewWidget->hexCursor()->setSelectFromFormatPage(true);
     m_hexViewWidget->hexCursor()->move(pos);
     m_hexViewWidget->hexCursor()->selectSize(length);
-
+    m_hexViewWidget->setSelectFromFormatPage(false);
+    m_hexViewWidget->hexCursor()->setSelectFromFormatPage(false);
 }
 
