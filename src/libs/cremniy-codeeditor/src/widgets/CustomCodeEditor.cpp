@@ -2657,9 +2657,50 @@ void CustomCodeEditor::toggleLineComment()
 
 void CustomCodeEditor::insertNewline()
 {
-    replaceRange(hasSelection() ? m_selectionStart : m_cursorBytePos,
-                 hasSelection() ? m_selectionLength : 0,
-                 QByteArray("\n"));
+    if (!m_buffer)
+        return;
+
+    const qint64 insertPos = hasSelection() ? m_selectionStart : m_cursorBytePos;
+    const qint64 removeLength = hasSelection() ? m_selectionLength : 0;
+    const qint64 lineNum = lineFromBytePos(insertPos);
+    const QString lineText = displayTextForLine(lineNum);
+    const QString linePrefix = displayPrefixForPosition(lineNum, insertPos);
+    const QString lineSuffix = lineText.mid(linePrefix.length());
+
+    QString indent;
+    for (const QChar ch : lineText) {
+        if (ch == QLatin1Char(' ') || ch == QLatin1Char('\t')) {
+            indent.append(ch);
+            continue;
+        }
+        break;
+    }
+
+    const QString indentUnit = m_tabReplace ? QString(m_tabReplaceSize, QLatin1Char(' '))
+                                            : QString(QLatin1Char('\t'));
+    const bool shouldIncreaseIndent = linePrefix.trimmed().endsWith(QLatin1Char('{'));
+    const bool splitClosingBrace = shouldIncreaseIndent && lineSuffix.trimmed().startsWith(QLatin1Char('}'));
+
+    QByteArray replacement("\n");
+    replacement.append(indent.toUtf8());
+    if (shouldIncreaseIndent)
+        replacement.append(indentUnit.toUtf8());
+    if (splitClosingBrace) {
+        replacement.append('\n');
+        replacement.append(indent.toUtf8());
+    }
+
+    replaceRange(insertPos, removeLength, replacement);
+
+    if (splitClosingBrace) {
+        m_cursorBytePos = insertPos + 1 + indent.toUtf8().size() + indentUnit.toUtf8().size();
+        m_selectionStart = m_cursorBytePos;
+        m_selectionLength = 0;
+        m_selectionAnchor = -1;
+        syncSelectionToBuffer();
+        emit cursorPositionChanged();
+        viewport()->update();
+    }
 }
 
 void CustomCodeEditor::insertTab()
@@ -2735,6 +2776,28 @@ void CustomCodeEditor::insertText(const QString& text)
 {
     if (text.isEmpty())
         return;
+
+    if (text == QStringLiteral("{") && !hasSelection()) {
+        replaceRange(m_cursorBytePos, 0, QByteArray("{}"));
+        m_cursorBytePos = qMax<qint64>(firstTextByte(), m_cursorBytePos - 1);
+        m_selectionStart = m_cursorBytePos;
+        m_selectionLength = 0;
+        m_selectionAnchor = -1;
+        syncSelectionToBuffer();
+        emit cursorPositionChanged();
+        viewport()->update();
+        return;
+    }
+
+    if (text == QStringLiteral("}") && !hasSelection() && m_cursorBytePos < m_buffer->size() && m_buffer->getByte(m_cursorBytePos) == '}') {
+        ++m_cursorBytePos;
+        clearSelection();
+        ensureCursorVisible();
+        emit cursorPositionChanged();
+        viewport()->update();
+        return;
+    }
+
     replaceRange(hasSelection() ? m_selectionStart : m_cursorBytePos,
                  hasSelection() ? m_selectionLength : 0,
                  text.toUtf8());
