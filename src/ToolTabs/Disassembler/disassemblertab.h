@@ -3,6 +3,7 @@
 
 #include "core/ToolTab.h"
 #include "disassemblerworker.h"
+#include <QIcon>
 #include <QWidget>
 #include <QThread>
 #include <QHash>

@@ -2,6 +2,10 @@
 #define REFERENCEWINDOWFACTORY_H
 
 #include "MenuBar/Menus/References/referencewindow.h"
+#include <QMap>
+#include <QString>
+#include <functional>
+
 class ReferenceWindowFactory
 {
 
