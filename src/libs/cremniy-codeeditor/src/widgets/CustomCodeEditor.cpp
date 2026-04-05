@@ -788,8 +788,9 @@ qint64 CustomCodeEditor::clampToUtf8Boundary(qint64 bytePos) const
     const qint64 clamped = qBound<qint64>(0, bytePos, m_buffer->size());
     const qint64 lineNum = m_lineIndex->lineCount() > 0 ? lineFromBytePos(clamped) : 0;
     const qint64 lineStart = m_lineIndex->lineCount() > 0 ? lineVisibleStart(lineNum) : 0;
-    const QByteArray prefix = m_buffer->read(lineStart, clamped - lineStart);
-    return lineStart + m_utf8Decoder->findCharBoundary(prefix, prefix.size());
+    const qint64 lineEnd = m_lineIndex->lineCount() > 0 ? lineVisibleEnd(lineNum) : 0;
+    const QByteArray lineBytes = m_buffer->read(lineStart, lineEnd - lineStart);
+    return lineStart + m_utf8Decoder->findCharBoundary(lineBytes, clamped - lineStart);
 }
 
 void CustomCodeEditor::setBData(const QByteArray& data)
@@ -2983,7 +2984,10 @@ qint64 CustomCodeEditor::bytePosForColumn(qint64 lineNum, qint64 column) const
     const int visualColumn = static_cast<int>(qMax<qint64>(0, column));
     const int clampedVisual = qBound(0, visualColumn, layout.displayText.length());
     const int rawColumn = layout.visualToRaw.value(clampedVisual, layout.rawText.length());
-    return lineVisibleStart(lineNum) + m_utf8Decoder->charPosToByte(layout.rawText, rawColumn);
+    const qint64 lineStart = lineVisibleStart(lineNum);
+    const qint64 lineEnd = lineVisibleEnd(lineNum);
+    const QByteArray lineBytes = m_buffer->read(lineStart, lineEnd - lineStart);
+    return lineStart + m_utf8Decoder->charPosToByte(lineBytes, rawColumn);
 }
 
 qint64 CustomCodeEditor::columnForBytePos(qint64 lineNum, qint64 bytePos) const
@@ -2992,7 +2996,8 @@ qint64 CustomCodeEditor::columnForBytePos(qint64 lineNum, qint64 bytePos) const
     const qint64 lineStart = lineVisibleStart(lineNum);
     const qint64 clampedPos = qBound(lineStart, bytePos, lineVisibleEnd(lineNum));
     const qint64 relativeBytePos = clampedPos - lineStart;
-    const int rawColumn = static_cast<int>(m_utf8Decoder->byteToCharPos(layout.rawText.toUtf8(), relativeBytePos));
+    const QByteArray lineBytes = m_buffer->read(lineStart, lineVisibleEnd(lineNum) - lineStart);
+    const int rawColumn = static_cast<int>(m_utf8Decoder->byteToCharPos(lineBytes, relativeBytePos));
     return layout.rawToVisual.value(qBound(0, rawColumn, layout.rawText.length()), layout.displayText.length());
 }
 

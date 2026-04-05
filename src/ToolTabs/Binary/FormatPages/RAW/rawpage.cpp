@@ -51,7 +51,8 @@ RAWPage::RAWPage(QWidget *parent)
                     qint64 length = m_hexViewWidget->hexCursor()->selectionLength();
                     emit selectionChanged(start, length);
                 } else {
-                    emit selectionChanged(m_hexViewWidget->hexCursor()->offset(), 0);
+                    // A single click in hex view focuses 1 byte visually. It should transfer as a 1 byte selection to Code Editor.
+                    emit selectionChanged(m_hexViewWidget->hexCursor()->offset(), 1);
                 }
             });
 
