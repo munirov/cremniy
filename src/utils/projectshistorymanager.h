@@ -27,6 +27,7 @@ public:
     static QStringList loadProjectsHistory();
     static void saveProjectsHistory(const QString & projectsHistory);
     static void checkDirectoryExists();
+    static void removeProjectFromHistory(const QString & projectPath); 
 };
 
 } // utils

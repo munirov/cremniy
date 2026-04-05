@@ -21,6 +21,7 @@ public:
 private:
     QStackedWidget *stack;
     QPushButton *open_recent_proj_btn;
+    QPushButton *remove_recent_proj_btn;
     QLabel *proj_name_label;
     QLineEdit *proj_name_lineEdit;
     QComboBox *language_comboBox;
@@ -36,6 +37,7 @@ private:
 private slots:
     void SelectProjectInList();
     void OpenRecentProjectHandler();
+    void RemoveRecentProjectHandler();
     void OpenProjectHandler();
     void CreateProjectHandler();
     void L2BackButton();
