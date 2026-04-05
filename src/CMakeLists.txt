@@ -134,7 +134,6 @@ endif()
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/../external/cremniy-codeeditor ${CMAKE_BINARY_DIR}/external/cremniy-codeeditor)
 
-
 # - - Tool Tabs - -
 file(GLOB TOOLTAB_DIRS CONFIGURE_DEPENDS ToolTabs/*)
 foreach(dir ${TOOLTAB_DIRS})
