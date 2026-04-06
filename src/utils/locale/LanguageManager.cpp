@@ -8,9 +8,19 @@
 #include <qlocale.h>
 #include <QTranslator>
 
+#include "appsettings.h"
+
 LanguageManager & LanguageManager::instance() {
     static LanguageManager inst;
     return inst;
+}
+
+void LanguageManager::loadUserDefaultLocale() {
+    const QJsonObject settigs = AppSettings::getSettingsJson();
+    if (settigs["language"].isNull() || settigs["language"] == "")
+        setLocale("en");
+    else
+        setLocale(settigs["language"].toString());
 }
 
 void LanguageManager::setLocale(const QString& locale) {
@@ -23,6 +33,9 @@ void LanguageManager::setLocale(const QString& locale) {
     _m_translator = std::move(newTranslator);
     QApplication::installTranslator(_m_translator.get());
 
+    QJsonObject settigs = AppSettings::getSettingsJson();
+    settigs["language"] = locale;
+    AppSettings::updateSettingsJson(settigs);
 }
 
 QString LanguageManager::translationsPath() {

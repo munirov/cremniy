@@ -1,6 +1,7 @@
 #ifndef APPSETTINGS_H
 #define APPSETTINGS_H
 
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -12,6 +13,10 @@ public:
         Objdump = 0,
         Radare2 = 1,
     };
+
+    //
+    static QJsonObject getSettingsJson();
+    static void updateSettingsJson(const QJsonObject& data);
 
     static DisasmBackend disasmBackend();
     static void setDisasmBackend(DisasmBackend backend);
@@ -55,6 +60,7 @@ public:
     static bool importFromIni(const QString &filePath, QString *error = nullptr);
 
 private:
+    static QString getAppSettingsPath();
     static QString keyDisasmBackend();
     static QString keyObjdumpPath();
     static QString keyRadare2Path();
@@ -77,3 +83,4 @@ private:
 };
 
 #endif // APPSETTINGS_H
+

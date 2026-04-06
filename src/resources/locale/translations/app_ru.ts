@@ -674,27 +674,27 @@ Check the Log panel for details.</source>
         <translation>Не удалось разобрать radare2 JSON (iSj): %1</translation>
     </message>
     <message>
-        <location filename="../../../utils/appsettings.cpp" line="111"/>
+        <location filename="../../../utils/appsettings.cpp" line="136"/>
         <source>Empty file path</source>
         <translation>Пустой путь файла</translation>
     </message>
     <message>
-        <location filename="../../../utils/appsettings.cpp" line="120"/>
+        <location filename="../../../utils/appsettings.cpp" line="145"/>
         <source>Failed to write INI file</source>
         <translation>Не удалось записать INI-файл.</translation>
     </message>
     <message>
-        <location filename="../../../utils/appsettings.cpp" line="130"/>
+        <location filename="../../../utils/appsettings.cpp" line="155"/>
         <source>File does not exist</source>
         <translation>Файл не существует</translation>
     </message>
     <message>
-        <location filename="../../../utils/appsettings.cpp" line="136"/>
+        <location filename="../../../utils/appsettings.cpp" line="161"/>
         <source>Failed to read INI file</source>
         <translation>Не удалось прочитать INI-файл.</translation>
     </message>
     <message>
-        <location filename="../../../utils/appsettings.cpp" line="157"/>
+        <location filename="../../../utils/appsettings.cpp" line="182"/>
         <source>Failed to apply settings</source>
         <translation>Не удалось применить настройки</translation>
     </message>
@@ -788,103 +788,103 @@ Check the Log panel for details.</source>
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="46"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="47"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="57"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="58"/>
         <source>objdump</source>
         <translation>objdump</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="58"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="59"/>
         <source>radare2</source>
         <translation>radare2</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="59"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="60"/>
         <source>Disassembler backend</source>
         <translation>Disassembler backend</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="66"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="67"/>
         <source>Maximum number of instructions per section (keeps UI responsive)</source>
         <translation>Максимальное количество инструкций на секцию (для поддержания отзывчивости интерфейса)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="67"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="68"/>
         <source>Instruction limit/section</source>
         <translation>Лимит инструкций на секцию</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="70"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="71"/>
         <source>Intel</source>
         <translation>Intel</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="71"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="72"/>
         <source>AT&amp;T</source>
         <translation>AT&amp;T</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="72"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="73"/>
         <source>Assembly syntax</source>
         <translation>Синтаксис ассемблера</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="81"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="82"/>
         <source>Leave empty to use PATH lookup</source>
         <translation>Оставьте поле пустым, чтобы использовать поиск по пути PATH.</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="85"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="105"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="86"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="106"/>
         <source>Browse…</source>
         <translation>Обзор…</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="90"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="91"/>
         <source>objdump path</source>
         <translation>objdump путь</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="101"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="102"/>
         <source>Path to r2 (radare2) executable</source>
         <translation>Путь к исполняемому файлу r2 (radare2).</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="110"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="111"/>
         <source>radare2 path</source>
         <translation>radare2 путь</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="123"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="124"/>
         <source>Dependency: file(1)</source>
         <translation>Зависимость: файл(1)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="129"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="130"/>
         <source>None (fast)</source>
         <translation>Без (быстро)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="130"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="131"/>
         <source>aa (basic)</source>
         <translation>aa (основная)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="131"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="132"/>
         <source>aaa (full)</source>
         <translation>aaa (полная)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="132"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="133"/>
         <source>radare2 analysis</source>
         <translation>radare2 анализ</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="135"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="136"/>
         <source>Optional r2 commands before JSON queries (one per line). Example:
 e asm.syntax=intel
 e asm.bits=64</source>
@@ -893,72 +893,92 @@ e asm.syntax=intel
 e asm.bits=64</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="191"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="147"/>
+        <source>Choose:</source>
+        <translation>Выберите</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="152"/>
+        <source>Language</source>
+        <translation>Язык</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="187"/>
+        <source>Information</source>
+        <translation>Информация</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="187"/>
+        <source>Please restart IDE to apply the settings.</source>
+        <translation>Для применения настроек перезапустите IDE.</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="209"/>
         <source>Settings exported to:
 %1</source>
         <translation>Настройки экспортированы в:
 %1</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="213"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="231"/>
         <source>Settings imported from:
 %1</source>
         <translation>Настройки импортированы из
 %1</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="139"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="140"/>
         <source>radare2 pre-commands</source>
         <translation>radare2 предварительные команды</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="146"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="158"/>
         <source>Test</source>
         <translation>Тест</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="148"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="160"/>
         <source>Import…</source>
         <translation>Импорт…</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="149"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="161"/>
         <source>Export…</source>
         <translation>Экспорт…</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="153"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="165"/>
         <source>OK</source>
         <translation>Ок</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="154"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="166"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="181"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="199"/>
         <source>Export settings</source>
         <translation>Экспорт настроек</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="183"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="200"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="201"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="218"/>
         <source>INI files (*.ini)</source>
         <translation>INI файлы (*.ini)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="188"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="206"/>
         <source>Export failed</source>
         <translation>Экспорт не удался</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="188"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="206"/>
         <source>Failed to export settings</source>
         <translation>Не удалось экспортировать настройки.</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="191"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="209"/>
         <source>Export</source>
         <translation>Экспорт</translation>
     </message>
@@ -969,100 +989,100 @@ e asm.bits=64</translation>
     %1</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="198"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="216"/>
         <source>Import settings</source>
         <translation>Импортировать настройки</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="205"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="223"/>
         <source>Import failed</source>
         <translation>Импорт не удался</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="205"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="223"/>
         <source>Failed to import settings</source>
         <translation>Не удалось импортировать настройки.</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="213"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="231"/>
         <source>Import</source>
         <translation>Импорт</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="253"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="254"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="271"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="272"/>
         <source>Active backend</source>
         <translation>Активный бэкенд</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="253"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="254"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="271"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="272"/>
         <source>Inactive backend (still configurable)</source>
         <translation>Неактивный бэкенд (можно настроить)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="264"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="282"/>
         <source>Select objdump executable</source>
         <translation>Выберите исполняемый файл objdump</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="272"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="290"/>
         <source>Select radare2 (r2) executable</source>
         <translation>Укажите путь к исполняемому файлу radare2 (r2)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="301"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="319"/>
         <source>objdump: OK (%1)</source>
         <translation>objdump: Ок (%1)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="302"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="320"/>
         <source>objdump: FAIL (%1)</source>
         <translation>objdump: Ошибка (%1)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="302"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="312"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="320"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="330"/>
         <source>not found</source>
         <translation>Не найден</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="311"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="329"/>
         <source>radare2: OK (%1)</source>
         <translation>radare2: Ок (%1)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="312"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="330"/>
         <source>radare2: FAIL (%1)</source>
         <translation>radare2: Ошибка (%1)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="319"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="337"/>
         <source>Tool check</source>
         <translation>Проверка инструмента</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="359"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="367"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="375"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="377"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="385"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="393"/>
         <source>found</source>
         <translation>Найден</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="359"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="367"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="375"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="377"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="385"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="393"/>
         <source>missing</source>
         <translation>Отсутсвует</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="360"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="368"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="378"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="386"/>
         <source>Not found in PATH and no valid path set</source>
         <translation>Не найдено в PATH, и не указан действительный путь.</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="376"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="394"/>
         <source>The objdump backend uses &apos;file -b &lt;path&gt;&apos; for arch detection</source>
         <translation>В бэкенде objdump для определения архитектуры используется команда `&apos;file -b &lt;path&gt;`.</translation>
     </message>
@@ -1090,7 +1110,7 @@ e asm.bits=64</translation>
     <message>
         <location filename="../../../ui/MenuBar/Menus/View/viewmenu.cpp" line="12"/>
         <source>Word Wrap</source>
-        <translation type="unfinished">ВТФ</translation>
+        <translation>Перенос слов</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/View/viewmenu.cpp" line="16"/>
