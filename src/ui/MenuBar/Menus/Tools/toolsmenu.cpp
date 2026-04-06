@@ -1,8 +1,11 @@
 #include "toolsmenu.h"
 #include "core/ToolTabFactory.h"
 #include "dialogs/reversecalculatordialog.h"
+#include "dialogs/dataconverterdialog.h"
+
 #include "ui/MenuBar/menufactory.h"
 #include <QKeySequence>
+#include <QAction>
 
 static bool registered = []() {
   MenuFactory::instance().registerMenu("5", []() { return new ToolsMenu(); });
@@ -12,6 +15,9 @@ static bool registered = []() {
 ToolsMenu::ToolsMenu() : BaseMenu("Tools") {
   m_reverseCalculator = new QAction("Reverse Calculator", this);
   m_reverseCalculator->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R));
+
+  m_dataConverter = new QAction("Data Converter", this);
+  m_dataConverter->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D));
 
   const auto toolDescriptors = ToolTabFactory::instance().availableTabs(ToolTabGroup::Other);
   for (const auto& descriptor : toolDescriptors) {
@@ -26,6 +32,8 @@ ToolsMenu::ToolsMenu() : BaseMenu("Tools") {
   }
 
   addAction(m_reverseCalculator);
+  addSeparator();
+  addAction(m_dataConverter);
 }
 
 void ToolsMenu::setupConnections(IDEWindow *ideWind) {
@@ -43,10 +51,24 @@ void ToolsMenu::setupConnections(IDEWindow *ideWind) {
 
   connect(m_reverseCalculator, &QAction::triggered, this,
           &ToolsMenu::on_Open_ReverseCalculator);
+  connect(m_dataConverter, &QAction::triggered, this,
+          &ToolsMenu::on_Open_DataConverter);
 }
 
 void ToolsMenu::on_Open_ReverseCalculator() {
   auto *dlg = new ReverseCalculatorDialog(m_ideWindow);
+  dlg->setAttribute(Qt::WA_DeleteOnClose, true);
+  if (m_ideWindow) {
+    dlg->adjustSize();
+    dlg->move(m_ideWindow->geometry().center() - dlg->rect().center());
+  }
+  dlg->show();
+  dlg->raise();
+  dlg->activateWindow();
+}
+
+void ToolsMenu::on_Open_DataConverter() {
+  auto *dlg = new DataConverterDialog(m_ideWindow);
   dlg->setAttribute(Qt::WA_DeleteOnClose, true);
   if (m_ideWindow) {
     dlg->adjustSize();
