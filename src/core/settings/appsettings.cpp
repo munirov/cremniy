@@ -1,12 +1,37 @@
 #include "appsettings.h"
 
+#include <QApplication>
 #include <QSettings>
 #include <QFileInfo>
+
+#include "filecontext.h"
+#include "filemanager.h"
 
 static QSettings &settings()
 {
     static QSettings s;
     return s;
+}
+
+QJsonObject AppSettings::getSettingsJson() {
+    FileContext fl(getAppSettingsPath());
+    return FileManager::loadJson(fl);
+}
+
+void AppSettings::updateSettingsJson(const QJsonObject &data) {
+    FileContext fl(getAppSettingsPath());
+    FileManager::saveJson(fl, data);
+}
+
+
+QString AppSettings::getAppSettingsPath() {
+    QString settingsPath = QCoreApplication::applicationDirPath();
+
+#if defined(Q_OS_APPLE) || defined(Q_OS_MAC)
+    return settingsPath.append("/../data/settings.json");
+#else
+    return settingsPath.append("/data/settings.json");
+#endif
 }
 
 QString AppSettings::keyDisasmBackend() { return "disasm/backend"; }

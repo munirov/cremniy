@@ -9,8 +9,8 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QCoreApplication::setOrganizationName("Munirov");
-    LanguageManager::instance().setLocale("en");
+
+    LanguageManager::instance().loadUserDefaultLocale();
 
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");
@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
     QString baseStyle   = QLatin1String(baseStyleFile.readAll());
     QString theme  = QLatin1String(themeFile.readAll());
 
-    baseStyleFile.close();
     baseStyleFile.close();
 
     a.setStyleSheet(baseStyle + "\n" + theme);
