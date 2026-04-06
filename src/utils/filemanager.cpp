@@ -3,6 +3,7 @@
 #include <QDir>
 #include <qfileinfo.h>
 #include <QJsonObject>
+#include <QJsonDocument>
 
 
 void FileManager::saveFile(FileContext* fc, const QByteArray* data){
