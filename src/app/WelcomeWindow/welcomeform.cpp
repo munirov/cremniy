@@ -103,10 +103,6 @@ WelcomeForm::WelcomeForm(QWidget *parent)
 
     QPushButton *createButton = new QPushButton(tr("Create"));
     QPushButton *backButton = new QPushButton(tr("Back"));
-    // buttonLayout->addStretch(1);       // пустое пространство слева
-      
-    QPushButton *createButton = new QPushButton("Create");
-    QPushButton *backButton = new QPushButton("Back");
 
     buttonLayout->addWidget(createButton);
     buttonLayout->addWidget(backButton);
