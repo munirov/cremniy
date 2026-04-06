@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="src/resources/icons/icon.png" width="250" alt="Cremniy logo">
+<img src="docs/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
 
 <br>
 <h3>Cremniy</h3>
-<h6>Среда разработки для низкоуровневого программирования, объединяющая все низкоуровневые инструменты в одном приложении</h6>
+<h6>Все инструменты для низкоуровневой разработки объединены и связаны в одном приложении — пишите код, редактируйте байты и анализируйте бинарники без лишних окон</h6>
 
 [![License](https://img.shields.io/github/license/igmunv/cremniy?color=orange&style=flat-square)](LICENSE)
 [![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
@@ -17,11 +17,11 @@
 
 </div>
 
----
+<br>
 
 ## Что такое Cremniy?
 
-**Cremniy** — интегрированная среда для низкоуровневой разработки. Вместо того чтобы держать HEX-редактор в одном окне, дизассемблер в другом, а редактор кода в третьем — всё это объединено в одном последовательном и удобном приложении.
+**Cremniy** — интегрированная среда для низкоуровневой разработки. Вместо того чтобы держать HEX-редактор в одном окне, дизассемблер в другом, а редактор кода в третьем — всё это объединено и связано в одном удобном приложении.
 
 **Ориентирован на:**
 
@@ -30,30 +30,18 @@
 - 🔐 Специалистов по информационной безопасности
 - 📡 Разработчиков embedded-систем
 
----
+## Почему Cremniy?
 
-## Скриншоты
+Низкоуровневая разработка сегодня — это редактор кода, HEX-редактор, дизассемблер, отладчик, открытые **в разных окнах**.
 
-<div align="center">
+Вы постоянно **переключаетесь** между разными окнами, и при этом инструменты **не связаны** между собой.
 
-### Редактор кода
-<img src="screenshots/code.png" alt="Code Editor" width="800">
-<br>
+#### **Cremniy решает это!**
+- 🔘 Всё находится в одном месте
+- 🔗 Всё связано между собой
+- 💻 Единый workflow
 
-### Дизассемблер
-<img src="screenshots/dasm.png" alt="Disassembler" width="800">
-<br>
-
-### HEX-редактор
-<img src="screenshots/hex.png" alt="HEX Editor" width="800">
-<br>
-
-### Другое
-<img src="screenshots/revcalc.png" alt="HEX Editor" width="800">
-<br>
-</div>
-
----
+![out](https://github.com/user-attachments/assets/f5e9c520-fb31-45cc-ab11-17eff66d7069)
 
 ## Возможности
 
@@ -62,7 +50,7 @@
 | Функция | Описание |
 |---|---|
 | 📝 Редактор кода | Написание и редактирование низкоуровневого кода с поддержкой синтаксиса |
-| 🔢 HEX-редактор | Просмотр и изменение бинарных данных на уровне байт |
+| 🔢 HEX-редактор | Просмотр и изменение бинарных данных на уровне байт (патчинг) |
 | 🔧 Дизассемблер | Декодирование машинных инструкций в читаемый ассемблер |
 
 ### В планах
@@ -70,9 +58,7 @@
 - 🐛 **Отладчик** — пошаговое выполнение, просмотр регистров и памяти
 - 🧠 **Визуализация памяти** — наглядные карты расположения и выделения памяти
 
----
-
-## Начало работы
+## Сборка
 
 ### Зависимости
 
@@ -119,9 +105,7 @@ brew install cmake qt@6
 
 </details>
 
----
-
-## Linux cборка
+### Linux cборка
 
 ```bash
 git clone https://github.com/igmunv/cremniy.git
@@ -132,18 +116,14 @@ cmake ../src
 cmake --build .
 ```
 
-### Сборка в режиме Release
+#### Сборка в режиме Release
 
 ```bash
 cmake ../src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
-## Windows сборка
-
-### Установить Windows [зависимости](#зависимости)
-
-### Собрать Cremniy
+### Windows сборка
 
 ```bash
 git clone https://github.com/igmunv/cremniy.git
@@ -155,14 +135,12 @@ cmake --build .
 
 ```
 
-### Сборка в режиме Release
+#### Сборка в режиме Release
 
 ```bash
 cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
-
----
 
 ## Участие в разработке
 
@@ -172,9 +150,8 @@ cmake --build . --config Release
 
 Все участники указываются в [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) и упоминаются в видео на [YouTube-канале](https://www.youtube.com/@igmunv).
 
-Подробнее — в [CONTRIBUTING.md](CONTRIBUTING.md).
+Подробнее — в [CONTRIBUTING.md](CONTRIBUTING_ru.md).
 
----
 
 ## Лицензия
 

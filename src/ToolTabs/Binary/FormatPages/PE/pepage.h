@@ -21,6 +21,7 @@ public:
 
     void setPageData(QByteArray& data) override;
     QByteArray getPageData() const override;
+    void setSelection(qint64 pos, qint64 length) override { Q_UNUSED(pos); Q_UNUSED(length); }
 };
 
 #endif // PEPAGE_H

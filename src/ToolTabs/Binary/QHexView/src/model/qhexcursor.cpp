@@ -119,6 +119,7 @@ void QHexCursor::move(qint64 line, qint64 column) {
 }
 
 void QHexCursor::move(QHexPosition pos) {
+    qDebug() << "QHexCursor::move(QHexPosition pos)";
     if(pos.line >= 0)
         m_selection.line = pos.line;
     if(pos.column >= 0)
@@ -135,6 +136,7 @@ void QHexCursor::select(qint64 line, qint64 column) {
 }
 
 void QHexCursor::select(QHexPosition pos) {
+    qDebug() << "QHexCursor::select(QHexPosition pos)";
     if(pos.line >= 0)
         m_position.line = pos.line;
     if(pos.column >= 0)

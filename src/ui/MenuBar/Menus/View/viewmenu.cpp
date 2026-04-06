@@ -1,5 +1,6 @@
 #include "viewmenu.h"
 #include "ui/MenuBar/menufactory.h"
+#include <QKeySequence>
 
 static bool registered = [](){
     MenuFactory::instance().registerMenu("3", [](){
@@ -15,8 +16,12 @@ ViewMenu::ViewMenu() : BaseMenu("View") {
 
     m_terminal = new QAction("Show terminal", this);
     m_terminal->setCheckable(true);
-    m_terminal->setChecked(true);
-
+    m_terminal->setChecked(false);
+    m_terminal->setShortcuts({
+        QKeySequence("Ctrl+`"),
+        QKeySequence("Ctrl+ё"),
+    });
+    
     this->addAction(m_wordWrap);
     this->addSeparator();
     this->addAction(m_terminal);

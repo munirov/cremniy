@@ -10,10 +10,12 @@ class FileTab : public QWidget
 
 private:
     ToolsTabWidget *m_tooltabWidget;
+    bool m_modified = false;
 
 public:
     explicit FileTab(QWidget *parrent, QString path);
     QString filePath;
+    bool isFileUnsaved() const { return m_modified; }
 
 public slots:
     void removeStar();

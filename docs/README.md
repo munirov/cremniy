@@ -6,10 +6,12 @@ English • [Русский](README_ru.md)
 
 # Documentation
 
-🌐 **[Introduction to Cremniy](overview.md)** – purpose, goals, philosophy, and project architecture
+🌐 **[Introduction to Cremniy](EN/overview.md)** – purpose, goals, philosophy, and project architecture
 
-🚀 **[Quick Start](quick_start.md)** – installation, build, and first launch
+🚀 **[Quick Start](EN/quick_start.md)** – installation, build, and first launch
 
-👤 **[User Guide](user_guide.md)** – how to use the program
+👤 **[User Guide](EN/user_guide.md)** – how to use the program
 
-🛠️ **[Developer Guide](developer_guide.md)** – detailed explanation of the architecture, how to make changes, and add features
+⌨️ **[Hotkeys](EN/hotkey.md)** – all combinations of keys in the program
+
+🛠️ **[Developer Guide](EN/developer_guide.md)** – detailed explanation of the architecture, how to make changes, and add features

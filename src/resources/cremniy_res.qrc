@@ -6,5 +6,6 @@
         <file>icons/dasm.png</file>
         <file>icons/code.png</file>
         <file>icons/close.png</file>
+        <file>data/instructions_ru.json</file>
     </qresource>
 </RCC>

@@ -5,9 +5,15 @@
 #include "toolstabwidget.h"
 #include "core/ToolTabFactory.h"
 #include "core/ToolTab.h"
+#include "core/FileDataBuffer.h"
 
 ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
     {
+
+    // Создаем общий буфер данных для всех вкладок
+    m_sharedBuffer = new FileDataBuffer(this);
+
+    m_sharedBuffer->openFile(path);
 
     // Tools
 
@@ -15,11 +21,11 @@ ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
 
     qDebug() << "ToolsTabWidget constr: for id in avTabs";
     for (const QString& toolID : toolFactory.availableTabs()){
-        ToolTab* tab = toolFactory.create(toolID);
+        ToolTab* tab = toolFactory.create(toolID, m_sharedBuffer);
         qDebug() << "availableTab: " << tab->toolName();
 
         tab->setFile(path);
-        tab->setTabData();
+        tab->setProperty("tabDataLoaded", false);
 
         connect(tab, &ToolTab::refreshDataAllTabsSignal, this, &ToolsTabWidget::refreshDataAllTabs);
         connect(tab, &ToolTab::modifyData, this, &ToolsTabWidget::setupStar);
@@ -27,6 +33,28 @@ ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
 
         if (tab) this->addTab(tab, tab->toolIcon(), tab->toolName());
     }
+
+    if (this->count() > 0) {
+        ToolTab* tab = dynamic_cast<ToolTab*>(this->widget(0));
+        if (tab) {
+            tab->setTabData();
+            tab->setProperty("tabDataLoaded", true);
+        }
+    }
+
+    connect(this, &QTabWidget::currentChanged, this, [this](int index) {
+        if (index < 0)
+            return;
+
+        ToolTab* tab = dynamic_cast<ToolTab*>(this->widget(index));
+        if (!tab)
+            return;
+
+        if (!tab->property("tabDataLoaded").toBool()) {
+            tab->setTabData();
+            tab->setProperty("tabDataLoaded", true);
+        }
+    });
 
     // // - - Connects - -
 

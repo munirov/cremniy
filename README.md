@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="src/resources/icons/icon.png" width="250" alt="Cremniy logo">
+<img src="docs/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
 
 <br>
 <h3>Cremniy</h3>
-<h6>A development environment for low-level programming that combines all low-level tools into a single application</h6>
+<h6>All tools for low-level development are combined and linked in a single application — write code, edit bytes, and analyze binaries without extra windows</h6>
 
 [![License](https://img.shields.io/github/license/igmunv/cremniy?color=orange&style=flat-square)](LICENSE)
 [![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
@@ -17,43 +17,31 @@ English • [Русский](README_ru.md)
 
 </div>
 
----
+<br>
 
 ## What is Cremniy?
 
-**Cremniy** is an integrated environment for low-level development. Instead of juggling a hex editor here, a disassembler there, and a code editor somewhere else — you get them all in one consistent, focused application.
+**Cremniy** is an integrated environment for low-level development. Instead of keeping a HEX editor in one window, a disassembler in another, and a code editor in a third — all tools are combined and linked in a single convenient application.
 
-**Built for:**
+**Designed for:**
 
 - 🛠 System software developers
 - 🔍 Reverse engineers
-- 🔐 Information security specialists
+- 🔐 Cybersecurity specialists
 - 📡 Embedded systems developers
 
----
+## Why Cremniy?
 
-## Screenshots
+Low-level development today means using a code editor, HEX editor, disassembler, debugger, all opened **in separate windows**.
 
-<div align="center">
+You constantly **switch** between different windows, and the tools are **not linked** together.
 
-### Code Editor
-<img src="screenshots/code.png" alt="Code Editor" width="800">
-<br>
+#### **Cremniy solves this!**
+- 🔘 Everything is in one place
+- 🔗 All tools are connected
+- 💻 Unified workflow
 
-### Disassembler
-<img src="screenshots/dasm.png" alt="Disassembler" width="800">
-<br>
-
-### HEX Editor
-<img src="screenshots/hex.png" alt="HEX Editor" width="800">
-<br>
-
-### Other
-<img src="screenshots/revcalc.png" alt="HEX Editor" width="800">
-<br>
-</div>
-
----
+![out](https://github.com/user-attachments/assets/f5e9c520-fb31-45cc-ab11-17eff66d7069)
 
 ## Features
 
@@ -62,7 +50,7 @@ English • [Русский](README_ru.md)
 | Feature | Description |
 |---|---|
 | 📝 Code editor | Write and edit low-level code with syntax support |
-| 🔢 HEX editor | Inspect and modify binary data at the byte level |
+| 🔢 HEX editor | Inspect and modify binary data at the byte level (patching) |
 | 🔧 Disassembler | Decode machine instructions into readable assembly |
 
 ### Coming soon
@@ -70,9 +58,7 @@ English • [Русский](README_ru.md)
 - 🐛 **Debugger** — step through execution, inspect registers and memory
 - 🧠 **Memory visualization** — visual maps of memory layout and allocation
 
----
-
-## Getting Started
+## Build
 
 ### Prerequisites
 
@@ -119,9 +105,7 @@ brew install cmake qt@6
 
 </details>
 
----
-
-## Build in Linux
+### Build in Linux
 
 ```bash
 git clone https://github.com/igmunv/cremniy.git
@@ -132,18 +116,14 @@ cmake ../src
 cmake --build .
 ```
 
-### Release build
+#### Release build
 
 ```bash
 cmake ../src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
-## Build in Windows
-
-### Install Windows [prerequisites](#prerequisites)
-
-### Build Cremniy
+### Build in Windows
 
 ```bash
 git clone https://github.com/igmunv/cremniy.git
@@ -155,14 +135,12 @@ cmake --build .
 
 ```
 
-### Release build
+#### Release build
 
 ```bash
 cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
-
----
 
 ## Contributing
 
@@ -173,8 +151,6 @@ Whether it's a bug fix, a new feature, or an improvement to documentation — fe
 All contributors are credited in [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) and mentioned in videos on the [YouTube channel](https://www.youtube.com/@igmunv).
 
 For guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
 
 ## License
 

@@ -17,6 +17,8 @@
 #include <qjsondocument.h>
 #include <qjsonobject.h>
 
+#include "projectshistorymanager.h"
+
 IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     : QMainWindow(parent)
 {
@@ -25,6 +27,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     MenuBarBuilder* menuBarBuilder = new MenuBarBuilder(menuBar(), this);
     Q_UNUSED(menuBarBuilder);
+    menuBar()->setNativeMenuBar(false);
 
     SaveProjectInCache(ProjectPath);
 
@@ -53,7 +56,6 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
             break;
         }
     }
-
     m_statusBar = statusBar();
 
     m_mainWidget = new QWidget(this);
@@ -64,11 +66,11 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_verticalSplitter = new QSplitter(Qt::Vertical, m_mainWidget);
     m_terminal = new TerminalWidget(this);
 
-    QWidget* leftWidget = new QWidget();
+    QWidget* leftWidget = new QWidget(this);
     QVBoxLayout* leftLayout = new QVBoxLayout(leftWidget);
     leftLayout->setContentsMargins(0,0,0,0);
 
-    m_filesTabWidget = new FilesTabWidget();
+    m_filesTabWidget = new FilesTabWidget(this);
     m_filesTabWidget->setObjectName("filesTabWidget");
     m_filesTreeView = new FileTreeView();
     leftLayout->addWidget(m_filesTreeView);
@@ -90,8 +92,8 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
             });
     connect(m_buildManager, &BuildManager::processFinished,
             this, [this](int code) {
-                m_terminal->appendLine(
-                    QString("=== Finished (exit code %1) ===").arg(code));
+            m_terminal->appendLine(
+                QString("=== Finished (exit code %1) ===").arg(code));
             });
     connect(m_buildManager, &BuildManager::errorOccurred,
             m_terminal, &TerminalWidget::appendLine);
@@ -100,13 +102,15 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     setCentralWidget(m_mainWidget);
 
     leftLayout->addWidget(m_filesTreeView);
-
     m_mainSplitter->setSizes({200, 1000});
     m_mainSplitter->setCollapsible(0, false);
     m_mainSplitter->setCollapsible(1, false);
 
     m_verticalSplitter->setSizes({800, 200});
-    m_verticalSplitter->setCollapsible(1, true);
+    
+    if (m_verticalSplitter->count() > 1) {
+        m_verticalSplitter->setCollapsible(1, true);
+    }
 
     m_filesTreeView->setMinimumWidth(180);
     m_filesTreeView->setTextElideMode(Qt::ElideNone);
@@ -135,9 +139,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     connect(this, &IDEWindow::saveFileSignal, m_filesTabWidget, &FilesTabWidget::saveFileSlot);
     connect(m_filesTabWidget, &QTabWidget::tabCloseRequested,
-            this, [=](int index){
-                m_filesTabWidget->removeTab(index);
-            });
+            m_filesTabWidget, &FilesTabWidget::closeTab);
     connect(m_filesTreeView, &QTreeView::customContextMenuRequested, this, &IDEWindow::on_Tree_ContextMenu);
     connect(m_filesTreeView, &QTreeView::doubleClicked, this, &IDEWindow::on_treeView_doubleClicked);
 
@@ -162,40 +164,27 @@ IDEWindow::~IDEWindow()
 {}
 
 void IDEWindow::on_Toggle_Terminal(bool checked) {
+    if (checked && !m_terminal) {
+        m_terminal = new TerminalWidget(this);
+        m_verticalSplitter->addWidget(m_terminal);
+        m_verticalSplitter->setCollapsible(1, true);
+        m_verticalSplitter->setSizes({800, 200});
+    }
+
+    if (!m_terminal) {
+        return;
+    }
+    
     m_terminal->setVisible(checked);
-}
 
-void IDEWindow::SaveProjectInCache(const QString project_path){
-    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir(dataDir).mkpath(".");
-    QFile history_file(dataDir+"/"+"history_open_projects.dat");
-    QStringList lines;
-    if (history_file.open(QIODevice::ReadOnly)) {
-        QByteArray data = history_file.readAll();
-        QString text = QString::fromUtf8(data);
-        lines = text.split(QRegularExpression("[\r\n]+"), Qt::SkipEmptyParts);
-        history_file.close();
+    if(checked) {
+        m_terminal->setFocus();
     }
-    lines.removeAll(project_path);
-    lines.prepend(project_path);
-    while (lines.size() > 15)
-        lines.removeLast();
-    if (!history_file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
-    QTextStream out(&history_file);
-    for (const QString& l : lines){
-        if (!QDir(l).exists()) continue;
-        out << l << "\n";
-    }
-
-    history_file.close();
 }
 
 void IDEWindow::on_ClosingProject() {
-    WelcomeForm* wForm = new WelcomeForm();
-    wForm->show();
-
+    emit CloseProject();
     this->close();
-    this->deleteLater();
 }
 
 void IDEWindow::on_treeView_doubleClicked(const QModelIndex &index)
@@ -329,6 +318,11 @@ void IDEWindow::onProjectOpened(const QString& projectDir)
         m_terminal->appendLine("Build config not set. Use Tools -> Configure Build to set it up.");
     }
     delete dlg;
+}
+
+void IDEWindow::SaveProjectInCache(const QString project_path)
+{
+    utils::ProjectsHistoryManager::saveProjectsHistory(project_path);
 }
 
 void IDEWindow::on_NewProject()

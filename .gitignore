@@ -61,6 +61,11 @@ CMakeLists.txt.user*
 *.opensdf
 *.vcxproj
 *vcxproj.*
+.vscode/
+.vs/
+
+# IDEA Clion generated files
+.idea
 
 # MinGW generated files
 *.Debug
@@ -86,6 +91,8 @@ CMakeLists.txt.user*
 .ninja_deps
 .ninja_log
 .ninja_logs
+*.clangd
+*.clang-format
 
 build/
 CMakeFiles/

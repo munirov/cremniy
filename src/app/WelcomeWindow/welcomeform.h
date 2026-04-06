@@ -28,7 +28,7 @@ private:
     QLabel *info_label;
     QLabel *path_label;
     ClickableLineEdit *path_lineEdit;
-    QListView *history_project_list;
+    QListView *RecentProjectsList;
     void L2CreateProject(QString name, QString path, QString language);
     void SetProjectHistoryList();
     void OpenProject(QString path);
@@ -40,6 +40,7 @@ private slots:
     void CreateProjectHandler();
     void L2BackButton();
     void L2CreateButton();
+
 };
 
 #endif // WELCOMEFORM_H

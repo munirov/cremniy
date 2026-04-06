@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -52,13 +52,19 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         utils/utils.cpp
         utils/appsettings.h
         utils/appsettings.cpp
+        utils/instructionhelpservice.h
+        utils/instructionhelpservice.cpp
         utils/filecontext.h
         utils/filemanager.h
         utils/filemanager.cpp
+        utils/projectshistorymanager.cpp
+        utils/projectshistorymanager.h
 
         core/ToolTab.h
         core/ToolTabFactory.cpp
         core/ToolTabFactory.h
+        core/FileDataBuffer.h
+        core/FileDataBuffer.cpp
 
         BuildSystem/BuildConfig.cpp
         BuildSystem/BuildConfig.h
@@ -81,6 +87,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ui/filestabwidget.h
         ui/toolstabwidget.cpp
         ui/toolstabwidget.h
+
 
 
     )

@@ -13,9 +13,16 @@ class BinaryTab : public ToolTab
 private:
 
     QStackedWidget* pageView;
+    bool m_updatingSelection = false; // Флаг для предотвращения рекурсии
+    bool m_syncingBufferData = false;
+
+protected slots:
+    // Обработчик изменения выделения из буфера
+    void onSelectionChanged(qint64 pos, qint64 length) override;
+    void onDataChanged() override;
 
 public:
-    explicit BinaryTab(QWidget *parent = nullptr);
+    explicit BinaryTab(FileDataBuffer* buffer, QWidget *parent = nullptr);
 
     QString toolName() const override { return "Binary"; };
     QIcon toolIcon() const override { return QIcon(":/icons/binary.png"); };
