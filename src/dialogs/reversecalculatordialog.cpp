@@ -158,10 +158,12 @@ ReverseCalculatorDialog::ReverseCalculatorDialog(QWidget* parent)
     btnRow->addStretch(1);
 
     m_copyHex = new QPushButton(tr("Copy hex"), this);
-    m_copyDec = new QPushButton(tr("Copy dec"), this);
+    m_copyDecU = new QPushButton(tr("Copy uint"), this);
+    m_copyDecS = new QPushButton(tr("Copy int"), this);
     m_copyBin = new QPushButton(tr("Copy bin"), this);
     btnRow->addWidget(m_copyHex);
-    btnRow->addWidget(m_copyDec);
+    btnRow->addWidget(m_copyDecU);
+    btnRow->addWidget(m_copyDecS);
     btnRow->addWidget(m_copyBin);
     root->addLayout(btnRow);
 
@@ -171,7 +173,8 @@ ReverseCalculatorDialog::ReverseCalculatorDialog(QWidget* parent)
     connect(m_showSigned, &QCheckBox::toggled, this, &ReverseCalculatorDialog::onInputChanged);
     connect(m_swapBtn, &QPushButton::clicked, this, &ReverseCalculatorDialog::onSwapEndian);
     connect(m_copyHex, &QPushButton::clicked, this, &ReverseCalculatorDialog::onCopyHex);
-    connect(m_copyDec, &QPushButton::clicked, this, &ReverseCalculatorDialog::onCopyDec);
+    connect(m_copyDecU, &QPushButton::clicked, this, &ReverseCalculatorDialog::onCopyUINT);
+    connect(m_copyDecS, &QPushButton::clicked, this, &ReverseCalculatorDialog::onCopyINT);
     connect(m_copyBin, &QPushButton::clicked, this, &ReverseCalculatorDialog::onCopyBin);
     connect(m_historyList, &QListWidget::itemClicked, this, &ReverseCalculatorDialog::onHistoryItemClicked);
     connect(m_clearHistoryBtn, &QPushButton::clicked, this, [this]() {
@@ -514,6 +517,7 @@ void ReverseCalculatorDialog::updateSignedRowVisibility()
 {
     const bool show = m_showSigned->isChecked();
     m_form->setRowVisible(m_decS, show);
+    m_copyDecS->setVisible(show);
     if (QWidget* label = m_form->labelForField(m_decS))
         show ? label->show() : label->hide();
 }
@@ -542,12 +546,17 @@ void ReverseCalculatorDialog::onCopyHex()
     QGuiApplication::clipboard()->setText(m_hex->text());
 }
 
-void ReverseCalculatorDialog::onCopyDec()
+void ReverseCalculatorDialog::onCopyUINT()
 {
     QGuiApplication::clipboard()->setText(m_decU->text());
 }
 
+void ReverseCalculatorDialog::onCopyINT()
+{
+    QGuiApplication::clipboard()->setText(m_decS->text());
+}
+
 void ReverseCalculatorDialog::onCopyBin()
 {
-    QGuiApplication::clipboard()->setText(m_bin->text());
+	QGuiApplication::clipboard()->setText("0b" + m_bin->text().remove(' '));
 }

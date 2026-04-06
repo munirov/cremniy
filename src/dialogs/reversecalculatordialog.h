@@ -26,7 +26,8 @@ private slots:
     void onHistoryItemClicked(QListWidgetItem* item);
     void onSwapEndian();
     void onCopyHex();
-    void onCopyDec();
+    void onCopyUINT();
+    void onCopyINT();
     void onCopyBin();
 
 private:
@@ -53,7 +54,8 @@ private:
 
     QPushButton* m_swapBtn = nullptr;
     QPushButton* m_copyHex = nullptr;
-    QPushButton* m_copyDec = nullptr;
+    QPushButton* m_copyDecU = nullptr;
+    QPushButton* m_copyDecS = nullptr;
     QPushButton* m_copyBin = nullptr;
 
     QListWidget* m_historyList = nullptr;
