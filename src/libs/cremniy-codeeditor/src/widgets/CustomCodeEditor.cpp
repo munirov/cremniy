@@ -1,5 +1,8 @@
 #include "widgets/CustomCodeEditor.h"
 
+#include "widgets/EditorEditOperations.h"
+#include "widgets/EditorLanguageSupport.h"
+#include "widgets/EditorTypingBehaviors.h"
 #include "widgets/LineNumberArea.h"
 #include "QCXXHighlighter.hpp"
 #include "QJSONHighlighter.hpp"
@@ -647,28 +650,13 @@ void CustomCodeEditor::initSyntaxSupport()
 
 QString CustomCodeEditor::normalizedFileExt(const QString& ext) const
 {
-    QString value = ext.trimmed().toLower();
-    if (value == QStringLiteral("makefile"))
-        return QStringLiteral("make");
-    if (value == QStringLiteral("cmakelists.txt"))
-        return QStringLiteral("cmake");
-    if (value == QStringLiteral("yml"))
-        return QStringLiteral("yaml");
-    if (value == QStringLiteral("bash") || value == QStringLiteral("zsh") || value == QStringLiteral("fish"))
-        return QStringLiteral("sh");
-    if (value == QStringLiteral("mjs") || value == QStringLiteral("cjs") || value == QStringLiteral("jsx"))
-        return QStringLiteral("js");
-    if (value == QStringLiteral("tsx"))
-        return QStringLiteral("ts");
-    if (value == QStringLiteral("cfg") || value == QStringLiteral("conf") || value == QStringLiteral("properties") || value == QStringLiteral("env"))
-        return QStringLiteral("ini");
-    return value;
+    return EditorLanguageSupport::normalizedFileExt(ext);
 }
 
 void CustomCodeEditor::rebuildHighlighterForCurrentExtension()
 {
     const QString ext = normalizedFileExt(m_fileExt);
-    const QString resource = m_languageResourceByExt.value(ext, QStringLiteral(":/languages/cpp.xml"));
+    const QString resource = EditorLanguageSupport::languageResourceForExtension(ext);
     m_languageResource = resource;
 
     if (resource == QStringLiteral(":/languages/markdown")) {
@@ -693,19 +681,7 @@ void CustomCodeEditor::rebuildHighlighterForCurrentExtension()
                                                         QRegularExpression(QStringLiteral("\"[^\"\\n]*\"|'[^'\\n]*'")),
                                                         QRegularExpression(QStringLiteral("\\b(0x[0-9A-Fa-f]+|\\d+(?:\\.\\d+)?)\\b")),
                                                         m_highlightDocument));
-    } else if (resource == QStringLiteral(":/languages/yaml") ||
-               resource == QStringLiteral(":/languages/toml") ||
-               resource == QStringLiteral(":/languages/ini") ||
-               resource == QStringLiteral(":/languages/sh") ||
-               resource == QStringLiteral(":/languages/js") ||
-               resource == QStringLiteral(":/languages/ts") ||
-               resource == QStringLiteral(":/languages/java") ||
-               resource == QStringLiteral(":/languages/cs") ||
-               resource == QStringLiteral(":/languages/go") ||
-               resource == QStringLiteral(":/languages/php") ||
-               resource == QStringLiteral(":/languages/sql") ||
-               resource == QStringLiteral(":/languages/xml") ||
-               resource == QStringLiteral(":/languages/sln")) {
+    } else if (EditorLanguageSupport::isCommonRuleLanguageResource(resource)) {
         setSyntaxHighlighter(createCommonLanguageHighlighter(ext, m_highlightDocument));
     } else if (resource == QStringLiteral(":/languages/plain")) {
         setSyntaxHighlighter(nullptr);
@@ -980,16 +956,7 @@ QString CustomCodeEditor::syntaxKey() const
 
 QString CustomCodeEditor::lineCommentPrefix() const
 {
-    const QString key = syntaxKey();
-    if (key == QStringLiteral("py") || key == QStringLiteral("yaml") || key == QStringLiteral("toml") ||
-        key == QStringLiteral("ini") || key == QStringLiteral("sh") || key == QStringLiteral("make") ||
-        key == QStringLiteral("cmake"))
-        return QStringLiteral("#");
-    if (key == QStringLiteral("sql"))
-        return QStringLiteral("--");
-    if (key == QStringLiteral("xml"))
-        return {};
-    return QStringLiteral("//");
+    return EditorLanguageSupport::lineCommentPrefix(syntaxKey());
 }
 
 bool CustomCodeEditor::findText(const QString& text, bool forward, Qt::CaseSensitivity caseSensitivity)
@@ -1234,9 +1201,33 @@ void CustomCodeEditor::keyPressEvent(QKeyEvent* event)
         });
         return;
     case Qt::Key_Up:
+        if (event->modifiers() == Qt::AltModifier) {
+            endEditGrouping();
+            moveSelectedLines(-1);
+            event->accept();
+            return;
+        }
+        if (event->modifiers() == (Qt::AltModifier | Qt::ShiftModifier)) {
+            endEditGrouping();
+            duplicateSelectionOrLine(true);
+            event->accept();
+            return;
+        }
         handleMove([this]() { moveCursorUp(); });
         return;
     case Qt::Key_Down:
+        if (event->modifiers() == Qt::AltModifier) {
+            endEditGrouping();
+            moveSelectedLines(1);
+            event->accept();
+            return;
+        }
+        if (event->modifiers() == (Qt::AltModifier | Qt::ShiftModifier)) {
+            endEditGrouping();
+            duplicateSelectionOrLine(false);
+            event->accept();
+            return;
+        }
         handleMove([this]() { moveCursorDown(); });
         return;
     case Qt::Key_Home:
@@ -1337,7 +1328,18 @@ void CustomCodeEditor::keyPressEvent(QKeyEvent* event)
         event->accept();
         return;
     }
-
+    if (controlPressed && !shiftPressed && event->key() == Qt::Key_D) {
+        endEditGrouping();
+        duplicateSelectionOrLine(false);
+        event->accept();
+        return;
+    }
+    if (controlPressed && shiftPressed && event->key() == Qt::Key_K) {
+        endEditGrouping();
+        deleteCurrentLine();
+        event->accept();
+        return;
+    }
     const QString text = event->text();
     if (text == QStringLiteral(" ") && !event->modifiers().testFlag(Qt::ControlModifier)) {
         beginEditGrouping(EditGroupTyping);
@@ -1388,7 +1390,11 @@ void CustomCodeEditor::keyPressEvent(QKeyEvent* event)
         endEditGrouping();
         if (kLogInputEvents)
             qDebug() << "[CustomCodeEditor][keyPressEvent] action=InsertNewline";
-        if (shiftPressed) {
+        if (controlPressed && shiftPressed) {
+            insertLineAbove();
+        } else if (controlPressed) {
+            insertLineBelow();
+        } else if (shiftPressed) {
             replaceRange(hasSelection() ? m_selectionStart : m_cursorBytePos,
                          hasSelection() ? m_selectionLength : 0,
                          QByteArray("\n"));
@@ -1730,7 +1736,13 @@ void CustomCodeEditor::onBufferSelectionChanged(qint64 pos, qint64 length)
         return;
 
     updateSelection(pos, length);
-    m_cursorBytePos = clampToUtf8Boundary(length > 0 ? pos + length : pos);
+
+    // A zero-length external selection should only clear the selection state.
+    // Moving the caret to that position causes the first local edit to jump to
+    // the start of the file when another view echoes back an empty selection.
+    if (length > 0)
+        m_cursorBytePos = clampToUtf8Boundary(pos + length);
+
     clampCursorToBuffer();
     ensureCursorVisible();
     emit cursorPositionChanged();
@@ -2464,7 +2476,24 @@ void CustomCodeEditor::cutSelection()
 
 void CustomCodeEditor::pasteFromClipboard()
 {
-    insertText(QApplication::clipboard()->text());
+    QString text = QApplication::clipboard()->text();
+    if (text.isEmpty())
+        return;
+
+    if (!hasSelection()) {
+        const qint64 lineNum = lineFromBytePos(m_cursorBytePos);
+        const QString lineText = displayTextForLine(lineNum);
+        QString indent;
+        for (const QChar ch : lineText) {
+            if (ch == QLatin1Char(' ') || ch == QLatin1Char('\t'))
+                indent.append(ch);
+            else
+                break;
+        }
+        text = EditorTypingBehaviors::smartPasteText(text, indent);
+    }
+
+    insertText(text);
 }
 
 void CustomCodeEditor::selectAll()
@@ -2539,6 +2568,28 @@ void CustomCodeEditor::deleteBackward()
     const QString text = displayTextForLine(lineNum);
     const QString prefix = displayPrefixForPosition(lineNum, m_cursorBytePos);
     const int currentCharPos = prefix.length();
+
+    if (currentCharPos < text.length()) {
+        const QChar previousChar = currentCharPos > 0 ? text.at(currentCharPos - 1) : QChar();
+        const QChar nextChar = text.at(currentCharPos);
+        if (EditorTypingBehaviors::isMatchingPair(previousChar, nextChar)) {
+            const qint64 prevPos = lineStart + m_utf8Decoder->charPosToByte(text, currentCharPos - 1);
+            const qint64 nextPos = lineStart + m_utf8Decoder->charPosToByte(text, currentCharPos + 1);
+            replaceRange(prevPos,
+                         nextPos - prevPos,
+                         QByteArray());
+            return;
+        }
+    }
+
+    const int smartIndentDeleteCount = EditorTypingBehaviors::smartBackspaceColumnDeleteCount(prefix, m_tabReplaceSize, m_tabReplace);
+    if (smartIndentDeleteCount > 0) {
+        const int smartPrevCharPos = qMax(0, currentCharPos - smartIndentDeleteCount);
+        const qint64 smartPrevPos = lineStart + m_utf8Decoder->charPosToByte(text, smartPrevCharPos);
+        replaceRange(smartPrevPos, m_cursorBytePos - smartPrevPos, QByteArray());
+        return;
+    }
+
     const int prevCharPos = qMax(0, currentCharPos - 1);
     const qint64 prevPos = lineStart + m_utf8Decoder->charPosToByte(text, prevCharPos);
     if (kLogInputEvents)
@@ -2577,6 +2628,17 @@ void CustomCodeEditor::deleteForward()
     const QString text = displayTextForLine(lineNum);
     const QString prefix = displayPrefixForPosition(lineNum, m_cursorBytePos);
     const int currentCharPos = prefix.length();
+
+    if (currentCharPos + 1 < text.length()) {
+        const QChar currentChar = text.at(currentCharPos);
+        const QChar nextChar = text.at(currentCharPos + 1);
+        if (EditorTypingBehaviors::isMatchingPair(currentChar, nextChar)) {
+            const qint64 nextPairPos = lineVisibleStart(lineNum) + m_utf8Decoder->charPosToByte(text, currentCharPos + 2);
+            replaceRange(m_cursorBytePos, nextPairPos - m_cursorBytePos, QByteArray());
+            return;
+        }
+    }
+
     const int nextCharPos = qMin(text.length(), currentCharPos + 1);
     const qint64 nextPos = lineVisibleStart(lineNum) + m_utf8Decoder->charPosToByte(text, nextCharPos);
     if (kLogInputEvents)
@@ -2633,39 +2695,19 @@ void CustomCodeEditor::toggleLineComment()
     const qint64 endAnchor = hasSelection() ? qMax(selectionStart, selectionEnd - 1) : selectionEnd;
     const qint64 endLine = lineFromBytePos(endAnchor);
 
-    bool canUncomment = true;
+    QStringList lines;
     for (qint64 lineNum = startLine; lineNum <= endLine; ++lineNum) {
-        const QString text = displayTextForLine(lineNum);
-        const QString trimmed = text.trimmed();
-        if (!trimmed.isEmpty() && !trimmed.startsWith(comment)) {
-            canUncomment = false;
-            break;
-        }
+        lines.append(displayTextForLine(lineNum));
     }
 
-    QByteArray replacement;
     qint64 replaceStart = lineVisibleStart(startLine);
     qint64 replaceEnd = lineVisibleEnd(endLine);
 
-    for (qint64 lineNum = startLine; lineNum <= endLine; ++lineNum) {
-        const QString text = displayTextForLine(lineNum);
-        QString updated = text;
-        if (canUncomment) {
-            const int indent = text.indexOf(QRegularExpression(QStringLiteral("\\S")));
-            if (indent >= 0 && text.mid(indent).startsWith(comment)) {
-                updated.remove(indent, comment.length());
-                if (updated.mid(indent).startsWith(QLatin1Char(' ')))
-                    updated.remove(indent, 1);
-            }
-        } else {
-            const QString trimmed = text.trimmed();
-            const int indent = text.indexOf(QRegularExpression(QStringLiteral("\\S")));
-            const int insertPos = indent >= 0 ? indent : text.length();
-            updated.insert(insertPos, trimmed.isEmpty() ? comment : comment + QLatin1Char(' '));
-        }
-
-        replacement.append(updated.toUtf8());
-        if (lineNum < endLine)
+    const QStringList updatedLines = EditorTypingBehaviors::toggleLineComments(lines, comment);
+    QByteArray replacement;
+    for (int i = 0; i < updatedLines.size(); ++i) {
+        replacement.append(updatedLines.at(i).toUtf8());
+        if (i + 1 < updatedLines.size())
             replacement.append('\n');
     }
 
@@ -2699,10 +2741,38 @@ void CustomCodeEditor::insertNewline()
         break;
     }
 
-    const QString indentUnit = m_tabReplace ? QString(m_tabReplaceSize, QLatin1Char(' '))
-                                            : QString(QLatin1Char('\t'));
-    const bool shouldIncreaseIndent = linePrefix.trimmed().endsWith(QLatin1Char('{'));
-    const bool splitClosingBrace = shouldIncreaseIndent && lineSuffix.trimmed().startsWith(QLatin1Char('}'));
+    const QString indentUnit = EditorTypingBehaviors::indentUnitText(m_tabReplace, m_tabReplaceSize);
+
+    if (!hasSelection()) {
+        const auto emptyLineReplacement = EditorTypingBehaviors::emptyLineEnterReplacement(
+            lineText,
+            indent,
+            indentUnit,
+            m_tabReplace);
+        if (emptyLineReplacement.has_value()) {
+            const qint64 replaceStart = lineVisibleStart(lineNum);
+            const qint64 replaceEnd = lineVisibleEnd(lineNum);
+            replaceRange(replaceStart, replaceEnd - replaceStart, *emptyLineReplacement);
+            m_cursorBytePos = replaceStart + emptyLineReplacement->size();
+            m_selectionStart = m_cursorBytePos;
+            m_selectionLength = 0;
+            m_selectionAnchor = -1;
+            syncSelectionToBuffer();
+            ensureCursorVisible();
+            emit cursorPositionChanged();
+            viewport()->update();
+            return;
+        }
+    }
+
+    const QString trimmedPrefix = linePrefix.trimmed();
+    const QString trimmedSuffix = lineSuffix.trimmed();
+    const auto indentDecision = EditorTypingBehaviors::indentationAfterPrefix(trimmedPrefix);
+    const bool shouldIncreaseIndent = indentDecision.shouldIncrease;
+    const QChar expectedCloser = indentDecision.splitCloser;
+    const bool splitClosingBrace = expectedCloser.isNull()
+        ? false
+        : trimmedSuffix.startsWith(expectedCloser);
 
     QByteArray replacement("\n");
     replacement.append(indent.toUtf8());
@@ -2726,6 +2796,78 @@ void CustomCodeEditor::insertNewline()
     }
 }
 
+void CustomCodeEditor::insertLineBelow()
+{
+    if (!m_buffer)
+        return;
+
+    const qint64 lineNum = lineFromBytePos(m_cursorBytePos);
+    const qint64 lineEnd = lineVisibleEnd(lineNum);
+    qint64 insertPos = lineEnd;
+    if (insertPos < m_buffer->size()) {
+        if (m_buffer->getByte(insertPos) == '\r' && insertPos + 1 < m_buffer->size() && m_buffer->getByte(insertPos + 1) == '\n')
+            insertPos += 2;
+        else if (m_buffer->getByte(insertPos) == '\n')
+            insertPos += 1;
+    }
+
+    replaceRange(insertPos, 0, QByteArray("\n"));
+    m_cursorBytePos = insertPos + 1;
+    m_selectionStart = m_cursorBytePos;
+    m_selectionLength = 0;
+    m_selectionAnchor = -1;
+    syncSelectionToBuffer();
+    ensureCursorVisible();
+    emit cursorPositionChanged();
+    viewport()->update();
+}
+
+void CustomCodeEditor::insertLineAbove()
+{
+    if (!m_buffer)
+        return;
+
+    const qint64 lineNum = lineFromBytePos(m_cursorBytePos);
+    const qint64 lineStart = lineVisibleStart(lineNum);
+
+    replaceRange(lineStart, 0, QByteArray("\n"));
+    m_cursorBytePos = lineStart;
+    m_selectionStart = m_cursorBytePos;
+    m_selectionLength = 0;
+    m_selectionAnchor = -1;
+    syncSelectionToBuffer();
+    ensureCursorVisible();
+    emit cursorPositionChanged();
+    viewport()->update();
+}
+
+void CustomCodeEditor::deleteCurrentLine()
+{
+    if (!m_buffer)
+        return;
+
+    const qint64 lineNum = lineFromBytePos(m_cursorBytePos);
+    const qint64 lineStart = lineVisibleStart(lineNum);
+    const qint64 lineEnd = lineVisibleEnd(lineNum);
+    qint64 deleteEnd = lineEnd;
+    if (deleteEnd < m_buffer->size()) {
+        if (m_buffer->getByte(deleteEnd) == '\r' && deleteEnd + 1 < m_buffer->size() && m_buffer->getByte(deleteEnd + 1) == '\n')
+            deleteEnd += 2;
+        else if (m_buffer->getByte(deleteEnd) == '\n')
+            deleteEnd += 1;
+    }
+
+    replaceRange(lineStart, deleteEnd - lineStart, QByteArray());
+    m_cursorBytePos = lineStart;
+    m_selectionStart = m_cursorBytePos;
+    m_selectionLength = 0;
+    m_selectionAnchor = -1;
+    syncSelectionToBuffer();
+    ensureCursorVisible();
+    emit cursorPositionChanged();
+    viewport()->update();
+}
+
 void CustomCodeEditor::insertTab()
 {
     if (hasSelection()) {
@@ -2746,10 +2888,12 @@ void CustomCodeEditor::insertTab()
         }
 
         replaceRange(replaceStart, replaceEnd - replaceStart, replacement);
-        m_selectionStart = replaceStart;
-        m_selectionLength = replacement.size();
+        const qint64 newSelectionStart = replaceStart + indent.size();
+        const qint64 newSelectionEnd = replaceStart + replacement.size();
+        m_selectionStart = newSelectionStart;
+        m_selectionLength = qMax<qint64>(0, newSelectionEnd - newSelectionStart);
         m_selectionAnchor = m_selectionStart;
-        m_cursorBytePos = m_selectionStart + m_selectionLength;
+        m_cursorBytePos = newSelectionStart + m_selectionLength;
         syncSelectionToBuffer();
         viewport()->update();
         return;
@@ -2783,28 +2927,162 @@ void CustomCodeEditor::outdentSelection()
     const qint64 replaceStart = lineVisibleStart(startLine);
     const qint64 replaceEnd = lineVisibleEnd(endLine);
     QByteArray replacement;
+    qint64 firstLineRemoved = 0;
 
     for (qint64 lineNum = startLine; lineNum <= endLine; ++lineNum) {
         QString text = displayTextForLine(lineNum);
+        int removedCount = 0;
         if (text.startsWith(QLatin1Char('\t'))) {
             text.remove(0, 1);
+            removedCount = 1;
         } else {
             int removeCount = 0;
             while (removeCount < text.length() && removeCount < m_tabReplaceSize && text.at(removeCount) == QLatin1Char(' '))
                 ++removeCount;
             text.remove(0, removeCount);
+            removedCount = removeCount;
         }
+        if (lineNum == startLine)
+            firstLineRemoved = removedCount;
         replacement.append(text.toUtf8());
         if (lineNum < endLine)
             replacement.append('\n');
     }
 
     replaceRange(replaceStart, replaceEnd - replaceStart, replacement);
-    m_selectionStart = replaceStart;
-    m_selectionLength = replacement.size();
+    const qint64 newSelectionStart = replaceStart + qMin<qint64>(firstLineRemoved, selStart - replaceStart);
+    m_selectionStart = newSelectionStart;
+    m_selectionLength = qMax<qint64>(0, (replaceStart + replacement.size()) - newSelectionStart);
     m_selectionAnchor = m_selectionStart;
     m_cursorBytePos = m_selectionStart + m_selectionLength;
     syncSelectionToBuffer();
+    viewport()->update();
+}
+
+void CustomCodeEditor::duplicateSelectionOrLine(bool duplicateAbove)
+{
+    if (!m_buffer)
+        return;
+
+    if (hasSelection()) {
+        const auto operation = EditorEditOperations::duplicateSelection(
+            m_selectionStart,
+            m_selectionLength,
+            m_buffer->read(m_selectionStart, m_selectionLength),
+            duplicateAbove);
+        replaceRange(operation.replaceStart, operation.replaceLength, operation.replacement);
+        m_selectionStart = operation.selectionStart;
+        m_selectionLength = operation.selectionLength;
+        m_selectionAnchor = m_selectionStart;
+        m_cursorBytePos = m_selectionStart + m_selectionLength;
+        syncSelectionToBuffer();
+        viewport()->update();
+        return;
+    }
+
+    const qint64 lineNum = lineFromBytePos(m_cursorBytePos);
+    const qint64 lineStart = lineVisibleStart(lineNum);
+    const qint64 lineEnd = lineVisibleEnd(lineNum);
+    QByteArray lineBytes = m_buffer->read(lineStart, lineEnd - lineStart);
+
+    qint64 newlineStart = lineEnd;
+    QByteArray newlineBytes;
+    if (newlineStart < m_buffer->size()) {
+        newlineBytes.append(m_buffer->getByte(newlineStart));
+        if (m_buffer->getByte(newlineStart) == '\r' && newlineStart + 1 < m_buffer->size() && m_buffer->getByte(newlineStart + 1) == '\n')
+            newlineBytes.append(m_buffer->getByte(newlineStart + 1));
+    } else {
+        newlineBytes = QByteArray("\n");
+    }
+
+    const auto operation = EditorEditOperations::duplicateLine(
+        lineStart,
+        lineEnd - lineStart,
+        m_buffer->size(),
+        lineBytes,
+        newlineBytes,
+        duplicateAbove);
+    replaceRange(operation.replaceStart, operation.replaceLength, operation.replacement);
+    m_selectionStart = operation.selectionStart;
+    m_selectionLength = operation.selectionLength;
+    m_selectionAnchor = m_selectionStart;
+    m_cursorBytePos = m_selectionStart + m_selectionLength;
+    syncSelectionToBuffer();
+    viewport()->update();
+}
+
+void CustomCodeEditor::moveSelectedLines(int direction)
+{
+    if (!m_buffer || direction == 0)
+        return;
+
+    const qint64 rangeStart = hasSelection() ? m_selectionStart : m_cursorBytePos;
+    const qint64 rangeEnd = hasSelection() ? (m_selectionStart + m_selectionLength) : m_cursorBytePos;
+    const qint64 startLine = lineFromBytePos(rangeStart);
+    const qint64 endLine = lineFromBytePos(hasSelection() ? qMax(rangeStart, rangeEnd - 1) : rangeEnd);
+
+    if (direction < 0 && startLine <= 0)
+        return;
+    if (direction > 0 && endLine >= m_lineIndex->lineCount() - 1)
+        return;
+
+    const qint64 blockStart = lineVisibleStart(startLine);
+    const qint64 blockEnd = lineVisibleEnd(endLine);
+    qint64 blockRawEnd = blockEnd;
+    if (blockRawEnd < m_buffer->size()) {
+        if (m_buffer->getByte(blockRawEnd) == '\r' && blockRawEnd + 1 < m_buffer->size() && m_buffer->getByte(blockRawEnd + 1) == '\n')
+            blockRawEnd += 2;
+        else if (m_buffer->getByte(blockRawEnd) == '\n')
+            blockRawEnd += 1;
+    }
+    const QByteArray blockBytes = m_buffer->read(blockStart, blockRawEnd - blockStart);
+
+    if (direction < 0) {
+        const qint64 prevLine = startLine - 1;
+        const qint64 prevStart = lineVisibleStart(prevLine);
+        const qint64 prevEnd = lineVisibleEnd(prevLine);
+        qint64 prevRawEnd = prevEnd;
+        if (prevRawEnd < m_buffer->size()) {
+            if (m_buffer->getByte(prevRawEnd) == '\r' && prevRawEnd + 1 < m_buffer->size() && m_buffer->getByte(prevRawEnd + 1) == '\n')
+                prevRawEnd += 2;
+            else if (m_buffer->getByte(prevRawEnd) == '\n')
+                prevRawEnd += 1;
+        }
+        const auto operation = EditorEditOperations::moveBlockUp(
+            prevStart,
+            m_buffer->read(prevStart, prevRawEnd - prevStart),
+            blockBytes);
+        if (!operation.has_value())
+            return;
+        replaceRange(operation->replaceStart, operation->replaceLength, operation->replacement);
+        m_selectionStart = operation->selectionStart;
+        m_selectionLength = operation->selectionLength;
+    } else {
+        const qint64 nextLine = endLine + 1;
+        const qint64 nextStart = lineVisibleStart(nextLine);
+        const qint64 nextEnd = lineVisibleEnd(nextLine);
+        qint64 nextRawEnd = nextEnd;
+        if (nextRawEnd < m_buffer->size()) {
+            if (m_buffer->getByte(nextRawEnd) == '\r' && nextRawEnd + 1 < m_buffer->size() && m_buffer->getByte(nextRawEnd + 1) == '\n')
+                nextRawEnd += 2;
+            else if (m_buffer->getByte(nextRawEnd) == '\n')
+                nextRawEnd += 1;
+        }
+        const auto operation = EditorEditOperations::moveBlockDown(
+            blockStart,
+            blockBytes,
+            m_buffer->read(nextStart, nextRawEnd - nextStart));
+        if (!operation.has_value())
+            return;
+        replaceRange(operation->replaceStart, operation->replaceLength, operation->replacement);
+        m_selectionStart = operation->selectionStart;
+        m_selectionLength = operation->selectionLength;
+    }
+
+    m_selectionAnchor = m_selectionStart;
+    m_cursorBytePos = m_selectionStart + m_selectionLength;
+    syncSelectionToBuffer();
+    ensureCursorVisible();
     viewport()->update();
 }
 
@@ -2813,24 +3091,62 @@ void CustomCodeEditor::insertText(const QString& text)
     if (text.isEmpty())
         return;
 
-    if (text == QStringLiteral("{") && !hasSelection()) {
-        replaceRange(m_cursorBytePos, 0, QByteArray("{}"));
-        m_cursorBytePos = qMax<qint64>(firstTextByte(), m_cursorBytePos - 1);
+    if (!hasSelection()) {
+        const qint64 lineNum = lineFromBytePos(m_cursorBytePos);
+        const qint64 lineStart = lineVisibleStart(lineNum);
+        const QString linePrefix = displayPrefixForPosition(lineNum, m_cursorBytePos);
+        const QString lineSuffix = displayTextForLine(lineNum).mid(linePrefix.length());
+        const auto dedentedPrefix = EditorTypingBehaviors::autoDedentedPrefix(
+            text,
+            linePrefix,
+            lineSuffix,
+            EditorTypingBehaviors::indentUnitText(m_tabReplace, m_tabReplaceSize),
+            m_tabReplace);
+
+        if (dedentedPrefix.has_value()) {
+            replaceRange(lineStart, m_cursorBytePos - lineStart, dedentedPrefix->toUtf8() + text.toUtf8());
+            return;
+        }
+    }
+
+    const auto wrapSelection = [this](const QByteArray& pair, qint64 cursorAdvance) {
+        const qint64 start = hasSelection() ? m_selectionStart : m_cursorBytePos;
+        const qint64 length = hasSelection() ? m_selectionLength : 0;
+        const QByteArray selectedBytes = length > 0 ? m_buffer->read(start, length) : QByteArray();
+        QByteArray replacement = pair.left(1);
+        replacement.append(selectedBytes);
+        replacement.append(pair.right(1));
+        replaceRange(start, length, replacement);
+        m_cursorBytePos = start + cursorAdvance + selectedBytes.size();
         m_selectionStart = m_cursorBytePos;
         m_selectionLength = 0;
         m_selectionAnchor = -1;
         syncSelectionToBuffer();
         emit cursorPositionChanged();
         viewport()->update();
-        return;
-    }
+    };
 
-    if (text == QStringLiteral("}") && !hasSelection() && m_cursorBytePos < m_buffer->size() && m_buffer->getByte(m_cursorBytePos) == '}') {
+    const auto skipClosing = [this, &text]() {
+        if (hasSelection() || m_cursorBytePos >= m_buffer->size())
+            return false;
+        if (!EditorTypingBehaviors::shouldSkipClosing(text, m_buffer->getByte(m_cursorBytePos)))
+            return false;
+
         ++m_cursorBytePos;
         clearSelection();
         ensureCursorVisible();
         emit cursorPositionChanged();
         viewport()->update();
+        return true;
+    };
+
+    const QByteArray pair = EditorTypingBehaviors::matchingPair(text);
+    if (!pair.isEmpty()) {
+        wrapSelection(pair, 1);
+        return;
+    }
+
+    if (skipClosing()) {
         return;
     }
 

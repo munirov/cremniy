@@ -18,12 +18,18 @@ add_library(cremniy-codeeditor STATIC
     include/core/LineIndex.h
     include/core/UTF8Decoder.h
     include/widgets/CustomCodeEditor.h
+    include/widgets/EditorEditOperations.h
+    include/widgets/EditorLanguageSupport.h
+    include/widgets/EditorTypingBehaviors.h
     include/widgets/LineNumberArea.h
     src/core/FileDataBuffer.cpp
     src/core/LineCache.cpp
     src/core/LineIndex.cpp
     src/core/UTF8Decoder.cpp
     src/widgets/CustomCodeEditor.cpp
+    src/widgets/EditorEditOperations.cpp
+    src/widgets/EditorLanguageSupport.cpp
+    src/widgets/EditorTypingBehaviors.cpp
     src/widgets/LineNumberArea.cpp
     third_party/QCodeEditor/include/QCECompleter.hpp
     third_party/QCodeEditor/include/QCXXHighlighter.hpp
