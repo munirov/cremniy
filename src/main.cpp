@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     QCoreApplication::setOrganizationName("cremniy");
 
-    LanguageManager::instance().setLocale("en");
+    LanguageManager::instance().loadUserDefaultLocale();
 
     QCoreApplication::setApplicationName("Cremniy");
     QApplication::setWindowIcon(QIcon(":/icons/icon.png"));

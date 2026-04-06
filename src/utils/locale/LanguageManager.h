@@ -17,11 +17,13 @@ private:
 public:
     static LanguageManager& instance();
 
+    void loadUserDefaultLocale();
+
     void setLocale(const QString& locale);
 
     static QString translationsPath();
 
-    QStringList supportedLanguages() {
+    static QStringList supportedLanguages() {
         return QStringLiteral(APP_LANGUAGES).split(';', Qt::SkipEmptyParts);
     }
 };

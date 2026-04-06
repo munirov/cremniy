@@ -145,7 +145,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     auto * languageSwitcherBox = new QComboBox(this);
 
     languageSwitcherBox->setPlaceholderText(tr("Choose:"));
-    for (auto const & locale : LanguageManager::instance().supportedLanguages())
+    for (auto const & locale : LanguageManager::supportedLanguages())
         languageSwitcherBox->addItem(QLocale(locale).nativeTerritoryName(), QVariant::fromValue(locale));
 
     languageSwitcherBox->setMinimumWidth(250);
@@ -181,9 +181,10 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     connect(m_r2AnalysisCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
     connect(m_r2PreCommands, &QPlainTextEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
 
-    connect(languageSwitcherBox, &QComboBox::currentIndexChanged, this, [languageSwitcherBox](int index) {
+    connect(languageSwitcherBox, &QComboBox::currentIndexChanged, this, [languageSwitcherBox, this](int index) {
         auto locale = languageSwitcherBox->currentData().value<QString>();
         LanguageManager::instance().setLocale(locale);
+        QMessageBox::information(this, tr("Information"), tr("Please restart IDE to apply the settings."), QMessageBox::Apply);
     });
 
     loadFromSettings();
