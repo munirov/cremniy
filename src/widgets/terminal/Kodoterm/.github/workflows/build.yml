@@ -1,0 +1,145 @@
+name: Build & Package
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Linux (x64)",       os: ubuntu-latest, arch: x64 }
+          - { name: "Linux (ARM64)",     os: ubuntu-24.04-arm, arch: arm64 }
+          - { name: "Windows (x64)",     os: windows-latest, arch: x64 }
+          # - { name: "Windows (ARM64)",   os: windows-latest-arm64, arch: arm64  }
+          - { name: "macOS (ARM64)",     os: macos-14, arch: arm64 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get short git SHA
+        id: git-sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Install Qt
+        id: install-qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.1'
+          arch: ${{ matrix.config.os == 'windows-latest' && 'win64_msvc2022_64' || (matrix.config.os == 'windows-latest-arm64' && 'win64_msvc2022_arm64' || '') }}
+          cache: true
+
+      - name: Install Linux Deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libdbus-1-dev libx11-dev libxcb1-dev wget
+
+          LD_ARCH=$(uname -m)
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-$LD_ARCH.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-$LD_ARCH.AppImage
+          chmod +x linuxdeploy-$LD_ARCH.AppImage linuxdeploy-plugin-qt-$LD_ARCH.AppImage
+
+          ln -s linuxdeploy-$LD_ARCH.AppImage linuxdeploy.AppImage
+          ln -s linuxdeploy-plugin-qt-$LD_ARCH.AppImage linuxdeploy-plugin-qt.AppImage
+        shell: bash
+
+      - name: Configure CMake
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -DGIT_SHA=${{ steps.git-sha.outputs.sha }}
+          else
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DCPACK_PACKAGE_VERSION_SUFFIX=${{ steps.git-sha.outputs.sha }}
+          fi
+        shell: bash
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake --install build --prefix deploy --config Release
+
+          $WIND_PATH = Join-Path "${{ env.QT_ROOT_DIR }}" "bin\windeployqt.exe"
+          $EXE_PATH = "deploy\KodoShell.exe"
+
+          Write-Host "Using windeployqt: $WIND_PATH"
+          Write-Host "Deploying for: $EXE_PATH",
+
+          $env:PATH = "${{ env.QT_ROOT_DIR }}\bin;" + $env:PATH
+
+          # Deploy dependencies. Remove network support to reduce size.
+          & "$WIND_PATH" --release --no-translations --no-network --compiler-runtime "$EXE_PATH"
+          $DEPLOY_ABS_PATH = (Get-Item "deploy").FullName.Replace('\', '/')
+
+          cd build
+          cpack -G WIX -C Release -D "CPACK_INSTALLED_DIRECTORIES=$DEPLOY_ABS_PATH;/" -D CPACK_INSTALL_CMAKE_PROJECTS="" --verbose
+          #cpack -G ZIP -C Release -D "CPACK_INSTALLED_DIRECTORIES=$DEPLOY_ABS_PATH;/" -D CPACK_INSTALL_CMAKE_PROJECTS="" --verbose
+
+          mv *.msi ..\
+          mv *.zip ..\
+        shell: pwsh
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wix-build-log
+          path: build/_CPack_Packages/win64/WIX/wix.log
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # Find the app bundle
+          APP_BUNDLE=$(find build -name "KodoShell.app" -type d | head -n 1)
+          echo "Found app bundle at: $APP_BUNDLE"
+          "${{ env.QT_ROOT_DIR }}/bin/macdeployqt" "$APP_BUNDLE"
+          cd build
+          cpack -C Release
+        shell: bash
+
+      - name: Package (Linux AppImage)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          export VERSION=0.0.1-${{ steps.git-sha.outputs.sha }}
+          cmake --install build --prefix AppDir
+
+          # Ensure linuxdeploy can find Qt libraries for dependency scanning
+          export LD_LIBRARY_PATH=${{ env.QT_ROOT_DIR }}/lib:$LD_LIBRARY_PATH
+          export QMAKE=${{ env.QT_ROOT_DIR }}/bin/qmake
+
+          # Specify the executable to ensure Qt plugin scans correctly
+          ./linuxdeploy.AppImage --appimage-extract-and-run --appdir AppDir \
+            --executable AppDir/bin/KodoShell \
+            --plugin qt \
+            --desktop-file examples/tabbed/KodoShell.desktop \
+            --icon-file examples/tabbed/KodoShell.svg \
+            --output appimage
+
+          # Rename output to requested format
+          mv KodoShell-*.AppImage kodo-linux-${{ matrix.config.arch == 'x64' && 'amd64' || 'arm64' }}-${{ steps.git-sha.outputs.sha }}.appimage
+
+      - name: Upload Installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: KodoTerm-${{ matrix.config.name }}-Installer
+          path: |
+            *.msi
+            build/*.dmg
+            *.appimage
+
+      - name: Upload Portable (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: KodoTerm-${{ matrix.config.name }}-Portable
+          path: "*.zip"

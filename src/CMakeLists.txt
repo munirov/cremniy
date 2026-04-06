@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Test)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
+add_subdirectory(widgets/terminal/Kodoterm)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -80,7 +81,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ui/toolstabwidget.cpp
         ui/toolstabwidget.h
 
-
+        widgets/terminal/KodoTermThemes.qrc
 
     )
     target_include_directories(${PROJECT_NAME} PRIVATE
@@ -89,7 +90,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/utils
         ${CMAKE_CURRENT_SOURCE_DIR}/ui
-        ${CMAKE_CURRENT_SOURCE_DIR}/terminal/ptyqt/core)
+        ${CMAKE_CURRENT_SOURCE_DIR}/widgets/terminal/Kodoterm/include)
 
 else()
     if(ANDROID)
@@ -114,6 +115,7 @@ endforeach()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     Qt${QT_VERSION_MAJOR}::Widgets
+    KodoTerm
 )
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt)
 

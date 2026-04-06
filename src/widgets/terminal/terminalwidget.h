@@ -2,40 +2,24 @@
 #define TERMINALWIDGET_H
 
 #include <QWidget>
-#include <QPlainTextEdit>
 #include <QVBoxLayout>
-#include <QProcess>
-#include <QStringList>
+#include <KodoTerm/KodoTerm.hpp>
 
 class TerminalWidget : public QWidget {
     Q_OBJECT
 public:
     explicit TerminalWidget(QWidget *parent = nullptr);
-    ~TerminalWidget();
-
-private slots:
-    void onReadyRead();
-    void onProcessError(QProcess::ProcessError error);
+    void applyTheme(bool isDark);
 
 private:
-    void setupShell();
-    void handleEnter();
+    void startShell(); // Метод для отложенного запуска
     
-    // История
-    void showHistory(int direction);
-    void replaceCurrentCommand(const QString &cmd);
-    void loadHistory(); // Загрузка
-    void saveHistory(); //Сохранение
-    
-    bool eventFilter(QObject *obj, QEvent *event) override;
+    KodoTerm *m_terminal;
+    bool m_isStarted = false; 
 
-    QPlainTextEdit *m_display;
-    QProcess *m_process;
-    
-    int m_lastPromptPos = 0;
-    
-    QStringList m_history;
-    int m_historyIndex = 0;
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 };
 
 #endif

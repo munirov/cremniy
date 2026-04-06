@@ -1,0 +1,50 @@
+<svg
+    width="256"
+    height="256"
+    viewBox="0 0 256 256"
+    xmlns="http://www.w3.org/2000/svg"
+    role="img"
+    aria-label="KodoShell logo">
+
+  <!-- Terminal body -->
+  <rect
+    x="16"
+    y="16"
+    width="224"
+    height="224"
+    rx="20"
+    fill="#1E1E2E"/>
+
+  <!-- Prompt symbol (centered, raised) -->
+  <!-- Group width ≈ 112px, centered at x = 128 -->
+  <polyline
+    points="72,76 120,108 72,140"
+    fill="none"
+    stroke="#4FC3F7"
+    stroke-width="14"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+
+  <line
+    x1="136"
+    y1="140"
+    x2="184"
+    y2="140"
+    stroke="#A5E075"
+    stroke-width="14"
+    stroke-linecap="round"/>
+
+  <!-- Bottom tab bar -->
+  <rect
+    x="16"
+    y="184"
+    width="224"
+    height="56"
+    fill="#2A2A3C"/>
+
+  <!-- Tabs -->
+  <rect x="32"  y="192" width="48" height="32" rx="8" fill="#3A3A55"/>
+  <rect x="88"  y="192" width="48" height="32" rx="8" fill="#3A3A55"/>
+  <rect x="144" y="192" width="48" height="32" rx="8" fill="#4FC3F7"/>
+
+</svg>

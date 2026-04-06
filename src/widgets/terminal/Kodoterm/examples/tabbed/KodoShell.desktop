@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=KodoShell
+Comment=A terminal emulator based on KodoTerm
+Exec=KodoShell
+Icon=KodoShell
+Terminal=false
+Categories=System;TerminalEmulator;

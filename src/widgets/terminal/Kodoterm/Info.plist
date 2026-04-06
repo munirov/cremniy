@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Basic app information -->
+    <key>CFBundleName</key>
+    <string>KodoShell</string>
+    <key>CFBundleDisplayName</key>
+    <string>KodoShell</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.com.diegoiast.kodoshell</string>
+    <key>CFBundleVersion</key>
+    <string>0.0.1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.0.1</string>
+
+    <!-- App type -->
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.13</string>
+
+    <!-- Icon -->
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+
+    <!-- macOS specific -->
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>

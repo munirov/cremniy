@@ -1,224 +1,88 @@
 #include "terminalwidget.h"
-#include <QKeyEvent>
-#include <QTextCursor>
-#include <QRegularExpression>
-#include <QFile>
-#include <QTextStream>
-#include <QStandardPaths>
-#include <QDir>
+#include <QProcessEnvironment>
+#include <KodoTerm/KodoTermConfig.hpp>
+#include <QTimer>
 #include <QApplication>
+#include <QResizeEvent>
 #include <QDebug>
-
-#ifdef Q_OS_WIN
-#include <windows.h>
-#endif
-
-#ifdef Q_OS_UNIX
-#include <signal.h>
-#include <unistd.h>
-#endif
-
-static QString stripAnsiCodes(const QString &text) {
-    if (text.isEmpty()) return text;
-    static QRegularExpression ansiRegex(
-        "(\x1b\\][0-9];.*?\x07|"       // OSC (Operating System Commands)
-        "\x1b\\[[0-9;?]*[A-Za-z])"      // CSI (Control Sequence Introducer)
-    );
-
-    QString cleaned = text;
-    cleaned.remove(ansiRegex);
-    // оставляем \n и \t (не используйте .simplified())
-    return cleaned;
-}
 
 TerminalWidget::TerminalWidget(QWidget *parent) : QWidget(parent) {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    m_display = new QPlainTextEdit(this);
-    m_display->setStyleSheet(
-        "background-color: #1e1e1e; color: #cccccc; "
-        "font-family: 'Consolas', 'DejaVu Sans Mono', monospace; font-size: 10pt;"
-    );
-    layout->addWidget(m_display);
-    setFocusProxy(m_display);
+    m_terminal = new KodoTerm(this); 
+    m_terminal->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    layout->addWidget(m_terminal);
+    m_terminal->setMinimumWidth(600);
+    KodoTermConfig config;
+    QFont monoFont("Consolas", 10);
+    monoFont.setFixedPitch(true);
+    monoFont.setKerning(false); 
+    monoFont.setStyleStrategy(QFont::NoFontMerging); // Чтобы не подтягивало символы из других шрифтов, ломая ширину
+    config.font = monoFont;
+    m_terminal->setConfig(config);
 
-    m_process = new QProcess(this);
-    m_process->setProcessChannelMode(QProcess::MergedChannels);
-    connect(m_process, &QProcess::readyRead, this, &TerminalWidget::onReadyRead);
-    connect(m_process, &QProcess::errorOccurred, this, &TerminalWidget::onProcessError);
+    applyTheme(true);
 
-    loadHistory(); 
-    setupShell();
-    
-    m_display->installEventFilter(this);
+    // Устанавливаем фильтр событий только на сам виджет терминала
+    m_terminal->installEventFilter(this);
 }
 
-void TerminalWidget::setupShell() {
-#ifdef Q_OS_WIN
-    // Используем полный путь на всякий случай
-    m_process->start("powershell.exe", QStringList() << "-NoLogo" << "-NoExit" << "-Command" << "chcp 65001; clear");
-#else
-    m_process->start("/bin/bash", QStringList() << "-i");
-#endif
-}
-
-void TerminalWidget::onReadyRead() {
-    QByteArray data = m_process->readAll();
-    QString output = QString::fromUtf8(data); 
+void TerminalWidget::applyTheme(bool isDark) {
+    KodoTermConfig config = m_terminal->getConfig();
     
-    m_display->moveCursor(QTextCursor::End);
-    m_display->insertPlainText(stripAnsiCodes(output));
+    // Настройка шрифта "на максималках"
+    QFont monoFont;
+    monoFont.setFamily("Consolas");
+    monoFont.setStyleHint(QFont::Monospace); // Это заставит Qt искать любой моно-шрифт, если Consolas нет
+    monoFont.setFixedPitch(true);
+    monoFont.setPointSize(10);
+    monoFont.setKerning(false);
     
-    m_lastPromptPos = m_display->toPlainText().length();
-    m_display->moveCursor(QTextCursor::End);
-}
+    config.font = monoFont;
+    
+    QString themePath = isDark 
+        ? ":/KodoTermThemes/konsole/Breeze.colorscheme" 
+        : ":/KodoTermThemes/konsole/BlackOnWhite.colorscheme";
 
+    config.theme = TerminalTheme::loadTheme(themePath);
+    m_terminal->setConfig(config);
+}
 bool TerminalWidget::eventFilter(QObject *obj, QEvent *event) {
-    if (obj == m_display && event->type() == QEvent::KeyPress) {
-        auto *keyEvent = static_cast<QKeyEvent *>(event);
-        QTextCursor cursor = m_display->textCursor();
-
-        // Ctrl+C
-        if ((keyEvent->key() == Qt::Key_C) && (keyEvent->modifiers() & Qt::ControlModifier)) {
-            if (cursor.hasSelection()) {
-                return false; // Копируем, если выделено
-            } else {
-                if (m_process->state() == QProcess::Running) {
-#ifdef Q_OS_WIN
-                    GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, 0);
-                    m_process->write("\r\n");
-#else
-                    qint64 pid = m_process->processId();
-                    if (pid > 0) {
-                        kill(-pid, SIGINT);
-                    }
-#endif
-                    m_display->moveCursor(QTextCursor::End);
-                    m_display->insertPlainText("^C\n");
-                    m_lastPromptPos = m_display->toPlainText().length();
-                }
-                return true;
-            }
-        }
-
-        if (keyEvent->matches(QKeySequence::SelectAll)) {
-            cursor.setPosition(m_lastPromptPos);
-            cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-            m_display->setTextCursor(cursor);
-            return true;
-        }
-        bool isModifierOnly = (keyEvent->modifiers() != Qt::NoModifier && keyEvent->text().isEmpty());
-        bool isNavigation = (keyEvent->key() == Qt::Key_Left || keyEvent->key() == Qt::Key_Right || 
-                             keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down ||
-                             keyEvent->key() == Qt::Key_Home || keyEvent->key() == Qt::Key_End);
-
-        if (!isModifierOnly && !isNavigation) {
-            if (cursor.position() < m_lastPromptPos || (cursor.hasSelection() && cursor.selectionStart() < m_lastPromptPos)) {
-                cursor.movePosition(QTextCursor::End);
-                m_display->setTextCursor(cursor);
-            }
-        }
-
-        switch (keyEvent->key()) {
-            case Qt::Key_Backspace:
-                if (m_display->textCursor().position() <= m_lastPromptPos && !m_display->textCursor().hasSelection()) return true;
-                break;
-            case Qt::Key_Return:
-            case Qt::Key_Enter:
-                handleEnter();
-                return true;
-            case Qt::Key_Up:
-                showHistory(-1);
-                return true;
-            case Qt::Key_Down:
-                showHistory(1);
-                return true;
+    // Ловим Resize, но ТОЛЬКО если терминал еще не запущен
+    if (!m_isStarted && obj == m_terminal && event->type() == QEvent::Resize) {
+        if (m_terminal->width() > 200) {
+            // Вызываем старт через таймер 0, чтобы выйти из текущего обработчика событий 
+            // и избежать любой возможности рекурсии
+            QTimer::singleShot(0, this, &TerminalWidget::startShell);
         }
     }
     return QWidget::eventFilter(obj, event);
 }
 
-void TerminalWidget::loadHistory() {
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/terminal_history.txt";
-    QFile file(path);
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&file);
-        while (!in.atEnd()) {
-            QString line = in.readLine().trimmed();
-            if (!line.isEmpty()) m_history.append(line);
-        }
-        file.close();
-    }
-    m_historyIndex = m_history.size();
-}
+void TerminalWidget::startShell() {
+    if (m_isStarted) return;
 
-void TerminalWidget::saveHistory() {
-    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir().mkpath(dataDir);
-    QFile file(dataDir + "/terminal_history.txt");
+    QString shell;
+#ifdef Q_OS_WIN
+    shell = "powershell.exe";
+#else
+    shell = qEnvironmentVariable("SHELL", "/bin/bash");
+#endif
+
+    m_terminal->setProgram(shell);
+    m_terminal->start(); 
+    m_isStarted = true;
     
-    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(&file);
-        int start = qMax(0, m_history.size() - 100);
-        for (int i = start; i < m_history.size(); ++i) {
-            out << m_history[i] << "\n";
-        }
-        file.close();
-    }
+    qDebug() << "Terminal started with width:" << m_terminal->width();
 }
 
-void TerminalWidget::showHistory(int direction) {
-    if (m_history.isEmpty()) return;
-
-    m_historyIndex += direction;
-    if (m_historyIndex < 0) m_historyIndex = 0;
-    if (m_historyIndex >= m_history.size()) {
-        m_historyIndex = m_history.size();
-        replaceCurrentCommand(""); 
-        return;
-    }
-
-    replaceCurrentCommand(m_history[m_historyIndex]);
-}
-
-void TerminalWidget::replaceCurrentCommand(const QString &cmd) {
-    QTextCursor cursor = m_display->textCursor();
-    cursor.setPosition(m_lastPromptPos);
-    cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-    cursor.insertText(cmd);
-}
-
-void TerminalWidget::handleEnter() {
-    if (m_process->state() != QProcess::Running) return;
-
-    QTextCursor cursor = m_display->textCursor();
-    cursor.setPosition(m_lastPromptPos);
-    cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-    
-    QString cmd = cursor.selectedText().replace(QChar::ParagraphSeparator, '\n');
-    
-    if (!cmd.trimmed().isEmpty()) {
-        if (m_history.isEmpty() || m_history.last() != cmd) {
-            m_history.append(cmd);
-            saveHistory();
-        }
-    }
-    m_historyIndex = m_history.size();
-
-    cursor.removeSelectedText(); 
-    m_process->write((cmd + "\n").toUtf8());
-}
-
-void TerminalWidget::onProcessError(QProcess::ProcessError error) {
-    m_display->appendPlainText("Terminal Error: " + QString::number(error));
-}
-
-TerminalWidget::~TerminalWidget() {
-    saveHistory();
-    
-    if (m_process->state() != QProcess::NotRunning) {
-        m_process->kill();
-        m_process->setParent(nullptr);
+void TerminalWidget::showEvent(QShowEvent *event) {
+    QWidget::showEvent(event);
+    // Когда терминал снова виден, принудительно заставляем его перерисоваться
+    if (m_terminal) {
+        m_terminal->update(); 
+        // Если метод damageAll публичный (или через мета-объект):
+        QMetaObject::invokeMethod(m_terminal, "damageAll"); 
     }
 }
