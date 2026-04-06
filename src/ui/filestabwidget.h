@@ -19,6 +19,10 @@ public slots:
   void removeStar(FileTab *tab);
   void setupStar(FileTab *tab);
   void saveFileSlot();
+  void closeTab(int index);
+  
+private:
+  void switchTab(int page);
 };
 
 #endif // FILESTABWIDGET_H

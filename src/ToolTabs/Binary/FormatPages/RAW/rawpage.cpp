@@ -17,7 +17,6 @@ RAWPage::RAWPage(QWidget *parent)
     m_hexViewWidget = new QHexView(this);
     layout->addWidget(m_hexViewWidget);
 
-
     connect(m_hexViewWidget->hexDocument(),
             &QHexDocument::changed,
             this,
@@ -39,11 +38,11 @@ RAWPage::RAWPage(QWidget *parent)
     // Отслеживаем изменение выделения в hex view
     connect(m_hexViewWidget->hexCursor(), &QHexCursor::positionChanged,
             this, [this](){
-                if (m_hexViewWidget->hexCursor()->hasSelection()) {
+                // if (m_hexViewWidget->hexCursor()->hasSelection()) {
                     qint64 start = m_hexViewWidget->hexCursor()->selectionStartOffset();
                     qint64 length = m_hexViewWidget->hexCursor()->selectionLength();
                     emit selectionChanged(start, length);
-                }
+                // }
             });
 
 }
@@ -60,7 +59,10 @@ QByteArray RAWPage::getPageData() const {
 
 void RAWPage::setSelection(qint64 pos, qint64 length) {
     // Устанавливаем выделение в hex view
+    m_hexViewWidget->setSelectFromFormatPage(true);
+    m_hexViewWidget->hexCursor()->setSelectFromFormatPage(true);
     m_hexViewWidget->hexCursor()->move(pos);
     m_hexViewWidget->hexCursor()->selectSize(length);
+
 }
 

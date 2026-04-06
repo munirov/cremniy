@@ -15,7 +15,7 @@ private:
     static constexpr unsigned short maxLength = 15;
 
     static QString getDefaultPathLocation() {
-        return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/history_open_projects.dat";
+        return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/recent_projects.dat";
     }
 
     ProjectsHistoryManager() = default;

@@ -19,7 +19,7 @@ namespace utils {
         FileContext fileContext(getDefaultPathLocation());
         const QByteArray projectsHistory = FileManager::openFile(&fileContext);
 
-        return QString::fromUtf8(projectsHistory).split('\n');
+        return QString::fromUtf8(projectsHistory).split('\n', Qt::SkipEmptyParts);
     }
 
     void ProjectsHistoryManager::saveProjectsHistory(const QString &projectsHistory) {

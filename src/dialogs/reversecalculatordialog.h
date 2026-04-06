@@ -9,6 +9,7 @@ class QLineEdit;
 class QLabel;
 class QCheckBox;
 class QPushButton;
+class QFormLayout;
 
 class ReverseCalculatorDialog final : public QDialog
 {
@@ -33,6 +34,8 @@ private:
     QLineEdit  *m_input = nullptr;
     QComboBox  *m_width = nullptr;
     QCheckBox  *m_showSigned = nullptr;
+
+    QFormLayout *m_form = nullptr;
 
     QLabel     *m_status = nullptr;
     QLabel     *m_hex = nullptr;

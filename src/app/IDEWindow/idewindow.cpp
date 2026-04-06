@@ -6,8 +6,6 @@
 #include <qjsondocument.h>
 #include <qjsonobject.h>
 #include <QApplication>
-#include "projectshistorymanager.h"
-#include "app/WelcomeWindow/welcomeform.h"
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
 
@@ -22,9 +20,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     // - - Menu Bar - -
     MenuBarBuilder* menuBarBuilder = new MenuBarBuilder(menuBar(), this);
 
-    // Save Project In History
-    SaveProjectInCache(ProjectPath);
-
+    menuBar()->setNativeMenuBar(false);
     // - - Widgets - -
     m_statusBar = statusBar();
 
@@ -36,13 +32,16 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     m_verticalSplitter = new QSplitter(Qt::Vertical, m_mainWidget);
 
-    m_terminal = new TerminalWidget(this);
+    // Terminal is initialized lazily on demand (see on_Toggle_Terminal)
+    // m_terminal = new TerminalWidget(this, ProjectPath);
+    // m_terminal->setVisible(false);
+    m_terminal = nullptr;
 
-    QWidget* leftWidget = new QWidget();
+    QWidget* leftWidget = new QWidget(this);
     QVBoxLayout* leftLayout = new QVBoxLayout(leftWidget);
     leftLayout->setContentsMargins(0,0,0,0);
-    
-    m_filesTabWidget = new FilesTabWidget();
+
+    m_filesTabWidget = new FilesTabWidget(this);
     m_filesTabWidget->setObjectName("filesTabWidget");
     m_filesTreeView = new FileTreeView();
     leftLayout->addWidget(m_filesTreeView);
@@ -52,7 +51,6 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_mainSplitter->setSizes({200, 1000});
 
     m_verticalSplitter->addWidget(m_mainSplitter); // Сверху все наше IDE
-    m_verticalSplitter->addWidget(m_terminal);     // Снизу терминал
     m_verticalSplitter->setSizes({800, 200});      // пр
 
     m_mainLayout->addWidget(m_verticalSplitter);
@@ -61,17 +59,15 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     leftLayout->addWidget(m_filesTreeView);
 
     // - - Tunning Widgets/Layouts - -
-
-    setCentralWidget(m_mainWidget);
-
-    m_mainLayout->addWidget(m_verticalSplitter);
-
     m_mainSplitter->setSizes({200, 1000});
     m_mainSplitter->setCollapsible(0, false);
     m_mainSplitter->setCollapsible(1, false);
 
     m_verticalSplitter->setSizes({800, 200});
-    m_verticalSplitter->setCollapsible(1, true);
+    
+    if (m_verticalSplitter->count() > 1) {
+        m_verticalSplitter->setCollapsible(1, true);
+    }
 
     m_filesTreeView->setMinimumWidth(180);
     m_filesTreeView->setTextElideMode(Qt::ElideNone);
@@ -105,9 +101,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     connect(this, &IDEWindow::saveFileSignal, m_filesTabWidget, &FilesTabWidget::saveFileSlot);
 
     connect(m_filesTabWidget, &QTabWidget::tabCloseRequested,
-            this, [=](int index){
-                m_filesTabWidget->removeTab(index);
-            });
+            m_filesTabWidget, &FilesTabWidget::closeTab);
     connect(m_filesTreeView, &QTreeView::customContextMenuRequested,this, &IDEWindow::on_Tree_ContextMenu);
     connect(m_filesTreeView, &QTreeView::doubleClicked, this, &IDEWindow::on_treeView_doubleClicked);
 }
@@ -116,19 +110,27 @@ IDEWindow::~IDEWindow()
 {}
 
 void IDEWindow::on_Toggle_Terminal(bool checked) {
-    m_terminal->setVisible(checked);
-}
+    if (checked && !m_terminal) {
+        m_terminal = new TerminalWidget(this);
+        m_verticalSplitter->addWidget(m_terminal);
+        m_verticalSplitter->setCollapsible(1, true);
+        m_verticalSplitter->setSizes({800, 200});
+    }
 
-void IDEWindow::SaveProjectInCache(const QString & project_path){
-    utils::ProjectsHistoryManager::saveProjectsHistory(project_path);
+    if (!m_terminal) {
+        return;
+    }
+    
+    m_terminal->setVisible(checked);
+
+    if(checked) {
+        m_terminal->setFocus();
+    }
 }
 
 void IDEWindow::on_ClosingProject() {
-    WelcomeForm* wForm = new WelcomeForm();
-    wForm->show();
-
+    emit CloseProject();
     this->close();
-    this->deleteLater();
 }
 
 void IDEWindow::on_treeView_doubleClicked(const QModelIndex &index)
@@ -144,7 +146,7 @@ void IDEWindow::on_treeView_doubleClicked(const QModelIndex &index)
 
 void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
 {
-    QModelIndex index = m_filesTreeView->indexAt(pos); // индекс под курсором
+    QModelIndex index = m_filesTreeView->indexAt(pos);
 
     QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_filesTreeView->model());
     if (!model)
@@ -156,7 +158,7 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
 
         QString path = model->filePath(index);
         QString fileName = model->fileName(index);
-        bool isDir = model->isDir(index);  // <-- проверяем, директория ли
+        bool isDir = model->isDir(index);
 
         if (isDir){
             menu.addAction(tr("Open"), [this, path]() {
@@ -168,13 +170,7 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
                 if (!index.isValid())
                     return;
 
-                // Разворачиваем саму директорию
                 m_filesTreeView->expand(index);
-
-                // Прокручиваем и выделяем
-                //m_filesTreeView->scrollTo(index);
-                //m_filesTreeView->setCurrentIndex(index);
-                //m_filesTreeView->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
 
             });
 
@@ -220,7 +216,6 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
                 if (!index.isValid())
                     return;
 
-                // Включаем редактирование индекса
                 m_filesTreeView->edit(index);
             });
             menu.addAction(tr("Delete"), [path,this]() {
@@ -229,9 +224,6 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
                 if (res == QMessageBox::Ok) QFile(path).remove();
             });
         }
-
-        // Показать меню в глобальных координатах
-
     }
 
     else{

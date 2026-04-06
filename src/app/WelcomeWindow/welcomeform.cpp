@@ -12,12 +12,15 @@
 #include <QJsonArray>
 #include <qstandardpaths.h>
 #include <qstringlistmodel.h>
+#include <qtimer.h>
 
 #include "projectshistorymanager.h"
 
 WelcomeForm::WelcomeForm(QWidget *parent)
     : QWidget(parent)
 {
+    qDebug("WelcomeForm::WelcomeForm(QWidget *parent)");
+
     this->setWindowTitle("Cremniy");
     this->setBaseSize(400, 300);
     this->resize(400, 300);
@@ -33,10 +36,10 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     QWidget *pageWelcome = new QWidget();
     QVBoxLayout *l1 = new QVBoxLayout(pageWelcome);
 
-    history_project_list = new QListView(pageWelcome);
-    l1->addWidget(history_project_list);
-    history_project_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    history_project_list->setSelectionMode(QAbstractItemView::SingleSelection);
+    RecentProjectsList = new QListView(pageWelcome);
+    l1->addWidget(RecentProjectsList);
+    RecentProjectsList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    RecentProjectsList->setSelectionMode(QAbstractItemView::SingleSelection);
     SetProjectHistoryList();
 
     QHBoxLayout *btnLayout = new QHBoxLayout();
@@ -97,12 +100,16 @@ WelcomeForm::WelcomeForm(QWidget *parent)
 
     // --- Горизонтальный layout для кнопок ---
     QHBoxLayout *buttonLayout = new QHBoxLayout();
+
     QPushButton *createButton = new QPushButton(tr("Create"));
     QPushButton *backButton = new QPushButton(tr("Back"));
     // buttonLayout->addStretch(1);       // пустое пространство слева
+      
+    QPushButton *createButton = new QPushButton("Create");
+    QPushButton *backButton = new QPushButton("Back");
+
     buttonLayout->addWidget(createButton);
     buttonLayout->addWidget(backButton);
-    // buttonLayout->addStretch(1);       // пустое пространство справа
 
     // Добавляем кнопки в основной вертикальный layout
     l2->addLayout(buttonLayout);
@@ -113,7 +120,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     stack->setCurrentIndex(0);
 
     // Events
-    connect(history_project_list->selectionModel(), &QItemSelectionModel::selectionChanged, this, &WelcomeForm::SelectProjectInList);
+    connect(RecentProjectsList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &WelcomeForm::SelectProjectInList);
 
     connect(open_recent_proj_btn, &QPushButton::clicked, this, &WelcomeForm::OpenRecentProjectHandler);
     connect(open_browse_proj_btn, &QPushButton::clicked, this, &WelcomeForm::OpenProjectHandler);
@@ -122,7 +129,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     connect(backButton, &QPushButton::clicked, this, &WelcomeForm::L2BackButton);
     connect(createButton, &QPushButton::clicked, this, &WelcomeForm::L2CreateButton);
 
-    connect(history_project_list, &QListView::doubleClicked, this, &WelcomeForm::OpenRecentProjectHandler);
+    connect(RecentProjectsList, &QListView::doubleClicked, this, &WelcomeForm::OpenRecentProjectHandler);
 }
 
 WelcomeForm::~WelcomeForm()
@@ -136,11 +143,10 @@ void WelcomeForm::SelectProjectInList(){
 }
 
 void WelcomeForm::OpenRecentProjectHandler(){
-    QModelIndex index = history_project_list->currentIndex();
+    QModelIndex index = RecentProjectsList->currentIndex();
 
-    if (index.isValid()) {
+    if (index.isValid())
         OpenProject(index.data().toString());
-    }
 }
 
 void WelcomeForm::OpenProjectHandler()
@@ -158,10 +164,20 @@ void WelcomeForm::OpenProjectHandler()
 void WelcomeForm::OpenProject(QString path){
     if (!QDir(path).exists()) return;
 
+    utils::ProjectsHistoryManager::saveProjectsHistory(path);
+
+    this->hide();
+
     IDEWindow *mw = new IDEWindow(path, nullptr);
+    mw->setAttribute(Qt::WA_DeleteOnClose);
     mw->setWindowState(Qt::WindowMaximized);
+
+    connect(mw, &IDEWindow::CloseProject, this, [this, mw]() {
+        this->show();
+    });
+
     mw->show();
-    this->destroy();
+
 }
 
 void WelcomeForm::CreateProjectHandler()
@@ -231,5 +247,5 @@ void WelcomeForm::SetProjectHistoryList(){
 
     QStringListModel *model = new QStringListModel(this);
     model->setStringList(history);
-    history_project_list->setModel(model);
+    RecentProjectsList->setModel(model);
 }

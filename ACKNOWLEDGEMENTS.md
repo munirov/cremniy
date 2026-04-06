@@ -9,16 +9,28 @@ Your time, ideas, and effort help the project grow and move forward.
 
 People who contributed their time and code to Cremniy.
 
-| Contributor | GitHub |
-|---|---|
-| mansar1337 | [@mansar1337](https://github.com/mansar1337) |
-| Pawmii | [@Pawmii](https://github.com/Pawmii) |
-| mystergaif | [@mystergaif](https://github.com/mystergaif) |
-| Artem Romancuk | [@teenageswag](https://github.com/teenageswag) |
-| Nikita Ivin | [@Keqy](https://github.com/Keqy) |
-| Altro-O | [@Altro-O](https://github.com/Altro-O) |
-| Kirill | [@KaVoshnik](https://github.com/KaVoshnik) |
-| Marcus | [@encryrose](https://github.com/encryrose) |
+[@mansar1337](https://github.com/mansar1337)
+
+[@Pawmii](https://github.com/Pawmii)
+
+[@mystergaif](https://github.com/mystergaif)
+
+[@teenageswag](https://github.com/teenageswag)
+
+[@Keqy](https://github.com/Keqy)
+
+[@Altro-O](https://github.com/Altro-O)
+
+[@KaVoshnik](https://github.com/KaVoshnik)
+
+[@encryrose](https://github.com/encryrose)
+
+[@zylo-code](https://github.com/zylo-code)
+
+[@ewasion137](https://github.com/ewasion137)
+
+[@faketri33](https://github.com/faketri33)
+
 ---
 
 ## 💸 Donators

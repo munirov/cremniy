@@ -51,6 +51,9 @@ public:
     qint64 positionToOffset(QHexPosition pos) const;
     QHexPosition offsetToPosition(qint64 offset) const;
 
+    void setSelectFromFormatPage(bool value) {m_selectFromFormatPage = value;}
+    bool getSelectFromFormatPage() {return m_selectFromFormatPage;}
+
 public Q_SLOTS:
     void cut(bool hex = false);
     void copy(bool hex = false) const;
@@ -68,6 +71,8 @@ private:
     const QHexOptions* m_options;
     Mode m_mode{Mode::Overwrite};
     QHexPosition m_position{}, m_selection{};
+
+    bool m_selectFromFormatPage = false;
 
     friend class QHexView;
 };

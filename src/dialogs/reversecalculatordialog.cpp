@@ -75,8 +75,8 @@ ReverseCalculatorDialog::ReverseCalculatorDialog(QWidget *parent)
     m_status->setStyleSheet("color: #ef4444;");
     root->addWidget(m_status);
 
-    auto *form = new QFormLayout();
-    form->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_form = new QFormLayout();
+    m_form->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
     m_hex  = new QLabel("-", this);
     m_decU = new QLabel("-", this);
@@ -92,11 +92,11 @@ ReverseCalculatorDialog::ReverseCalculatorDialog(QWidget *parent)
     m_decS->setStyleSheet("color: #ef4444;"); // red
     m_bin->setStyleSheet("color: #21c55d;");  // green
 
-    form->addRow(tr("Hex"), m_hex);
-    form->addRow(tr("Dec (unsigned)"), m_decU);
-    form->addRow(tr("Dec (signed)"), m_decS);
-    form->addRow(tr("Bin"), m_bin);
-    root->addLayout(form);
+    m_form->addRow(tr("Hex"), m_hex);
+    m_form->addRow(tr("Dec (unsigned)"), m_decU);
+    m_form->addRow(tr("Dec (signed)"), m_decS);
+    m_form->addRow(tr("Bin"), m_bin);
+    root->addLayout(m_form);
 
     auto *btnRow = new QHBoxLayout();
     m_swapBtn = new QPushButton(tr("Swap endian"), this);
@@ -186,40 +186,55 @@ bool ReverseCalculatorDialog::parseValue(const QString &text, qulonglong *outVal
     return true;
 }
 
-void ReverseCalculatorDialog::updateOutputs(qulonglong value, bool ok)
-{
-    const int bits = m_width->currentData().toInt();
-    if (!ok) {
-        m_status->setText(tr("Invalid input"));
-        m_hex->setText("-");
-        m_decU->setText("-");
-        m_decS->setText("-");
-        m_bin->setText("-");
-        return;
-    }
+void ReverseCalculatorDialog::updateOutputs(qulonglong value, bool ok) {
+  const int bits = m_width->currentData().toInt();
 
-    m_status->clear();
+  if (!ok) {
+    m_status->setText(tr("Invalid input"));
+    m_hex->setText("-");
+    m_decU->setText("-");
+    m_decS->setText("-");
+    m_bin->setText("-");
+    return;
+  }
 
-    const qulonglong v = maskToWidth(value, bits);
-    m_hex->setText(fmtHex(v, bits));
-    m_decU->setText(QString::number(v));
+  m_status->clear();
 
-    if (m_showSigned->isChecked()) {
-        m_decS->setText(QString::number(toSigned(v, bits)));
-        m_decS->setVisible(true);
-    } else {
-        m_decS->setText("-");
-        m_decS->setVisible(false);
-    }
+  const qulonglong v = maskToWidth(value, bits);
 
-    m_bin->setText(fmtBin(v, bits));
+  m_hex->setText(fmtHex(v, bits));
+  m_decU->setText(QString::number(v));
+  m_decS->setText(QString::number(toSigned(v, bits)));
+  m_bin->setText(fmtBin(v, bits));
 }
 
-void ReverseCalculatorDialog::onInputChanged()
-{
-    qulonglong v = 0;
-    const bool ok = parseValue(m_input->text(), &v);
-    updateOutputs(v, ok);
+void ReverseCalculatorDialog::onInputChanged() {
+  qulonglong v = 0;
+  const bool isInputEmpty = m_input->text().trimmed().isEmpty();
+  const bool ok = parseValue(m_input->text(), &v);
+  
+  if (isInputEmpty) {
+    m_status->clear();
+    m_hex->setText("-");
+    m_decU->setText("-");
+    m_decS->setText("-");
+    m_bin->setText("-");
+  } else {
+    updateOutputs(v, ok); 
+  }
+
+  if (m_showSigned->isChecked()) {
+    m_form->setRowVisible(m_decS, true);
+    m_decS->setVisible(true);
+    if (QWidget *label = m_form->labelForField(m_decS)) {
+      label->show();
+    }
+  } else {
+    m_form->setRowVisible(m_decS, false);
+    if (QWidget *label = m_form->labelForField(m_decS)) {
+      label->hide();
+    }
+  }
 }
 
 void ReverseCalculatorDialog::onSwapEndian()

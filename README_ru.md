@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="src/resources/icons/icon.png" width="250" alt="Cremniy logo">
+<img src="docs/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
 
 <br>
 <h3>Cremniy</h3>
@@ -150,7 +150,7 @@ cmake --build . --config Release
 
 Все участники указываются в [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) и упоминаются в видео на [YouTube-канале](https://www.youtube.com/@igmunv).
 
-Подробнее — в [CONTRIBUTING.md](CONTRIBUTING.md).
+Подробнее — в [CONTRIBUTING.md](CONTRIBUTING_ru.md).
 
 
 ## Лицензия

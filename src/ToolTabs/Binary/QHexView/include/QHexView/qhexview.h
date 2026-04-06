@@ -130,6 +130,10 @@ public:
         return m_hexdocument->read(0, m_hexdocument->length());
     }
 
+    void setSelectFromFormatPage(bool value){
+        m_selectFromFormatPageFlag = value;
+    }
+
 public Q_SLOTS:
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
     void showFind();
@@ -195,6 +199,7 @@ private:
     bool keyPressMove(QKeyEvent* e);
     bool keyPressTextInput(QKeyEvent* e);
     bool keyPressAction(QKeyEvent* e);
+    mutable bool m_selectFromFormatPageFlag = false;
 
 protected:
     bool event(QEvent* e) override;

@@ -37,11 +37,6 @@ private slots:
 
 private:
 
-    /**
-     * @brief Сохранить текущий путь проекта в истории
-    */
-    void SaveProjectInCache(const QString& project_path);
-
     // - - Main Widgets - -
     QMenuBar* m_menuBar;
     QStatusBar* m_statusBar;
@@ -95,6 +90,7 @@ public slots:
 
 signals:
     void saveFileSignal();
+    void CloseProject();
 
 };
 #endif // IDEWINDOW_H

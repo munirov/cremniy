@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="src/resources/icons/icon.png" width="250" alt="Cremniy logo">
+<img src="docs/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
 
 <br>
 <h3>Cremniy</h3>

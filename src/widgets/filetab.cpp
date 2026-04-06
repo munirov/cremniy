@@ -23,14 +23,17 @@ FileTab::FileTab(QWidget* parent, QString path)
 }
 
 void FileTab::removeStar(){
+    m_modified = false;
     emit removeStarSignal(this);
 }
 
 void FileTab::setupStar(){
+    m_modified = true;
     emit setupStarSignal(this);
 }
 
 void FileTab::saveFile(){
     qDebug() << "FileTab::saveFile()";
+    emit removeStarSignal(this);
     emit saveFileSignal();
 }

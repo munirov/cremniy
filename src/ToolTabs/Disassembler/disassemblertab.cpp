@@ -172,73 +172,60 @@ QString DisassemblerTab::autoCommentForLine(const LineInfo &li) const
 
 QString DisassemblerTab::formatLine(const LineInfo &li) const
 {
-    // Simple IDA-like fixed columns (monospace)
-    // addr: right aligned to 10..16 chars; bytes: padded to 24 chars
+    // 1. Адрес (18 символов для 64-битных ядер)
     QString addr = li.address.trimmed();
     if (!addr.startsWith("0x")) addr = "0x" + addr;
-    addr = addr.rightJustified(12, ' ');
+    addr = addr.leftJustified(18, ' ');
 
-    QString bytes = li.bytes;
-    if (!bytes.isEmpty()) {
-        // normalize spaces between bytes
-        const QString b = normalizeBytes(bytes);
+    // 2. Метки функций (например <sys_get_time_ms>)
+    QString mnem = li.mnemonic.trimmed();
+    if (mnem.startsWith('<') && mnem.endsWith('>')) {
+        return QString("%1 %2").arg(addr, mnem);
+    }
+
+    // 3. Байты (превью до 8 байт, остальное прячем под '…')
+    QString bytes;
+    const QString b = normalizeBytes(li.bytes);
+    const int totalBytes = b.size() / 2;
+    const int previewBytes = qMin(8, totalBytes);
+    if (totalBytes > 0) {
         QString spaced;
-        for (int i = 0; i < b.size(); i += 2) {
+        for (int i = 0; i < previewBytes * 2; i += 2) {
             if (i) spaced += ' ';
             spaced += b.mid(i, 2);
         }
+        if (totalBytes > previewBytes) spaced += " …";
         bytes = spaced;
     }
-    // Prevent huge byte-runs from destroying layout (e.g. coalesced invalid blocks).
-    // Show preview of first 16 bytes in the "bytes" column.
-    {
-        const QString b = normalizeBytes(li.bytes);
-        const int totalBytes = b.size() / 2;
-        const int previewBytes = qMin(16, totalBytes);
-        if (totalBytes > 0) {
-            QString spaced;
-            for (int i = 0; i < previewBytes * 2; i += 2) {
-                if (i) spaced += ' ';
-                spaced += b.mid(i, 2);
-            }
-            if (totalBytes > previewBytes)
-                spaced += " …";
-            bytes = spaced;
-        }
-    }
-    bytes = bytes.leftJustified(28, ' ');
+    bytes = bytes.leftJustified(24, ' '); // Фиксированная ширина байтов
 
-    QString mnem = li.mnemonic;
-    QString ops  = li.operands;
+    // 4. Выравнивание мнемоники и операндов
+    mnem = mnem.leftJustified(10, ' '); // 10 символов на мнемонику
+    
+    QString ops = li.operands.trimmed();
+    if (ops.contains('#')) ops = ops.section('#', 0, 0).trimmed(); // чистим комменты objdump
+    ops = ops.leftJustified(32, ' '); // 32 символа на операнды
+
+    // 5. Комментарии (автокомментарии для строк)
     const QString comment = autoCommentForLine(li);
     const QString c = comment.isEmpty() ? QString() : ("  " + comment);
 
-    // radare2 can return "invalid" when bytes can't be decoded as an instruction.
-    // Render it as data bytes to keep the listing useful. Show only a preview to avoid huge lines.
-    if (mnem.trimmed().compare("invalid", Qt::CaseInsensitive) == 0 && !bytes.trimmed().isEmpty()) {
-        const QString b = normalizeBytes(li.bytes);
-        const int totalBytes = b.size() / 2;
-        const int previewBytes = qMin(16, totalBytes);
-
+    // Обработка "invalid" (если встретили сырые данные)
+    if (li.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) == 0 && !li.bytes.trimmed().isEmpty()) {
         QStringList parts;
-        parts.reserve(previewBytes);
         for (int i = 0; i + 1 < b.size() && (i / 2) < previewBytes; i += 2)
             parts << ("0x" + b.mid(i, 2));
 
         QString data = QString(".byte %1").arg(parts.join(", "));
-        if (totalBytes > previewBytes)
-            data += ", …";
-
+        if (totalBytes > previewBytes) data += ", …";
+        
+        data = data.leftJustified(32, ' ');
         const QString invInfo = QString("  ; invalid bytes (%1)").arg(totalBytes);
-        return QString("%1: %2  %3%4%5").arg(addr, bytes, data, c, invInfo);
+        return QString("%1  %2  %3 %4%5").arg(addr, bytes, QString("invalid").leftJustified(10, ' '), data, invInfo);
     }
-    if (!mnem.isEmpty() && ops.isEmpty())
-        return QString("%1: %2  %3%4").arg(addr, bytes, mnem, c);
-    if (mnem.isEmpty() && !ops.isEmpty())
-        return QString("%1: %2  %3%4").arg(addr, bytes, ops, c);
-    if (mnem.isEmpty() && ops.isEmpty())
-        return QString("%1: %2").arg(addr, bytes);
-    return QString("%1: %2  %3 %4%5").arg(addr, bytes, mnem, ops, c);
+
+    // Итоговая сборка с жесткими отступами
+    return QString("%1  %2  %3 %4%5").arg(addr, bytes, mnem, ops, c);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -365,6 +352,7 @@ void DisassemblerTab::onDataChanged()
 // ─────────────────────────────────────────────────────────────────────────────
 void DisassemblerTab::setupUi()
 {
+    
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
@@ -373,8 +361,6 @@ void DisassemblerTab::setupUi()
     m_toolbar = new QWidget(this);
     m_toolbar->setObjectName("dasmToolbar");
     m_toolbar->setFixedHeight(36);
-    m_toolbar->setStyleSheet(
-        "QWidget#dasmToolbar { background: #262626; border-bottom: 1px solid #1f1f1f; }");
     auto *toolLayout = new QHBoxLayout(m_toolbar);
     toolLayout->setContentsMargins(6, 0, 6, 0);
     toolLayout->setSpacing(6);
@@ -391,7 +377,6 @@ void DisassemblerTab::setupUi()
     toolLayout->addSpacing(8);
 
     QLabel *secLabel = new QLabel(tr("Section:"), m_toolbar);
-    secLabel->setStyleSheet("color: #888888;");
     toolLayout->addWidget(secLabel);
 
     m_sectionCombo = new QComboBox(m_toolbar);
@@ -427,17 +412,11 @@ void DisassemblerTab::setupUi()
     m_progressBar->setTextVisible(false);
     m_progressBar->setFixedHeight(3);
     m_progressBar->setVisible(false);
-    m_progressBar->setStyleSheet(
-        "QProgressBar { background: #1f1f1f; border: none; }"
-        "QProgressBar::chunk { background: #2626d5; }");
     mainLayout->addWidget(m_progressBar);
 
     // ── Splitter: disasm table (top) + log panel (bottom) ────────────────────
     m_splitter = new QSplitter(Qt::Vertical, this);
     m_splitter->setHandleWidth(4);
-    m_splitter->setStyleSheet(
-        "QSplitter::handle { background: #1f1f1f; }"
-        "QSplitter::handle:hover { background: #2626d5; }");
     mainLayout->addWidget(m_splitter, 1);
 
     // ── Top: stack (listing / placeholder) ───────────────────────────────────
@@ -451,15 +430,11 @@ void DisassemblerTab::setupUi()
 
     m_placeholderLbl = new QLabel(topWidget);
     m_placeholderLbl->setAlignment(Qt::AlignCenter);
-    m_placeholderLbl->setStyleSheet("color: #555555; font-size: 14px;");
     m_stack->addWidget(m_placeholderLbl);
 
     // Functions panel + listing
     m_topSplitter = new QSplitter(Qt::Horizontal, topWidget);
     m_topSplitter->setHandleWidth(4);
-    m_topSplitter->setStyleSheet(
-        "QSplitter::handle { background: #1f1f1f; }"
-        "QSplitter::handle:hover { background: #2626d5; }");
 
     m_funcPanel = new QWidget(m_topSplitter);
     auto *funcLayout = new QVBoxLayout(m_funcPanel);
@@ -473,11 +448,6 @@ void DisassemblerTab::setupUi()
     funcLayout->addWidget(m_funcFilterEdit);
     m_funcList = new QListWidget(m_funcPanel);
     m_funcList->setObjectName("disasmFuncList");
-    m_funcList->setStyleSheet(
-        "QListWidget { background:#1a1a1a; border:1px solid #262626; color:#21c55d;"
-        "  font-family:'JetBrains Mono','Consolas',monospace; font-size:12px; }"
-        "QListWidget::item { padding: 4px 6px; }"
-        "QListWidget::item:selected { background:#2d2d50; color:#ffffff; }");
     funcLayout->addWidget(m_funcList, 1);
     m_funcPanel->setLayout(funcLayout);
 
@@ -490,16 +460,11 @@ void DisassemblerTab::setupUi()
         }
     });
     connect(m_funcList, &QListWidget::itemActivated, this, [this](QListWidgetItem *it) {
-        if (!it) return;
-        const QString addr = it->data(Qt::UserRole).toString();
-        if (!addr.isEmpty())
-            jumpToAddress(addr);
+        if (it) jumpToAddress(it->data(Qt::UserRole).toString());
     });
+
     connect(m_funcList, &QListWidget::itemClicked, this, [this](QListWidgetItem *it) {
-        if (!it) return;
-        const QString addr = it->data(Qt::UserRole).toString();
-        if (!addr.isEmpty())
-            jumpToAddress(addr);
+        if (it) jumpToAddress(it->data(Qt::UserRole).toString());
     });
 
     m_disasmView = new QPlainTextEdit(m_topSplitter);
@@ -507,11 +472,16 @@ void DisassemblerTab::setupUi()
     m_disasmView->setLineWrapMode(QPlainTextEdit::NoWrap);
     m_disasmView->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
     m_disasmView->setStyleSheet(
-        "QPlainTextEdit { background: #1f1f1f; border: none; padding: 6px;"
-        "  font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 12px;"
-        "  color: #60a5fa; }"
-        "QPlainTextEdit::selection { background: #2d2d50; color: #ffffff; }");
+        "QPlainTextEdit { "
+        "font-family: 'JetBrains Mono', 'Consolas', 'DejaVu Sans Mono', 'Ubuntu Mono', 'Liberation Mono', monospace; "
+        "font-size: 12px; "
+        "}"
+    );
     m_disasmView->setContextMenuPolicy(Qt::CustomContextMenu);
+    QFont f = m_disasmView->font();
+    f.setStyleHint(QFont::Monospace);
+    f.setFixedPitch(true);
+    m_disasmView->setFont(f);
     m_disasmView->viewport()->setMouseTracking(true);
     m_disasmView->viewport()->installEventFilter(this);
     m_disasmHighlighter = new DisasmTextHighlighter(m_disasmView->document());
@@ -757,29 +727,21 @@ void DisassemblerTab::setupUi()
     // Log header bar
     QWidget *logHeader = new QWidget(m_logPanel);
     logHeader->setFixedHeight(24);
-    logHeader->setStyleSheet("background: #1a1a1a; border-top: 1px solid #333333;");
     auto *logHeaderLayout = new QHBoxLayout(logHeader);
     logHeaderLayout->setContentsMargins(8, 0, 8, 0);
     QLabel *logTitle = new QLabel(tr("Diagnostic Log"), logHeader);
-    logTitle->setStyleSheet("color: #666666; font-size: 11px;");
     logHeaderLayout->addWidget(logTitle);
     logHeaderLayout->addStretch();
     QPushButton *clearBtn = new QPushButton(tr("Clear"), logHeader);
     clearBtn->setFixedHeight(18);
     clearBtn->setFixedWidth(44);
-    clearBtn->setStyleSheet(
-        "QPushButton { font-size: 10px; padding: 0; border: 1px solid #333333; color: #888888; }"
-        "QPushButton:hover { color: #cccccc; border-color: #555555; }");
     logHeaderLayout->addWidget(clearBtn);
     logLayout->addWidget(logHeader);
 
     m_logView = new QPlainTextEdit(m_logPanel);
     m_logView->setReadOnly(true);
     m_logView->setMaximumBlockCount(5000);
-    m_logView->setStyleSheet(
-        "QPlainTextEdit { background: #141414; color: #888888;"
-        "  font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 11px;"
-        "  border: none; }");
+    m_logView->setStyleSheet("QPlainTextEdit font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 11px;");
     logLayout->addWidget(m_logView, 1);
     m_splitter->addWidget(m_logPanel);
 
@@ -791,9 +753,7 @@ void DisassemblerTab::setupUi()
     // ── Status bar ─────────────────────────────────────────────────────────────
     m_statusLabel = new QLabel(this);
     m_statusLabel->setFixedHeight(20);
-    m_statusLabel->setStyleSheet(
-        "color: #555555; font-size: 11px; padding: 0 6px;"
-        "background: #262626; border-top: 1px solid #1f1f1f;");
+    m_statusLabel->setStyleSheet("font-size: 11px; padding: 0 6px;");
     mainLayout->addWidget(m_statusLabel);
 
     showPlaceholder(tr("Press \"Disassemble\" to analyse the file"));
@@ -1057,7 +1017,7 @@ void DisassemblerTab::setFunctionsList(const QVector<DisasmFunction> &funcs)
 
     for (const auto &f : sorted) {
         auto *it = new QListWidgetItem(QString("%1  %2").arg(f.address, f.name), m_funcList);
-        it->setData(Qt::UserRole, f.address);
+        it->setData(Qt::UserRole, f.address); 
     }
 }
 
@@ -1081,32 +1041,53 @@ void DisassemblerTab::rebuildFunctionsFromLines()
 
 void DisassemblerTab::jumpToAddress(const QString &addr)
 {
-    if (!m_disasmView) return;
-    // Search within current visible listing by "ADDR:" prefix.
-    QString needle = addr.trimmed().toLower();
-    if (needle.startsWith("0x")) needle = needle.mid(2);
-    if (needle.isEmpty()) return;
+    if (!m_disasmView || addr.isEmpty()) return;
 
-    QTextCursor cur(m_disasmView->document());
-    cur.movePosition(QTextCursor::Start);
-    while (true) {
-        const QTextBlock b = cur.block();
-        if (!b.isValid()) break;
-        const QString line = b.text().toLower();
-        // line begins with right-justified addr, format: "    0x401000: ..."
-        int colon = line.indexOf(':');
-        if (colon > 0) {
-            QString left = line.left(colon);
-            left.remove(' ');
-            if (left.startsWith("0x")) left = left.mid(2);
-            if (left.startsWith(needle)) {
-                QTextCursor c(b);
-                m_disasmView->setTextCursor(c);
-                m_disasmView->centerCursor();
-                return;
+    // 1. Конвертируем целевой адрес в число для надежного сравнения
+    quint64 targetAddr = 0;
+    if (!parseHexU64(addr, &targetAddr)) return;
+
+    int targetVisualLine = -1;
+
+    // 2. Ищем в m_visibleLineMap индекс строки, который соответствует этому адресу.
+    // Это гораздо быстрее и точнее, чем парсить текст из QPlainTextEdit.
+    for (int visLine = 0; visLine < m_visibleLineMap.size(); ++visLine) {
+        int lineIdx = m_visibleLineMap[visLine];
+        if (lineIdx < 0) continue; // Пропускаем строки-заголовки (где индекс -1)
+
+        const LineInfo &li = m_lines[lineIdx];
+        quint64 currentAddr = 0;
+        if (parseHexU64(li.address, &currentAddr)) {
+            if (currentAddr == targetAddr) {
+                targetVisualLine = visLine;
+                break;
             }
         }
-        cur.movePosition(QTextCursor::NextBlock);
+    }
+
+    // 3. Если строка найдена в текущем представлении
+    if (targetVisualLine != -1) {
+        QTextDocument *doc = m_disasmView->document();
+        QTextBlock block = doc->findBlockByNumber(targetVisualLine);
+        
+        if (block.isValid()) {
+            QTextCursor cursor(block);
+            m_disasmView->setTextCursor(cursor);
+            m_disasmView->centerCursor();
+
+            // Визуальная подсветка прыжка
+            QList<QTextEdit::ExtraSelection> extra;
+            QTextEdit::ExtraSelection sel;
+            sel.format.setBackground(m_disasmView->palette().highlight());
+            sel.format.setForeground(m_disasmView->palette().highlightedText());
+            sel.format.setProperty(QTextFormat::FullWidthSelection, true);
+            sel.cursor = cursor;
+            extra.append(sel);
+            m_disasmView->setExtraSelections(extra);
+        }
+    } else {
+        // Если адрес не найден (например, он в другой секции, которая сейчас скрыта фильтром)
+        m_statusLabel->setText(tr("Address %1 is not visible in current view").arg(addr));
     }
 }
 
@@ -1196,91 +1177,93 @@ void DisassemblerTab::onSearchTextChanged(const QString &)
 
 void DisassemblerTab::applyFilter()
 {
-    if (m_sections.isEmpty()) return;
+    if (m_sections.isEmpty() || !m_disasmView) return;
 
     const QString query = m_searchEdit->text().trimmed().toLower();
-
-    if (!m_disasmView) return;
+    const bool haveQuery = !query.isEmpty();
 
     m_visibleLineMap.clear();
     QStringList out;
     out.reserve(m_lines.size());
 
-    const bool haveQuery = !query.isEmpty();
-    int shown = 0;
-
-    // Function separators (IDA-like): show a header when we hit a function start.
+    // Хеш-карта имен функций для быстрой вставки заголовков
     QHash<QString, QString> funcByAddr;
-    funcByAddr.reserve(m_functions.size());
-    for (const auto &f : m_functions)
+    for (const auto &f : m_functions) {
         funcByAddr.insert(f.address.trimmed().toLower(), f.name);
+    }
+
+    int shownLines = 0;
 
     for (int i = 0; i < m_lines.size(); ++i) {
         const LineInfo &li = m_lines[i];
-        const bool inSection = (m_currentSectionIndex < 0) || (li.sectionIndex == m_currentSectionIndex);
+
+        // Фильтрация по секции и поисковому запросу
+        bool inSection = (m_currentSectionIndex < 0) || (li.sectionIndex == m_currentSectionIndex);
         if (!inSection) continue;
+
         if (haveQuery) {
-            const bool match = li.addrL.contains(query)
-                            || li.bytesL.contains(query)
-                            || li.mnemL.contains(query)
-                            || li.opsL.contains(query);
+            bool match = li.addrL.contains(query) || li.bytesL.contains(query) || 
+                         li.mnemL.contains(query) || li.opsL.contains(query);
             if (!match) continue;
         }
 
-        const QString a = li.address.trimmed().toLower();
-        if (funcByAddr.contains(a)) {
-            out << QString("; ─── %1 (%2) ───").arg(funcByAddr.value(a), li.address.trimmed());
-            m_visibleLineMap << -1; // header line
+        // Вставка заголовка функции (IDA-style)
+        QString normAddr = li.address.trimmed().toLower();
+        if (funcByAddr.contains(normAddr)) {
+            out << QString("; --- FUNCTION: %1 (%2) ---").arg(funcByAddr.value(normAddr), li.address.trimmed());
+            m_visibleLineMap << -1; 
         }
 
-        // Coalesce consecutive "invalid" into a single data line (radare2 often marks undecodable bytes one-by-one).
-        if (li.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) == 0 && !li.bytes.trimmed().isEmpty()) {
+        // Оптимизация: Склейка идущих подряд "invalid" инструкций в один блок
+        if (li.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) == 0 && !li.bytes.isEmpty()) {
             quint64 curAddr = 0;
             if (parseHexU64(li.address, &curAddr)) {
-                QString joined = normalizeBytes(li.bytes);
-                quint64 nextExpected = curAddr + static_cast<quint64>(joined.size() / 2);
+                QString joinedBytes = normalizeBytes(li.bytes);
+                quint64 nextExpected = curAddr + (joinedBytes.size() / 2);
 
                 int j = i + 1;
-                for (; j < m_lines.size(); ++j) {
-                    const LineInfo &n = m_lines[j];
-                    if (n.sectionIndex != li.sectionIndex) break;
-                    if (n.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) != 0) break;
-                    const QString nb = normalizeBytes(n.bytes);
-                    if (nb.isEmpty()) break;
-                    quint64 na = 0;
-                    if (!parseHexU64(n.address, &na)) break;
-                    if (na != nextExpected) break;
-                    joined += nb;
-                    nextExpected += static_cast<quint64>(nb.size() / 2);
+                while (j < m_lines.size()) {
+                    const LineInfo &next = m_lines[j];
+                    if (next.sectionIndex != li.sectionIndex || 
+                        next.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) != 0) break;
+
+                    quint64 nextAddr = 0;
+                    if (!parseHexU64(next.address, &nextAddr) || nextAddr != nextExpected) break;
+
+                    QString nb = normalizeBytes(next.bytes);
+                    joinedBytes += nb;
+                    nextExpected += (nb.size() / 2);
+                    j++;
                 }
 
-                LineInfo tmp = li;
-                tmp.bytes = joined;
-                tmp.bytesL = joined.toLower();
-                tmp.operands.clear();
-                tmp.opsL.clear();
-
-                out << formatLine(tmp);
-                m_visibleLineMap << i; // map to first underlying line (hex-patch here still works)
-                ++shown;
-                i = j - 1;
+                LineInfo coalesced = li;
+                coalesced.bytes = joinedBytes;
+                coalesced.operands.clear();
+                
+                out << formatLine(coalesced);
+                m_visibleLineMap << i;
+                shownLines++;
+                i = j - 1; // Пропускаем обработанные строки
                 continue;
             }
         }
 
+        // Обычная строка
         out << formatLine(li);
         m_visibleLineMap << i;
-        ++shown;
+        shownLines++;
     }
 
+    // Обновляем UI
     m_disasmView->setPlainText(out.join('\n'));
 
-    if (shown == 0) {
+    if (shownLines == 0 && haveQuery) {
         showPlaceholder(tr("No results for \"%1\"").arg(m_searchEdit->text()));
     } else {
         m_stack->setCurrentWidget(m_topSplitter);
     }
-    m_statusLabel->setText(tr("%1 line(s) shown").arg(shown));
+    
+    m_statusLabel->setText(tr("%1 lines shown").arg(shownLines));
 }
 
 #include "moc_disassemblertab.cpp"
