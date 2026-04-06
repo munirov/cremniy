@@ -324,49 +324,78 @@ bool ReverseCalculatorDialog::parseExpression(const QString& text, qulonglong* o
         return false;
     }
 
-    qulonglong result = 0;
-    if (!parseValue(mergedTokens[0], &result)) {
+    QList<qulonglong> values;
+    QList<QString> ops;
+
+    qulonglong firstVal = 0;
+    if (!parseValue(mergedTokens[0], &firstVal)) {
         *errorOut = tr("Invalid operand: ") + mergedTokens[0];
         return false;
     }
+    values.append(firstVal);
 
     if (lhsBase) {
         *lhsBase = detectBase(mergedTokens[0]);
     }
 
     for (int j = 1; j < mergedTokens.size(); j += 2) {
-        QString op = mergedTokens[j];
-        QString rhsStr = mergedTokens[j + 1];
-        qulonglong rhs = 0;
-
-        if (!parseValue(rhsStr, &rhs)) {
-            *errorOut = tr("Invalid operand: ") + rhsStr;
+        ops.append(mergedTokens[j]);
+        qulonglong val = 0;
+        if (!parseValue(mergedTokens[j + 1], &val)) {
+            *errorOut = tr("Invalid operand: ") + mergedTokens[j + 1];
             return false;
         }
+        values.append(val);
+    }
 
-        if (op == "+")       result = result + rhs;
-        else if (op == "-")  result = result - rhs;
-        else if (op == "*")  result = result * rhs;
-        else if (op == "/") {
-            if (rhs == 0) { *errorOut = tr("Division by zero"); return false; }
-            result = result / rhs;
-        }
-        else if (op == "%") {
-            if (rhs == 0) { *errorOut = tr("Modulo by zero"); return false; }
-            result = result % rhs;
-        }
-        else if (op == "&")  result = result & rhs;
-        else if (op == "|")  result = result | rhs;
-        else if (op == "^")  result = result ^ rhs;
-        else if (op == "<<") result = result << rhs;
-        else if (op == ">>") result = result >> rhs;
-        else {
-            *errorOut = tr("Unknown operator: ") + op;
-            return false;
+    // priority-based calculation
+    QList<QStringList> precedenceLevels = {
+        {"*", "/", "%"},
+        {"+", "-"},
+        {"<<", ">>"},
+        {"&"},
+        {"^"},
+        {"|"}
+    };
+
+    for (const QStringList& level : precedenceLevels) {
+        for (int j = 0; j < ops.size();) {
+            if (level.contains(ops[j])) {
+                QString op = ops[j];
+                qulonglong lhs = values[j];
+                qulonglong rhs = values[j + 1];
+                qulonglong res = 0;
+
+                if (op == "*")       res = lhs * rhs;
+                else if (op == "/") {
+                    if (rhs == 0) { *errorOut = tr("Division by zero"); return false; }
+                    res = lhs / rhs;
+                }
+                else if (op == "%") {
+                    if (rhs == 0) { *errorOut = tr("Modulo by zero"); return false; }
+                    res = lhs % rhs;
+                }
+                else if (op == "+")  res = lhs + rhs;
+                else if (op == "-")  res = lhs - rhs;
+                else if (op == "<<") res = lhs << rhs;
+                else if (op == ">>") res = lhs >> rhs;
+                else if (op == "&")  res = lhs & rhs;
+                else if (op == "^")  res = lhs ^ rhs;
+                else if (op == "|")  res = lhs | rhs;
+
+                values[j] = res;
+
+                values.removeAt(j + 1);
+                ops.removeAt(j);
+            }
+            else {
+                j++;
+            }
         }
     }
 
-    *outValue = result;
+    if (values.isEmpty()) return false;
+    *outValue = values[0];
     return true;
 }
 
