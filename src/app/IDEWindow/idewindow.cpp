@@ -6,6 +6,7 @@
 #include <qjsondocument.h>
 #include <qjsonobject.h>
 #include <QApplication>
+#include "dialogs/keyboardscancodesdialog.h"
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
 
@@ -256,4 +257,13 @@ void IDEWindow::on_SaveFile(){
 void IDEWindow::on_openSettings(){
     SettingsDialog dlg(this);
     dlg.exec();
+}
+
+void IDEWindow::on_openKeyboardScanCodes()
+{
+    auto *dlg = new KeyboardScanCodesDialog(this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->show();
+    dlg->raise();
+    dlg->activateWindow();
 }

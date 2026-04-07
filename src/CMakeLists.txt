@@ -32,7 +32,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         dialogs/settingsdialog.h
         dialogs/reversecalculatordialog.cpp
         dialogs/reversecalculatordialog.h
+        dialogs/keyboardscancodesdialog.cpp
+        dialogs/keyboardscancodesdialog.h
 
+        widgets/keyboardscancodevizwidget.cpp
+        widgets/keyboardscancodevizwidget.h
         widgets/clickablelineedit.cpp
         widgets/clickablelineedit.h
         widgets/filetab.cpp

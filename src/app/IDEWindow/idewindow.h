@@ -81,6 +81,7 @@ public slots:
      * Открывает окно Settings
     */
     void on_openSettings();
+    void on_openKeyboardScanCodes();
 
     /**
      * @brief Отображение терминала

@@ -11,6 +11,7 @@ private:
     QAction* m_keybScancodes;
 public:
     ReferencesMenu();
+    void setupConnections(IDEWindow *ideWind) override;
 };
 
 #endif // REFERENCESMENU_H

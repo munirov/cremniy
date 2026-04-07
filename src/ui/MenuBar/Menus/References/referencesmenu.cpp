@@ -10,8 +10,13 @@ static bool registered = [](){
 
 ReferencesMenu::ReferencesMenu() : BaseMenu("References") {
     m_asciiChars = new QAction("ASCII characters", this);
-    m_keybScancodes = new QAction("Keyboard Scancodes", this);
+    m_keybScancodes = new QAction("Keyboard Scan-Codes", this);
 
     this->addAction(m_asciiChars);
     this->addAction(m_keybScancodes);
+}
+
+void ReferencesMenu::setupConnections(IDEWindow *ideWind)
+{
+    connect(m_keybScancodes, &QAction::triggered, ideWind, &IDEWindow::on_openKeyboardScanCodes);
 }
