@@ -1,6 +1,5 @@
 #include "codeeditortab.h"
 #include "core/ToolTabFactory.h"
-#include "filemanager.h"
 #include "utils.h"
 
 #include <QBoxLayout>
@@ -11,6 +10,7 @@
 #include <QPushButton>
 #include <QStackedLayout>
 #include <QVBoxLayout>
+#include <QCheckBox>
 
 static const bool registeredCodeEditorTab =
     registerAlwaysToolTab<CodeEditorTab>(QStringLiteral("code"), QStringLiteral("Code"), ToolTabOrder::Code);
