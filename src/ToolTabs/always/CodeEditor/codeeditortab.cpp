@@ -89,7 +89,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
     connect(m_searchPrevButton, &QPushButton::clicked, this, [this]() { findNext(false); });
     connect(m_searchNextButton, &QPushButton::clicked, this, [this]() { findNext(true); });
     connect(m_searchCloseButton, &QPushButton::clicked, this, &CodeEditorTab::closeSearchBar);
-    connect(m_matchCaseCheckBox, &QCheckBox::checkStateChanged, this, [this](int) {
+    connect(m_matchCaseCheckBox, &QCheckBox::stateChanged, this, [this](int) {
         updateSearchUi();
     });
 
