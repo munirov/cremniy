@@ -116,6 +116,43 @@ qint64 UTF8Decoder::charPosToByte(const QString& text, qint64 charPos) const {
     return substring.toUtf8().size();
 }
 
+qint64 UTF8Decoder::charPosToByte(const QByteArray& bytes, qint64 charPos) const {
+    if (charPos <= 0 || bytes.isEmpty()) return 0;
+    
+    qint64 byteIndex = 0;
+    qint64 currentCharPos = 0;
+    
+    while (byteIndex < bytes.size() && currentCharPos < charPos) {
+        unsigned char b = static_cast<unsigned char>(bytes[byteIndex]);
+        int len = utf8SequenceLength(b);
+        
+        if (len == 0 || byteIndex + len > bytes.size() || 
+            !validateContinuationBytes(bytes, byteIndex, len)) {
+            // Invalid sequence decodes to 1 replacement character
+            byteIndex++;
+            currentCharPos++;
+        } else {
+            // Valid sequence
+            if (len == 4) {
+                uint32_t codePoint = ((b & 0x07) << 18) | 
+                                     ((static_cast<unsigned char>(bytes[byteIndex + 1]) & 0x3F) << 12) |
+                                     ((static_cast<unsigned char>(bytes[byteIndex + 2]) & 0x3F) << 6) |
+                                     (static_cast<unsigned char>(bytes[byteIndex + 3]) & 0x3F);
+                if (codePoint >= 0x10000 && codePoint <= 0x10FFFF) {
+                    currentCharPos += 2; // Surrogate pair adds 2 QChars
+                } else {
+                    currentCharPos++;
+                }
+            } else {
+                currentCharPos++;
+            }
+            byteIndex += len;
+        }
+    }
+    
+    return byteIndex;
+}
+
 qint64 UTF8Decoder::byteToCharPos(const QByteArray& bytes, qint64 bytePos) const {
     if (bytePos <= 0) return 0;
     if (bytePos >= bytes.size()) {

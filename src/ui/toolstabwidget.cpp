@@ -1,44 +1,32 @@
 #include <QFile>
+#include <QTabBar>
+#include <utility>
 #include <qboxlayout.h>
 #include <qfileinfo.h>
 
-#include "toolstabwidget.h"
-#include "core/ToolTabFactory.h"
 #include "core/ToolTab.h"
 #include "core/FileDataBuffer.h"
+#include "core/ToolTabFactory.h"
+#include "toolstabwidget.h"
 
 ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
-    {
+    : QTabWidget(parent)
+    , m_filePath(std::move(path))
+{
+    setTabsClosable(true);
 
-    qDebug() << "ToolsTabWidget ctor: this=" << this << " parent=" << parent << " path=" << path;
 
     // Создаем общий буфер данных для всех вкладок
     m_sharedBuffer = new FileDataBuffer(this);
 
-    m_sharedBuffer->openFile(path);
-
-    // Tools
+    m_sharedBuffer->openFile(m_filePath);
 
     auto& toolFactory = ToolTabFactory::instance();
 
-    qDebug() << "ToolsTabWidget constr: for id in avTabs";
-    for (const QString& toolID : toolFactory.availableTabs()){
-        ToolTab* tab = toolFactory.create(toolID, m_sharedBuffer);
-        if (!tab) {
-            qWarning() << "ToolsTabWidget ctor: failed to create tab for id" << toolID;
-            continue;
+    for (const auto& descriptor : toolFactory.availableTabs()) {
+        if (descriptor.autoOpen) {
+            createToolTab(descriptor.id);
         }
-
-        qDebug() << "ToolsTabWidget ctor: created tab id=" << toolID << " ptr=" << tab << " name=" << tab->toolName();
-
-        tab->setFile(path);
-        tab->setProperty("tabDataLoaded", false);
-
-        connect(tab, &ToolTab::refreshDataAllTabsSignal, this, &ToolsTabWidget::refreshDataAllTabs);
-        connect(tab, &ToolTab::modifyData, this, &ToolsTabWidget::setupStar);
-        connect(tab, &ToolTab::dataEqual, this, &ToolsTabWidget::removeStar);
-
-        this->addTab(tab, tab->toolIcon(), tab->toolName());
     }
 
     if (this->count() > 0) {
@@ -65,11 +53,102 @@ ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
         }
     });
 
+    connect(this, &QTabWidget::tabCloseRequested, this, &ToolsTabWidget::closeToolTab);
+
     // // - - Connects - -
 
     // // Trigger: Menu Bar: File->SaveFile or CTRL+S - saveTabData
     // connect(GlobalWidgetsManager::instance().get_IDEWindow_menuBar_file_saveFile(),
             // &QAction::triggered, this, &ToolsTabWidget::saveCurrentTabData);
+}
+
+void ToolsTabWidget::updateCloseButtons()
+{
+    for (int index = 0; index < count(); ++index) {
+        if (widget(index)->property("toolTabClosable").toBool()) {
+            continue;
+        }
+
+        tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
+        tabBar()->setTabButton(index, QTabBar::RightSide, nullptr);
+    }
+}
+
+ToolTab* ToolsTabWidget::findToolTab(const QString& toolId) const
+{
+    for (int index = 0; index < count(); ++index) {
+        auto* tab = qobject_cast<ToolTab*>(widget(index));
+        if (tab && tab->property("toolTabId").toString() == toolId) {
+            return tab;
+        }
+    }
+
+    return nullptr;
+}
+
+ToolTab* ToolsTabWidget::createToolTab(const QString& toolId)
+{
+    const auto descriptor = ToolTabFactory::instance().descriptor(toolId);
+    if (!descriptor.isValid()) {
+        qWarning() << "ToolsTabWidget: unknown tool tab id" << toolId;
+        return nullptr;
+    }
+
+    ToolTab* tab = ToolTabFactory::instance().create(toolId, m_sharedBuffer);
+    if (!tab) {
+        qWarning() << "ToolsTabWidget: failed to create tab for id" << toolId;
+        return nullptr;
+    }
+
+    tab->setFile(m_filePath);
+    tab->setProperty("toolTabId", descriptor.id);
+    tab->setProperty("toolTabOrder", descriptor.order);
+    tab->setProperty("toolTabClosable", descriptor.group == ToolTabGroup::Other);
+    tab->setProperty("tabDataLoaded", false);
+
+    connect(tab, &ToolTab::refreshDataAllTabsSignal, this, &ToolsTabWidget::refreshDataAllTabs);
+    connect(tab, &ToolTab::modifyData, this, &ToolsTabWidget::setupStar);
+    connect(tab, &ToolTab::dataEqual, this, &ToolsTabWidget::removeStar);
+
+    int insertIndex = count();
+    if (descriptor.group == ToolTabGroup::Always) {
+        for (int index = 0; index < count(); ++index) {
+            QWidget* existingWidget = widget(index);
+            const bool existingClosable = existingWidget->property("toolTabClosable").toBool();
+            const int existingOrder = existingWidget->property("toolTabOrder").toInt();
+            if (existingClosable || descriptor.order < existingOrder) {
+                insertIndex = index;
+                break;
+            }
+        }
+    }
+
+    insertTab(insertIndex, tab, tab->toolIcon(), tab->toolName());
+    updateCloseButtons();
+    return tab;
+}
+
+ToolTab* ToolsTabWidget::openToolTab(const QString& toolId, bool activate)
+{
+    ToolTab* tab = findToolTab(toolId);
+    if (!tab) {
+        tab = createToolTab(toolId);
+    }
+
+    if (!tab) {
+        return nullptr;
+    }
+
+    if (!tab->property("tabDataLoaded").toBool()) {
+        tab->setTabData();
+        tab->setProperty("tabDataLoaded", true);
+    }
+
+    if (activate) {
+        setCurrentWidget(tab);
+    }
+
+    return tab;
 }
 
 void ToolsTabWidget::refreshDataAllTabs(){
@@ -79,6 +158,18 @@ void ToolsTabWidget::refreshDataAllTabs(){
             tab->setTabData();
         }
     }
+}
+
+void ToolsTabWidget::closeToolTab(int index)
+{
+    QWidget* toolWidget = widget(index);
+    if (!toolWidget || !toolWidget->property("toolTabClosable").toBool()) {
+        return;
+    }
+
+    removeTab(index);
+    toolWidget->deleteLater();
+    updateCloseButtons();
 }
 
 void ToolsTabWidget::saveCurrentTabData(){

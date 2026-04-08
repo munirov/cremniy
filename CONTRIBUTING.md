@@ -48,6 +48,7 @@ All other branches (`feature/...`, `fix/...`) are created **in your fork** when 
 - A pull request should address **one specific task** or a tightly related group of tasks.
 - Do not combine **different changes** in a single PR (e.g., new features, refactoring, and fixes at the same time).
 - Large changes should be **split into multiple** separate PRs.
+- Link your PR to a task if one exists ([see details below](CONTRIBUTING.md#linking-pr-to-tasks))
 
 ### Submission
 
@@ -56,6 +57,11 @@ All other branches (`feature/...`, `fix/...`) are created **in your fork** when 
 3. Make your changes
 4. Sync your branch with the main `main` branch and resolve conflicts if any
 5. Create a pull request with a clear description
+
+### Linking PR to tasks
+
+Each Pull Request should **clearly indicate which task or Issue it addresses**, if such a [task](ROADMAP.md) or Issue exists.  
+If there is no corresponding task, simply describe the changes in the PR.
 
 ## Acknowledgements
 

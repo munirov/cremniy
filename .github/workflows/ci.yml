@@ -2,9 +2,9 @@ name: CI Build
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ main, dev ]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -26,7 +26,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.5.3'
-          cache: false
+          cache: true
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -38,7 +38,7 @@ jobs:
         run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release --parallel
 
       - name: Test executable exists (Linux/macOS)
         if: runner.os != 'Windows'
@@ -46,4 +46,8 @@ jobs:
 
       - name: Test executable exists (Windows)
         if: runner.os == 'Windows'
-        run: Test-Path build/Release/cremniy.exe
+        shell: pwsh
+        run: |
+          if (!(Test-Path "build/Release/cremniy.exe")) {
+            throw "build/Release/cremniy.exe was not produced"
+          }

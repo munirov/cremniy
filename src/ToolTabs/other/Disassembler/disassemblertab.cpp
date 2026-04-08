@@ -34,12 +34,8 @@
 #include "disasm/disasmtexthighlighter.h"
 #include "core/ToolTabFactory.h"
 
-static bool registered = [](){
-    ToolTabFactory::instance().registerTab("3", [](FileDataBuffer* buffer){
-        return new DisassemblerTab(buffer);
-    });
-    return true;
-}();
+static const bool registeredDisassemblerTab =
+    registerOtherToolTab<DisassemblerTab>(QStringLiteral("disassembler"), QStringLiteral("Disassembler"));
 
 static QString normalizeBytes(const QString &bytes)
 {

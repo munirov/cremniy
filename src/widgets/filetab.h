@@ -19,6 +19,7 @@ public:
     bool isFileUnsaved() const { return m_modified; }
     bool isPinned() const { return m_pinned; }
     void setPinned(bool pinned);
+    ToolsTabWidget* toolsTabWidget() const { return m_tooltabWidget; }
 
 public slots:
     void removeStar();

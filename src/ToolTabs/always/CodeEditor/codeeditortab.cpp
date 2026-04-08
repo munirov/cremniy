@@ -1,6 +1,5 @@
 #include "codeeditortab.h"
 #include "core/ToolTabFactory.h"
-#include "filemanager.h"
 #include "utils.h"
 
 #include <QBoxLayout>
@@ -11,13 +10,10 @@
 #include <QPushButton>
 #include <QStackedLayout>
 #include <QVBoxLayout>
+#include <QCheckBox>
 
-static bool registered = []() {
-    ToolTabFactory::instance().registerTab("1", [](FileDataBuffer* buffer) {
-        return new CodeEditorTab(buffer);
-    });
-    return true;
-}();
+static const bool registeredCodeEditorTab =
+    registerAlwaysToolTab<CodeEditorTab>(QStringLiteral("code"), QStringLiteral("Code"), ToolTabOrder::Code);
 
 CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
     : ToolTab(buffer, parent)

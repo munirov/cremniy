@@ -11,12 +11,8 @@
 #include "formatpage.h"
 #include "core/ToolTabFactory.h"
 
-static bool registered = [](){
-    ToolTabFactory::instance().registerTab("2", [](FileDataBuffer* buffer){
-        return new BinaryTab(buffer);
-    });
-    return true;
-}();
+static const bool registeredBinaryTab =
+    registerAlwaysToolTab<BinaryTab>(QStringLiteral("binary"), QStringLiteral("Binary"), ToolTabOrder::Binary);
 
 namespace {
 void syncCurrentFormatPage(QStackedWidget* pageView, FileDataBuffer* dataBuffer)

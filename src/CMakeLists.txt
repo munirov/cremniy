@@ -21,7 +21,7 @@ if(CREMNIY_ENABLE_ASAN)
     endif()
 endif()
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
@@ -42,8 +42,12 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         dialogs/filecreatedialog.h
         dialogs/settingsdialog.cpp
         dialogs/settingsdialog.h
-        dialogs/reversecalculatordialog.cpp
-        dialogs/reversecalculatordialog.h
+        dialogs/reversecalculator/reversecalculatordialog.cpp
+        dialogs/reversecalculator/reversecalculatordialog.h
+        dialogs/reversecalculator/reversecalculatorengine.cpp
+        dialogs/reversecalculator/reversecalculatorengine.h
+        dialogs/dataconverterdialog.cpp
+        dialogs/dataconverterdialog.h
 
         widgets/clickablelineedit.cpp
         widgets/clickablelineedit.h
@@ -124,14 +128,10 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/cremniy-codeeditor ${CMAKE_BIN
 
 
 # - - Tool Tabs - -
-file(GLOB TOOLTAB_DIRS CONFIGURE_DEPENDS ToolTabs/*)
-foreach(dir ${TOOLTAB_DIRS})
-    if(IS_DIRECTORY ${dir})
-        add_subdirectory(${dir})
-    endif()
-endforeach()
+add_subdirectory(ToolTabs/always)
+add_subdirectory(ToolTabs/other)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     cremniy-codeeditor
 )

@@ -39,6 +39,14 @@ public:
     qint64 findCharBoundary(const QByteArray& bytes, qint64 pos) const;
     
     /**
+     * @brief Convert character position to byte position using original bytes
+     * @param bytes The raw original byte array
+     * @param charPos Character position (0-indexed)
+     * @return Byte position in the raw byte array
+     */
+    qint64 charPosToByte(const QByteArray& bytes, qint64 charPos) const;
+
+    /**
      * @brief Convert character position to byte position
      * @param text The text string
      * @param charPos Character position (0-indexed)
@@ -55,7 +63,7 @@ public:
     qint64 byteToCharPos(const QByteArray& bytes, qint64 bytePos) const;
 
 private:
-    static constexpr char kReplacementChar = 0xFFFD;
+    static constexpr char32_t kReplacementChar = 0xFFFD;
     static constexpr unsigned char kUtf8Bom[3] = {0xEF, 0xBB, 0xBF};
     
     /**

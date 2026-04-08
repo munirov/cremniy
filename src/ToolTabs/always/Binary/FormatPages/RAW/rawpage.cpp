@@ -46,12 +46,19 @@ RAWPage::RAWPage(QWidget *parent)
     // Отслеживаем изменение выделения в hex view
     connect(m_hexViewWidget->hexCursor(), &QHexCursor::positionChanged,
             this, [this](){
+                if (m_hexViewWidget->hexCursor()->getSelectFromFormatPage()) {
+                    m_hexViewWidget->hexCursor()->setSelectFromFormatPage(false);
+                    m_hexViewWidget->setSelectFromFormatPage(false);
+                    return;
+                }
+
                 if (m_hexViewWidget->hexCursor()->hasSelection()) {
                     qint64 start = m_hexViewWidget->hexCursor()->selectionStartOffset();
                     qint64 length = m_hexViewWidget->hexCursor()->selectionLength();
                     emit selectionChanged(start, length);
                 } else {
-                    emit selectionChanged(m_hexViewWidget->hexCursor()->offset(), 0);
+                    // A single click in hex view focuses 1 byte visually. It should transfer as a 1 byte selection to Code Editor.
+                    emit selectionChanged(m_hexViewWidget->hexCursor()->offset(), 1);
                 }
             });
 
@@ -88,6 +95,8 @@ void RAWPage::setSharedBuffer(FileDataBuffer* buffer)
         return;
 
     m_sharedBuffer = buffer;
+    m_hexViewWidget->setSelectFromFormatPage(true);
+    m_hexViewWidget->hexCursor()->setSelectFromFormatPage(true);
     m_hexViewWidget->setSharedBuffer(buffer);
     m_dataHash = buffer->currentHash();
     emit dataEqual();

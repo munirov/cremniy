@@ -1,0 +1,18 @@
+* text=auto eol=lf
+
+*.cpp text
+*.h text
+*.hpp text
+
+*.qrc text
+*.qss text
+*.json text
+
+*.txt text
+*.md text
+*.desktop text
+*.svg text
+
+*.png binary
+*.drawio binary
+*.bkp binary

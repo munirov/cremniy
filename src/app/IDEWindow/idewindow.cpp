@@ -1,5 +1,6 @@
 #include "idewindow.h"
 #include "dialogs/filecreatedialog.h"
+#include "widgets/filetab.h"
 #include "QFileSystemModel"
 #include "QMessageBox"
 #include <qheaderview.h>
@@ -20,8 +21,8 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     // - - Menu Bar - -
     MenuBarBuilder* menuBarBuilder = new MenuBarBuilder(menuBar(), this);
-
     menuBar()->setNativeMenuBar(false);
+
     // - - Widgets - -
     m_statusBar = statusBar();
 
@@ -33,14 +34,17 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     m_verticalSplitter = new QSplitter(Qt::Vertical, m_mainWidget);
 
-    m_terminal = new TerminalWidget(this, ProjectPath);
-    m_terminal->setVisible(false);
+    // Terminal is initialized lazily on demand (see on_Toggle_Terminal)
+    // m_terminal = new TerminalWidget(this, ProjectPath);
+    // m_terminal->setVisible(false);
+    m_terminal = nullptr;
 
-    m_leftSidebar = new QWidget();
+    m_leftSidebar = new QWidget(this);
     QVBoxLayout* leftLayout = new QVBoxLayout(m_leftSidebar);
+
     leftLayout->setContentsMargins(0,0,0,0);
 
-    m_filesTabWidget = new FilesTabWidget();
+    m_filesTabWidget = new FilesTabWidget(this);
     m_filesTabWidget->setObjectName("filesTabWidget");
     m_filesTreeView = new FileTreeView();
     leftLayout->addWidget(m_filesTreeView);
@@ -50,25 +54,22 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_mainSplitter->setSizes({200, 1000});
 
     m_verticalSplitter->addWidget(m_mainSplitter); // Сверху все наше IDE
-    m_verticalSplitter->addWidget(m_terminal);     // Снизу терминал
-    m_verticalSplitter->setSizes({800, 200});      // пр
+    m_verticalSplitter->setSizes({800, 200});
 
     m_mainLayout->addWidget(m_verticalSplitter);
     setCentralWidget(m_mainWidget);
 
 
     // - - Tunning Widgets/Layouts - -
-
-    setCentralWidget(m_mainWidget);
-
-    m_mainLayout->addWidget(m_verticalSplitter);
-
     m_mainSplitter->setSizes({200, 1000});
     m_mainSplitter->setCollapsible(0, false);
     m_mainSplitter->setCollapsible(1, false);
 
     m_verticalSplitter->setSizes({800, 200});
-    m_verticalSplitter->setCollapsible(1, true);
+    
+    if (m_verticalSplitter->count() > 1) {
+        m_verticalSplitter->setCollapsible(1, true);
+    }
 
     m_filesTreeView->setMinimumWidth(180);
     m_filesTreeView->setTextElideMode(Qt::ElideNone);
@@ -87,6 +88,10 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_filesTreeView->setAnimated(true);
     m_filesTreeView->setEditTriggers(QAbstractItemView::EditKeyPressed);
     m_filesTreeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_filesTreeView->setDragEnabled(true);
+    m_filesTreeView->setAcceptDrops(true);
+    m_filesTreeView->setDropIndicatorShown(true);
+    m_filesTreeView->setDragDropMode(QAbstractItemView::DragDrop);
 
     m_mainLayout->setContentsMargins(0,0,0,0);
 
@@ -101,8 +106,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     connect(this, &IDEWindow::saveFileSignal, m_filesTabWidget, &FilesTabWidget::saveFileSlot);
 
-    connect(m_filesTabWidget, &QTabWidget::tabCloseRequested,
-            m_filesTabWidget, &FilesTabWidget::closeTab);
+    connect(m_filesTabWidget, &QTabWidget::tabCloseRequested,m_filesTabWidget, &FilesTabWidget::closeTab);
     connect(m_filesTreeView, &QTreeView::customContextMenuRequested,this, &IDEWindow::on_Tree_ContextMenu);
     connect(m_filesTreeView, &QTreeView::doubleClicked, this, &IDEWindow::on_treeView_doubleClicked);
 }
@@ -110,8 +114,35 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 IDEWindow::~IDEWindow()
 {}
 
+FileTab* IDEWindow::currentFileTab() const
+{
+    return qobject_cast<FileTab*>(m_filesTabWidget->currentWidget());
+}
+
+bool IDEWindow::openToolForCurrentFile(const QString& toolId)
+{
+    FileTab* fileTab = currentFileTab();
+    if (!fileTab || !fileTab->toolsTabWidget()) {
+        return false;
+    }
+
+    return fileTab->toolsTabWidget()->openToolTab(toolId) != nullptr;
+}
+
 void IDEWindow::on_Toggle_Terminal(bool checked) {
+    if (checked && !m_terminal) {
+        m_terminal = new TerminalWidget(this);
+        m_verticalSplitter->addWidget(m_terminal);
+        m_verticalSplitter->setCollapsible(1, true);
+        m_verticalSplitter->setSizes({800, 200});
+    }
+
+    if (!m_terminal) {
+        return;
+    }
+
     m_terminal->setVisible(checked);
+
     if(checked) {
         m_terminal->setFocus();
     }
@@ -139,8 +170,10 @@ void IDEWindow::on_SetTabWidth(int width)
 {
     const auto editors = findChildren<CustomCodeEditor*>();
     for (CustomCodeEditor* editor : editors) {
-        if (editor)
+        if (editor) {
             editor->setTabDisplaySize(width);
+            editor->setTabReplaceSize(width);
+        }
     }
 }
 

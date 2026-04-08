@@ -253,6 +253,19 @@ QPushButton::pressed[state="green"] {
 background-color: #163318; border: 2px solid #2c7c32; font-weight: bold;
 }
 
+QPushButton[state="red"] {
+    border: 1px solid #a82323;
+}
+QPushButton::hover[state="red"] {
+    background-color: #451212; 
+    border: 1px solid #a82323;
+}
+QPushButton::pressed[state="red"] {
+    background-color: #451212; 
+    border: 2px solid #a82323; 
+    font-weight: bold;
+}
+
 /* Vertical QScrollBar */
 
 QScrollBar:vertical {

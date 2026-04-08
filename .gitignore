@@ -1,46 +1,35 @@
-# This file is used to ignore files which are generated
-# ----------------------------------------------------------------------------
-
+# General and Common Patterns
 *~
-*.autosave
-*.a
-*.core
-*.moc
-*.o
-*.obj
+*.bak
 *.orig
 *.rej
-*.so
-*.so.*
-*_pch.h.cpp
-*_resource.rc
-*.qm
-.#*
+*.autosave
 *.*#
+.#*
 core
 !core/
 tags
+*.tar.gz
+*.tar.xz
+*.zip
+*.7z
+*.debug
+timestamp
+*.log
+*.tmp
+*.temp
+
+# OS Specific Files
 .DS_Store
 .directory
-*.debug
-Makefile*
-*.prl
-*.app
-moc_*.cpp
-ui_*.h
-qrc_*.cpp
 Thumbs.db
-*.res
-*.rc
-/.qmake.cache
-/.qmake.stash
-**/.qmlls.ini
+desktop.ini
 
-# qtcreator generated files
+# Qt Creator
 *.pro.user*
 *.qbs.user*
 CMakeLists.txt.user*
-
+*CMakeSettings.json
 # xemacs temporary files
 *.flc
 
@@ -48,6 +37,10 @@ CMakeLists.txt.user*
 .*.swp
 
 # Visual Studio generated files
+/.qtcreator/
+**/.qmlls.ini
+
+# Visual Studio
 *.ib_pdb_index
 *.idb
 *.ilk
@@ -61,77 +54,92 @@ CMakeLists.txt.user*
 *.opensdf
 *.vcxproj
 *vcxproj.*
-.vscode/
+*.VC.db
+*.VC.opendb
+*.user
 .vs/
 
-# IDEA Clion generated files
-.idea
+# VS Code
+.vscode/
 
-# MinGW generated files
-*.Debug
-*.Release
+# CLion
+.idea/
+cmake-build-*/
+out/
 
-# Python byte code
-*.pyc
+# Vim
+.*.swp
+.*.swo
 
-# Binaries
-# --------
-*.dll
+# Object & Library Files
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+
+# Executables & Binaries
 *.exe
+*.dll
+*.bin
+*.out
+*.app
 
-# Directories with generated files
+# Compiled QML
+*.qmlc
+
+# Qt Specific Generated Files
+*.moc
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
+*.qm
+*.res
+*.rc
+*_pch.h.cpp
+*_resource.rc
+/.qmake.cache
+/.qmake.stash
+
+# Qt Directories
 .moc/
 .obj/
 .pch/
 .rcc/
 .uic/
-/build*/
-/.qtcreator/
 /.qt/
+
+# CMake & Build Systems
+build/
+/build*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*_autogen/
+Testing/
+*.clangd
+*.clang-format
+install_manifest.txt
+compile_commands.json
+
+# Ninja
+build.ninja
 .ninja_deps
 .ninja_log
 .ninja_logs
-*.clangd
-*.clang-format
-
-build/
-CMakeFiles/
-*_autogen/
-Testing/
-
-
-CMakeCache.txt
-build.ninja
-cmake_install.cmake
-*.o
-*.a
-*.so
-*.exe
-*.dll
-*.user
-*.pro.user
-*.qmlc
-
-
-build.ninja
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-untitled1_autogen/
-codeeditor/CMakeFiles/
-codeeditor/codeeditor_autogen/
-codeeditor/cmake_install.cmake
-
-CompilerIdCXX
-CMakeDetermineCompilerABI_CXX.bin
 rules.ninja
+
+# MinGW
+*.Debug
+*.Release
+
+# Specialized CMake Artifacts
+CompilerIdCXX/
+CompilerIdC/
+CMakeDetermineCompilerABI_CXX.bin
+CMakeDetermineCompilerABI_C.bin
 TargetDirectories.txt
-
-*_autogen/
-moc_*.cpp
-moc_*.h
 ParseCache.txt
-timestamp
-deps/
-
-*.zip

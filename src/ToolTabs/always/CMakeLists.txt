@@ -1,0 +1,6 @@
+file(GLOB TOOLTAB_DIRS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*)
+foreach(dir ${TOOLTAB_DIRS})
+    if(IS_DIRECTORY ${dir})
+        add_subdirectory(${dir})
+    endif()
+endforeach()

@@ -52,4 +52,11 @@ namespace utils {
 
         formatedDataRawAndSave(formatedList);
     }
+
+    void ProjectsHistoryManager::removeProjectFromHistory(const QString & projectPath) {
+        QStringList projects = loadProjectsHistory();
+        if (projects.removeAll(projectPath) > 0) {
+            formatedDataRawAndSave(projects);
+        }
+    }
 }; // utils

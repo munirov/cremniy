@@ -1,3 +1,6 @@
+#include <QMap>
+#include <QString>
+#include <functional>
 #include "formatpagefactory.h"
 
 

@@ -17,6 +17,7 @@ class IDEWindow : public QMainWindow
 public:
     explicit IDEWindow(QString ProjectPath, QWidget *parent = nullptr);
     ~IDEWindow() override;
+    bool openToolForCurrentFile(const QString& toolId);
 
 private slots:
 
@@ -36,6 +37,7 @@ private slots:
 
 
 private:
+    FileTab* currentFileTab() const;
 
     // - - Main Widgets - -
     QMenuBar* m_menuBar;

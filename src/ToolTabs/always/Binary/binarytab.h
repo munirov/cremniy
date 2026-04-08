@@ -4,6 +4,7 @@
 #include "core/ToolTab.h"
 #include <QShortcut>
 #include <QWidget>
+#include <QIcon>
 #include <qfileinfo.h>
 #include <qstackedwidget.h>
 
