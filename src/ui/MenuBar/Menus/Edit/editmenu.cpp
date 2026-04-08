@@ -7,9 +7,9 @@ static bool registered = []() {
   return true;
 }();
 
-EditMenu::EditMenu() : BaseMenu("Edit") {
+EditMenu::EditMenu() : BaseMenu(tr("Edit")) {
 
-  m_settings = new QAction("Settings", this);
+  m_settings = new QAction(tr("Settings"), this);
   
     m_settings->setShortcuts({
         QKeySequence(Qt::CTRL | Qt::Key_Comma),

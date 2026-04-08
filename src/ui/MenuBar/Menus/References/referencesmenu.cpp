@@ -8,9 +8,9 @@ static bool registered = [](){
     return true;
 }();
 
-ReferencesMenu::ReferencesMenu() : BaseMenu("References") {
-    m_asciiChars = new QAction("ASCII characters", this);
-    m_keybScancodes = new QAction("Keyboard Scancodes", this);
+ReferencesMenu::ReferencesMenu() : BaseMenu(tr("References")) {
+    m_asciiChars = new QAction(tr("ASCII characters"), this);
+    m_keybScancodes = new QAction(tr("Keyboard Scancodes"), this);
 
     this->addAction(m_asciiChars);
     this->addAction(m_keybScancodes);

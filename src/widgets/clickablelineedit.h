@@ -15,7 +15,7 @@ protected:
         // Здесь будем вызывать FIleDialog и полученное значение из диалога подставлять в Text данного виждета
         QString dir = QFileDialog::getExistingDirectory(
             this,
-            "Choose Directory",
+            tr("Choose Directory"),
             QDir::homePath(),
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
             );

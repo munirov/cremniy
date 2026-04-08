@@ -1,19 +1,25 @@
 #include <QApplication>
+#include <QTranslator>
 #include <QCoreApplication>
 
 #include "app/WelcomeWindow/welcomeform.h"
+#include "locale/LanguageManager.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QCoreApplication::setOrganizationName("cremniy");
+
+    LanguageManager::instance().loadUserDefaultLocale();
+
     QCoreApplication::setApplicationName("Cremniy");
-    a.setWindowIcon(QIcon(":/icons/icon.png"));
+    QApplication::setWindowIcon(QIcon(":/icons/icon.png"));
 
     QFile file(":/styles/style.qss");
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    a.setStyleSheet(styleSheet);
+    if (file.open(QFile::ReadOnly)) {
+        const QString styleSheet = QLatin1String(file.readAll());
+        a.setStyleSheet(styleSheet);
+    }
 
     WelcomeForm wf;
     wf.show();

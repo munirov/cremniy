@@ -1,8 +1,12 @@
 #include "filemanager.h"
+
+#include <QDir>
 #include <qfileinfo.h>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 
-void FileManager::saveFile(FileContext* fc, QByteArray* data){
+void FileManager::saveFile(FileContext* fc, const QByteArray* data){
     QFile f(fc->filePath());
     if (!f.open(QFile::WriteOnly)) return;
     f.write(*data);
@@ -18,4 +22,33 @@ QByteArray FileManager::openFile(FileContext* fc){
     fc->m_startOffset = 0;
     fc->m_endOffset = data.size() - 1;
     return data;
+}
+
+void FileManager::saveJson(FileContext &fc, const QJsonObject &json) {
+    QFile f(fc.filePath());
+
+    if (!f.exists()) QDir().mkpath(QFileInfo(fc.filePath()).absolutePath());
+
+    if (!f.open(QFile::WriteOnly)) {
+        return;
+    }
+
+    const QJsonDocument doc(json);
+    f.write(doc.toJson());
+    f.close();
+}
+
+QJsonObject FileManager::loadJson(FileContext &fc) {
+    QFile file(fc.filePath());
+    if (!file.open(QIODevice::ReadOnly))
+        return {};
+
+    const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    if (doc.isNull() || !doc.isObject())
+        return {};
+
+    const QJsonObject root = doc.object();
+
+    file.close();
+    return root;
 }
