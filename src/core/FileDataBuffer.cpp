@@ -314,6 +314,13 @@ QByteArray FileDataBuffer::materializeLocked() const
         result.append(readLocked(offset, len));
         offset += len;
     }
+
+    for (auto it = m_overrides.cbegin(); it != m_overrides.cend(); ++it) {
+        const qint64 pos = it.key();
+         if (pos >= 0 && pos < result.size())
+            result[pos] = it.value();
+    }
+    
     return result;
 }
 
