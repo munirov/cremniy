@@ -3,12 +3,16 @@
 
 #include "filestabwidget.h"
 #include "filetreeview.h"
+#include "widgets/terminal/terminalwidget.h"
+#include "BuildSystem/BuildConfig.h"
+#include "BuildSystem/BuildManager.h"
+#include "BuildSystem/BuildSetupDialog.h"
+
 #include <QMainWindow>
 #include <qboxlayout.h>
 #include <qmenubar.h>
 #include <qsplitter.h>
 #include <qstatusbar.h>
-#include "widgets/terminal/terminalwidget.h"
 
 class IDEWindow : public QMainWindow
 {
@@ -19,78 +23,38 @@ public:
     ~IDEWindow() override;
 
 private slots:
-
-    /**
-     * @brief Двойной клик
-     *
-     * Обрабатывает открытие файла или разворачивание директории
-    */
     void on_treeView_doubleClicked(const QModelIndex &index);
-
-    /**
-     * @brief Открытие контекстного меню
-     *
-     * Нужен при клике на ПКМ для открытия контекстного меню
-    */
     void on_Tree_ContextMenu(const QPoint &pos);
 
-
 private:
+    void SaveProjectInCache(const QString project_path);
+    void onProjectOpened(const QString& projectDir);
 
-    // - - Main Widgets - -
-    QMenuBar* m_menuBar;
-    QStatusBar* m_statusBar;
-    QWidget* m_mainWidget;
-    QHBoxLayout* m_mainLayout;
-    QSplitter* m_verticalSplitter;  // splitter (вверх вниз)
-    QSplitter* m_mainSplitter; 
+    QMenuBar* m_menuBar = nullptr;
+    QStatusBar* m_statusBar = nullptr;
+    QWidget* m_mainWidget = nullptr;
+    QHBoxLayout* m_mainLayout = nullptr;
+    QSplitter* m_verticalSplitter = nullptr;
+    QSplitter* m_mainSplitter = nullptr;
 
-    // - - General Widgets - -
-    FilesTabWidget* m_filesTabWidget;
-    FileTreeView* m_filesTreeView;
+    FilesTabWidget* m_filesTabWidget = nullptr;
+    FileTreeView* m_filesTreeView = nullptr;
+    TerminalWidget* m_terminal = nullptr;
 
-    // - - Terminal Widget - -
-    TerminalWidget* m_terminal;
-
+    BuildManager* m_buildManager = nullptr;
+    QString m_projectDir;
 
 public slots:
-
-    /**
-     * @brief Создать новый проект (QMenuBar->File->NewProject)
-    */
     void on_NewProject();
-
-    /**
-     * @brief Открыть другой проект (QMenuBar->File->OpenProject)
-    */
     void on_OpenProject();
-
-    /**
-     * @brief Сохранить файл (QMenuBar->File->SaveFile)
-    */
     void on_SaveFile();
-
-    /**
-     * @brief Закрыть проект (QMenuBar->File->CloseProject)
-    */
     void on_ClosingProject();
-
-    /**
-     * @brief Нажатие на Settings (QMenuBar->Edit->Settings)
-     *
-     * Открывает окно Settings
-    */
     void on_openSettings();
-
-    /**
-     * @brief Отображение терминала
-    */
     void on_Toggle_Terminal(bool checked);
-
 
 signals:
     void saveFileSignal();
     void CloseProject();
-
 };
+
 #endif // IDEWINDOW_H

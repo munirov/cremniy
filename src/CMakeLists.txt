@@ -66,6 +66,14 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         core/FileDataBuffer.h
         core/FileDataBuffer.cpp
 
+        BuildSystem/BuildConfig.cpp
+        BuildSystem/BuildConfig.h
+        BuildSystem/BuildManager.cpp
+        BuildSystem/BuildManager.h
+        BuildSystem/BuildSetupDialog.cpp
+        BuildSystem/BuildSetupDialog.h
+        BuildSystem/OutputPanel.cpp
+        BuildSystem/OutputPanel.h
         ui/MenuBar/menubarbuilder.h ui/MenuBar/menubarbuilder.cpp
         ui/MenuBar/menufactory.h ui/MenuBar/menufactory.cpp
         ui/MenuBar/Menus/File/filemenu.h ui/MenuBar/Menus/File/filemenu.cpp
