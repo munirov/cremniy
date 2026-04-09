@@ -11,6 +11,7 @@
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
 #include "widgets/CustomCodeEditor.h"
+#include <QHBoxLayout>
 
 namespace {
 
@@ -139,13 +140,27 @@ void IDEWindow::setupStatusBar()
     m_statusCenterLabel = new QLabel(this);
     m_statusRightLabel = new QLabel(this);
 
-    m_statusLeftLabel->setMinimumWidth(160);
-    m_statusCenterLabel->setMinimumWidth(160);
-    m_statusRightLabel->setMinimumWidth(160);
+    m_statusLeftLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+    m_statusCenterLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+    m_statusRightLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+    m_statusLeftLabel->setMinimumWidth(78);
+    m_statusCenterLabel->setMinimumWidth(92);
+    m_statusRightLabel->setMinimumWidth(96);
 
-    m_statusBar->addPermanentWidget(m_statusLeftLabel, 1);
-    m_statusBar->addPermanentWidget(m_statusCenterLabel, 1);
-    m_statusBar->addPermanentWidget(m_statusRightLabel, 1);
+    auto* spacer = new QWidget(m_statusBar);
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    auto* statusGroup = new QWidget(m_statusBar);
+    auto* statusLayout = new QHBoxLayout(statusGroup);
+    statusLayout->setContentsMargins(0, 0, 10, 0);
+    statusLayout->setSpacing(32);
+    statusLayout->addWidget(m_statusLeftLabel);
+    statusLayout->addWidget(m_statusCenterLabel);
+    statusLayout->addWidget(m_statusRightLabel);
+
+    m_statusBar->setSizeGripEnabled(false);
+    m_statusBar->addWidget(spacer, 1);
+    m_statusBar->addPermanentWidget(statusGroup);
 
     applyStatusState({"No file open", "", ""});
 }
