@@ -90,6 +90,7 @@ qt_add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/cremniy-codeeditor/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/cremniy-codeeditor/third_party/QCodeEditor/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/widgets
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -105,7 +106,10 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/cremniy-codeeditor ${CMAKE_BIN
 add_subdirectory(ToolTabs/always)
 add_subdirectory(ToolTabs/other)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qt6::Widgets
+    cremniy-codeeditor
+)
 
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt)
 
