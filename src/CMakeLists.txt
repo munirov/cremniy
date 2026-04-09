@@ -140,6 +140,12 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
     )
 endif()
 
+<<<<<<< HEAD
+=======
+if(QT_VERSION VERSION_LESS 6.1.0)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.${PROJECT_NAME})
+endif()
+>>>>>>> e4d81f3 (fix: correct Qt version check in CMake)
 set_target_properties(${PROJECT_NAME} PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
