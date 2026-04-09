@@ -23,8 +23,21 @@ FilesTabWidget::FilesTabWidget(QWidget *parent) {
 
 void FilesTabWidget::tabSelect(int index) {
     FileTab *tab = qobject_cast<FileTab *>(widget(index));
-    if (!tab)
+    if (!tab) {
+        emit activeStatusStateChanged({"No file open", "", ""});
         return;
+    }
+    
+    emit activeStatusStateChanged(tab->currentStatusState());
+}
+
+ToolStatusState FilesTabWidget::currentStatusState() const
+{
+    FileTab* tab = qobject_cast<FileTab*>(currentWidget());
+    if (!tab)
+        return {"No file open", "", ""};
+
+    return tab->currentStatusState();
 }
 
 // Create new tab and open file if he is not open already
@@ -48,6 +61,7 @@ void FilesTabWidget::openFile(QString filePath, QString tabTitle) {
     connect(filetab, &FileTab::removeStarSignal, this, &FilesTabWidget::removeStar);
     connect(filetab, &FileTab::setupStarSignal, this, &FilesTabWidget::setupStar);
     connect(filetab, &FileTab::pinnedChanged, this, &FilesTabWidget::updatePinnedState);
+    connect(filetab, &FileTab::activeStatusStateChanged, this, &FilesTabWidget::onFileTabActiveStatusStateChanged);
 }
 
 void FilesTabWidget::removeStar(FileTab *tab) {
@@ -192,6 +206,8 @@ void FilesTabWidget::closeTab(int index) {
     removeTab(index);
     if (tab)
         tab->deleteLater();
+
+    emit activeStatusStateChanged(currentStatusState());
 }
 
 void FilesTabWidget::switchTab(int page) {
@@ -274,4 +290,12 @@ int FilesTabWidget::pinnedCount() const {
         }
     }
     return countPinned;
+}
+
+void FilesTabWidget::onFileTabActiveStatusStateChanged(const ToolStatusState& state)
+{
+    if (sender() != currentWidget())
+        return;
+
+    emit activeStatusStateChanged(state);
 }

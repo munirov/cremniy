@@ -17,9 +17,15 @@ FileTab::FileTab(QWidget* parent, QString path)
     // - - Connects - -
     connect(m_tooltabWidget, &ToolsTabWidget::removeStarSignal, this, &FileTab::removeStar);
     connect(m_tooltabWidget, &ToolsTabWidget::setupStarSignal, this, &FileTab::setupStar);
+    connect(m_tooltabWidget, &ToolsTabWidget::activeStatusStateChanged, this, &FileTab::activeStatusStateChanged);
 
     connect(this, &FileTab::saveFileSignal, m_tooltabWidget, &ToolsTabWidget::saveCurrentTabData);
 
+}
+
+ToolStatusState FileTab::currentStatusState() const
+{
+    return m_tooltabWidget->currentStatusState();
 }
 
 void FileTab::setPinned(bool pinned){

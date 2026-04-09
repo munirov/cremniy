@@ -21,6 +21,7 @@ private:
     QShortcut* m_findShortcut = nullptr;
 
     void openFindDialog();
+    void updateStatusState();
 
 protected slots:
     // Обработчик изменения выделения из буфера

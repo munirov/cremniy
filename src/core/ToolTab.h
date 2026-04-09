@@ -1,7 +1,8 @@
 #ifndef TOOLTAB_H
 #define TOOLTAB_H
 
-#include "FileDataBuffer.h"
+#include "core/FileDataBuffer.h"
+#include "ToolStatusState.h"
 #include "utils/filecontext.h"
 #include <QWidget>
 
@@ -27,6 +28,8 @@ protected:
      * Если true - данные изменены, false - данные равны данным в файле
      */
     bool m_modifyIndicator = false;
+
+    ToolStatusState m_statusState;
 
 public:
     /**
@@ -66,11 +69,27 @@ public:
         return m_modifyIndicator;
     }
 
+    ToolStatusState statusState() const {
+        return m_statusState;
+    }
+
     /**
      * @brief Установить значение индикатора изменений
      */
     void setModifyIndicator(bool value) {
         m_modifyIndicator = value;
+    }
+
+protected:
+    void setStatusState(const ToolStatusState& state) {
+        if (m_statusState.left == state.left &&
+            m_statusState.center == state.center &&
+            m_statusState.right == state.right) {
+            return;
+        }
+
+        m_statusState = state;
+        emit statusStateChanged(m_statusState);
     }
 
 protected slots:
@@ -108,6 +127,10 @@ protected slots:
     virtual void onDataChanged() {}
 
 public slots:
+    void publishStatusState() {
+        emit statusStateChanged(m_statusState);
+    }
+
     /**
      * @brief Установить файл инструменту
      *
@@ -148,6 +171,8 @@ signals:
      * Также эмиттится после вызова функции setTabData, чтобы убрать звезду
      */
     void dataEqual();
+
+    void statusStateChanged(const ToolStatusState& state);
 };
 
 #endif // TOOLTAB_H

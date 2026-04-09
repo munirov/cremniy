@@ -39,27 +39,40 @@ ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
     }
 
     connect(this, &QTabWidget::currentChanged, this, [this](int index) {
-        if (index < 0)
+        if (index < 0) {
+            setActiveToolTab(nullptr);
             return;
+        }
 
         ToolTab* tab = dynamic_cast<ToolTab*>(this->widget(index));
-        if (!tab)
+        if (!tab) {
+            setActiveToolTab(nullptr);
             return;
+        }
 
         if (!tab->property("tabDataLoaded").toBool()) {
             qDebug() << "ToolsTabWidget currentChanged: loading tab index=" << index << " ptr=" << tab << " name=" << tab->toolName();
             tab->setTabData();
             tab->setProperty("tabDataLoaded", true);
         }
+
+        setActiveToolTab(tab);
     });
 
     connect(this, &QTabWidget::tabCloseRequested, this, &ToolsTabWidget::closeToolTab);
+
+    setActiveToolTab(qobject_cast<ToolTab*>(currentWidget()));
 
     // // - - Connects - -
 
     // // Trigger: Menu Bar: File->SaveFile or CTRL+S - saveTabData
     // connect(GlobalWidgetsManager::instance().get_IDEWindow_menuBar_file_saveFile(),
             // &QAction::triggered, this, &ToolsTabWidget::saveCurrentTabData);
+}
+
+ToolStatusState ToolsTabWidget::currentStatusState() const
+{
+    return m_activeStatusState;
 }
 
 void ToolsTabWidget::updateCloseButtons()
@@ -128,6 +141,40 @@ ToolTab* ToolsTabWidget::createToolTab(const QString& toolId)
     return tab;
 }
 
+void ToolsTabWidget::setActiveToolTab(ToolTab* tab)
+{
+    if (m_activeStatusConnection)
+        disconnect(m_activeStatusConnection);
+
+    m_activeToolTab = tab;
+
+    if (!m_activeToolTab) {
+        updateActiveStatusState({"No tool selected", "", ""});
+        return;
+    }
+
+    m_activeStatusConnection = connect(
+        m_activeToolTab,
+        &ToolTab::statusStateChanged,
+        this,
+        &ToolsTabWidget::updateActiveStatusState
+    );
+
+    updateActiveStatusState(m_activeToolTab->statusState());
+}
+
+void ToolsTabWidget::updateActiveStatusState(const ToolStatusState& state)
+{
+    if (m_activeStatusState.left == state.left &&
+        m_activeStatusState.center == state.center &&
+        m_activeStatusState.right == state.right) {
+        return;
+    }
+
+    m_activeStatusState = state;
+    emit activeStatusStateChanged(m_activeStatusState);
+}
+
 ToolTab* ToolsTabWidget::openToolTab(const QString& toolId, bool activate)
 {
     ToolTab* tab = findToolTab(toolId);
@@ -170,6 +217,10 @@ void ToolsTabWidget::closeToolTab(int index)
     removeTab(index);
     toolWidget->deleteLater();
     updateCloseButtons();
+
+    if (currentIndex() < 0) {
+        setActiveToolTab(nullptr);
+    }
 }
 
 void ToolsTabWidget::saveCurrentTabData(){

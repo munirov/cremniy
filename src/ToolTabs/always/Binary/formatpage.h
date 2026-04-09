@@ -1,6 +1,7 @@
 #ifndef FORMATPAGE_H
 #define FORMATPAGE_H
 
+#include "core/ToolStatusState.h"
 #include <QWidget>
 #include <qboxlayout.h>
 
@@ -19,6 +20,7 @@ public:
     ~FormatPage();
 
     virtual QString pageName() const = 0;
+    virtual ToolStatusState statusState() const;
 
     virtual void setPageData(QByteArray& data) = 0;
     virtual QByteArray getPageData() const = 0;

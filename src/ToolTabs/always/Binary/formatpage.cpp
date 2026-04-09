@@ -5,6 +5,15 @@
 // чтобы Qt создал vtable для FormatPage
 FormatPage::~FormatPage() {}
 
+ToolStatusState FormatPage::statusState() const
+{
+    return {
+        QString("Page %1").arg(pageName()),
+        "",
+        "Binary"
+    };
+}
+
 void FormatPage::setSharedBuffer(FileDataBuffer* buffer)
 {
     m_sharedBuffer = buffer;

@@ -14,6 +14,11 @@ public:
     explicit RAWPage(QWidget *parent = nullptr);
 
     QString pageName() const override { return "RAW"; }
+    ToolStatusState statusState() const override;
+    qint64 currentOffset() const;
+    qint64 currentSelectionStartOffset() const;
+    qint64 currentSelectionLength() const;
+    qint64 dataSize() const;
 
     void setPageData(QByteArray& data) override;
     QByteArray getPageData() const override;

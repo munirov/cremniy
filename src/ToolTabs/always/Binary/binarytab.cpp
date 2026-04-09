@@ -26,6 +26,14 @@ void syncCurrentFormatPage(QStackedWidget* pageView, FileDataBuffer* dataBuffer)
 
     currentPage->setSharedBuffer(dataBuffer);
 }
+
+FormatPage* currentFormatPage(QStackedWidget* pageView)
+{
+    if (!pageView)
+        return nullptr;
+
+    return dynamic_cast<FormatPage*>(pageView->currentWidget());
+}
 }
 
 BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
@@ -79,6 +87,8 @@ BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
                             setModifyIndicator(false);
                             emit dataEqual();
                         }
+
+                        updateStatusState();
                     });
             
             // Подключаем сигнал выделения от страницы к буферу
@@ -89,6 +99,8 @@ BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
                         m_updatingSelection = true;
                         m_dataBuffer->setSelection(pos, length);
                         m_updatingSelection = false;
+
+                        updateStatusState();
                     });
         }
     }
@@ -107,13 +119,13 @@ BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
                 if (row >= 0)
                     syncCurrentFormatPage(pageView, m_dataBuffer);
                 m_pageDataDirty = false;
+                updateStatusState();
             });
 
     m_findShortcut = new QShortcut(QKeySequence::Find, this);
     connect(m_findShortcut, &QShortcut::activated, this, &BinaryTab::openFindDialog);
 
-    connect(m_dataBuffer, &FileDataBuffer::selectionChanged,
-            this, &BinaryTab::onSelectionChanged);
+    updateStatusState();
 }
 
 
@@ -150,6 +162,8 @@ void BinaryTab::setTabData(){
         emit dataEqual();
     }
     qDebug() << "HexViewTab: setTabData(): success";
+
+    updateStatusState();
 };
 
 void BinaryTab::onDataChanged()
@@ -176,6 +190,7 @@ void BinaryTab::onSelectionChanged(qint64 pos, qint64 length)
     }
     
     m_updatingSelection = false;
+    updateStatusState();
 }
 
 void BinaryTab::saveTabData() {
@@ -190,6 +205,17 @@ void BinaryTab::saveTabData() {
     setModifyIndicator(false);
     emit dataEqual();
     emit refreshDataAllTabsSignal();
+}
+
+void BinaryTab::updateStatusState()
+{
+    auto* page = currentFormatPage(pageView);
+    if (!page) {
+        setStatusState({"Binary", "", ""});
+        return;
+    }
+
+    setStatusState(page->statusState());
 }
 
 void BinaryTab::openFindDialog()

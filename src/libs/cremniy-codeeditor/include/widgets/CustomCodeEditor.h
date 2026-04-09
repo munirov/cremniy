@@ -58,6 +58,8 @@ public:
     // State queries
     bool isModified() const;
     qint64 cursorPosition() const;
+    qint64 cursorLineNumber() const;
+    qint64 cursorColumnNumber() const;
     qint64 lineCount() const;
     bool hasSelection() const;
     QString selectedText() const;

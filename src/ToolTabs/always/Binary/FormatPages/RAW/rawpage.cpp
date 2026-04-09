@@ -64,6 +64,54 @@ RAWPage::RAWPage(QWidget *parent)
 
 }
 
+qint64 RAWPage::currentOffset() const
+{
+    return m_hexViewWidget->hexCursor()->offset();
+}
+
+qint64 RAWPage::currentSelectionStartOffset() const
+{
+    return m_hexViewWidget->hexCursor()->selectionStartOffset();
+}
+
+qint64 RAWPage::currentSelectionLength() const
+{
+    return m_hexViewWidget->hexCursor()->selectionLength();
+}
+
+qint64 RAWPage::dataSize() const
+{
+    if (m_sharedBuffer)
+        return m_sharedBuffer->size();
+
+    return m_hexViewWidget->getBData().size();
+}
+
+ToolStatusState RAWPage::statusState() const
+{
+    const qint64 size = dataSize();
+    if (size <= 0) {
+        return {"No data", "", "RAW"};
+    }
+
+    qint64 offset = currentOffset();
+    if (currentSelectionLength() > 0) {
+        offset = currentSelectionStartOffset();
+    }
+
+    offset = qBound<qint64>(0, offset, size - 1);
+
+    const QString address = QString("0x%1")
+        .arg(static_cast<qulonglong>(offset), 0, 16)
+        .toUpper();
+
+    return {
+        QString("Address %1").arg(address),
+        QString("Byte %1").arg(offset + 1),
+        "RAW"
+    };
+}
+
 void RAWPage::setPageData(QByteArray& data) {
     m_sharedBuffer = nullptr;
     m_hexViewWidget->setBData(data);
@@ -101,4 +149,3 @@ void RAWPage::setSharedBuffer(FileDataBuffer* buffer)
     m_dataHash = buffer->currentHash();
     emit dataEqual();
 }
-

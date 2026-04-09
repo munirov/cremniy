@@ -1,6 +1,7 @@
 #ifndef FILETAB_H
 #define FILETAB_H
 
+#include "core/ToolStatusState.h"
 #include "toolstabwidget.h"
 #include <QWidget>
 
@@ -16,6 +17,7 @@ private:
 public:
     explicit FileTab(QWidget *parrent, QString path);
     QString filePath;
+    ToolStatusState currentStatusState() const;
     bool isFileUnsaved() const { return m_modified; }
     bool isPinned() const { return m_pinned; }
     void setPinned(bool pinned);
@@ -31,6 +33,7 @@ signals:
     void setupStarSignal(FileTab* tab);
     void saveFileSignal();
     void pinnedChanged(FileTab* tab);
+    void activeStatusStateChanged(const ToolStatusState& state);
 
 };
 

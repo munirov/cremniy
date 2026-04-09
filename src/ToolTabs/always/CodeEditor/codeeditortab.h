@@ -55,6 +55,7 @@ private:
     void openReplaceDialog();
     void findNext(bool forward = true);
     void openGoToLineDialog();
+    void updateStatusState();
     void updateSearchUi();
     void setReplaceMode(bool enabled);
     void replaceCurrent();

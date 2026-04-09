@@ -3,6 +3,7 @@
 #include "widgets/filetab.h"
 #include "QFileSystemModel"
 #include "QMessageBox"
+#include <QLabel>
 #include <qheaderview.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
@@ -10,6 +11,16 @@
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
 #include "widgets/CustomCodeEditor.h"
+#include <QHBoxLayout>
+
+namespace {
+
+QString normalizedStatusText(const QString& text)
+{
+    return text.isEmpty() ? QStringLiteral(" ") : text;
+}
+
+}
 
 IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     : QMainWindow(parent), m_projectPath(ProjectPath)
@@ -25,6 +36,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     // - - Widgets - -
     m_statusBar = statusBar();
+    setupStatusBar();
 
     m_mainWidget = new QWidget(this);
     m_mainLayout = new QHBoxLayout(m_mainWidget);
@@ -109,6 +121,9 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     connect(m_filesTabWidget, &QTabWidget::tabCloseRequested,m_filesTabWidget, &FilesTabWidget::closeTab);
     connect(m_filesTreeView, &QTreeView::customContextMenuRequested,this, &IDEWindow::on_Tree_ContextMenu);
     connect(m_filesTreeView, &QTreeView::doubleClicked, this, &IDEWindow::on_treeView_doubleClicked);
+    connect(m_filesTabWidget, &FilesTabWidget::activeStatusStateChanged, this, &IDEWindow::onActiveStatusStateChanged);
+
+    applyStatusState(m_filesTabWidget->currentStatusState());
 }
 
 IDEWindow::~IDEWindow()
@@ -117,6 +132,49 @@ IDEWindow::~IDEWindow()
 FileTab* IDEWindow::currentFileTab() const
 {
     return qobject_cast<FileTab*>(m_filesTabWidget->currentWidget());
+}
+
+void IDEWindow::setupStatusBar()
+{
+    m_statusLeftLabel = new QLabel(this);
+    m_statusCenterLabel = new QLabel(this);
+    m_statusRightLabel = new QLabel(this);
+
+    m_statusLeftLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+    m_statusCenterLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+    m_statusRightLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+    m_statusLeftLabel->setMinimumWidth(78);
+    m_statusCenterLabel->setMinimumWidth(92);
+    m_statusRightLabel->setMinimumWidth(96);
+
+    auto* spacer = new QWidget(m_statusBar);
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    auto* statusGroup = new QWidget(m_statusBar);
+    auto* statusLayout = new QHBoxLayout(statusGroup);
+    statusLayout->setContentsMargins(0, 0, 10, 0);
+    statusLayout->setSpacing(32);
+    statusLayout->addWidget(m_statusLeftLabel);
+    statusLayout->addWidget(m_statusCenterLabel);
+    statusLayout->addWidget(m_statusRightLabel);
+
+    m_statusBar->setSizeGripEnabled(false);
+    m_statusBar->addWidget(spacer, 1);
+    m_statusBar->addPermanentWidget(statusGroup);
+
+    applyStatusState({"No file open", "", ""});
+}
+
+void IDEWindow::applyStatusState(const ToolStatusState& state)
+{
+    m_statusLeftLabel->setText(normalizedStatusText(state.left));
+    m_statusCenterLabel->setText(normalizedStatusText(state.center));
+    m_statusRightLabel->setText(normalizedStatusText(state.right));
+}
+
+void IDEWindow::onActiveStatusStateChanged(const ToolStatusState& state)
+{
+    applyStatusState(state);
 }
 
 bool IDEWindow::openToolForCurrentFile(const QString& toolId)

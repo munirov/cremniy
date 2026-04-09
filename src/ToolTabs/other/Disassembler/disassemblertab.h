@@ -85,6 +85,14 @@ private slots:
     void onGlobalActionTriggered(const QString &actionName);
 
 private:
+    enum class StatusMode {
+        Idle,
+        Loading,
+        Ready,
+        Empty,
+        Error,
+    };
+
     bool eventFilter(QObject *watched, QEvent *event) override;
     void showInstructionHelpAt(const QPoint &pos, bool forceByCursor = false);
 
@@ -99,6 +107,9 @@ private:
     void rebuildFunctionsFromLines();          // objdump labels
     void setFunctionsList(const QVector<DisasmFunction> &funcs);
     void jumpToAddress(const QString &addr);
+    const LineInfo *currentLineInfo(int *visibleLine = nullptr) const;
+    int currentInstructionOrdinal(int visibleLine) const;
+    void updateStatusState();
     QString autoCommentForLine(const LineInfo &li) const;
     bool tryResolveStringRefAddr(const LineInfo &li, quint64 *outAddr) const;
 
@@ -139,6 +150,8 @@ private:
 
     int m_currentSectionIndex = -1;
     QTimer *m_refreshDebounce = nullptr;
+    StatusMode m_statusMode = StatusMode::Idle;
+    QString m_statusDetail;
 };
 
 #endif // DISASSEMBLERTAB_H

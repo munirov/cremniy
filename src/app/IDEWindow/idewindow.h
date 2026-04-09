@@ -1,6 +1,7 @@
 #ifndef IDEWINDOW_H
 #define IDEWINDOW_H
 
+#include "core/ToolStatusState.h"
 #include "filestabwidget.h"
 #include "filetreeview.h"
 #include <QMainWindow>
@@ -9,6 +10,8 @@
 #include <qsplitter.h>
 #include <qstatusbar.h>
 #include "widgets/terminal/terminalwidget.h"
+
+class QLabel;
 
 class IDEWindow : public QMainWindow
 {
@@ -35,9 +38,13 @@ private slots:
     */
     void on_Tree_ContextMenu(const QPoint &pos);
 
+    void onActiveStatusStateChanged(const ToolStatusState& state);
+
 
 private:
     FileTab* currentFileTab() const;
+    void setupStatusBar();
+    void applyStatusState(const ToolStatusState& state);
 
     // - - Main Widgets - -
     QMenuBar* m_menuBar;
@@ -57,6 +64,9 @@ private:
     // - - Terminal Widget - -
     TerminalWidget* m_terminal;
     QString m_projectPath;
+    QLabel* m_statusLeftLabel = nullptr;
+    QLabel* m_statusCenterLabel = nullptr;
+    QLabel* m_statusRightLabel = nullptr;
 
 
 public slots:
