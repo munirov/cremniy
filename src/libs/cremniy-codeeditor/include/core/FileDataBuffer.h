@@ -44,6 +44,10 @@ public:
     void beginHistoryGroup();
     void endHistoryGroup();
 
+    // Сохраняет состояние выделения/курсора ДО/ПОСЛЕ применения изменения.
+    void setPendingHistorySelectionBefore(qint64 pos, qint64 length);
+    void setPendingHistorySelectionAfter(qint64 pos, qint64 length);
+
     // Изменить один байт
     void setByte(qint64 pos, char byte);
 
@@ -115,9 +119,16 @@ private:
     void pushHistoryLocked(const QByteArray& before, const QByteArray& after);
     void endHistoryGroupLocked();
 
+    struct SelectionState {
+        qint64 pos = 0;
+        qint64 length = 0;
+    };
+
     struct HistoryEntry {
         QByteArray before;
         QByteArray after;
+        SelectionState selectionBefore;
+        SelectionState selectionAfter;
     };
 
     mutable QMutex m_mutex;
@@ -141,6 +152,15 @@ private:
     bool m_historyGroupActive = false;
     QByteArray m_historyGroupBefore;
     QByteArray m_historyGroupAfter;
+
+    // Временное состояние выделения ДО/ПОСЛЕ изменения(history entry)
+    SelectionState m_historyGroupSelectionBefore;
+    SelectionState m_historyGroupSelectionAfter;
+    SelectionState m_pendingSelectionBefore;
+    SelectionState m_pendingSelectionAfter;
+    // Флаги, показывающие, что значения выше были явно установлены
+    bool m_hasPendingSelectionBefore = false;
+    bool m_hasPendingSelectionAfter = false;
 };
 
 #endif // FILEDATABUFFER_H
