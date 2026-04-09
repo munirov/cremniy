@@ -1068,6 +1068,63 @@ int CustomCodeEditor::currentMatchIndex(const QString& text, Qt::CaseSensitivity
     return 0;
 }
 
+bool CustomCodeEditor::replaceCurrentSelection(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity)
+{
+    if (!m_buffer || text.isEmpty() || !hasSelection())
+        return false;
+
+    const QString currentSelection = selectedText();
+    const bool matches = caseSensitivity == Qt::CaseSensitive
+        ? currentSelection == text
+        : currentSelection.compare(text, Qt::CaseInsensitive) == 0;
+
+    if (!matches)
+        return false;
+
+    replaceRange(m_selectionStart, m_selectionLength, replacement.toUtf8());
+    return true;
+}
+
+int CustomCodeEditor::replaceAllMatches(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity)
+{
+    if (!m_buffer || text.isEmpty() || m_lineIndex->lineCount() == 0)
+        return 0;
+
+    struct MatchRange {
+        qint64 start = 0;
+        qint64 length = 0;
+    };
+
+    QVector<MatchRange> matches;
+
+    for (qint64 lineNum = 0; lineNum < m_lineIndex->lineCount(); ++lineNum) {
+        const QString lineText = displayTextForLine(lineNum);
+        int searchFrom = 0;
+
+        while (true) {
+            const int index = lineText.indexOf(text, searchFrom, caseSensitivity);
+            if (index < 0)
+                break;
+
+            const qint64 start = bytePosForColumn(lineNum, index);
+            const qint64 end = bytePosForColumn(lineNum, index + text.length());
+            matches.push_back({start, end - start});
+
+            searchFrom = index + text.length();
+        }
+    }
+
+    if (matches.isEmpty())
+        return 0;
+
+    const QByteArray replacementBytes = replacement.toUtf8();
+
+    for (qsizetype i = matches.size() - 1; i >= 0; --i)
+        replaceRange(matches[i].start, matches[i].length, replacementBytes);
+
+    return static_cast<int>(matches.size());
+}
+
 void CustomCodeEditor::setScaleFactor(double factor)
 {
     const double boundedFactor = qBound(0.5, factor, 4.0);

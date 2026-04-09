@@ -26,9 +26,12 @@ private:
     QWidget* m_overlayWidget;
     QWidget* m_searchBar = nullptr;
     QLineEdit* m_searchEdit = nullptr;
+    QLineEdit* m_replaceEdit = nullptr;
     QLabel* m_searchStatusLabel = nullptr;
     QPushButton* m_searchPrevButton = nullptr;
     QPushButton* m_searchNextButton = nullptr;
+    QPushButton* m_replaceButton = nullptr;
+    QPushButton* m_replaceAllButton = nullptr;
     QPushButton* m_searchCloseButton = nullptr;
     QCheckBox* m_matchCaseCheckBox = nullptr;
 
@@ -45,11 +48,17 @@ private:
     QShortcut* m_findNextShortcut = nullptr;
     QShortcut* m_findPreviousShortcut = nullptr;
     QShortcut* m_goToLineShortcut = nullptr;
+    QShortcut* m_replaceShortcut = nullptr;
+    bool m_replaceMode = false;
 
     void openFindDialog();
+    void openReplaceDialog();
     void findNext(bool forward = true);
     void openGoToLineDialog();
     void updateSearchUi();
+    void setReplaceMode(bool enabled);
+    void replaceCurrent();
+    void replaceAll();
     void closeSearchBar();
 
 public:

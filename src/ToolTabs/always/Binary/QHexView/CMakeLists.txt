@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.13)
-
 project(QHexView)
 
 option(QHEXVIEW_ENABLE_DIALOGS "BuiltIn dialogs" ON)
@@ -17,7 +15,7 @@ set_target_properties(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-        Qt::Widgets
+        Qt6::Widgets
         cremniy-codeeditor
 )
 

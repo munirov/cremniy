@@ -66,6 +66,8 @@ public:
     bool goToLine(qint64 oneBasedLineNumber);
     int countMatches(const QString& text, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive) const;
     int currentMatchIndex(const QString& text, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive) const;
+    bool replaceCurrentSelection(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive);
+    int replaceAllMatches(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive);
     
     // Zoom support
     void setScaleFactor(double factor);

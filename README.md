@@ -11,7 +11,7 @@
 [![Community](https://img.shields.io/badge/Community-Telegram-blue?logo=telegram&style=flat-square)](https://t.me/cremniy_com)
 <br>
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue?style=flat-square&logo=cplusplus)](https://en.cppreference.com/w/cpp/17)
-[![Qt 6](https://img.shields.io/badge/Qt-6.x-41CD52?style=flat-square&logo=qt)](https://www.qt.io/)
+[![Qt 6](https://img.shields.io/badge/Qt-6.8.2-41CD52?style=flat-square&logo=qt)](https://www.qt.io/)
 
 English • [Русский](README_ru.md)
 
@@ -65,7 +65,7 @@ You constantly **switch** between different windows, and the tools are **not lin
 | Dependency | Minimum version |
 |---|---|
 | **CMake** | 3.16 |
-| **Qt** | 6.x |
+| **Qt** | 6.8.2 |
 | **C++ compiler** | C++17 support |
 
 <details>

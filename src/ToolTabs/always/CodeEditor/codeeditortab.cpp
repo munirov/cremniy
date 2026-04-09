@@ -5,6 +5,7 @@
 #include <QBoxLayout>
 #include <QFileInfo>
 #include <QInputDialog>
+#include <QKeySequence>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -31,8 +32,12 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
     auto* searchLabel = new QLabel("Find:", m_searchBar);
     m_searchEdit = new QLineEdit(m_searchBar);
     m_searchEdit->setPlaceholderText("Search in file");
+    m_replaceEdit = new QLineEdit(m_searchBar);
+    m_replaceEdit->setPlaceholderText("Replace with");
     m_searchPrevButton = new QPushButton("Prev", m_searchBar);
     m_searchNextButton = new QPushButton("Next", m_searchBar);
+    m_replaceButton = new QPushButton("Replace", m_searchBar);
+    m_replaceAllButton = new QPushButton("Replace All", m_searchBar);
     m_matchCaseCheckBox = new QCheckBox("Match case", m_searchBar);
     m_searchStatusLabel = new QLabel("0/0", m_searchBar);
     m_searchCloseButton = new QPushButton("x", m_searchBar);
@@ -40,11 +45,17 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
 
     searchLayout->addWidget(searchLabel);
     searchLayout->addWidget(m_searchEdit, 1);
+    searchLayout->addWidget(m_replaceEdit, 1);
     searchLayout->addWidget(m_searchPrevButton);
     searchLayout->addWidget(m_searchNextButton);
+    searchLayout->addWidget(m_replaceButton);
+    searchLayout->addWidget(m_replaceAllButton);
     searchLayout->addWidget(m_matchCaseCheckBox);
     searchLayout->addWidget(m_searchStatusLabel);
     searchLayout->addWidget(m_searchCloseButton);
+
+    setReplaceMode(false);
+
     m_searchBar->hide();
     rootLayout->addWidget(m_searchBar);
 
@@ -88,6 +99,8 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
     connect(m_searchEdit, &QLineEdit::returnPressed, this, [this]() { findNext(true); });
     connect(m_searchPrevButton, &QPushButton::clicked, this, [this]() { findNext(false); });
     connect(m_searchNextButton, &QPushButton::clicked, this, [this]() { findNext(true); });
+    connect(m_replaceButton, &QPushButton::clicked, this, &CodeEditorTab::replaceCurrent);
+    connect(m_replaceAllButton, &QPushButton::clicked, this, &CodeEditorTab::replaceAll);
     connect(m_searchCloseButton, &QPushButton::clicked, this, &CodeEditorTab::closeSearchBar);
     connect(m_matchCaseCheckBox, &QCheckBox::stateChanged, this, [this](int) {
         updateSearchUi();
@@ -112,11 +125,13 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
     });
 
     m_findShortcut = new QShortcut(QKeySequence::Find, this);
+    m_replaceShortcut = new QShortcut(QKeySequence::Replace, this);
     m_findNextShortcut = new QShortcut(QKeySequence(Qt::Key_F3), this);
     m_findPreviousShortcut = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F3), this);
     m_goToLineShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_G), this);
 
     connect(m_findShortcut, &QShortcut::activated, this, &CodeEditorTab::openFindDialog);
+    connect(m_replaceShortcut, &QShortcut::activated, this, &CodeEditorTab::openReplaceDialog);
     connect(m_findNextShortcut, &QShortcut::activated, this, [this]() { findNext(true); });
     connect(m_findPreviousShortcut, &QShortcut::activated, this, [this]() { findNext(false); });
     connect(m_goToLineShortcut, &QShortcut::activated, this, &CodeEditorTab::openGoToLineDialog);
@@ -124,6 +139,16 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
 
 void CodeEditorTab::openFindDialog()
 {
+    setReplaceMode(false);
+    m_searchBar->show();
+    m_searchEdit->setFocus();
+    m_searchEdit->selectAll();
+    updateSearchUi();
+}
+
+void CodeEditorTab::openReplaceDialog()
+{
+    setReplaceMode(true);
     m_searchBar->show();
     m_searchEdit->setFocus();
     m_searchEdit->selectAll();
@@ -169,6 +194,45 @@ void CodeEditorTab::updateSearchUi()
     const bool hasQuery = !m_searchEdit->text().isEmpty();
     m_searchPrevButton->setEnabled(hasQuery && total > 0);
     m_searchNextButton->setEnabled(hasQuery && total > 0);
+    m_replaceButton->setEnabled(m_replaceMode && hasQuery && total > 0);
+    m_replaceAllButton->setEnabled(m_replaceMode && hasQuery && total > 0);
+}
+
+void CodeEditorTab::setReplaceMode(bool enabled)
+{
+    m_replaceMode = enabled;
+    m_replaceEdit->setVisible(enabled);
+    m_replaceButton->setVisible(enabled);
+    m_replaceAllButton->setVisible(enabled);
+}
+
+void CodeEditorTab::replaceCurrent()
+{
+    if (!m_replaceMode || m_searchEdit->text().isEmpty())
+        return;
+
+    const Qt::CaseSensitivity caseSensitivity = m_matchCaseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+
+    if (!m_codeEditorWidget->replaceCurrentSelection(m_searchEdit->text(), m_replaceEdit->text(), caseSensitivity)) {
+        if (!m_codeEditorWidget->findText(m_searchEdit->text(), true, caseSensitivity))
+            return;
+
+        if (!m_codeEditorWidget->replaceCurrentSelection(m_searchEdit->text(), m_replaceEdit->text(), caseSensitivity))
+            return;
+    }
+
+    m_codeEditorWidget->findText(m_searchEdit->text(), true, caseSensitivity);
+    updateSearchUi();
+}
+
+void CodeEditorTab::replaceAll()
+{
+    if (!m_replaceMode || m_searchEdit->text().isEmpty())
+        return;
+
+    const Qt::CaseSensitivity caseSensitivity = m_matchCaseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    m_codeEditorWidget->replaceAllMatches(m_searchEdit->text(), m_replaceEdit->text(), caseSensitivity);
+    updateSearchUi();
 }
 
 void CodeEditorTab::closeSearchBar()
