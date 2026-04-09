@@ -37,6 +37,10 @@ People who contributed their time and code to Cremniy.
 
 People who financially supported the development of Cremniy.
 
+[alexandr-seredkin](https://github.com/alexandr-seredkin)
+
+NeXxRT
+
 ---
 
 > Want to contribute? Check out our [contribution guidelines](CONTRIBUTING.md) or open a pull request!
