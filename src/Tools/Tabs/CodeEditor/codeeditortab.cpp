@@ -15,7 +15,7 @@
 #include <QCheckBox>
 
 static const bool registeredCodeEditorTab =
-    registerAlwaysToolTab<CodeEditorTab>(QStringLiteral("code"), QStringLiteral("Code"), ToolTabOrder::Code);
+    registerAlwaysToolTab<CodeEditorTab>(QStringLiteral("code"), QStringLiteral("Code"), 100);
 
 CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
     : ToolTab(buffer, parent)

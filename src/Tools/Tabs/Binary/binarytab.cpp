@@ -10,7 +10,7 @@
 #include "ui/ToolsTabWidget/ToolTabFactory.h"
 
 static const bool registeredBinaryTab =
-    registerAlwaysToolTab<BinaryTab>(QStringLiteral("binary"), QStringLiteral("Binary"), ToolTabOrder::Binary);
+    registerAlwaysToolTab<BinaryTab>(QStringLiteral("binary"), QStringLiteral("Binary"), 200);
 
 namespace {
 void syncCurrentFormatPage(QStackedWidget* pageView, FileDataBuffer* dataBuffer)

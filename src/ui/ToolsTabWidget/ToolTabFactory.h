@@ -13,11 +13,6 @@ enum class ToolTabGroup {
     Other
 };
 
-namespace ToolTabOrder {
-inline constexpr int Code = 100;
-inline constexpr int Binary = 200;
-}
-
 class ToolTabFactory {
 
 public:
