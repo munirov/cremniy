@@ -5,7 +5,6 @@
 #include "widgets/filetab.h"
 
 class FilesTabWidget : public QTabWidget {
-<<<<<<< HEAD
     Q_OBJECT
 public:
     FilesTabWidget(QWidget *parent = nullptr);
@@ -39,31 +38,6 @@ signals:
     void setTabReplaceSignal(bool checked);
     void setTabWidthSignal(int width);
     void statusBarInfoChanged(const QString& info);
-=======
-  Q_OBJECT
-public:
-  FilesTabWidget(QWidget *parent = nullptr);
-
-  void tabSelect(int index);
-  void openFile(QString fullPath, QString fileName);
-
-protected:
-  bool eventFilter(QObject *obj, QEvent *event) override;
-
-public slots:
-  void removeStar(FileTab *tab);
-  void setupStar(FileTab *tab);
-  void updatePinnedState(FileTab *tab);
-  void saveFileSlot();
-  void closeTab(int index);
-  void onTabMoved(int from, int to);
-  
-private:
-  void switchTab(int page);
-  void setPinnedTabText(int index, FileTab *tab);
-  int pinnedCount() const;
-  bool m_adjustingTabMove = false;
->>>>>>> 6bd6db6 (arch: file structure)
 };
 
 #endif // FILESTABWIDGET_H

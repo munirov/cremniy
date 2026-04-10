@@ -124,6 +124,10 @@ ToolTab* ToolsTabWidget::createToolTab(const QString& toolId)
     connect(this, &ToolsTabWidget::setTabReplaceSignal, tab, &ToolTab::setTabReplaceSlot);
     connect(this, &ToolsTabWidget::setTabWidthSignal, tab, &ToolTab::setTabWidthSlot);
 
+    connect(this, &ToolsTabWidget::setWordWrapSignal, tab, &ToolTab::setWordWrapSlot);
+    connect(this, &ToolsTabWidget::setTabReplaceSignal, tab, &ToolTab::setTabReplaceSlot);
+    connect(this, &ToolsTabWidget::setTabWidthSignal, tab, &ToolTab::setTabWidthSlot);
+
     int insertIndex = count();
     if (descriptor.fileGroup == FileToolGroup::Always) {
         for (int index = 0; index < count(); ++index) {

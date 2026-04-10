@@ -1,6 +1,5 @@
 #include "idewindow.h"
 #include "dialogs/filecreatedialog.h"
-#include "libs/CodeEditor/include/widgets/CustomCodeEditor.h"
 #include "widgets/filetab.h"
 #include "QFileSystemModel"
 #include "QMessageBox"
