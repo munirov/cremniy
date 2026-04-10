@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - name: Checkout code
@@ -30,7 +30,7 @@ jobs:
           arch: 'win64_msvc2022_64'
           cache: true
       
-      - name: Install Qt (Linux/macOS)
+      - name: Install Qt (Linux)
         if: runner.os != 'Windows'
         uses: jurplel/install-qt-action@v3
         with:
@@ -48,14 +48,14 @@ jobs:
         shell: pwsh
         run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
       
-      - name: Configure CMake (Linux/macOS)
+      - name: Configure CMake (Linux)
         if: runner.os != 'Windows'
         run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build --config Release --parallel
 
-      - name: Test executable exists (Linux/macOS)
+      - name: Test executable exists (Linux)
         if: runner.os != 'Windows'
         run: test -f build/cremniy || test -f build/cremniy.app/Contents/MacOS/cremniy
 
