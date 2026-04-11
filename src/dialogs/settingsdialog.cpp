@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -141,6 +142,30 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
     root->addLayout(form);
 
+    // ── Excluded Files section ──
+    {
+        auto *separator = new QFrame(this);
+        separator->setFrameShape(QFrame::HLine);
+        separator->setFrameShadow(QFrame::Sunken);
+        root->addWidget(separator);
+
+        auto *lbl = new QLabel(tr("Excluded Files / Folders"), this);
+        QFont bold = lbl->font();
+        bold.setBold(true);
+        lbl->setFont(bold);
+        root->addWidget(lbl);
+
+        auto *hint = new QLabel(tr("One pattern per line. Examples: node_modules, .git, *.log, dist/"), this);
+        hint->setWordWrap(true);
+        hint->setStyleSheet("color: gray; font-size: 11px;");
+        root->addWidget(hint);
+
+        m_excludedPatterns = new QPlainTextEdit(this);
+        m_excludedPatterns->setPlaceholderText(tr("node_modules\n.git\n*.log"));
+        m_excludedPatterns->setFixedHeight(90);
+        root->addWidget(m_excludedPatterns);
+    }
+
     // buttons
     auto *btnRow = new QHBoxLayout();
     m_testBtn = new QPushButton(tr("Test"), this);
@@ -239,6 +264,8 @@ void SettingsDialog::loadFromSettings()
     }
 
     m_r2PreCommands->setPlainText(AppSettings::radare2PreCommands().replace(';', '\n'));
+
+    m_excludedPatterns->setPlainText(AppSettings::excludedPatterns().join('\n'));
 }
 
 void SettingsDialog::updateUiEnabledState()
@@ -339,6 +366,13 @@ void SettingsDialog::onAccept()
                             .split('\n', Qt::SkipEmptyParts)
                             .join(';');
     AppSettings::setRadare2PreCommands(pre);
+
+    // Excluded patterns
+    {
+        const QStringList patterns = m_excludedPatterns->toPlainText()
+                                         .split('\n', Qt::SkipEmptyParts);
+        AppSettings::setExcludedPatterns(patterns);
+    }
 
     // emit GlobalWidgetsManager::instance().actionTriggered("settingsChanged");
     accept();

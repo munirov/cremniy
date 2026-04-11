@@ -57,6 +57,8 @@ qt_add_executable(${PROJECT_NAME}
     core/project/projectshistorymanager.h
     core/settings/appsettings.cpp
     core/settings/appsettings.h
+    core/settings/exclusionfilterproxymodel.cpp
+    core/settings/exclusionfilterproxymodel.h
 
     # UI
     ui/FilesTabWidget/filestabwidget.cpp

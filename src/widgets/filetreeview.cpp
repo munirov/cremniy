@@ -1,5 +1,6 @@
 #include "filetreeview.h"
 #include <QFileSystemModel>
+#include <QSortFilterProxyModel>
 #include <QMessageBox>
 #include <QFile>
 #include <QDir>
@@ -50,8 +51,14 @@ void FileTreeView::dragMoveEvent(QDragMoveEvent *event)
             m_expandTimer->stop();
         }
 
-        QFileSystemModel *fsModel = qobject_cast<QFileSystemModel*>(model());
-        if (fsModel && fsModel->isDir(m_hoverIndex) && !isExpanded(m_hoverIndex)) {
+        QAbstractItemModel *raw = model();
+        auto *proxy = qobject_cast<QSortFilterProxyModel *>(raw);
+        QFileSystemModel *fsModel = proxy
+            ? qobject_cast<QFileSystemModel *>(proxy->sourceModel())
+            : qobject_cast<QFileSystemModel *>(raw);
+        QModelIndex srcIdx = proxy ? proxy->mapToSource(m_hoverIndex) : m_hoverIndex;
+
+        if (fsModel && fsModel->isDir(srcIdx) && !isExpanded(m_hoverIndex)) {
             m_expandTimer->start();
         }
     }
@@ -68,7 +75,11 @@ void FileTreeView::dropEvent(QDropEvent *event)
 {
     const QMimeData* mimeData = event->mimeData();
 
-    QFileSystemModel *fsModel = qobject_cast<QFileSystemModel*>(model());
+    QAbstractItemModel *raw = model();
+    auto *proxy = qobject_cast<QSortFilterProxyModel *>(raw);
+    QFileSystemModel *fsModel = proxy
+        ? qobject_cast<QFileSystemModel *>(proxy->sourceModel())
+        : qobject_cast<QFileSystemModel *>(raw);
     if (!fsModel) {
         event->ignore();
         return;
@@ -92,7 +103,8 @@ void FileTreeView::dropEvent(QDropEvent *event)
                 QModelIndexList selected = selectionModel()->selectedIndexes();
                 for (const QModelIndex &idx : selected) {
                     if (idx.column() == 0) {
-                        QString p = fsModel->filePath(idx);
+                        QModelIndex srcIdx = proxy ? proxy->mapToSource(idx) : idx;
+                        QString p = fsModel->filePath(srcIdx);
                         if (!p.isEmpty() && !sourcePaths.contains(p))
                             sourcePaths << p;
                     }
@@ -107,7 +119,8 @@ void FileTreeView::dropEvent(QDropEvent *event)
         return;
     }
 
-    QModelIndex targetIndex = indexAt(event->position().toPoint());
+    QModelIndex targetProxyIndex = indexAt(event->position().toPoint());
+    QModelIndex targetIndex = proxy ? proxy->mapToSource(targetProxyIndex) : targetProxyIndex;
     QString targetDirPath;
 
     if (!targetIndex.isValid()) {

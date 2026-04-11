@@ -3,6 +3,7 @@
 
 #include "ui/FilesTabWidget/filestabwidget.h"
 #include "widgets//filetreeview.h"
+#include "core/settings/exclusionfilterproxymodel.h"
 #include <QMainWindow>
 #include <qboxlayout.h>
 #include <qmenubar.h>
@@ -57,6 +58,9 @@ private:
     // - - Terminal Widget - -
     TerminalWidget* m_terminal;
     QString m_projectPath;
+
+    // - - Filtering - -
+    ExclusionFilterProxyModel* m_exclusionProxy;
 
 
 public slots:

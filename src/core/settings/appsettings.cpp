@@ -16,6 +16,7 @@ QString AppSettings::keyInsnLimitPerSection() { return "disasm/insnLimitPerSecti
 QString AppSettings::keyRadare2AnalysisLevel() { return "radare2/analysisLevel"; }
 QString AppSettings::keyAsmSyntax() { return "disasm/asmSyntax"; }
 QString AppSettings::keyRadare2PreCommands() { return "radare2/preCommands"; }
+QString AppSettings::keyExcludedPatterns() { return "filetree/excludedPatterns"; }
 
 AppSettings::DisasmBackend AppSettings::disasmBackend()
 {
@@ -97,6 +98,30 @@ void AppSettings::setRadare2PreCommands(const QString &cmds)
     settings().setValue(keyRadare2PreCommands(), cmds.trimmed());
 }
 
+QStringList AppSettings::excludedPatterns()
+{
+    const QString raw = settings().value(keyExcludedPatterns()).toString();
+    if (raw.trimmed().isEmpty())
+        return {};
+    QStringList list = raw.split(';', Qt::SkipEmptyParts);
+    for (QString &p : list)
+        p = p.trimmed();
+    list.removeAll(QString());
+    return list;
+}
+
+void AppSettings::setExcludedPatterns(const QStringList &patterns)
+{
+    settings().setValue(keyExcludedPatterns(), patterns.join(';'));
+    emit SettingsNotifier::instance()->excludedPatternsChanged();
+}
+
+SettingsNotifier *SettingsNotifier::instance()
+{
+    static SettingsNotifier s;
+    return &s;
+}
+
 static void copyKeys(QSettings &dst, QSettings &src)
 {
     const QStringList keys = src.allKeys();
@@ -146,6 +171,7 @@ bool AppSettings::importFromIni(const QString &filePath, QString *error)
         keyRadare2AnalysisLevel(),
         keyAsmSyntax(),
         keyRadare2PreCommands(),
+        keyExcludedPatterns(),
     };
 
     for (const QString &k : allowed) {

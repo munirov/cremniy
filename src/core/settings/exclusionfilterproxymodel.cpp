@@ -1,0 +1,95 @@
+#include "exclusionfilterproxymodel.h"
+#include "core/settings/appsettings.h"
+
+#include <QFileSystemModel>
+
+ExclusionFilterProxyModel::ExclusionFilterProxyModel(QObject *parent)
+    : QSortFilterProxyModel(parent)
+{
+    reloadPatterns();
+    connect(SettingsNotifier::instance(), &SettingsNotifier::excludedPatternsChanged,
+            this, &ExclusionFilterProxyModel::reloadPatterns);
+}
+
+void ExclusionFilterProxyModel::reloadPatterns()
+{
+    const QStringList raw = AppSettings::excludedPatterns();
+    m_patterns.clear();
+    m_patterns.reserve(raw.size());
+    for (const QString &p : raw) {
+        QString normalized = p.toLower().replace('\\', '/');
+        while (normalized.endsWith('/'))
+            normalized.chop(1);
+        if (!normalized.isEmpty())
+            m_patterns.append(normalized);
+    }
+    beginFilterChange();
+    endFilterChange();
+}
+
+bool ExclusionFilterProxyModel::filterAcceptsRow(int sourceRow,
+                                                  const QModelIndex &sourceParent) const
+{
+    if (m_patterns.isEmpty())
+        return true;
+
+    auto *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
+    if (!fsModel)
+        return true;
+
+    const QModelIndex idx = fsModel->index(sourceRow, 0, sourceParent);
+    if (!idx.isValid())
+        return true;
+
+    const QString rawName = fsModel->fileName(idx);
+    const QString name = rawName.toLower().replace('\\', '/');
+
+    const QString fullPath = fsModel->filePath(idx).toLower().replace('\\', '/');
+    const QString rootPath = fsModel->rootPath().toLower().replace('\\', '/');
+
+    QString relativePath = fullPath;
+    if (relativePath.startsWith(rootPath)) {
+        relativePath = relativePath.mid(rootPath.length());
+        if (relativePath.startsWith('/'))
+            relativePath = relativePath.mid(1);
+    }
+
+    for (const QString &pattern : m_patterns) {
+        if (pattern.contains('/')) {
+            if (globMatch(pattern, relativePath))
+                return false;
+        } else {
+            if (globMatch(pattern, name))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool ExclusionFilterProxyModel::globMatch(const QString &pattern, const QString &text)
+{
+    // simple iterative glob matcher supporting '*' and '?'
+    int px = 0, tx = 0;
+    int starPx = -1, starTx = -1;
+    const int pLen = pattern.length();
+    const int tLen = text.length();
+
+    while (tx < tLen) {
+        if (px < pLen && (pattern[px] == text[tx] || pattern[px] == '?')) {
+            ++px;
+            ++tx;
+        } else if (px < pLen && pattern[px] == '*') {
+            starPx = px++;
+            starTx = tx;
+        } else if (starPx >= 0) {
+            px = starPx + 1;
+            tx = ++starTx;
+        } else {
+            return false;
+        }
+    }
+    while (px < pLen && pattern[px] == '*')
+        ++px;
+    return px == pLen;
+}
