@@ -1,7 +1,9 @@
 #ifndef APPSETTINGS_H
 #define APPSETTINGS_H
 
+#include <QObject>
 #include <QString>
+#include <QStringList>
 
 class AppSettings
 {
@@ -44,6 +46,10 @@ public:
     static QString radare2PreCommands();
     static void setRadare2PreCommands(const QString &cmds);
 
+    // File-tree exclusion patterns ("node_modules", "*.log", ".git").
+    static QStringList excludedPatterns();
+    static void setExcludedPatterns(const QStringList &patterns);
+
     // Import/export settings to share with others (INI file).
     static bool exportToIni(const QString &filePath, QString *error = nullptr);
     static bool importFromIni(const QString &filePath, QString *error = nullptr);
@@ -56,7 +62,18 @@ private:
     static QString keyRadare2AnalysisLevel();
     static QString keyAsmSyntax();
     static QString keyRadare2PreCommands();
+    static QString keyExcludedPatterns();
+};
+
+class SettingsNotifier : public QObject
+{
+    Q_OBJECT
+public:
+    static SettingsNotifier *instance();
+signals:
+    void excludedPatternsChanged();
+private:
+    explicit SettingsNotifier(QObject *parent = nullptr) : QObject(parent) {}
 };
 
 #endif // APPSETTINGS_H
-

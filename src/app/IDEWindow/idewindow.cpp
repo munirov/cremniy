@@ -79,8 +79,12 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     model->setIconProvider(new IconProvider()); 
     model->setRootPath(ProjectPath);
     model->setReadOnly(false);
-    m_filesTreeView->setModel(model);
-    m_filesTreeView->setRootIndex(model->index(ProjectPath));
+
+    m_exclusionProxy = new ExclusionFilterProxyModel(this);
+    m_exclusionProxy->setSourceModel(model);
+
+    m_filesTreeView->setModel(m_exclusionProxy);
+    m_filesTreeView->setRootIndex(m_exclusionProxy->mapFromSource(model->index(ProjectPath)));
 
     m_filesTreeView->setColumnHidden(1, true);
     m_filesTreeView->setColumnHidden(2, true);
@@ -179,10 +183,11 @@ void IDEWindow::on_ClosingProject() {
 
 void IDEWindow::on_treeView_doubleClicked(const QModelIndex &index)
 {
-    auto *model = static_cast<QFileSystemModel*>(m_filesTreeView->model());
-    if (model->isDir(index)) return;
-    QString fileName = model->fileName(index);
-    QString filePath = model->filePath(index);
+    const QModelIndex sourceIndex = m_exclusionProxy->mapToSource(index);
+    auto *model = static_cast<QFileSystemModel*>(m_exclusionProxy->sourceModel());
+    if (model->isDir(sourceIndex)) return;
+    QString fileName = model->fileName(sourceIndex);
+    QString filePath = model->filePath(sourceIndex);
 
     m_filesTabWidget->openFile(filePath, fileName);
 
@@ -190,9 +195,10 @@ void IDEWindow::on_treeView_doubleClicked(const QModelIndex &index)
 
 void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
 {
-    QModelIndex index = m_filesTreeView->indexAt(pos);
+    QModelIndex proxyIndex = m_filesTreeView->indexAt(pos);
+    QModelIndex index = m_exclusionProxy->mapToSource(proxyIndex);
 
-    QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_filesTreeView->model());
+    QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_exclusionProxy->sourceModel());
     if (!model)
         return;
 
@@ -206,29 +212,31 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
 
         if (isDir){
             menu.addAction("Open", [this, path]() {
-                QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_filesTreeView->model());
+                QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_exclusionProxy->sourceModel());
                 if (!model)
                     return;
 
-                QModelIndex index = model->index(path);
-                if (!index.isValid())
+                QModelIndex srcIndex = model->index(path);
+                if (!srcIndex.isValid())
                     return;
 
-                m_filesTreeView->expand(index);
+                QModelIndex proxyIdx = m_exclusionProxy->mapFromSource(srcIndex);
+                m_filesTreeView->expand(proxyIdx);
 
             });
 
             menu.addAction("Rename", [this, path]() {
-                QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_filesTreeView->model());
+                QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_exclusionProxy->sourceModel());
                 if (!model)
                     return;
 
-                QModelIndex index = model->index(path);
-                if (!index.isValid())
+                QModelIndex srcIndex = model->index(path);
+                if (!srcIndex.isValid())
                     return;
 
+                QModelIndex proxyIdx = m_exclusionProxy->mapFromSource(srcIndex);
                 // Включаем редактирование индекса
-                m_filesTreeView->edit(index);
+                m_filesTreeView->edit(proxyIdx);
             });
             menu.addAction("Delete", [path, this]() {
                 QDir dir(path);
@@ -252,15 +260,16 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
                 m_filesTabWidget->openFile(path, fileName);
             });
             menu.addAction("Rename", [this, path]() {
-                QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_filesTreeView->model());
+                QFileSystemModel *model = qobject_cast<QFileSystemModel*>(m_exclusionProxy->sourceModel());
                 if (!model)
                     return;
 
-                QModelIndex index = model->index(path);
-                if (!index.isValid())
+                QModelIndex srcIndex = model->index(path);
+                if (!srcIndex.isValid())
                     return;
 
-                m_filesTreeView->edit(index);
+                QModelIndex proxyIdx = m_exclusionProxy->mapFromSource(srcIndex);
+                m_filesTreeView->edit(proxyIdx);
             });
             menu.addAction("Delete", [path,this]() {
                 QString dialogTitle = QString("Are you sure you want to delete the file \"%1\"?").arg(QFileInfo(path).fileName());

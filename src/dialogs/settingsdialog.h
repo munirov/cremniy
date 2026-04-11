@@ -46,6 +46,9 @@ private:
     QComboBox     *m_r2AnalysisCombo = nullptr;
     QPlainTextEdit *m_r2PreCommands = nullptr;
 
+    // File-tree exclusion
+    QPlainTextEdit *m_excludedPatterns = nullptr;
+
     QPushButton *m_testBtn      = nullptr;
     QPushButton *m_exportBtn    = nullptr;
     QPushButton *m_importBtn    = nullptr;
