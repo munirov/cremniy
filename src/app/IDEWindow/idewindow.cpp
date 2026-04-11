@@ -6,6 +6,7 @@
 #include <qheaderview.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
+#include "core/icons/iconprovider.h"
 #include <QApplication>
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
@@ -75,6 +76,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_filesTreeView->setIndentation(12);
 
     QFileSystemModel *model = new QFileSystemModel(this);
+    model->setIconProvider(new IconProvider()); 
     model->setRootPath(ProjectPath);
     model->setReadOnly(false);
 

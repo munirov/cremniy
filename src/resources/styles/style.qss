@@ -199,6 +199,11 @@ QTreeView::item:hover:!selected {
     background-color: #333333;
 }
 
+QTreeView {
+    /* Это заставит Qt рендерить иконки с учетом цвета текста (работает не всегда, но часто) */
+    qproperty-iconRedraw: true; 
+}
+
 /* Hover для пунктов меню верхней панели */
 QMenuBar::item {
     background: transparent;   /* чтобы не перекрывать фон */

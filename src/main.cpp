@@ -1,5 +1,7 @@
 #include <QApplication>
 #include <QCoreApplication>
+#include <QFile>
+#include <QIcon>
 
 #include "app/WelcomeWindow/welcomeform.h"
 
@@ -9,6 +11,10 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("cremniy");
     QCoreApplication::setApplicationName("Cremniy");
     a.setWindowIcon(QIcon(":/icons/icon.png"));
+
+    // Themes
+    QIcon::setThemeSearchPaths({":/icons"});
+    QIcon::setThemeName("phoicons");         // маленькими буквами!
 
     QFile file(":/styles/style.qss");
     if (!file.open(QFile::ReadOnly)) {
