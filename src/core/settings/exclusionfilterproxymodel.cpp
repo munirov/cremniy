@@ -23,8 +23,12 @@ void ExclusionFilterProxyModel::reloadPatterns()
         if (!normalized.isEmpty())
             m_patterns.append(normalized);
     }
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
     beginFilterChange();
     endFilterChange();
+#else
+    invalidateFilter();
+#endif
 }
 
 bool ExclusionFilterProxyModel::filterAcceptsRow(int sourceRow,
