@@ -1,7 +1,7 @@
 #ifndef FILETAB_H
 #define FILETAB_H
 
-#include "toolstabwidget.h"
+#include "ui/ToolsTabWidget/toolstabwidget.h"
 #include <QWidget>
 
 class FileTab : public QWidget
@@ -26,11 +26,19 @@ public slots:
     void setupStar();
     void saveFile();
 
+    void setWordWrapSlot(bool checked);
+    void setTabReplaceSlot(bool checked);
+    void setTabWidthSlot(int width);
+
 signals:
     void removeStarSignal(FileTab* tab);
     void setupStarSignal(FileTab* tab);
     void saveFileSignal();
     void pinnedChanged(FileTab* tab);
+
+    void setWordWrapSignal(bool checked);
+    void setTabReplaceSignal(bool checked);
+    void setTabWidthSignal(int width);
 
 };
 

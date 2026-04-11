@@ -1,6 +1,6 @@
 #include "settingsdialog.h"
 
-#include "utils/appsettings.h"
+#include "core/settings/appsettings.h"
 
 #include <QComboBox>
 #include <QFileDialog>

@@ -9,7 +9,6 @@
 #include <QApplication>
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
-#include "widgets/CustomCodeEditor.h"
 
 IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     : QMainWindow(parent), m_projectPath(ProjectPath)
@@ -109,6 +108,10 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     connect(m_filesTabWidget, &QTabWidget::tabCloseRequested,m_filesTabWidget, &FilesTabWidget::closeTab);
     connect(m_filesTreeView, &QTreeView::customContextMenuRequested,this, &IDEWindow::on_Tree_ContextMenu);
     connect(m_filesTreeView, &QTreeView::doubleClicked, this, &IDEWindow::on_treeView_doubleClicked);
+
+    connect(this, &IDEWindow::setWordWrapSignal, m_filesTabWidget, &FilesTabWidget::setWordWrapSlot);
+    connect(this, &IDEWindow::setTabReplaceSignal, m_filesTabWidget, &FilesTabWidget::setTabReplaceSlot);
+    connect(this, &IDEWindow::setTabWidthSignal, m_filesTabWidget, &FilesTabWidget::setTabWidthSlot);
 }
 
 IDEWindow::~IDEWindow()
@@ -150,31 +153,17 @@ void IDEWindow::on_Toggle_Terminal(bool checked) {
 
 void IDEWindow::on_SetWordWrap(bool checked)
 {
-    const auto editors = findChildren<CustomCodeEditor*>();
-    for (CustomCodeEditor* editor : editors) {
-        if (editor)
-            editor->setWordWrapEnabled(checked);
-    }
+    emit setWordWrapSignal(checked);
 }
 
 void IDEWindow::on_SetTabReplace(bool checked)
 {
-    const auto editors = findChildren<CustomCodeEditor*>();
-    for (CustomCodeEditor* editor : editors) {
-        if (editor)
-            editor->setTabReplace(checked);
-    }
+    emit setTabReplaceSignal(checked);
 }
 
 void IDEWindow::on_SetTabWidth(int width)
 {
-    const auto editors = findChildren<CustomCodeEditor*>();
-    for (CustomCodeEditor* editor : editors) {
-        if (editor) {
-            editor->setTabDisplaySize(width);
-            editor->setTabReplaceSize(width);
-        }
-    }
+    emit setTabWidthSignal(width);
 }
 
 void IDEWindow::on_Toggle_FileTree(bool checked) {

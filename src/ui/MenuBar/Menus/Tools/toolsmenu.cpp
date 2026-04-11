@@ -1,5 +1,6 @@
 #include "toolsmenu.h"
 
+
 #include "core/ToolsRegistry.h"
 #include "ui/MenuBar/menufactory.h"
 

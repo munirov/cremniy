@@ -31,91 +31,89 @@ qt_add_executable(${PROJECT_NAME}
     MANUAL_FINALIZATION
     main.cpp
 
+    # App
     app/IDEWindow/idewindow.cpp
     app/IDEWindow/idewindow.h
     app/WelcomeWindow/welcomeform.cpp
     app/WelcomeWindow/welcomeform.h
 
+    # Dialogs
     dialogs/filecreatedialog.cpp
     dialogs/filecreatedialog.h
     dialogs/settingsdialog.cpp
     dialogs/settingsdialog.h
-    dialogs/reversecalculator/reversecalculatordialog.cpp
-    dialogs/reversecalculator/reversecalculatordialog.h
-    dialogs/reversecalculator/reversecalculatorengine.cpp
-    dialogs/reversecalculator/reversecalculatorengine.h
-    dialogs/dataconverterdialog.cpp
-    dialogs/dataconverterdialog.h
-    dialogs/shellcodegeneratordialog.cpp
-    dialogs/shellcodegeneratordialog.h
 
-    widgets/clickablelineedit.cpp
+    # Widgets
     widgets/clickablelineedit.h
     widgets/filetab.cpp
     widgets/filetab.h
     widgets/filetreeview.cpp
     widgets/filetreeview.h
-
     widgets/terminal/terminalwidget.cpp
     widgets/terminal/terminalwidget.h
 
-    utils/iconprovider.cpp
-    utils/iconprovider.h
-
+    # Resources
     resources/cremniy_res.qrc
 
+    # Utils
     utils/utils.h
     utils/utils.cpp
-    utils/appsettings.h
-    utils/appsettings.cpp
-    utils/instructionhelpservice.h
-    utils/instructionhelpservice.cpp
-    utils/filecontext.h
-    utils/filemanager.h
-    utils/filemanager.cpp
-    utils/projectshistorymanager.cpp
-    utils/projectshistorymanager.h
 
-    core/ToolTab.h
+    # Core
+    core/file/filecontext.h
+    core/file/FileDataBuffer.cpp
+    core/file/FileDataBuffer.h
+    core/file/filemanager.cpp
+    core/file/filemanager.h
+    core/project/projectshistorymanager.cpp
+    core/project/projectshistorymanager.h
+    core/settings/appsettings.cpp
+    core/settings/appsettings.h
     core/ToolsRegistry.cpp
     core/ToolsRegistry.h
 
+    # UI
+    ui/FilesTabWidget/filestabwidget.cpp
+    ui/FilesTabWidget/filestabwidget.h
+    ui/ToolsTabWidget/toolstabwidget.cpp
+    ui/ToolsTabWidget/toolstabwidget.h
+    ui/ToolsTabWidget/ToolTab.h
+    ui/ToolsTabWidget/ToolTabFactory.cpp
+    ui/ToolsTabWidget/ToolTabFactory.h
+
+    # UI Menubar
     ui/MenuBar/menubarbuilder.h ui/MenuBar/menubarbuilder.cpp
     ui/MenuBar/menufactory.h ui/MenuBar/menufactory.cpp
-    ui/MenuBar/Menus/File/filemenu.h ui/MenuBar/Menus/File/filemenu.cpp
     ui/MenuBar/basemenu.h
-    ui/MenuBar/Menus/Edit/editmenu.h ui/MenuBar/Menus/Edit/editmenu.cpp
-    ui/MenuBar/Menus/View/viewmenu.h ui/MenuBar/Menus/View/viewmenu.cpp
-    ui/MenuBar/Menus/Build/buildmenu.h ui/MenuBar/Menus/Build/buildmenu.cpp
-    ui/MenuBar/Menus/Tools/toolsmenu.h ui/MenuBar/Menus/Tools/toolsmenu.cpp
-    ui/MenuBar/Menus/References/referencesmenu.h ui/MenuBar/Menus/References/referencesmenu.cpp
-    ui/filestabwidget.cpp
-    ui/filestabwidget.h
-    ui/toolstabwidget.cpp
-    ui/toolstabwidget.h
 
-    ui/MenuBar/Menus/References/referencewindow.h
-    ui/MenuBar/Menus/References/Windows/AsciiChars/asciicharsref.cpp
-    ui/MenuBar/Menus/References/Windows/AsciiChars/asciicharsref.h
-    ui/MenuBar/Menus/References/referencewindowfactory.h ui/MenuBar/Menus/References/referencewindowfactory.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/libs/cremniy-codeeditor/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/widgets
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/file
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/project
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/settings
     ${CMAKE_CURRENT_SOURCE_DIR}/utils
-    ${CMAKE_CURRENT_SOURCE_DIR}/ui
-    ${CMAKE_CURRENT_SOURCE_DIR}/terminal/ptyqt/core)
-
-set(BUILD_EXAMPLE OFF CACHE BOOL "Disable vendored code editor example" FORCE)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/cremniy-codeeditor ${CMAKE_BINARY_DIR}/libs/cremniy-codeeditor)
+    ${CMAKE_CURRENT_SOURCE_DIR}/ToolsTabWidget
+    ${CMAKE_CURRENT_SOURCE_DIR}/FilesTabWidget
+)
 
 
-# - - Tool Tabs - -
-add_subdirectory(ToolTabs/always)
-add_subdirectory(ToolTabs/other)
+# - - Libs - -
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/CodeEditor/ ${CMAKE_BINARY_DIR}/libs/CodeEditor/)
+target_link_libraries(${PROJECT_NAME} PRIVATE CodeEditor)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/HexEditor/ ${CMAKE_BINARY_DIR}/libs/HexEditor/)
+target_link_libraries(${PROJECT_NAME} PRIVATE HexEditor)
+
+# - - Tools - -
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Tools/References/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Tools/Tabs/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Tools/Windows/)
+
+# - - Menus - -
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ui/MenuBar/Menus/)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets

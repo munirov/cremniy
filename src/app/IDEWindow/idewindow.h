@@ -1,8 +1,8 @@
 #ifndef IDEWINDOW_H
 #define IDEWINDOW_H
 
-#include "filestabwidget.h"
-#include "filetreeview.h"
+#include "ui/FilesTabWidget/filestabwidget.h"
+#include "widgets//filetreeview.h"
 #include <QMainWindow>
 #include <qboxlayout.h>
 #include <qmenubar.h>
@@ -116,6 +116,10 @@ public slots:
 signals:
     void saveFileSignal();
     void CloseProject();
+
+    void setWordWrapSignal(bool checked);
+    void setTabReplaceSignal(bool checked);
+    void setTabWidthSignal(int width);
 
 };
 #endif // IDEWINDOW_H

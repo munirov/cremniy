@@ -1,7 +1,7 @@
 #ifndef REFERENCEWINDOWFACTORY_H
 #define REFERENCEWINDOWFACTORY_H
 
-#include "MenuBar/Menus/References/referencewindow.h"
+#include "ui/MenuBar/Menus/References/referencewindow.h"
 #include <QMap>
 #include <QString>
 #include <functional>
