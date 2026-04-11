@@ -78,8 +78,7 @@ qt_add_executable(${PROJECT_NAME}
     ui/ToolsTabWidget/toolstabwidget.cpp
     ui/ToolsTabWidget/toolstabwidget.h
     ui/ToolsTabWidget/ToolTab.h
-    ui/ToolsTabWidget/ToolTabFactory.cpp
-    ui/ToolsTabWidget/ToolTabFactory.h
+
 
     # UI Menubar
     ui/MenuBar/menubarbuilder.h ui/MenuBar/menubarbuilder.cpp
