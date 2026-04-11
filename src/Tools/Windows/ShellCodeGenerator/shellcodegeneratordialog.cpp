@@ -1,5 +1,7 @@
 #include "shellcodegeneratordialog.h"
 
+#include "core/ToolsRegistry.h"
+
 #include <QApplication>
 #include <QClipboard>
 #include <QComboBox>
@@ -20,6 +22,26 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+
+namespace {
+void showToolWindow(QDialog* dialog, QWidget* parent)
+{
+    dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+    dialog->adjustSize();
+    if (parent) {
+        dialog->move(parent->geometry().center() - dialog->rect().center());
+    }
+    dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
+}
+
+bool registeredShellcodeGenerator = registerWindowTool(
+    QStringLiteral("shellcode-generator"),
+    QStringLiteral("Shellcode Generator"),
+    [](QWidget* parent) {
+        showToolWindow(new ShellcodeGeneratorDialog(parent), parent);
+    });
 
 struct ArchEntry {
     const char *label;
@@ -42,6 +64,7 @@ static const StyleEntry kStyles[] = {
     {"RAW", 2},
 };
 static constexpr int kStyleCount = std::size(kStyles);
+} // namespace
 
 QString ShellcodeGeneratorDialog::findTool(const QString &name) {
     QString sysPath = QStandardPaths::findExecutable(name);

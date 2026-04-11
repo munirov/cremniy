@@ -7,10 +7,10 @@
 #include <QTableWidget>
 #include "formatpagefactory.h"
 #include "formatpage.h"
-#include "ui/ToolsTabWidget/ToolTabFactory.h"
+#include "core/ToolsRegistry.h"
 
 static const bool registeredBinaryTab =
-    registerAlwaysToolTab<BinaryTab>(QStringLiteral("binary"), QStringLiteral("Binary"), 200);
+    registerAlwaysFileTool<BinaryTab>(QStringLiteral("binary"), QStringLiteral("Binary"), FileToolOrder::Binary);
 
 namespace {
 void syncCurrentFormatPage(QStackedWidget* pageView, FileDataBuffer* dataBuffer)

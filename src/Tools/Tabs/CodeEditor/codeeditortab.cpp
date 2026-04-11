@@ -1,5 +1,5 @@
 #include "codeeditortab.h"
-#include "ui/ToolsTabWidget/ToolTabFactory.h"
+#include "core/ToolsRegistry.h"
 #include "utils/utils.h"
 #include "libs/CodeEditor/include/widgets/CustomCodeEditor.h"
 
@@ -15,7 +15,7 @@
 #include <QCheckBox>
 
 static const bool registeredCodeEditorTab =
-    registerAlwaysToolTab<CodeEditorTab>(QStringLiteral("code"), QStringLiteral("Code"), 100);
+    registerAlwaysFileTool<CodeEditorTab>(QStringLiteral("code"), QStringLiteral("Code"), FileToolOrder::Code);
 
 CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget* parent)
     : ToolTab(buffer, parent)

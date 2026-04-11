@@ -1,4 +1,5 @@
 #include "dataconverterdialog.h"
+#include "core/ToolsRegistry.h"
 
 #include <QClipboard>
 #include <QComboBox>
@@ -10,6 +11,27 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
+
+namespace {
+void showToolWindow(QDialog* dialog, QWidget* parent)
+{
+    dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+    dialog->adjustSize();
+    if (parent) {
+        dialog->move(parent->geometry().center() - dialog->rect().center());
+    }
+    dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
+}
+
+bool registeredDataConverter = registerWindowTool(
+    QStringLiteral("data-converter"),
+    QStringLiteral("Data Converter"),
+    [](QWidget* parent) {
+        showToolWindow(new DataConverterDialog(parent), parent);
+    });
+}
 
 struct UnitInfo {
 	const char* label;      // displayed in the form label

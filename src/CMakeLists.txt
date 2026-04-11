@@ -9,6 +9,18 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(CREMNIY_ENABLE_ASAN "Enable AddressSanitizer for supported debug builds" OFF)
+
+if(CREMNIY_ENABLE_ASAN)
+    if(MSVC)
+        add_compile_options($<$<CONFIG:Debug>:/fsanitize=address>)
+        add_link_options($<$<CONFIG:Debug>:/INCREMENTAL:NO> $<$<CONFIG:Debug>:/fsanitize=address>)
+    else()
+        add_compile_options($<$<CONFIG:Debug>:-fsanitize=address> $<$<CONFIG:Debug>:-fno-omit-frame-pointer>)
+        add_link_options($<$<CONFIG:Debug>:-fsanitize=address>)
+    endif()
+endif()
+
 find_package(Qt6 6.8.2 REQUIRED COMPONENTS Widgets Test)
 
 set(PROJECT_SOURCES
@@ -57,6 +69,8 @@ qt_add_executable(${PROJECT_NAME}
     core/project/projectshistorymanager.h
     core/settings/appsettings.cpp
     core/settings/appsettings.h
+    core/ToolsRegistry.cpp
+    core/ToolsRegistry.h
 
     # UI
     ui/FilesTabWidget/filestabwidget.cpp
@@ -64,8 +78,7 @@ qt_add_executable(${PROJECT_NAME}
     ui/ToolsTabWidget/toolstabwidget.cpp
     ui/ToolsTabWidget/toolstabwidget.h
     ui/ToolsTabWidget/ToolTab.h
-    ui/ToolsTabWidget/ToolTabFactory.cpp
-    ui/ToolsTabWidget/ToolTabFactory.h
+
 
     # UI Menubar
     ui/MenuBar/menubarbuilder.h ui/MenuBar/menubarbuilder.cpp
@@ -101,11 +114,13 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Tools/Windows/)
 # - - Menus - -
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ui/MenuBar/Menus/)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qt6::Widgets
+)
 
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt)
 
-if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
+if(WIN32 AND QT_VERSION_MAJOR EQUAL 6 AND WINDEPLOYQT_EXECUTABLE)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${WINDEPLOYQT_EXECUTABLE}
                 $<TARGET_FILE:${PROJECT_NAME}>
@@ -113,6 +128,9 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
     )
 endif()
 
+if(QT_VERSION VERSION_LESS 6.1.0)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.${PROJECT_NAME})
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -128,4 +146,6 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-qt_finalize_executable(${PROJECT_NAME})
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_finalize_executable(${PROJECT_NAME})
+endif()

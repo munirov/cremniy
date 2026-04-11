@@ -1,5 +1,6 @@
 #include "reversecalculatordialog.h"
 #include "reversecalculatorengine.h"
+#include "core/ToolsRegistry.h"
 
 #include <QClipboard>
 #include <QComboBox>
@@ -17,6 +18,18 @@
 #include <QStringBuilder>
 
 namespace {
+void showToolWindow(QDialog* dialog, QWidget* parent)
+{
+    dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+    dialog->adjustSize();
+    if (parent) {
+        dialog->move(parent->geometry().center() - dialog->rect().center());
+    }
+    dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
+}
+
 QFrame *makeSeparator(QWidget *parent) {
     auto *f = new QFrame(parent);
     f->setFrameShape(QFrame::HLine);
@@ -41,6 +54,13 @@ QLabel *makeValueLabel(QWidget *parent) {
     lbl->setStyleSheet(QStringLiteral("color: #888888; font-weight: bold;"));
     return lbl;
 }
+
+bool registeredReverseCalculator = registerWindowTool(
+    QStringLiteral("reverse-calculator"),
+    QStringLiteral("Reverse Calculator"),
+    [](QWidget* parent) {
+        showToolWindow(new ReverseCalculatorDialog(parent), parent);
+    });
 } // namespace
 
 ReverseCalculatorDialog::ReverseCalculatorDialog(QWidget *parent) : QDialog(parent) {
