@@ -34,16 +34,16 @@ CodeEditorTab::CodeEditorTab(QWidget* parent)
     searchLayout->setSpacing(6);
     // m_searchBar->setStyleSheet("background-color: #252525; border-bottom: 1px solid #3a3a3a;");
 
-    auto* searchLabel = new QLabel("Find:", m_searchBar);
+    auto* searchLabel = new QLabel(tr("Find:"), m_searchBar);
     m_searchEdit = new QLineEdit(m_searchBar);
-    m_searchEdit->setPlaceholderText("Search in file");
+    m_searchEdit->setPlaceholderText(tr("Search in file"));
     m_replaceEdit = new QLineEdit(m_searchBar);
-    m_replaceEdit->setPlaceholderText("Replace with");
-    m_searchPrevButton = new QPushButton("Prev", m_searchBar);
-    m_searchNextButton = new QPushButton("Next", m_searchBar);
-    m_replaceButton = new QPushButton("Replace", m_searchBar);
-    m_replaceAllButton = new QPushButton("Replace All", m_searchBar);
-    m_matchCaseCheckBox = new QCheckBox("Match case", m_searchBar);
+    m_replaceEdit->setPlaceholderText(tr("Replace with"));
+    m_searchPrevButton = new QPushButton(tr("Prev"), m_searchBar);
+    m_searchNextButton = new QPushButton(tr("Next"), m_searchBar);
+    m_replaceButton = new QPushButton(tr("Replace"), m_searchBar);
+    m_replaceAllButton = new QPushButton(tr("Replace All"), m_searchBar);
+    m_matchCaseCheckBox = new QCheckBox(tr("Match case"), m_searchBar);
     m_searchStatusLabel = new QLabel("0/0", m_searchBar);
     m_searchCloseButton = new QPushButton(m_searchBar);
     m_searchCloseButton->setIcon(QIcon(":/icons/close.svg"));
@@ -70,7 +70,7 @@ CodeEditorTab::CodeEditorTab(QWidget* parent)
     auto overlayLayout = new QVBoxLayout(m_overlayWidget);
     overlayLayout->setAlignment(Qt::AlignCenter);
 
-    QLabel* title = new QLabel("Binary file detected", m_overlayWidget);
+    QLabel* title = new QLabel(tr("Binary file detected"), m_overlayWidget);
     title->setStyleSheet("color: white; font-size: 20px;");
     title->setAlignment(Qt::AlignCenter);
     title->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -79,7 +79,7 @@ CodeEditorTab::CodeEditorTab(QWidget* parent)
 
     auto* btnLayout = new QHBoxLayout();
     btnLayout->setAlignment(Qt::AlignCenter);
-    auto* anywayOpenBtn = new QPushButton("Open anyway", m_overlayWidget);
+    auto* anywayOpenBtn = new QPushButton(tr("Open anyway"), m_overlayWidget);
     btnLayout->addWidget(anywayOpenBtn);
     overlayLayout->addLayout(btnLayout);
 

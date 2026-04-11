@@ -128,7 +128,7 @@ void AsciiCharsRef::initWidgets() {
     table->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QStringList asciiHeaders;
-    asciiHeaders << "Char" << "Decimal" << "Hex";
+    asciiHeaders << tr("Char") << tr("Decimal") << tr("Hex");
     table->setHorizontalHeaderLabels(asciiHeaders);
 
     auto currentRows = std::make_shared<QVector<RowData>>(buildAsciiRows());
@@ -141,9 +141,9 @@ void AsciiCharsRef::initWidgets() {
 
         QStringList headers;
         if (unicode)
-            headers << "Char" << "Code" << "Decimal" << "Hex";
+            headers << tr("Char") << tr("Code") << tr("Decimal") << tr("Hex");
         else
-            headers << "Char" << "Decimal" << "Hex";
+            headers << tr("Char") << tr("Decimal") << tr("Hex");
         table->setHorizontalHeaderLabels(headers);
 
         table->setRowCount(rows.size());

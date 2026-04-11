@@ -190,9 +190,15 @@ void FilesTabWidget::closeTab(int index) {
     if (tab && tab->isPinned()) {
         return;
     }
+
     if (tab && tab->isFileUnsaved()) {
-        const auto replay = QMessageBox::question(this, "Save File", "Do you want to save this file?",
-                                                  QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+        QMessageBox question_save_file(QMessageBox::Question, tr("Save File"), tr("Do you want to save this file?"),
+                                                  QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, this);
+        question_save_file.setButtonText(QMessageBox::Yes, tr("Yes"));
+        question_save_file.setButtonText(QMessageBox::No, tr("No"));
+        question_save_file.setButtonText(QMessageBox::Cancel, tr("Cancel"));
+
+        const auto replay = question_save_file.exec();
         switch (replay) {
         case QMessageBox::Yes:
             tab->saveFile();

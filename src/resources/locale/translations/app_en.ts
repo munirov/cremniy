@@ -5,70 +5,105 @@
     <name>AsciiCharsRef</name>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="26"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.h" line="12"/>
         <source>ASCII / Unicode Characters</source>
-        <translation type="unfinished"></translation>
+        <translation>ASCII / Unicode Characters</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="120"/>
         <source>ASCII (0-127)</source>
-        <translation type="unfinished"></translation>
+        <translation>ASCII (0-127)</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="121"/>
         <source>Unicode</source>
-        <translation type="unfinished"></translation>
+        <translation>Unicode</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="131"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="144"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="146"/>
+        <source>Char</source>
+        <translation>Char</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="131"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="144"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="146"/>
+        <source>Decimal</source>
+        <translation>Decimal</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="131"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="144"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="146"/>
+        <source>Hex</source>
+        <translation>Hex</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="144"/>
+        <source>Code</source>
+        <translation>Code Editor</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="187"/>
         <source>Search by Character</source>
-        <translation type="unfinished"></translation>
+        <translation>Search by Character</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="191"/>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="258"/>
         <source>Search by Decimal (0-127)</source>
-        <translation type="unfinished"></translation>
+        <translation>Search by Decimal (0-127)</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="196"/>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="260"/>
         <source>Search by Hex (0-7F)</source>
-        <translation type="unfinished"></translation>
+        <translation>Search by Hex (0-7F)</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="266"/>
         <source>Search by Decimal (Unicode)</source>
-        <translation type="unfinished"></translation>
+        <translation>Search by Decimal (Unicode)</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="268"/>
         <source>Search by Hex (Unicode)</source>
-        <translation type="unfinished"></translation>
+        <translation>Search by Hex (Unicode)</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="286"/>
         <source>Copy Char</source>
-        <translation type="unfinished"></translation>
+        <translation>Copy Char</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="287"/>
         <source>Copy Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Copy Code</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="288"/>
         <source>Copy Decimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Copy Decimal</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="289"/>
         <source>Copy Hex</source>
-        <translation type="unfinished"></translation>
+        <translation>Copy Hex</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="290"/>
         <source>Copy Row</source>
-        <translation type="unfinished"></translation>
+        <translation>Copy Row</translation>
+    </message>
+</context>
+<context>
+    <name>BinaryTab</name>
+    <message>
+        <location filename="../../../Tools/Tabs/Binary/binarytab.h" line="33"/>
+        <source>Binary</source>
+        <translation>Binary</translation>
     </message>
 </context>
 <context>
@@ -92,42 +127,42 @@
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="33"/>
         <source>Find:</source>
-        <translation type="unfinished">Find:</translation>
+        <translation>Find:</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="35"/>
         <source>Search in file</source>
-        <translation type="unfinished"></translation>
+        <translation>Search in file</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="37"/>
         <source>Replace with</source>
-        <translation type="unfinished"></translation>
+        <translation>Replace with</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="38"/>
         <source>Prev</source>
-        <translation type="unfinished"></translation>
+        <translation>Prev</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="39"/>
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>Next</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="40"/>
         <source>Replace</source>
-        <translation type="unfinished">Replace</translation>
+        <translation>Replace</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="41"/>
         <source>Replace All</source>
-        <translation type="unfinished"></translation>
+        <translation>Replace All</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="42"/>
         <source>Match case</source>
-        <translation type="unfinished"></translation>
+        <translation>Match case</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="69"/>
@@ -160,6 +195,11 @@
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="176"/>
         <source>Line number:</source>
         <translation>Line number:</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.h" line="68"/>
+        <source>Code</source>
+        <translation>Code Editor</translation>
     </message>
 </context>
 <context>
@@ -205,52 +245,52 @@
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="22"/>
         <source>Bits</source>
-        <translation type="unfinished"></translation>
+        <translation>Bits</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="23"/>
         <source>Bytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Bytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="24"/>
         <source>Kilobytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Kilobytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="25"/>
         <source>Megabytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Megabytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="26"/>
         <source>Gigabytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Gigabytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="27"/>
         <source>Terabytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Terabytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="28"/>
         <source>Petabytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Petabytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="29"/>
         <source>Exabytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Exabytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="30"/>
         <source>Zettabytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Zettabytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="31"/>
         <source>Yottabytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Yottabytes</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/DataConverter/dataconverterdialog.cpp" line="66"/>
@@ -783,17 +823,17 @@ Check the Log panel for details.</translation>
     <message>
         <location filename="../../../widgets/filetreeview.cpp" line="143"/>
         <source>Confirm move</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirm move</translation>
     </message>
     <message>
         <location filename="../../../widgets/filetreeview.cpp" line="144"/>
         <source>Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>Yes</translation>
     </message>
     <message>
         <location filename="../../../widgets/filetreeview.cpp" line="145"/>
         <source>No</source>
-        <translation type="unfinished"></translation>
+        <translation>No</translation>
     </message>
     <message>
         <location filename="../../../widgets/filetreeview.cpp" line="152"/>
@@ -828,6 +868,31 @@ Check the Log panel for details.</translation>
         <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="154"/>
         <source>Pin</source>
         <translation>Pin</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="183"/>
+        <source>Save File</source>
+        <translation>Save File</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="183"/>
+        <source>Do you want to save this file?</source>
+        <translation>Do you want to save this file?</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="185"/>
+        <source>Yes</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="186"/>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="187"/>
+        <source>Cancel</source>
+        <translation>Cancel</translation>
     </message>
 </context>
 <context>
@@ -1084,7 +1149,7 @@ Check the Log panel for details.</translation>
     <message>
         <location filename="../../../ui/ToolsTabWidget/ToolTabFactory.h" line="33"/>
         <source>unnamed</source>
-        <translation type="unfinished"></translation>
+        <translation>Unnamed</translation>
     </message>
 </context>
 <context>
@@ -1613,12 +1678,12 @@ e asm.bits=64</translation>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="120"/>
         <source>; Enter x86/x64 assembly here...</source>
-        <translation type="unfinished"></translation>
+        <translation>; Enter x86/x64 assembly here..</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="126"/>
         <source>// Shellcode output will appear here...</source>
-        <translation type="unfinished"></translation>
+        <translation>// Shellcode output will appear here...</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="136"/>
@@ -1629,27 +1694,27 @@ e asm.bits=64</translation>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="167"/>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="257"/>
         <source>Ready.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ready.</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="180"/>
         <source>Failed to create temp file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to create temp file.</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="192"/>
         <source>nasm not found. Ensure it is installed and in PATH.</source>
-        <translation type="unfinished"></translation>
+        <translation>nasm not found. Ensure it is installed and in PATH.</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="208"/>
         <source>Failed to read nasm output.</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to read nasm output.</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="219"/>
         <source>Assembled 0 bytes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Assembled 0 bytes.</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="223"/>
@@ -1659,19 +1724,21 @@ e asm.bits=64</translation>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="249"/>
         <source>Copied to clipboard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Copied to clipboard.</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="361"/>
         <source>unsigned char shellcode[] = {  // %1 bytes
 </source>
-        <translation type="unfinished"></translation>
+        <translation>unsigned char shellcode[] = {  // %1 bytes
+</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="369"/>
         <source>std::array&lt;std::uint8_t, %1&gt; shellcode = {  // %1 bytes
 </source>
-        <translation type="unfinished"></translation>
+        <translation>std::array&lt;std::uint8_t, %1&gt; shellcode = {  // %1 bytes
+</translation>
     </message>
     <message>
         <location filename="../../../Tools/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="410"/>
@@ -1687,25 +1754,14 @@ e asm.bits=64</translation>
 Please install them or add their location to PATH.
 
 Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The following tools were not found on your system:
-
- - %1
-
-Please install them or add their location to PATH.
-
-Download: https://www.nasm.us/pub/nasm/releasebuilds/
-</source>
-        <translation type="vanished">The following tools were not found on your system:
+        <translation>The following tools were not found on your system:
 
     - %1
 
 Please install them or add their location to PATH.
 
     Download: https://www.nasm.us/pub/nasm/releasebuilds/
-</translation>
+            </translation>
     </message>
 </context>
 <context>
@@ -1723,12 +1779,12 @@ Please install them or add their location to PATH.
     <message>
         <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="20"/>
         <source>Data Converter</source>
-        <translation type="unfinished">Data Converter</translation>
+        <translation>Data Converter</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="23"/>
         <source>Shellcode Generator</source>
-        <translation type="unfinished">Shellcode Generator</translation>
+        <translation>Shellcode Generator</translation>
     </message>
 </context>
 <context>
@@ -1833,7 +1889,7 @@ Please install them or add their location to PATH.
     <message>
         <location filename="../../../Tools/Tabs/Binary/binarytab.cpp" line="13"/>
         <source>Binary</source>
-        <translation type="unfinished"></translation>
+        <translation>Binary</translation>
     </message>
 </context>
 <context>
@@ -1841,7 +1897,7 @@ Please install them or add their location to PATH.
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="18"/>
         <source>Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Code Editor</translation>
     </message>
 </context>
 <context>
@@ -1849,7 +1905,7 @@ Please install them or add their location to PATH.
     <message>
         <location filename="../../../Tools/Tabs/Disassembler/disassemblertab.cpp" line="38"/>
         <source>Disassembler</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 </TS>
