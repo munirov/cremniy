@@ -1,6 +1,6 @@
 #include "ToolsRegistry.h"
 
-#include "ToolTab.h"
+#include "ui/ToolsTabWidget/ToolTab.h"
 
 #include <algorithm>
 
