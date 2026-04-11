@@ -38,10 +38,8 @@ void FileManager::saveJson(FileContext &fc, const QJsonObject &json) {
 
     if (!f.exists()) QDir().mkpath(QFileInfo(fc.filePath()).absolutePath());
 
-    if (!f.open(QFile::WriteOnly)) {
-        return;
-    }
-
+    if (!f.open(QFile::WriteOnly)) return;
+    
     const QJsonDocument doc(json);
     f.write(doc.toJson());
     f.close();

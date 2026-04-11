@@ -25,6 +25,7 @@ private slots:
     void onImportIni();
     void onAccept();
     void onBackendChanged(int index);
+    void onLanguageSwitched(const QString &locale);
 
 private:
     void loadFromSettings();
