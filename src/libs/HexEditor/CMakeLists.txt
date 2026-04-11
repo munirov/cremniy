@@ -16,7 +16,7 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         Qt6::Widgets
-        cremniy-codeeditor
+        CodeEditor
 )
 
 target_sources(${PROJECT_NAME}
