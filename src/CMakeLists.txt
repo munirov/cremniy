@@ -30,8 +30,12 @@ qt_add_executable(${PROJECT_NAME}
     dialogs/filecreatedialog.h
     dialogs/settingsdialog.cpp
     dialogs/settingsdialog.h
+    dialogs/keyboardscancodesdialog.cpp
+    dialogs/keyboardscancodesdialog.h
 
     # Widgets
+    widgets/keyboardscancodevizwidget.cpp
+    widgets/keyboardscancodevizwidget.h
     widgets/clickablelineedit.h
     widgets/filetab.cpp
     widgets/filetab.h

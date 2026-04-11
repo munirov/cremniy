@@ -6,6 +6,7 @@ class ReferenceWindow : public QWidget
 {
     Q_OBJECT
 public:
+    explicit ReferenceWindow(QWidget *parent = nullptr) : QWidget(parent) {}
 
     virtual QString RefWinName() = 0;
 
@@ -14,7 +15,7 @@ private:
     virtual void initWidgets() = 0;
 
 public slots:
-    void showWindow() { this->show(); }
+    virtual void showWindow() { this->show(); }
 
 };
 
