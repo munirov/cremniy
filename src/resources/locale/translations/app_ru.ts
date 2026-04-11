@@ -5,6 +5,7 @@
     <name>AsciiCharsRef</name>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="26"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.h" line="12"/>
         <source>ASCII / Unicode Characters</source>
         <translation>ASCII / Unicode символы</translation>
     </message>
@@ -17,6 +18,32 @@
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="121"/>
         <source>Unicode</source>
         <translation>Unicode</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="131"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="144"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="146"/>
+        <source>Char</source>
+        <translation>Символ</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="131"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="144"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="146"/>
+        <source>Decimal</source>
+        <translation>Десятиричный формат</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="131"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="144"/>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="146"/>
+        <source>Hex</source>
+        <translation>Шестнадцатиричный формат</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="144"/>
+        <source>Code</source>
+        <translation>Редактор кода</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="187"/>
@@ -72,6 +99,14 @@
     </message>
 </context>
 <context>
+    <name>BinaryTab</name>
+    <message>
+        <location filename="../../../Tools/Tabs/Binary/binarytab.h" line="33"/>
+        <source>Binary</source>
+        <translation>Машинный код</translation>
+    </message>
+</context>
+<context>
     <name>BuildMenu</name>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Build/buildmenu.cpp" line="11"/>
@@ -102,7 +137,7 @@
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="37"/>
         <source>Replace with</source>
-        <translation>Заменить с</translation>
+        <translation>Заменить на</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="38"/>
@@ -132,7 +167,7 @@
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="69"/>
         <source>Binary file detected</source>
-        <translation>Обнаружен двоичный файл.</translation>
+        <translation>Обнаружен исполняемый файл.</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="78"/>
@@ -160,6 +195,11 @@
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="176"/>
         <source>Line number:</source>
         <translation>Номер строки:</translation>
+    </message>
+    <message>
+        <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.h" line="68"/>
+        <source>Code</source>
+        <translation>Редактор кода</translation>
     </message>
 </context>
 <context>
@@ -831,6 +871,31 @@ Check the Log panel for details.</source>
         <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="154"/>
         <source>Pin</source>
         <translation>Закрепить</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="183"/>
+        <source>Save File</source>
+        <translation>Сохранить файл</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="183"/>
+        <source>Do you want to save this file?</source>
+        <translation>Вы хотите сохранить этот файл?</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="185"/>
+        <source>Yes</source>
+        <translation>Да</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="186"/>
+        <source>No</source>
+        <translation>Нет</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="187"/>
+        <source>Cancel</source>
+        <translation>Отменить</translation>
     </message>
 </context>
 <context>
