@@ -1,6 +1,7 @@
 #ifndef FILEDATABUFFER_H
 #define FILEDATABUFFER_H
 
+#include <list>
 #include <QObject>
 #include <QByteArray>
 #include <QFile>
