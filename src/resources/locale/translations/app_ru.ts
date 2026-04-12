@@ -362,8 +362,9 @@
 <context>
     <name>DisassemblerTab</name>
     <message>
+        <location filename="../../../Tools/Tabs/Disassembler/disassemblertab.h" line="35"/>
         <source>Disassembler</source>
-        <translation type="vanished">Дизассемблер</translation>
+        <translation>Дизассемблер</translation>
     </message>
     <message>
         <location filename="../../../Tools/Tabs/Disassembler/disassemblertab.cpp" line="364"/>
@@ -1009,44 +1010,44 @@ Check the Log panel for details.</source>
 <context>
     <name>IDEWindow</name>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="209"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="252"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="210"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="253"/>
         <source>Open</source>
         <translation>Открыть</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="222"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="255"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="223"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="256"/>
         <source>Rename</source>
         <translation>Переименовать</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="234"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="237"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="266"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="268"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="235"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="238"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="267"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="269"/>
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="236"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="237"/>
         <source>Are you sure you want to delete the folder &quot;%1&quot;?</source>
         <translation>Вы действительно хотите удалить данную папку &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="241"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="276"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="242"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="277"/>
         <source>Create File</source>
         <translation>Создать файл</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="246"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="280"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="247"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="281"/>
         <source>Create Folder</source>
         <translation>Создать папку</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="267"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="268"/>
         <source>Are you sure you want to delete the file &quot;%1&quot;?</source>
         <translation>вы действительно хотите удалить файл &quot;%1&quot;?</translation>
     </message>
@@ -1054,39 +1055,39 @@ Check the Log panel for details.</source>
 <context>
     <name>QHexView</name>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="382"/>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="401"/>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="409"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="378"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="397"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="405"/>
         <source>Go to</source>
         <translation>Перейти к</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="383"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="379"/>
         <source>Address or offset (0x... for hex address, decimal for offset):</source>
         <translation>Адрес или смещение (0x... для шестнадцатеричного адреса, десятичное значение для смещения):</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="402"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="398"/>
         <source>Invalid address or offset: %1</source>
         <translation>Неверный адрес или смещение: %1</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="410"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="406"/>
         <source>Target is outside the current document.</source>
         <translation>Цель находится за пределами текущего документа.</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1917"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1913"/>
         <source>Select All</source>
         <translation>Выделить все</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1918"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1914"/>
         <source>Copy</source>
         <translation>Скопировать</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1919"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1915"/>
         <source>Paste</source>
         <translation>Вставить</translation>
     </message>
