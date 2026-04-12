@@ -16,11 +16,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os:
+          # mainstream OS versions - standard for dev
+          - ubuntu-24.04
+          - macos-15
+          - windows-2025
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
 
       - name: Install Qt (Windows)
         if: runner.os == 'Windows'
@@ -43,14 +48,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-cursor0
 
+
       - name: Configure CMake (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022"
-      
+
       - name: Configure CMake (Linux/macOS)
         if: runner.os != 'Windows'
         run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release
+
 
       - name: Build
         run: cmake --build build --config Release --parallel
