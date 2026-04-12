@@ -2,7 +2,7 @@
 #include <qdir.h>
 #include <qfileinfo.h>
 #include <QJsonObject>
-
+#include <QJsonDocument>
 
 void FileManager::saveFile(FileContext* fc, const QByteArray* data){
     QFileInfo info(fc->filePath());
