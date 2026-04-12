@@ -13,7 +13,7 @@ FileMenu::FileMenu() : BaseMenu(tr("File")) {
     m_openProject = new QAction(tr("New Project"), this);
     m_newProject = new QAction(tr("Open Project"), this);
     m_saveFile = new QAction(tr("Save File"), this);
-    m_closeProject = new QAction(tr("Save File"), this);
+    m_closeProject = new QAction(tr("Close File"), this);
 
     m_saveFile->setShortcut(QKeySequence::Save);
 
