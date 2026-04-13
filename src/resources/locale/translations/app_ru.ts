@@ -7,7 +7,7 @@
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="26"/>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.h" line="12"/>
         <source>ASCII / Unicode Characters</source>
-        <translation>ASCII / Unicode символы</translation>
+        <translation>ASCII / Юникод символы</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="120"/>
@@ -17,7 +17,7 @@
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="121"/>
         <source>Unicode</source>
-        <translation>Unicode</translation>
+        <translation>Юникод</translation>
     </message>
     <message>
         <location filename="../../../Tools/References/AsciiChars/asciicharsref.cpp" line="131"/>
@@ -1161,7 +1161,7 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../ui/MenuBar/Menus/References/referencesmenu.cpp" line="12"/>
         <source>References</source>
-        <translation>Ссылки</translation>
+        <translation>Справка</translation>
     </message>
     <message>
         <source>ASCII characters</source>
