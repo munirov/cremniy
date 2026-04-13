@@ -1,4 +1,6 @@
 #include "filestabwidget.h"
+
+#include <qabstractbutton.h>
 #include <QApplication>
 #include <QCoreApplication>
 #include <QMessageBox>
@@ -13,6 +15,7 @@
 #include <QPixmap>
 #include <qboxlayout.h>
 #include <qfileinfo.h>
+#include <QPushButton>
 
 FilesTabWidget::FilesTabWidget(QWidget *parent) {
     connect(this, &QTabWidget::currentChanged, this, &FilesTabWidget::tabSelect);
@@ -192,24 +195,15 @@ void FilesTabWidget::closeTab(int index) {
     }
 
     if (tab && tab->isFileUnsaved()) {
-        QMessageBox question_save_file(QMessageBox::Question, tr("Save File"), tr("Do you want to save this file?"),
-                                                  QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, this);
-        question_save_file.setButtonText(QMessageBox::Yes, tr("Yes"));
-        question_save_file.setButtonText(QMessageBox::No, tr("No"));
-        question_save_file.setButtonText(QMessageBox::Cancel, tr("Cancel"));
+        QMessageBox question_save_file(QMessageBox::Question, tr("Save File"), tr("Do you want to save this file?"),QMessageBox::NoButton, this);
+        const auto yes = question_save_file.addButton(tr("Yes") ,QMessageBox::YesRole);
+        [[maybe_unused]] const auto no = question_save_file.addButton(tr("No"), QMessageBox::NoRole);
+        const auto cancel = question_save_file.addButton(tr("Cancel"), QMessageBox::RejectRole);
 
-        const auto replay = question_save_file.exec();
-        switch (replay) {
-        case QMessageBox::Yes:
-            tab->saveFile();
-            break;
-        case QMessageBox::No:
-            break;
-        case QMessageBox::Cancel:
-            return;
-        default:
-            break;
-        }
+        question_save_file.exec();
+        const auto reply = question_save_file.clickedButton();
+        if (reply == yes) tab->saveFile();
+        else if (reply == cancel || reply  == nullptr) return;
     }
 
     removeTab(index);

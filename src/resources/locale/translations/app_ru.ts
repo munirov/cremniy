@@ -797,26 +797,30 @@ Check the Log panel for details.</source>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="15"/>
-        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="16"/>
         <source>Save File</source>
         <translation>Сохранить файл</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="16"/>
+        <source>Close Project</source>
+        <translation>Закрыть проект</translation>
     </message>
 </context>
 <context>
     <name>FileTreeView</name>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="136"/>
-        <location filename="../../../widgets/filetreeview.cpp" line="152"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="137"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="155"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="136"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="137"/>
         <source>Cannot move a folder into itself.</source>
         <translation>Невозможно переместить папку внутрь себя.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="140"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="141"/>
         <source>Are you sure you want to move &apos;%1&apos; into &apos;%2&apos;?</source>
         <translation>Вы действительно хотите перенести &apos;%1&apos; внутрь &apos;%2&apos;?</translation>
     </message>
@@ -825,38 +829,38 @@ Check the Log panel for details.</source>
         <translation type="vanished">Подтвердите перемещение</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="143"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="144"/>
         <source>Confirm move</source>
         <translation>Подтвердите перемещение</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="144"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="145"/>
         <source>Yes</source>
         <translation>Да</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="145"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="146"/>
         <source>No</source>
         <translation>Нет</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="152"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="155"/>
         <source>Failed to move the file.</source>
         <translation>Не удалось переместить файл</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="174"/>
-        <location filename="../../../widgets/filetreeview.cpp" line="178"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="177"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="181"/>
         <source>Undo Failed</source>
         <translation>Невозможно отменить</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="174"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="177"/>
         <source>Could not move the file back.</source>
         <translation>Не удалось переместить файл обратно.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="178"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="181"/>
         <source>The file no longer exists at the moved location.</source>
         <translation>Файл больше не существует по новому пути.</translation>
     </message>
@@ -864,37 +868,37 @@ Check the Log panel for details.</source>
 <context>
     <name>FilesTabWidget</name>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="154"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="157"/>
         <source>Unpin</source>
         <translation>Открепить</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="154"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="157"/>
         <source>Pin</source>
         <translation>Закрепить</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="183"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="186"/>
         <source>Save File</source>
         <translation>Сохранить файл</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="183"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="186"/>
         <source>Do you want to save this file?</source>
         <translation>Вы хотите сохранить этот файл?</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="185"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="187"/>
         <source>Yes</source>
         <translation>Да</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="186"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="188"/>
         <source>No</source>
         <translation>Нет</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="187"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="189"/>
         <source>Cancel</source>
         <translation>Отменить</translation>
     </message>
@@ -1010,44 +1014,44 @@ Check the Log panel for details.</source>
 <context>
     <name>IDEWindow</name>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="210"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="253"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="208"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="251"/>
         <source>Open</source>
         <translation>Открыть</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="223"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="256"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="221"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="254"/>
         <source>Rename</source>
         <translation>Переименовать</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="235"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="238"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="233"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="236"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="265"/>
         <location filename="../../../app/IDEWindow/idewindow.cpp" line="267"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="269"/>
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="237"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="235"/>
         <source>Are you sure you want to delete the folder &quot;%1&quot;?</source>
         <translation>Вы действительно хотите удалить данную папку &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="242"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="277"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="240"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="275"/>
         <source>Create File</source>
         <translation>Создать файл</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="247"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="281"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="245"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="279"/>
         <source>Create Folder</source>
         <translation>Создать папку</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="268"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="266"/>
         <source>Are you sure you want to delete the file &quot;%1&quot;?</source>
         <translation>вы действительно хотите удалить файл &quot;%1&quot;?</translation>
     </message>
@@ -1845,22 +1849,22 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
         <translation>Выбрать директорию</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="235"/>
+        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="236"/>
         <source>Please enter project name</source>
         <translation>Пожалуйста введите имя проекта</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="244"/>
+        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="245"/>
         <source>Directory is invalid</source>
         <translation>Каталог недействителен</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="255"/>
+        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="256"/>
         <source>Directory is exists!</source>
         <translation>Каталог существует.!</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="261"/>
+        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="262"/>
         <source>Failed to create project directory!</source>
         <translation>Не удалось создать каталог проекта!</translation>
     </message>
