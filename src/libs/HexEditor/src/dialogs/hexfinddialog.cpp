@@ -107,21 +107,17 @@ HexFindDialog::HexFindDialog(Type type, QHexView* parent)
         buttonbox->setStandardButtons(QDialogButtonBox::Ok |
                                       QDialogButtonBox::Apply |
                                       QDialogButtonBox::Cancel);
-        buttonbox->button(QDialogButtonBox::Apply)->setText(tr("Apply"));
+        buttonbox->button(QDialogButtonBox::Apply)->setEnabled(false);
+        buttonbox->button(QDialogButtonBox::Apply)->setText(tr("Replace"));
     }
     else
         buttonbox->setStandardButtons(QDialogButtonBox::Ok |
                                       QDialogButtonBox::Cancel);
-    buttonbox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
 
     buttonbox->setObjectName(HexFindDialog::BUTTONBOX);
     buttonbox->button(QDialogButtonBox::Ok)->setEnabled(false);
     buttonbox->button(QDialogButtonBox::Ok)->setText(tr("Find"));
-
-    if(type == Type::Replace) {
-        buttonbox->button(QDialogButtonBox::Apply)->setEnabled(false);
-        buttonbox->button(QDialogButtonBox::Apply)->setText(tr("Replace"));
-    }
+    buttonbox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
 
     vlayout->addWidget(buttonbox);
 
