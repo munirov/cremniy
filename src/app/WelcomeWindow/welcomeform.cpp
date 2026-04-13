@@ -205,6 +205,7 @@ void WelcomeForm::OpenProject(QString path){
         open_recent_proj_btn->setProperty("state", "");
         open_recent_proj_btn->style()->polish(open_recent_proj_btn);
         this->show();
+        SetProjectHistoryList();
     });
 
     mw->show();
