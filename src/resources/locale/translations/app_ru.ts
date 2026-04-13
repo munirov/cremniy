@@ -976,39 +976,74 @@ Check the Log panel for details.</source>
         <translation>Назад</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="116"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="110"/>
+        <source>Apply</source>
+        <translation>Применить</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="115"/>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="119"/>
         <source>Find</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="120"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="123"/>
         <source>Replace</source>
         <translation>Замена</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="231"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="234"/>
         <source>Not found</source>
         <translation>Не найден</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="232"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="235"/>
         <source>Cannot find &apos;%1&apos;</source>
         <translation>Не найдено &apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="332"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="335"/>
         <source>Pattern Error</source>
         <translation>Неверный шаблон</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="333"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="336"/>
         <source>Hex pattern &apos;%1&apos; is not valid</source>
         <translation>Шаблон шестнадцатиричного формата &apos;%1&apos; некорректный</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="348"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="351"/>
         <source>Case sensitive</source>
         <translation>С учетом регистра</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="379"/>
+        <source>(any)</source>
+        <translation>(Любой)</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="398"/>
+        <source>Little Endian</source>
+        <translation>Обратный порядок</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="399"/>
+        <source>Big Endian</source>
+        <translation>Прямой порядок</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="413"/>
+        <source>Type:</source>
+        <translation>Тип:</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="415"/>
+        <source>Endian:</source>
+        <translation>Порядок байт</translation>
     </message>
 </context>
 <context>

@@ -103,13 +103,16 @@ HexFindDialog::HexFindDialog(Type type, QHexView* parent)
     auto* buttonbox = new QDialogButtonBox(this);
     buttonbox->setOrientation(Qt::Horizontal);
 
-    if(type == Type::Replace)
+    if(type == Type::Replace) {
         buttonbox->setStandardButtons(QDialogButtonBox::Ok |
                                       QDialogButtonBox::Apply |
                                       QDialogButtonBox::Cancel);
+        buttonbox->button(QDialogButtonBox::Apply)->setText(tr("Apply"));
+    }
     else
         buttonbox->setStandardButtons(QDialogButtonBox::Ok |
                                       QDialogButtonBox::Cancel);
+    buttonbox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
 
     buttonbox->setObjectName(HexFindDialog::BUTTONBOX);
     buttonbox->button(QDialogButtonBox::Ok)->setEnabled(false);
@@ -373,7 +376,7 @@ void HexFindDialog::prepareHexMode(QLayout* l) { l->addWidget(new QWidget()); }
 
 void HexFindDialog::prepareIntMode(QLayout* l) {
     static const QList<QPair<QString, unsigned int>> INT_TYPES = {
-        qMakePair<QString, unsigned int>("(any)", 0),
+        qMakePair<QString, unsigned int>(tr("(any)"), 0),
         qMakePair<QString, unsigned int>("8", QHexFindOptions::Int8),
         qMakePair<QString, unsigned int>("16", QHexFindOptions::Int16),
         qMakePair<QString, unsigned int>("32", QHexFindOptions::Int32),
@@ -392,8 +395,8 @@ void HexFindDialog::prepareIntMode(QLayout* l) {
             });
 
     auto* cbendian = new QComboBox();
-    cbendian->addItem("Little Endian", 0);
-    cbendian->addItem("Big Endian", QHexFindOptions::BigEndian);
+    cbendian->addItem(tr("Little Endian"), 0);
+    cbendian->addItem(tr("Big Endian"), QHexFindOptions::BigEndian);
 
     connect(cbendian, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             [this, cbendian](int index) {
@@ -407,9 +410,9 @@ void HexFindDialog::prepareIntMode(QLayout* l) {
     auto* vlayout = new QVBoxLayout(new QWidget());
 
     QGridLayout* gl = new QGridLayout();
-    gl->addWidget(new QLabel("Type:"), 0, 0, Qt::AlignRight);
+    gl->addWidget(new QLabel(tr("Type:")), 0, 0, Qt::AlignRight);
     gl->addWidget(cbbits, 0, 1);
-    gl->addWidget(new QLabel("Endian:"), 1, 0, Qt::AlignRight);
+    gl->addWidget(new QLabel(tr("Endian:")), 1, 0, Qt::AlignRight);
     gl->addWidget(cbendian, 1, 1);
     vlayout->addLayout(gl);
 
