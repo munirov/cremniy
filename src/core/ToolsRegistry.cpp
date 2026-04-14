@@ -118,7 +118,7 @@ ToolTab* ToolsRegistry::createFileTool(const QString& id, FileDataBuffer* buffer
 bool ToolsRegistry::openWindowTool(const QString& id, QWidget* parent) const
 {
     const auto it = m_descriptors.constFind(id);
-    if (it == m_descriptors.cend() || it->kind != ToolKind::Window) {
+    if (it == m_descriptors.cend() || (it->kind != ToolKind::Window && it->kind != ToolKind::Reference)) {
         return false;
     }
 
