@@ -691,6 +691,11 @@ Check the Log panel for details.</translation>
         <source>%1 line(s) shown</source>
         <translation type="vanished">%1 line(s) shown</translation>
     </message>
+    <message>
+        <location filename="../../../Tools/Tabs/Disassembler/disassemblertab.h" line="35"/>
+        <source>Disassembler</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>DisassemblerWorker</name>
@@ -734,6 +739,11 @@ Check the Log panel for details.</translation>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="16"/>
         <source>Enter folder name...</source>
         <translation>Enter folder name...</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="19"/>
+        <source>Create file</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="20"/>
@@ -793,26 +803,30 @@ Check the Log panel for details.</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="15"/>
-        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="16"/>
         <source>Save File</source>
         <translation>Save File</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/File/filemenu.cpp" line="16"/>
+        <source>Close Project</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>FileTreeView</name>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="136"/>
-        <location filename="../../../widgets/filetreeview.cpp" line="152"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="137"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="155"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="136"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="137"/>
         <source>Cannot move a folder into itself.</source>
         <translation>Cannot move a folder into itself.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="140"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="141"/>
         <source>Are you sure you want to move &apos;%1&apos; into &apos;%2&apos;?</source>
         <translation>Are you sure you want to move &apos;%1&apos; into &apos;%2&apos;?</translation>
     </message>
@@ -821,38 +835,38 @@ Check the Log panel for details.</translation>
         <translation type="vanished">Confirm Move</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="143"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="144"/>
         <source>Confirm move</source>
         <translation>Confirm move</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="144"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="145"/>
         <source>Yes</source>
         <translation>Yes</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="145"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="146"/>
         <source>No</source>
         <translation>No</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="152"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="155"/>
         <source>Failed to move the file.</source>
         <translation>Failed to move the file.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="174"/>
-        <location filename="../../../widgets/filetreeview.cpp" line="178"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="177"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="181"/>
         <source>Undo Failed</source>
         <translation>Undo Failed</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="174"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="177"/>
         <source>Could not move the file back.</source>
         <translation>Could not move the file back.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="178"/>
+        <location filename="../../../widgets/filetreeview.cpp" line="181"/>
         <source>The file no longer exists at the moved location.</source>
         <translation>The file no longer exists at the moved location.</translation>
     </message>
@@ -860,37 +874,37 @@ Check the Log panel for details.</translation>
 <context>
     <name>FilesTabWidget</name>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="154"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="157"/>
         <source>Unpin</source>
         <translation>Unpin</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="154"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="157"/>
         <source>Pin</source>
         <translation>Pin</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="183"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="186"/>
         <source>Save File</source>
         <translation>Save File</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="183"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="186"/>
         <source>Do you want to save this file?</source>
         <translation>Do you want to save this file?</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="185"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="187"/>
         <source>Yes</source>
         <translation>Yes</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="186"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="188"/>
         <source>No</source>
         <translation>No</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="187"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="189"/>
         <source>Cancel</source>
         <translation>Cancel</translation>
     </message>
@@ -968,37 +982,67 @@ Check the Log panel for details.</translation>
         <translation>Backward</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="116"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="119"/>
         <source>Find</source>
         <translation>Find</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="120"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="375"/>
+        <source>(any)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="394"/>
+        <source>Little Endian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="395"/>
+        <source>Big Endian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="409"/>
+        <source>Type:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="411"/>
+        <source>Endian:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="111"/>
         <source>Replace</source>
         <translation>Replace</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="231"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="120"/>
+        <source>Cancel</source>
+        <translation type="unfinished">Cancel</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="230"/>
         <source>Not found</source>
         <translation>Not found</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="232"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="231"/>
         <source>Cannot find &apos;%1&apos;</source>
         <translation>Cannot find &apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="332"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="331"/>
         <source>Pattern Error</source>
         <translation>Pattern Error</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="333"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="332"/>
         <source>Hex pattern &apos;%1&apos; is not valid</source>
         <translation>Hex pattern &apos;%1&apos; is not valid</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="348"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="347"/>
         <source>Case sensitive</source>
         <translation>Case sensitive</translation>
     </message>
@@ -1006,44 +1050,44 @@ Check the Log panel for details.</translation>
 <context>
     <name>IDEWindow</name>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="209"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="252"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="208"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="251"/>
         <source>Open</source>
         <translation>Open</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="222"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="255"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="221"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="254"/>
         <source>Rename</source>
         <translation>Rename</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="234"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="237"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="266"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="268"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="233"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="236"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="265"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="267"/>
         <source>Delete</source>
         <translation>Delete</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="236"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="235"/>
         <source>Are you sure you want to delete the folder &quot;%1&quot;?</source>
         <translation>Are you sure you want to delete the folder &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="241"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="276"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="240"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="275"/>
         <source>Create File</source>
         <translation>Create File</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="246"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="280"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="245"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="279"/>
         <source>Create Folder</source>
         <translation>Create Folder</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="267"/>
+        <location filename="../../../app/IDEWindow/idewindow.cpp" line="266"/>
         <source>Are you sure you want to delete the file &quot;%1&quot;?</source>
         <translation>Are you sure you want to delete the file &quot;%1&quot;?</translation>
     </message>
@@ -1051,39 +1095,39 @@ Check the Log panel for details.</translation>
 <context>
     <name>QHexView</name>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="382"/>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="401"/>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="409"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="378"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="397"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="405"/>
         <source>Go to</source>
         <translation>Go to</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="383"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="379"/>
         <source>Address or offset (0x... for hex address, decimal for offset):</source>
         <translation>Address or offset (0x... for hex address, decimal for offset):</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="402"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="398"/>
         <source>Invalid address or offset: %1</source>
         <translation>Invalid address or offset: %1</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="410"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="406"/>
         <source>Target is outside the current document.</source>
         <translation>Target is outside the current document.</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1917"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1913"/>
         <source>Select All</source>
         <translation>Select All</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1918"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1914"/>
         <source>Copy</source>
         <translation>Copy</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1919"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1915"/>
         <source>Paste</source>
         <translation>Paste</translation>
     </message>
@@ -1864,22 +1908,22 @@ Please install them or add their location to PATH.
         <translation>Choose Directory</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="235"/>
+        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="236"/>
         <source>Please enter project name</source>
         <translation>Please enter project name</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="244"/>
+        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="245"/>
         <source>Directory is invalid</source>
         <translation>Directory is invalid</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="255"/>
+        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="256"/>
         <source>Directory is exists!</source>
         <translation>Directory is exists!</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="261"/>
+        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="262"/>
         <source>Failed to create project directory!</source>
         <translation>Failed to create project directory!</translation>
     </message>

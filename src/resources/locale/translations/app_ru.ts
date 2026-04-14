@@ -175,18 +175,6 @@
         <translation>Открыть в любом случае</translation>
     </message>
     <message>
-        <source>Find...</source>
-        <translation type="vanished">Поиск...</translation>
-    </message>
-    <message>
-        <source>▲ Prev</source>
-        <translation type="vanished">▲ Предыдущий</translation>
-    </message>
-    <message>
-        <source>▼ Next</source>
-        <translation type="vanished">▼ Следующий</translation>
-    </message>
-    <message>
         <location filename="../../../Tools/Tabs/CodeEditor/codeeditortab.cpp" line="175"/>
         <source>Go to line</source>
         <translation>Перейти к строке</translation>
@@ -691,10 +679,6 @@ Check the Log panel for details.</source>
         <source>No results for &quot;%1&quot;</source>
         <translation>Результаты поиска по &quot;%1&quot; отсутствуют.</translation>
     </message>
-    <message>
-        <source>%1 line(s) shown</source>
-        <translation type="vanished">%1 строк показано</translation>
-    </message>
 </context>
 <context>
     <name>DisassemblerWorker</name>
@@ -738,6 +722,11 @@ Check the Log panel for details.</source>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="16"/>
         <source>Enter folder name...</source>
         <translation>Введите название директории</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/filecreatedialog.cpp" line="19"/>
+        <source>Create file</source>
+        <translation>Создать файл</translation>
     </message>
     <message>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="20"/>
@@ -823,10 +812,6 @@ Check the Log panel for details.</source>
         <location filename="../../../widgets/filetreeview.cpp" line="141"/>
         <source>Are you sure you want to move &apos;%1&apos; into &apos;%2&apos;?</source>
         <translation>Вы действительно хотите перенести &apos;%1&apos; внутрь &apos;%2&apos;?</translation>
-    </message>
-    <message>
-        <source>Confirm Move</source>
-        <translation type="vanished">Подтвердите перемещение</translation>
     </message>
     <message>
         <location filename="../../../widgets/filetreeview.cpp" line="144"/>
@@ -976,12 +961,7 @@ Check the Log panel for details.</source>
         <translation>Назад</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="110"/>
-        <source>Apply</source>
-        <translation>Применить</translation>
-    </message>
-    <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="115"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="120"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
@@ -991,57 +971,57 @@ Check the Log panel for details.</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="123"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="111"/>
         <source>Replace</source>
         <translation>Замена</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="234"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="230"/>
         <source>Not found</source>
         <translation>Не найден</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="235"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="231"/>
         <source>Cannot find &apos;%1&apos;</source>
         <translation>Не найдено &apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="335"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="331"/>
         <source>Pattern Error</source>
         <translation>Неверный шаблон</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="336"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="332"/>
         <source>Hex pattern &apos;%1&apos; is not valid</source>
         <translation>Шаблон шестнадцатиричного формата &apos;%1&apos; некорректный</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="351"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="347"/>
         <source>Case sensitive</source>
         <translation>С учетом регистра</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="379"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="375"/>
         <source>(any)</source>
         <translation>(Любой)</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="398"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="394"/>
         <source>Little Endian</source>
         <translation>Обратный порядок</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="399"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="395"/>
         <source>Big Endian</source>
         <translation>Прямой порядок</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="413"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="409"/>
         <source>Type:</source>
         <translation>Тип:</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="415"/>
+        <location filename="../../../libs/HexEditor/src/dialogs/hexfinddialog.cpp" line="411"/>
         <source>Endian:</source>
         <translation>Порядок байт</translation>
     </message>
@@ -1202,14 +1182,6 @@ Check the Log panel for details.</source>
         <source>References</source>
         <translation>Справка</translation>
     </message>
-    <message>
-        <source>ASCII characters</source>
-        <translation type="vanished">ASCII символы</translation>
-    </message>
-    <message>
-        <source>Keyboard Scancodes</source>
-        <translation type="vanished">Сканкоды клавиатуры</translation>
-    </message>
 </context>
 <context>
     <name>ReverseCalculatorDialog</name>
@@ -1313,54 +1285,6 @@ Check the Log panel for details.</source>
         <source>Error: </source>
         <translation>Ошибка</translation>
     </message>
-    <message>
-        <source>Enter value: 1234, -1, 0xDEADBEEF, 0b1010</source>
-        <translation type="vanished">Введите значение: 1234, -1, 0xDEADBEEF, 0b1010</translation>
-    </message>
-    <message>
-        <source>Bits:</source>
-        <translation type="vanished">Биты:</translation>
-    </message>
-    <message>
-        <source>Show signed</source>
-        <translation type="vanished">Показать со знаком</translation>
-    </message>
-    <message>
-        <source>Hex</source>
-        <translation type="vanished">Шеснадцатиричный формат</translation>
-    </message>
-    <message>
-        <source>Dec (unsigned)</source>
-        <translation type="vanished">Десятичное (без знака)</translation>
-    </message>
-    <message>
-        <source>Dec (signed)</source>
-        <translation type="vanished">Десятичное (с знаком)</translation>
-    </message>
-    <message>
-        <source>Bin</source>
-        <translation type="vanished">Двоичное представление</translation>
-    </message>
-    <message>
-        <source>Swap endian</source>
-        <translation type="vanished">Поменять порядок байт</translation>
-    </message>
-    <message>
-        <source>Copy hex</source>
-        <translation type="vanished">Скопировать в шестнадцатеричном виде</translation>
-    </message>
-    <message>
-        <source>Copy dec</source>
-        <translation type="vanished">Скопировать в десятичном формате</translation>
-    </message>
-    <message>
-        <source>Copy bin</source>
-        <translation type="vanished">Скопировать в двоичном формате</translation>
-    </message>
-    <message>
-        <source>Invalid input</source>
-        <translation type="vanished">Неверный ввод</translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -1382,7 +1306,7 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../dialogs/settingsdialog.cpp" line="60"/>
         <source>Disassembler backend</source>
-        <translation>Disassembler backend</translation>
+        <translation>Модуль дизассеблера</translation>
     </message>
     <message>
         <location filename="../../../dialogs/settingsdialog.cpp" line="67"/>
