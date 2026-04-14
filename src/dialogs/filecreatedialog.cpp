@@ -16,7 +16,7 @@ FileCreateDialog::FileCreateDialog(QWidget *parent, QString path, bool _is_dir):
         lineEdit->setPlaceholderText(tr("Enter folder name..."));
     }
     else {
-        setWindowTitle("Create file");
+        setWindowTitle(tr("Create file"));
         lineEdit->setPlaceholderText(tr("Enter file name..."));
     }
 
