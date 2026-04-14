@@ -11,7 +11,7 @@ static bool registered = [](){
 }();
 
 ReferencesMenu::ReferencesMenu() : BaseMenu("References") {
-    const auto descriptors = ToolsRegistry::instance().availableWindowTools();
+    const auto descriptors = ToolsRegistry::instance().availableReferenceTools();
     for (const auto& descriptor : descriptors){
         QAction* act = new QAction(descriptor.name, this);
         act->setProperty("toolId", descriptor.id);

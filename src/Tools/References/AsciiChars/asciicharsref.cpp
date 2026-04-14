@@ -11,14 +11,7 @@
 #include <memory>
 #include <QRegularExpressionValidator>
 
-static bool registered = []() {
-    registerWindowTool("ascii_chars", "ASCII / Unicode Characters", [](QWidget* parent) {
-        auto* win = new AsciiCharsRef();
-        win->setAttribute(Qt::WA_DeleteOnClose);
-        win->show();
-    });
-    return true;
-}();
+static bool registered = registerReferenceTool<AsciiCharsRef>("ascii_chars", "ASCII / Unicode Characters");
 
 AsciiCharsRef::AsciiCharsRef(QWidget* parent)
     : ReferenceWindow(parent)
