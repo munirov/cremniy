@@ -12,14 +12,7 @@ set_target_properties(${PROJECT_NAME}
         AUTOMOC ON
 )
 
-<<<<<<< HEAD
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt6::Widgets)
-=======
-target_link_libraries(${PROJECT_NAME}
-    PUBLIC
-        Qt6::Widgets
-)
->>>>>>> dfd10c9 (fix: correct CMake target names and Qt find_package)
 
 target_sources(${PROJECT_NAME}
     PRIVATE 

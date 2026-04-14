@@ -8,11 +8,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-<<<<<<< HEAD
 find_package(Qt6 REQUIRED COMPONENTS Widgets Test)
-=======
-find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets Test)
->>>>>>> 6bd6db6 (arch: file structure)
 
 add_library(CodeEditor STATIC
     include/core/toolwidget.hpp

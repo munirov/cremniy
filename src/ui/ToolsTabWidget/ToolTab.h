@@ -128,7 +128,6 @@ public slots:
     virtual void setTabWidthSlot(int width) = 0;
 
 signals:
-<<<<<<< HEAD
     /**
      * @brief Status bar information changed
      *
@@ -143,8 +142,6 @@ signals:
      * Например, при сохранении данных текущего ToolTab в файл, необходимо обновить данные на всех остальных ToolTab
      */
     void refreshDataAllTabsSignal();
-=======
->>>>>>> 933bcb5 (Modernize plugin architecture: integrate ToolsRegistry, centralize data management via FileDataBuffer, and update developer documentation.)
 
     /**
      * @brief Изменение изначальных данных

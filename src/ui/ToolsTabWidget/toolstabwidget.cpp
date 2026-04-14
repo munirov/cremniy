@@ -4,11 +4,7 @@
 #include <qboxlayout.h>
 #include <qfileinfo.h>
 
-<<<<<<< HEAD
-#include "core/ToolTab.h"
-=======
 #include "ui/ToolsTabWidget/ToolTab.h"
->>>>>>> 6bd6db6 (arch: file structure)
 #include "core/file/FileDataBuffer.h"
 #include "core/ToolsRegistry.h"
 #include "toolstabwidget.h"

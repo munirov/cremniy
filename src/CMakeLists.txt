@@ -75,7 +75,6 @@ qt_add_executable(${PROJECT_NAME}
     core/settings/exclusionfilterproxymodel.h
     core/ToolsRegistry.cpp
     core/ToolsRegistry.h
-    core/ToolTab.h
 
     # UI
     ui/FilesTabWidget/filestabwidget.cpp

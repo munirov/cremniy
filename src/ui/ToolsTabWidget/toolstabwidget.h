@@ -54,10 +54,6 @@ signals:
     void setTabReplaceSignal(bool checked);
     void setTabWidthSignal(int width);
 
-    void setWordWrapSignal(bool checked);
-    void setTabReplaceSignal(bool checked);
-    void setTabWidthSignal(int width);
-
 };
 
 #endif // TOOLTABWIDGET_H
