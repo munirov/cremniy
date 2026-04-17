@@ -102,7 +102,7 @@ file(GLOB_RECURSE PHOICONS_FILES
     "resources/icons/phoicons/*.theme"
 )
 
-qt_add_resources(${PROJECT_NAME} "phoicons_icons"
+qt_add_resources(${PROJECT_NAME}
     PREFIX "/icons"
     BASE "resources/icons"
     FILES ${PHOICONS_FILES}
