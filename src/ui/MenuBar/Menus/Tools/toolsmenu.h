@@ -19,7 +19,7 @@ public:
     void setupConnections(IDEWindow* ideWind);
 
 signals:
-    void openTabModule(TabModuleDescription desc);
+    void openTabModule(ModuleDescription<TabBase> desc);
 };
 
 #endif // TOOLSMENU_H

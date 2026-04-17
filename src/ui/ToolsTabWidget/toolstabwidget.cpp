@@ -7,6 +7,7 @@
 #include "core/file/FileDataBuffer.h"
 #include "ui/ToolsTabWidget/toolstabwidget.h"
 #include "core/modules/ModuleManager.h"
+#include "core/modules/TabBase.h"
 
 ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
     : QTabWidget(parent)
@@ -77,18 +78,18 @@ void ToolsTabWidget::createAlwaysTabs()
 {
 
     QString m_alwaysVisibleGroup = "always";
-    QList<QString> groups = ModuleManager::instance().getTabGroups();
+    QList<QString> groups = ModuleManager::instance().getGroups<TabBase>();
     if (!groups.contains(m_alwaysVisibleGroup)) return;
 
-    const QVector<TabModuleDescription>& tabsDesc = ModuleManager::instance().getTabsByGroup(m_alwaysVisibleGroup);
+    const QVector<ModuleDescription<TabBase>>& tabsDesc = ModuleManager::instance().getByGroup<TabBase>(m_alwaysVisibleGroup);
 
-    for (const TabModuleDescription& desc: tabsDesc){
+    for (const ModuleDescription<TabBase>& desc: tabsDesc){
         this->createTab(desc, true, false);
     }
     if (count() > 0) this->setCurrentIndex(0);
 }
 
-void ToolsTabWidget::createTab(const TabModuleDescription& desc, bool isAlways, bool tabClosable){
+void ToolsTabWidget::createTab(const ModuleDescription<TabBase>& desc, bool isAlways, bool tabClosable){
 
     TabBase* tab = desc.creator();
     if (!tab) return;
@@ -127,7 +128,7 @@ void ToolsTabWidget::createTab(const TabModuleDescription& desc, bool isAlways, 
         }
     }
 
-    insertTab(insertIndex, tab, tab->icon(), desc.name);
+    insertTab(insertIndex, tab, tab->icon(), desc.name());
     updateCloseButtons();
 }
 
@@ -209,8 +210,8 @@ void ToolsTabWidget::setTabWidthSlot(int width){
     emit setTabWidthSignal(width);
 }
 
-void ToolsTabWidget::openTabModule(TabModuleDescription desc){
-    qDebug() << "ToolsTabWidget::openTabModule(): " << desc.name;
+void ToolsTabWidget::openTabModule(ModuleDescription<TabBase> desc){
+    qDebug() << "ToolsTabWidget::openTabModule(): " << desc.name();
     this->createTab(desc);
     if (count() > 0) this->setCurrentIndex(count()-1);
 }

@@ -7,7 +7,6 @@
 #include "core/settings/exclusionfilterproxymodel.h"
 #include <QMainWindow>
 #include <qboxlayout.h>
-#include <qmenubar.h>
 #include <qsplitter.h>
 #include <qstatusbar.h>
 #include <QLabel>
@@ -127,7 +126,7 @@ signals:
     void setTabReplaceSignal(bool checked);
     void setTabWidthSignal(int width);
 
-    void openTabModule(TabModuleDescription desc);
+    void openTabModule(ModuleDescription<TabBase> desc);
 
 };
 #endif // IDEWINDOW_H

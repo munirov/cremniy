@@ -18,8 +18,6 @@
 #include <QStackedWidget>
 #include <QThread>
 #include <QFont>
-#include <QColor>
-#include <QDateTime>
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QTimer>
@@ -27,15 +25,18 @@
 #include <QHelpEvent>
 
 #include <QGuiApplication>
-#include <QClipboard>
 
 #include "core/settings/appsettings.h"
 #include "instructionhelpservice.h"
 #include "disasm/disasmtexthighlighter.h"
 #include "core/modules/ModuleManager.h"
 
+static QString displayName() {
+    return QCoreApplication::translate("DisassemblerTab", "Disassembler");
+}
+
 static bool registered = []() {
-    ModuleManager::instance().registerTab("Disassembler", "", []() { return new DisassemblerTab(); }, 100);
+    ModuleManager::instance().registerModule<TabBase>(&displayName, "", []() { return new DisassemblerTab(); }, 100);
     return true;
 }();
 

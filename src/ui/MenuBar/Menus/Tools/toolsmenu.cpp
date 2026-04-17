@@ -4,6 +4,8 @@
 #include <QKeySequence>
 #include <QAction>
 
+#include "core/modules/WindowBase.h"
+
 static bool registered = []() {
   MenuFactory::instance().registerMenu("5", []() { return new ToolsMenu(); });
   return true;
@@ -14,19 +16,19 @@ ToolsMenu::ToolsMenu() : BaseMenu("Tools") {
     QMenu* windowModulesMenu = new QMenu("Windows");
 
     // Modules: Tabs
-    const QList<QString>& tabGroups = ModuleManager::instance().getTabGroups();
+    const QList<QString>& tabGroups = ModuleManager::instance().getGroups<TabBase>();
 
     for (const QString& group : tabGroups){
 
         if (group == "always") continue;
 
-        const QVector<TabModuleDescription>& creatorTabModules = ModuleManager::instance().getTabsByGroup(group);
+        const QVector<ModuleDescription<TabBase>>& creatorTabModules = ModuleManager::instance().getByGroup<TabBase>(group);
 
         QMenu* groupMenu;
         if (group == "") groupMenu = tabModulesMenu;
         else groupMenu = new QMenu(group);
 
-        for (const TabModuleDescription& desc : creatorTabModules){
+        for (const ModuleDescription<TabBase>& desc : creatorTabModules){
 
             QAction* newAction = new QAction(desc.name, this);
             groupMenu->addAction(newAction);
@@ -43,17 +45,17 @@ ToolsMenu::ToolsMenu() : BaseMenu("Tools") {
 
 
     // Nodules: Windows
-    const QList<QString>& windowGroups = ModuleManager::instance().getWindowGroups();
+    const QList<QString>& windowGroups = ModuleManager::instance().getGroups<WindowBase>();
 
     for (const QString& group : windowGroups){
 
-        const QVector<WindowModuleDescription>& descWindowModules = ModuleManager::instance().getWindowsByGroup(group);
+        const QVector<ModuleDescription<WindowBase>>& descWindowModules = ModuleManager::instance().getByGroup<WindowBase>(group);
 
         QMenu* groupMenu;
         if (group == "") groupMenu = windowModulesMenu;
         else groupMenu = new QMenu(group);
 
-        for (const WindowModuleDescription& desc : descWindowModules){
+        for (const ModuleDescription<WindowBase>& desc : descWindowModules){
 
             QAction* newAction = new QAction(desc.name, this);
             groupMenu->addAction(newAction);

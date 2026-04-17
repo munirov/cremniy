@@ -1,9 +1,7 @@
 #include "keyboardscancodesref.h"
 #include "keyboardscancodevizwidget.h"
 #include "core/modules/ModuleManager.h"
-#include <QAbstractItemView>
 #include <QHeaderView>
-#include <QKeyEvent>
 #include <QKeySequence>
 #include <QLabel>
 #include <QFormLayout>
@@ -14,8 +12,12 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+static QString displayName() {
+    return QCoreApplication::translate("KeyboardScancodesRef", "Keyboard Scancodes");
+}
+
 static bool registered = []() {
-    ModuleManager::instance().registerReference("Keyboard Scancodes", "", []() { return new KeyboardScancodesRef(); });
+    ModuleManager::instance().registerModule<ReferenceBase>(&displayName, "", []() { return new KeyboardScancodesRef(); });
     return true;
 }();
 
@@ -49,8 +51,8 @@ struct RefRow {
 };
 
 static const RefRow kRefRows[] = {
-    {"Esc", "01", "Break code: 81"},
-    {"1", "02", "… 0 (top row) 0B"},
+    {"Esc", "01", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","Break code: 81")},
+    {"1", "02", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","… 0 (top row) 0B")},
     {"2", "03", ""},
     {"3", "04", ""},
     {"4", "05", ""},
@@ -64,7 +66,7 @@ static const RefRow kRefRows[] = {
     {"= (equals)", "0D", ""},
     {"Backspace", "0E", ""},
     {"Tab", "0F", ""},
-    {"Q", "10", "Letter rows: set 1 make codes"},
+    {"Q", "10", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "Letter rows: set 1 make codes")},
     {"W", "11", ""},
     {"E", "12", ""},
     {"R", "13", ""},
@@ -77,7 +79,7 @@ static const RefRow kRefRows[] = {
     {"[", "1A", ""},
     {"]", "1B", ""},
     {"Enter (main)", "1C", ""},
-    {"Left Ctrl", "1D", "Right Ctrl (extended): E0 1D"},
+    {"Left Ctrl", "1D", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "Right Ctrl (extended): E0 1D")},
     {"A", "1E", ""},
     {"S", "1F", ""},
     {"D", "20", ""},
@@ -90,8 +92,8 @@ static const RefRow kRefRows[] = {
     {";", "27", ""},
     {"'", "28", ""},
     {"` (grave)", "29", ""},
-    {"Left Shift", "2A", "Right Shift: 36"},
-    {"\\ (backslash)", "2B", "US 104-key; layout-dependent"},
+    {"Left Shift", "2A", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","Right Shift: 36")},
+    {"\\ (backslash)", "2B", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","US 104-key; layout-dependent")},
     {"Z", "2C", ""},
     {"X", "2D", ""},
     {"C", "2E", ""},
@@ -101,10 +103,10 @@ static const RefRow kRefRows[] = {
     {"M", "32", ""},
     {",", "33", ""},
     {".", "34", ""},
-    {"/", "35", "Numpad / (ext.): E0 35"},
+    {"/", "35", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","Numpad / (ext.): E0 35")},
     {"Right Shift", "36", ""},
     {"* (numpad)", "37", ""},
-    {"Left Alt", "38", "Right Alt / AltGr (ext.): E0 38"},
+    {"Left Alt", "38", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","Right Alt / AltGr (ext.): E0 38")},
     {"Space", "39", ""},
     {"Caps Lock", "3A", ""},
     {"F1", "3B", "F10: 44"},
@@ -119,7 +121,7 @@ static const RefRow kRefRows[] = {
     {"F10", "44", ""},
     {"Num Lock", "45", ""},
     {"Scroll Lock", "46", ""},
-    {"Numpad 7 / Home", "47", "Behavior depends on Num Lock"},
+    {"Numpad 7 / Home", "47", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","Behavior depends on Num Lock")},
     {"Numpad 8 / Up", "48", ""},
     {"Numpad 9 / PgUp", "49", ""},
     {"Numpad -", "4A", ""},
@@ -134,11 +136,11 @@ static const RefRow kRefRows[] = {
     {"Numpad . / Del", "53", ""},
     {"F11", "57", ""},
     {"F12", "58", ""},
-    {"Left Win", "E0 5B", "GUI keys (extended prefix E0)"},
+    {"Left Win", "E0 5B", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","GUI keys (extended prefix E0)")},
     {"Right Win", "E0 5C", ""},
     {"Context / Menu", "E0 5D", ""},
     {"Numpad Enter", "E0 1C", ""},
-    {"Insert", "E0 52", "Navigation cluster (E0)"},
+    {"Insert", "E0 52", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","Navigation cluster (E0)")},
     {"Home", "E0 47", ""},
     {"Page Up", "E0 49", ""},
     {"Delete", "E0 53", ""},
@@ -148,8 +150,8 @@ static const RefRow kRefRows[] = {
     {"Arrow Left", "E0 4B", ""},
     {"Arrow Down", "E0 50", ""},
     {"Arrow Right", "E0 4D", ""},
-    {"Print Screen", "E0 37", "Often a multi-byte sequence; see OS docs"},
-    {"Pause", "E1 1D 45 …", "Long pause make sequence; break differs"},
+    {"Print Screen", "E0 37", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","Often a multi-byte sequence; see OS docs")},
+    {"Pause", "E1 1D 45 …", QT_TRANSLATE_NOOP("KeyboardScanCodesRef","Long pause make sequence; break differs")},
 };
 
 KeyboardScancodesRef::KeyboardScancodesRef(QWidget *parent)
@@ -172,7 +174,7 @@ void KeyboardScancodesRef::initWidgets()
     root->setSpacing(8);
 
     m_helpToggle = new QToolButton(this);
-    m_helpToggle->setText(tr("Справка"));
+    m_helpToggle->setText(tr("Reference"));
     m_helpToggle->setCheckable(true);
     m_helpToggle->setChecked(false);
     m_helpToggle->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -182,10 +184,10 @@ void KeyboardScancodesRef::initWidgets()
     auto *helpLay = new QVBoxLayout(m_helpContent);
     helpLay->setContentsMargins(8, 8, 8, 8);
     auto *helpText = new QLabel(
-        tr("• Таблица показывает эталонные make-коды IBM PC/AT Scan Code Set 1 (hex).\n"
-           "• Поле захвата отображает текущую нажатую клавишу и native-коды из Qt.\n"
-           "• На визуальной клавиатуре подсвечивается соответствующая клавиша.\n"
-           "• Native scan code зависит от платформы и может отличаться от Set 1."),
+        tr("• The table shows the reference make codes for IBM PC/AT Scan Code Set 1 (hex).\n"
+           "• The capture field displays the currently pressed key and native codes from Qt.\n"
+           "• The corresponding key is highlighted on the visual keyboard.\n"
+           "• The native scan code depends on the platform and may differ from Set 1."),
         m_helpContent);
     helpText->setWordWrap(true);
     helpLay->addWidget(helpText);
@@ -195,7 +197,7 @@ void KeyboardScancodesRef::initWidgets()
     connect(m_helpToggle, &QToolButton::toggled, m_helpContent, &QWidget::setVisible);
 
     m_capture = new KeyCaptureFrame(this);
-    auto *capHint = new QLabel(tr("Фокус: кликните в область ниже и нажимайте клавиши"), this);
+    auto *capHint = new QLabel(tr("Focus: Click in the area below and press the button."), this);
     root->addWidget(capHint);
     root->addWidget(m_capture);
 
@@ -228,7 +230,7 @@ void KeyboardScancodesRef::initWidgets()
     statusPanel->setStyleSheet(QStringLiteral("background: rgba(255,255,255,0.03); border: 1px solid #3f3f46; border-radius: 6px;"));
     root->addWidget(statusPanel);
 
-    m_status = new QLabel(tr("Ожидание нажатия клавиши"), this);
+    m_status = new QLabel(tr("Waiting for a key press"), this);
     m_status->setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_status->setStyleSheet(QStringLiteral("color: #a1a1aa;"));
     root->addWidget(m_status);
@@ -285,7 +287,7 @@ void KeyboardScancodesRef::fillReferenceTable()
     for (int i = 0; i < n; ++i) {
         m_table->setItem(i, 0, new QTableWidgetItem(QString::fromUtf8(kRefRows[i].name)));
         m_table->setItem(i, 1, new QTableWidgetItem(QString::fromUtf8(kRefRows[i].set1)));
-        m_table->setItem(i, 2, new QTableWidgetItem(QString::fromUtf8(kRefRows[i].notes)));
+        m_table->setItem(i, 2, new QTableWidgetItem(QCoreApplication::translate("KeyboardScanCodesRef",kRefRows[i].notes)));
     }
 }
 
@@ -320,5 +322,5 @@ void KeyboardScancodesRef::onKeyActivity(int qtKey, quint32 nativeScan, quint32 
     m_vkValue->setText(QStringLiteral("0x") + QString::number(nativeVk, 16).toUpper());
     m_textValue->setText(text.isEmpty() ? QStringLiteral("—") : text);
     m_modsValue->setText(modStr.isEmpty() ? QStringLiteral("—") : modStr);
-    m_status->setText(tr("Последняя клавиша: %1").arg(keyName.isEmpty() ? QStringLiteral("Unknown") : keyName));
+    m_status->setText(tr("Last key: %1").arg(keyName.isEmpty() ? QStringLiteral("Unknown") : keyName));
 }

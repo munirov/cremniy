@@ -11,15 +11,18 @@
 #include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
-#include <QVBoxLayout>
 #include <QWidget>
 #include <QString>
-#include <QStringBuilder>
 
 #include "core/modules/ModuleManager.h"
 
+static QString displayName() {
+    return QCoreApplication::translate("ReverseCalculator", "Reverse Calculator");
+};
+
 static bool registered = []() {
-    ModuleManager::instance().registerWindow("Reverse Calulator", "", []() { return new ReverseCalculatorDialog(); });
+    ModuleManager::instance().registerModule<WindowBase>(
+    &displayName, "", []() { return new ReverseCalculatorDialog(); });
     return true;
 }();
 

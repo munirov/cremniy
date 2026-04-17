@@ -21,7 +21,7 @@ FilesTabWidget::FilesTabWidget(QWidget *parent) {
     QCoreApplication::instance()->installEventFilter(this);
 
     connect(this, &FilesTabWidget::openTabModule,
-            this, [this](TabModuleDescription desc){
+            this, [this](ModuleDescription<TabBase> desc){
                 if (auto* tab = qobject_cast<FileTab*>(currentWidget()))
                     emit tab->openTabModule(desc);
             });

@@ -39,7 +39,7 @@ signals:
     void setTabReplaceSignal(bool checked);
     void setTabWidthSignal(int width);
     void statusBarInfoChanged(const QString& info);
-    void openTabModule(TabModuleDescription desc);
+    void openTabModule(ModuleDescription<TabBase> desc);
 };
 
 #endif // FILESTABWIDGET_H

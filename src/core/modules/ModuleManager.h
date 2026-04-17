@@ -1,62 +1,85 @@
 #ifndef MODULEMANAGER_H
 #define MODULEMANAGER_H
 
-#include "core/modules/ReferenceBase.h"
-#include "core/modules/TabBase.h"
-#include "core/modules/WindowBase.h"
+#include <functional>
+#include <QList>
+#include <QString>
 
-using CreatorTabModule = std::function<TabBase*()>;
-using CreatorWindowModule = std::function<WindowBase*()>;
-using CreatorReferenceModule = std::function<ReferenceBase*()>;
 
-struct TabModuleDescription {
-    CreatorTabModule creator;
-    QString name;
-    int position;
+template<typename T>
+struct ModuleDescription {
+    std::function<T*()> creator;
+    std::function<QString()> name;
+    int position = 0;
 };
 
-struct WindowModuleDescription {
-    CreatorWindowModule creator;
-    QString name;
-};
-
-struct ReferenceModuleDescription {
-    CreatorReferenceModule creator;
-    QString name;
-};
+template<typename T>
+using ModuleStorage = QHash<QString, QVector<ModuleDescription<T>>>;
 
 class ModuleManager {
 
 public:
     static ModuleManager& instance();
 
-    void registerTab(
-                    const QString& name,
-                    const QString& group,
-                    CreatorTabModule creator,
-                    const int& position = 0
-                    );
-    void registerWindow(const QString& name,const QString& group, CreatorWindowModule creator);
-    void registerReference(const QString& name,const QString& group, CreatorReferenceModule creator);
+    template<typename T>
+    void registerModule(std::function<QString()> name, const QString &group, std::function<T*()> creator, int position = 0) const {
+        ModuleDescription<T> desc{
+            std::move(creator),
+            std::move(name),
+            position
+        };
+        getStorage<T>()[group.trimmed()].push_back(std::move(desc));
+    }
 
-    QList<QString> getTabGroups() const;
-    QList<QString> getWindowGroups() const;
-    QList<QString> getReferenceGroups() const;
+    template <typename T>
+    T* create(const QString& group, const int& index) {
+        const auto& storage = getStorageConst<T>();
+        auto it = storage.find(group.trimmed());
+        if (it == storage.end()) return nullptr;
 
-    const QVector<TabModuleDescription>& getTabsByGroup(const QString& group) const;
-    const QVector<WindowModuleDescription>& getWindowsByGroup(const QString& group) const;
-    const QVector<ReferenceModuleDescription>& getReferencesByGroup(const QString& group) const;
+        const auto& vec = it.value();
+        if (index < 0 || index >= vec.size()) return nullptr;
 
-    TabBase* createTab(const QString& group, const int& index);
-    WindowBase* createWindow(const QString& group, const int& index);
-    ReferenceBase* createReference(const QString& group, const int& index);
+        return vec[index].creator();
+    }
+
+    template<typename T>
+    const QVector<ModuleDescription<T>> & getByGroup(const QString &group) const { return getByGroup(group, getStorageConst<T>()); }
+
+    template<typename T>
+    QList<QString> getGroups() const { return getSortedKeys<T>(getStorageConst<T>()); }
 
 private:
+    template<typename T>
+    static ModuleStorage<T>& getStorage() {
+        static ModuleStorage<T> storage;
+        return storage;
+    }
 
-    QHash<QString, QVector<TabModuleDescription>> m_tabModuleCreators;
-    QHash<QString, QVector<WindowModuleDescription>> m_windowModuleCreators;
-    QHash<QString, QVector<ReferenceModuleDescription>> m_referenceModuleCreators;
+    template<typename T>
+    static const ModuleStorage<T>& getStorageConst() {
+        return getStorage<T>();
+    }
 
+    template<typename T>
+    const QVector<ModuleDescription<T>>& getByGroup(
+        const QString& group,
+        const QHash<QString, QVector<ModuleDescription<T>>>& hash) const
+    {
+        static const QVector<ModuleDescription<T>> empty;
+        auto it = hash.find(group.trimmed());
+        if (it == hash.end()) return empty;
+        return it.value();
+    }
+
+    template<typename T>
+    QList<QString> getSortedKeys(const QHash<QString, QVector<ModuleDescription<T>>>& map) const {
+        QList<QString> keys = map.keys();
+        std::sort(keys.begin(), keys.end(), [](const QString& a, const QString& b) {
+            return std::tuple{!a.isEmpty(), a} < std::tuple{!b.isEmpty(), b};
+        });
+        return keys;
+    }
 };
 
 #endif // MODULEMANAGER_H

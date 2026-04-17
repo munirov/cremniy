@@ -43,7 +43,7 @@ signals:
 
     void statusBarInfoChanged(const QString& info);
 
-    void openTabModule(TabModuleDescription desc);
+    void openTabModule(ModuleDescription<TabBase> desc);
 
 };
 

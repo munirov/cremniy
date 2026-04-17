@@ -9,8 +9,12 @@
 #include "formatpage.h"
 #include "core/modules/ModuleManager.h"
 
+static QString displayName() {
+    return QCoreApplication::translate("BinaryTab", "Binary");
+}
+
 static bool registered = []() {
-    ModuleManager::instance().registerTab("Binary", "always", []() { return new BinaryTab(); }, 200);
+    ModuleManager::instance().registerModule<TabBase>(&displayName, "always", []() { return new BinaryTab(); }, 200);
     return true;
 }();
 

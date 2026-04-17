@@ -7,13 +7,11 @@
 #include <QFile>
 #include <QFontDatabase>
 #include <QGuiApplication>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QMessageBox>
 #include <QProcess>
 #include <QPushButton>
 #include <QRegularExpression>
-#include <QSplitter>
 #include <QStandardPaths>
 #include <QTextEdit>
 #include <QTextStream>
@@ -21,8 +19,13 @@
 #include <QVBoxLayout>
 #include "core/modules/ModuleManager.h"
 
+static QString displayName() {
+    return QCoreApplication::translate("ShellCodeGenerator","Shell code");
+}
+
 static bool registered = []() {
-    ModuleManager::instance().registerWindow("ShellCode Generator", "", []() { return new ShellcodeGeneratorDialog(); });
+    ModuleManager::instance().registerModule<WindowBase>(
+        &displayName, "", []() { return new ShellcodeGeneratorDialog(); });
     return true;
 }();
 
@@ -122,13 +125,13 @@ ShellcodeGeneratorDialog::ShellcodeGeneratorDialog(QWidget *parent) : WindowBase
     editorsLayout->setSpacing(8);
 
     m_asmInput = new QTextEdit(this);
-    m_asmInput->setPlaceholderText("; Enter x86/x64 assembly here...");
+    m_asmInput->setPlaceholderText(tr("; Enter x86/x64 assembly here..."));
     m_asmInput->setFont(monoFont);
     m_asmInput->setTabStopDistance(32);
     m_asmInput->setStyleSheet("background-color: #202020; color: #ececec; border: 1px solid #505050;");
 
     m_shellcodeOutput = new QTextEdit(this);
-    m_shellcodeOutput->setPlaceholderText("// Shellcode output will appear here...");
+    m_shellcodeOutput->setPlaceholderText(tr("// Shellcode output will appear here..."));
     m_shellcodeOutput->setFont(monoFont);
     m_shellcodeOutput->setReadOnly(true);
     m_shellcodeOutput->setStyleSheet("background-color: #202020; color: #ececec; border: 1px solid #505050;");
@@ -169,7 +172,7 @@ void ShellcodeGeneratorDialog::onAssemble() {
     if (asmText.isEmpty()) {
         m_shellcodeOutput->clear();
         m_byteCountLabel->setText("0 bytes");
-        setStatus("Ready.");
+        setStatus(tr("Ready."));
         return;
     }
 
@@ -182,7 +185,7 @@ void ShellcodeGeneratorDialog::onAssemble() {
     {
         QFile f(tmpAsm);
         if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            setStatus("Failed to create temp file.", true);
+            setStatus(tr("Failed to create temp file."), true);
             return;
         }
         QTextStream s(&f);
@@ -194,7 +197,7 @@ void ShellcodeGeneratorDialog::onAssemble() {
     proc.start(nasmExe, {"-f", "bin", "-o", tmpBin, tmpAsm});
 
     if (!proc.waitForStarted(3000)) {
-        setStatus("nasm not found. Ensure it is installed and in PATH.", true);
+        setStatus(tr("nasm not found. Ensure it is installed and in PATH."), true);
         QFile::remove(tmpAsm);
         return;
     }
@@ -210,7 +213,7 @@ void ShellcodeGeneratorDialog::onAssemble() {
 
     QFile binFile(tmpBin);
     if (!binFile.open(QIODevice::ReadOnly)) {
-        setStatus("Failed to read nasm output.", true);
+        setStatus(tr("Failed to read nasm output."), true);
         QFile::remove(tmpAsm);
         return;
     }
@@ -221,7 +224,7 @@ void ShellcodeGeneratorDialog::onAssemble() {
     QFile::remove(tmpBin);
 
     if (raw.isEmpty()) {
-        setStatus("Assembled 0 bytes.", true);
+        setStatus(tr("Assembled 0 bytes."), true);
         return;
     }
 
@@ -251,7 +254,7 @@ void ShellcodeGeneratorDialog::onCopyOutput() {
     const QString text = m_shellcodeOutput->toPlainText();
     if (!text.isEmpty()) {
         QGuiApplication::clipboard()->setText(text);
-        setStatus("Copied to clipboard.");
+        setStatus(tr("Copied to clipboard."));
     }
 }
 
@@ -259,7 +262,7 @@ void ShellcodeGeneratorDialog::onClear() {
     m_asmInput->clear();
     m_shellcodeOutput->clear();
     m_byteCountLabel->setText("0 bytes");
-    setStatus("Ready.");
+    setStatus(tr("Ready."));
 }
 
 QList<ShellcodeGeneratorDialog::DisasmEntry> ShellcodeGeneratorDialog::disassemble(const QByteArray &raw, const QString &bits) const {
@@ -363,7 +366,7 @@ QString ShellcodeGeneratorDialog::formatAnnotated(const QByteArray &raw, const Q
 
 QString ShellcodeGeneratorDialog::generateC(const QByteArray &raw, const QString &bits) const {
     const auto entries = disassemble(raw, bits);
-    QString s = QString("unsigned char shellcode[] = {  // %1 bytes\n").arg(raw.size());
+    QString s = tr("unsigned char shellcode[] = {  // %1 bytes\n").arg(raw.size());
     s += formatAnnotated(raw, entries);
     s += "};\n";
     return s;
@@ -371,7 +374,7 @@ QString ShellcodeGeneratorDialog::generateC(const QByteArray &raw, const QString
 
 QString ShellcodeGeneratorDialog::generateCpp(const QByteArray &raw, const QString &bits) const {
     const auto entries = disassemble(raw, bits);
-    QString s = QString("std::array<std::uint8_t, %1> shellcode = {  // %1 bytes\n").arg(raw.size());
+    QString s = tr("std::array<std::uint8_t, %1> shellcode = {  // %1 bytes\n").arg(raw.size());
     s += formatAnnotated(raw, entries);
     s += "};\n";
     return s;
