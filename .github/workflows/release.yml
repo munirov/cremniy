@@ -72,13 +72,12 @@ jobs:
         run: |
           echo -e "[Desktop Entry]\nType=Application\nName=Cremniy\nExec=cremniy\nIcon=cremniy\nCategories=Utility;" > cremniy.desktop
 
-          # Используем SVG для иконки приложения, если можно, или конвертируем аккуратно
-          convert src/resources/icons/icon.svg -resize 256x256 cremniy.png
+          # Исправленная команда: делаем строго 256x256 с прозрачным фоном
+          convert src/resources/icons/icon.svg -background none -gravity center -resize 256x256 -extent 256x256 cremniy.png
 
           export QMAKE=$Qt6_DIR/bin/qmake
           export LD_LIBRARY_PATH=$Qt6_DIR/lib:$LD_LIBRARY_PATH
           
-          # Явно заставляем включить плагины для SVG и иконок
           export EXTRA_QT_PLUGINS=iconengines,imageformats
 
           ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run \
@@ -90,7 +89,6 @@ jobs:
             --output appimage
           
           mv Cremniy-*.AppImage ${{ matrix.artifact_name }}.AppImage || mv cremniy-*.AppImage ${{ matrix.artifact_name }}.AppImage
-
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
