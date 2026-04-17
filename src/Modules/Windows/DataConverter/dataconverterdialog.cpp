@@ -3,7 +3,6 @@
 #include <QClipboard>
 #include <QComboBox>
 #include <QAbstractItemView>
-#include <QApplication>
 #include <QFormLayout>
 #include <QGuiApplication>
 #include <QHBoxLayout>

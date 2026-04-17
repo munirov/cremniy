@@ -1,8 +1,7 @@
 #ifndef ASCIICHARSREF_H
 #define ASCIICHARSREF_H
 
-#include "ui/MenuBar/Menus/References/referencewindow.h"
-#include <QWidget>
+#include "core/modules/ReferenceBase.h"
 
 class AsciiCharsRef : public ReferenceBase
 {

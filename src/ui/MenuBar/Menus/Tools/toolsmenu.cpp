@@ -64,7 +64,6 @@ ToolsMenu::ToolsMenu() : BaseMenu(tr("Tools")) {
                 auto* module = desc.creator();
                 module->showWindow();
             });
-
         }
 
         if (group != "") windowModulesMenu->addMenu(groupMenu);
