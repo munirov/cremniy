@@ -15,18 +15,23 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");
     a.setWindowIcon(QIcon(":/icons/icon.svg"));
+
     // - - Themes - -
 
     // Icons
     QIcon::setThemeSearchPaths({":/icons"});
     QIcon::setThemeName("phoicons");         // маленькими буквами!
+    
     qDebug() << "=== SYSTEM DEBUG ===";
     qDebug() << "Supported formats:" << QImageReader::supportedImageFormats();
     qDebug() << "=== THEME DEBUG ===";
     qDebug() << "Theme Search Paths:" << QIcon::themeSearchPaths();
     qDebug() << "Current Theme Name:" << QIcon::themeName();
-    QFile themeFile(":/icons/phoicons/index.theme");
-    qDebug() << "index.theme exists in resources:" << themeFile.exists();
+    
+    // Переименовал в checkTheme, чтобы не было конфликта
+    QFile checkTheme(":/icons/phoicons/index.theme");
+    qDebug() << "index.theme exists in resources:" << checkTheme.exists();
+    
     qDebug() << "=== RESOURCE TREE ===";
     QDirIterator it(":/icons", QDirIterator::Subdirectories);
     while (it.hasNext()) {
@@ -41,19 +46,20 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    QFile themeFile(":/styles/dark.qss");
-    if (!themeFile.open(QFile::ReadOnly)) {
-        qWarning() << "Failed to open the theme file: " << themeFile.errorString();
+    // Переименовал в qssThemeFile
+    QFile qssThemeFile(":/styles/dark.qss");
+    if (!qssThemeFile.open(QFile::ReadOnly)) {
+        qWarning() << "Failed to open the theme file: " << qssThemeFile.errorString();
         return 1;
     }
 
-    QString baseStyle   = QLatin1String(baseStyleFile.readAll());
-    QString theme  = QLatin1String(themeFile.readAll());
+    QString baseStyle = QLatin1String(baseStyleFile.readAll());
+    QString themeData = QLatin1String(qssThemeFile.readAll());
 
     baseStyleFile.close();
-    baseStyleFile.close();
+    qssThemeFile.close(); // Теперь закрываем правильный файл
 
-    a.setStyleSheet(baseStyle + "\n" + theme);
+    a.setStyleSheet(baseStyle + "\n" + themeData);
 
     WelcomeForm wf;
     wf.show();
