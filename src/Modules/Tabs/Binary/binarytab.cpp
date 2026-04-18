@@ -55,9 +55,6 @@ BinaryTab::BinaryTab(QWidget *parent)
 
     // - - End Configurate Tab Widgets - -
 
-    // find
-    m_findShortcut = new QShortcut(QKeySequence::Find, this);
-    connect(m_findShortcut, &QShortcut::activated, this, &BinaryTab::openFindDialog);
 }
 
 

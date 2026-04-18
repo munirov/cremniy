@@ -1,7 +1,6 @@
 #ifndef BINARYTAB_H
 #define BINARYTAB_H
 
-#include <QShortcut>
 #include <QWidget>
 #include <QIcon>
 #include <qfileinfo.h>
@@ -20,7 +19,6 @@ private:
     bool m_updatingSelection = false; // Флаг для предотвращения рекурсии
     bool m_syncingBufferData = false;
     bool m_pageDataDirty = true;
-    QShortcut* m_findShortcut = nullptr;
     QListWidget* m_pageList;
 
     void openFindDialog();

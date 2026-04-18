@@ -44,11 +44,9 @@ private:
     bool m_largeFileMode = false;
     bool m_updatingSelection = false;
     QString m_lastSearchText;
-    QShortcut* m_findShortcut = nullptr;
     QShortcut* m_findNextShortcut = nullptr;
     QShortcut* m_findPreviousShortcut = nullptr;
     QShortcut* m_goToLineShortcut = nullptr;
-    QShortcut* m_replaceShortcut = nullptr;
     bool m_replaceMode = false;
     QString m_currentLang = "Plain Text";
 

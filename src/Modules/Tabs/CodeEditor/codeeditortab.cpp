@@ -132,14 +132,10 @@ CodeEditorTab::CodeEditorTab(QWidget* parent)
             emit dataEqual();
     });
 
-    m_findShortcut = new QShortcut(QKeySequence::Find, this);
-    m_replaceShortcut = new QShortcut(QKeySequence::Replace, this);
     m_findNextShortcut = new QShortcut(QKeySequence(Qt::Key_F3), this);
     m_findPreviousShortcut = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F3), this);
     m_goToLineShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_G), this);
 
-    connect(m_findShortcut, &QShortcut::activated, this, &CodeEditorTab::openFindDialog);
-    connect(m_replaceShortcut, &QShortcut::activated, this, &CodeEditorTab::openReplaceDialog);
     connect(m_findNextShortcut, &QShortcut::activated, this, [this]() { findNext(true); });
     connect(m_findPreviousShortcut, &QShortcut::activated, this, [this]() { findNext(false); });
     connect(m_goToLineShortcut, &QShortcut::activated, this, &CodeEditorTab::openGoToLineDialog);
@@ -416,4 +412,3 @@ void CodeEditorTab::setTabWidthSlot(int width) {
     m_codeEditorWidget->setTabDisplaySize(width);
     m_codeEditorWidget->setTabReplaceSize(width);
 }
-
