@@ -29,12 +29,10 @@ QIcon IconProvider::icon(const QFileInfo &info) const {
     bool isFolder = info.isDir();
 
     if (isFolder) {
-        iconName = "folder"; // или "folder-simple"
+        iconName = "folder";
     } else {
         QString ext = info.suffix().toLower();
         QString name = info.fileName();
-
-        // --- Phosphor ---
         if (ext == "c") iconName = "file-c";
         else if (ext == "cpp" || ext == "cxx") iconName = "file-cpp";
         else if (ext == "h" || ext == "hpp") iconName = "file-code";
@@ -51,17 +49,28 @@ QIcon IconProvider::icon(const QFileInfo &info) const {
         else iconName = "file";
     }
 
-    // Достаем иконку из темы
+    // 1. Пытаемся достать из темы (как положено)
     QIcon ic = QIcon::fromTheme(iconName);
+    
+    // 2. ЕСЛИ НЕ НАШЛОСЬ (ic.isNull() или системная иконка вместо нашей)
+    // Пробуем загрузить напрямую из файла в ресурсах
+    if (ic.isNull() || ic.availableSizes().isEmpty()) {
+        QString directPath = QString(":/icons/phoicons/icons/%1.svg").arg(iconName);
+        if (QFile::exists(directPath)) {
+            ic = QIcon(directPath);
+        }
+    }
+
+    // Если папка всё еще пустая, пробуем simple
     if (isFolder && ic.isNull()) {
-        ic = QIcon::fromTheme("folder-simple");
+        ic = QIcon(":/icons/phoicons/icons/folder-simple.svg");
     }
 
-    // Оставляем только проверку на null
+    // --- ФИНАЛЬНАЯ ПОКРАСКА ---
     if (!ic.isNull()) {
-        return paintIcon(ic, isFolder ? QColor("#FFFFFF") : Qt::white);
+        return paintIcon(ic, Qt::white);
     }
 
-    // Если иконка темы не нашлась, возвращаем дефолт ОС
+    // Если совсем ничего не помогло — дефолт ОС
     return QFileIconProvider::icon(info);
 }
