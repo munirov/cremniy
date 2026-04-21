@@ -11,6 +11,9 @@ class ExclusionFilterProxyModel : public QSortFilterProxyModel
 public:
     explicit ExclusionFilterProxyModel(QObject *parent = nullptr);
 
+    bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column,
+        const QModelIndex &parent) override;
+
 protected:
     bool filterAcceptsRow(int sourceRow,
                           const QModelIndex &sourceParent) const override;

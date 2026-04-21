@@ -2,6 +2,8 @@
 #include "core/settings/appsettings.h"
 
 #include <QFileSystemModel>
+#include <QMessageBox>
+#include <QPushButton>
 
 ExclusionFilterProxyModel::ExclusionFilterProxyModel(QObject *parent)
     : QSortFilterProxyModel(parent)
@@ -9,6 +11,25 @@ ExclusionFilterProxyModel::ExclusionFilterProxyModel(QObject *parent)
     reloadPatterns();
     connect(SettingsNotifier::instance(), &SettingsNotifier::excludedPatternsChanged,
             this, &ExclusionFilterProxyModel::reloadPatterns);
+}
+
+bool ExclusionFilterProxyModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column,
+    const QModelIndex &parent) {
+    if (action == Qt::MoveAction) {
+        QMessageBox confirm_move(
+            QMessageBox::Question,
+            tr("Confirm move"),
+            tr("Are you sure you want to move selected files?"),
+            QMessageBox::NoButton
+        );
+        auto const yes = confirm_move.addButton(tr("Yes"), QMessageBox::YesRole);
+        confirm_move.addButton(tr("No"), QMessageBox::NoRole);
+        confirm_move.exec();
+        auto const reply = confirm_move.clickedButton();
+        if (reply != yes) return false;
+    }
+
+    return QSortFilterProxyModel::dropMimeData(data, action, row, column, parent);
 }
 
 void ExclusionFilterProxyModel::reloadPatterns()

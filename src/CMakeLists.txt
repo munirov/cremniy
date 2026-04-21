@@ -35,8 +35,8 @@ qt_add_executable(${PROJECT_NAME}
     widgets/clickablelineedit.h
     widgets/filetab.cpp
     widgets/filetab.h
-    widgets/filetreeview.cpp
-    widgets/filetreeview.h
+    widgets/filetreepanel.cpp
+    widgets/filetreepanel.h
     widgets/terminal/terminalwidget.cpp
     widgets/terminal/terminalwidget.h
 
@@ -81,8 +81,7 @@ qt_add_executable(${PROJECT_NAME}
     # UI Menubar
     ui/MenuBar/menubarbuilder.h ui/MenuBar/menubarbuilder.cpp
     ui/MenuBar/menufactory.h ui/MenuBar/menufactory.cpp
-    ui/MenuBar/basemenu.h    
-
+    ui/MenuBar/basemenu.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
