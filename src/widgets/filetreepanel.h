@@ -13,7 +13,7 @@ class FileTreePanel : public QWidget {
     Q_OBJECT
 
 public:
-    explicit FileTreePanel(QWidget* parent, const QString& rootPath);
+    explicit FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilterProxyModel* proxy, const QString& rootPath);
 
 signals:
     void openFileRequested(const QString& filePath, const QString& fileName);
@@ -32,10 +32,10 @@ private:
     [[nodiscard]] QString currentPath() const;
     [[nodiscard]] QModelIndex getSourceIndex() const;
 
-    QPointer<QVBoxLayout> m_layout;
-    QPointer<QTreeView> m_treeView;
-    QPointer<QSortFilterProxyModel> m_exclusionProxy;
-    QPointer<QFileSystemModel> m_fileModel;
+    QVBoxLayout* m_layout;
+    QTreeView* m_treeView;
+    QSortFilterProxyModel* m_proxy;
+    QFileSystemModel* m_fileModel;
 
     QAction* m_createFile{};
     QAction* m_createDir{};

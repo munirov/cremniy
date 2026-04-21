@@ -36,7 +36,7 @@ private:
 
     // - - Sidebar Widgets - -
     QWidget* m_leftSidebar;
-    FileTreePanel *m_filesTreeView;
+    FileTreePanel* m_filesTreeView;
 
     // - - Terminal Widget - -
     TerminalWidget *m_terminal;

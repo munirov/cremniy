@@ -47,7 +47,10 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     m_filesTabWidget = new FilesTabWidget(this);
     m_filesTabWidget->setObjectName("filesTabWidget");
 
-    m_filesTreeView = new FileTreePanel(this, ProjectPath);
+    const auto model = new QFileSystemModel();
+    const auto proxy = new ExclusionFilterProxyModel();
+
+    m_filesTreeView = new FileTreePanel(this, model, proxy, ProjectPath);
     leftLayout->addWidget(m_filesTreeView, 1);
 
     m_mainSplitter->addWidget(m_leftSidebar);
@@ -85,24 +88,19 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
 
     connect(this, &IDEWindow::saveFileSignal, m_filesTabWidget, &FilesTabWidget::saveFileSlot);
 
-    connect(m_filesTabWidget, &FilesTabWidget::statusBarInfoChanged,
-            this, [this](const QString &info) {
-                m_statusLabel->setText(info);
-            });
+    connect(m_filesTabWidget, &FilesTabWidget::statusBarInfoChanged,this, [this](const QString &info) {
+        m_statusLabel->setText(info);
+    });
 
     connect(m_filesTabWidget, &QTabWidget::tabCloseRequested, m_filesTabWidget, &FilesTabWidget::closeTab);
     connect(this, &IDEWindow::setWordWrapSignal, m_filesTabWidget, &FilesTabWidget::setWordWrapSlot);
     connect(this, &IDEWindow::setTabReplaceSignal, m_filesTabWidget, &FilesTabWidget::setTabReplaceSlot);
     connect(this, &IDEWindow::setTabWidthSignal, m_filesTabWidget, &FilesTabWidget::setTabWidthSlot);
-
     connect(this, &IDEWindow::openTabModule, m_filesTabWidget, &FilesTabWidget::openTabModule);
 
-    connect(m_filesTreeView,
-        &FileTreePanel::openFileRequested,
-        this,
-        [this](const QString& filePath, const QString& fileName) {
+    connect(m_filesTreeView, &FileTreePanel::openFileRequested, this, [this](const QString& filePath, const QString& fileName) {
             m_filesTabWidget->openFile(filePath, fileName);
-        });
+    });
 }
 
 IDEWindow::~IDEWindow() = default;

@@ -11,13 +11,15 @@
 #include "dialogs/filecreatedialog.h"
 
 
-FileTreePanel::FileTreePanel(QWidget* parent, const QString& rootPath)
+FileTreePanel::FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilterProxyModel* proxy, const QString& rootPath)
         : QWidget(parent),
           m_layout(new QVBoxLayout(this)),
           m_treeView(new QTreeView(this)),
-          m_exclusionProxy(new ExclusionFilterProxyModel()),
-          m_fileModel(new QFileSystemModel(this)),
+          m_proxy(proxy),
+          m_fileModel(model),
           m_root_path(rootPath){
+    m_proxy->setParent(this);
+    m_fileModel->setParent(this);
     setupModel();
     setupUi();
     setupContextMenu();
@@ -27,10 +29,10 @@ FileTreePanel::FileTreePanel(QWidget* parent, const QString& rootPath)
 void FileTreePanel::setupModel() const {
     m_fileModel->setRootPath(m_root_path);
     m_fileModel->setIconProvider(new IconProvider());
-    m_exclusionProxy->setSourceModel(m_fileModel);
-    m_treeView->setModel(m_exclusionProxy);
+    m_proxy->setSourceModel(m_fileModel);
+    m_treeView->setModel(m_proxy);
     m_treeView->setRootIndex(
-        m_exclusionProxy->mapFromSource(
+        m_proxy->mapFromSource(
             m_fileModel->index(m_root_path)
         )
     );
@@ -123,7 +125,7 @@ void FileTreePanel::remove() const {
 QModelIndex FileTreePanel::getSourceIndex() const{
     const QModelIndex idx = m_treeView->currentIndex();
     if (!idx.isValid()) return {};
-    const QModelIndex srcIdx = m_exclusionProxy->mapToSource(idx);
+    const QModelIndex srcIdx = m_proxy->mapToSource(idx);
     return srcIdx;
 }
 

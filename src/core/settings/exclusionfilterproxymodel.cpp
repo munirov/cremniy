@@ -52,13 +52,13 @@ void ExclusionFilterProxyModel::reloadPatterns()
 #endif
 }
 
-bool ExclusionFilterProxyModel::filterAcceptsRow(int sourceRow,
+bool ExclusionFilterProxyModel::filterAcceptsRow(const int sourceRow,
                                                   const QModelIndex &sourceParent) const
 {
     if (m_patterns.isEmpty())
         return true;
 
-    auto *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
+    auto const *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
     if (!fsModel)
         return true;
 
@@ -95,8 +95,10 @@ bool ExclusionFilterProxyModel::filterAcceptsRow(int sourceRow,
 bool ExclusionFilterProxyModel::globMatch(const QString &pattern, const QString &text)
 {
     // simple iterative glob matcher supporting '*' and '?'
-    int px = 0, tx = 0;
-    int starPx = -1, starTx = -1;
+    int px = 0;
+    int tx = 0;
+    int starPx = -1;
+    int starTx = -1;
     const int pLen = pattern.length();
     const int tLen = text.length();
 
