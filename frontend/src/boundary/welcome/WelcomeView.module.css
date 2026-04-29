@@ -1,0 +1,123 @@
+.welcomeRoot {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 1rem;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+}
+
+.welcomeInner {
+  width: min(100%, 25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-emphasis);
+  text-align: center;
+}
+
+.recentList {
+  flex: 1;
+  min-height: 7.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 2px;
+  overflow: auto;
+  background-color: var(--color-bg-panel);
+}
+
+.listRow:nth-child(even) .listItem {
+  background-color: var(--color-list-alternate);
+}
+
+.listItem {
+  width: 100%;
+  margin: 0;
+  padding: 0.375rem 0.5rem;
+  border: none;
+  border-bottom: 1px solid var(--color-border-default);
+  background-color: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  text-align: left;
+  cursor: pointer;
+}
+
+.listRow:last-child .listItem {
+  border-bottom: none;
+}
+
+.listItem:hover {
+  background-color: var(--color-hover-tint);
+}
+
+.listItemSelected {
+  background-color: var(--color-selection);
+}
+
+.listRow:nth-child(even) .listItemSelected {
+  background-color: var(--color-selection);
+}
+
+.buttonRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.actionBtn {
+  flex: 1 1 auto;
+  min-width: 4rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 2px;
+  background-color: var(--color-bg-panel-alt);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.actionBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.actionBtn:not(:disabled):hover {
+  background-color: var(--color-hover-surface);
+}
+
+.actionBtnOpenReady:not(:disabled) {
+  border-color: var(--color-success);
+  background-color: var(--color-success-muted-bg);
+}
+
+.ideLinkRow {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.25rem;
+}
+
+.ideLink {
+  color: var(--color-border-accent);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.ideLink:hover {
+  color: var(--color-accent);
+}

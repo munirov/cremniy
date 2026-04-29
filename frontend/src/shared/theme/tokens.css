@@ -1,0 +1,45 @@
+:root {
+  /* Surfaces — QWidget / panels */
+  --color-bg-base: #262626;
+  --color-bg-panel: #1f1f1f;
+  --color-bg-panel-alt: #2b2b2b;
+  --color-list-alternate: #0a0f18;
+
+  /* Text */
+  --color-text-primary: #ffffff;
+  --color-text-on-accent: #ffffff;
+
+  /* Accent / selection */
+  --color-accent: #2626d5;
+  --color-selection: #333333;
+  --color-hover-surface: #333333;
+  --color-hover-tint: #162033;
+  --color-border-accent: #2c4c7c;
+
+  /* Borders */
+  --color-border-default: #1f1f1f;
+  --color-border-pane: #262626;
+  --color-border-muted: #333333;
+  --color-border-menu: #111111;
+
+  /* Semantic */
+  --color-success: #2c7c32;
+  --color-success-muted-bg: #163318;
+  --color-error: #bf3131;
+  --color-error-surface: #4a2020;
+  --color-error-border: #ff5555;
+
+  /* Menu bar */
+  --color-menubar-item-selected: #444444;
+  --color-menubar-item-hover: #262626;
+
+  /* Scrollbars */
+  --color-scrollbar-track: #1f1f1f;
+  --color-scrollbar-thumb: #262626;
+  --size-scrollbar: 16px;
+
+  /* Typography — matches QSS QWidget */
+  --font-family-mono: 'JetBrains Mono', 'Consolas', monospace;
+  --font-size-base: 12px;
+  --font-weight-emphasis: 700;
+}

@@ -1,0 +1,6 @@
+.title {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-emphasis);
+}

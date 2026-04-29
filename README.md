@@ -10,14 +10,40 @@
 [![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
 [![Community](https://img.shields.io/badge/Community-Telegram-blue?logo=telegram&style=flat-square)](https://t.me/cremniy_com)
 <br>
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue?style=flat-square&logo=cplusplus)](https://en.cppreference.com/w/cpp/17)
-[![Qt 6](https://img.shields.io/badge/Qt-6.8.3-41CD52?style=flat-square&logo=qt)](https://www.qt.io/)
+[![Tauri](https://img.shields.io/badge/Tauri-2-24C8D8?style=flat-square&logo=tauri)](https://tauri.app/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev/)
 
 English • [Русский](README_ru.md)
 
 </div>
 
 <br>
+
+## Desktop app (Tauri + React)
+
+The in-repo desktop product is **Tauri 2 + React + TypeScript** under [`frontend/`](frontend/). See [ADR-001](ai_docs/develop/architecture/ADR-001-tauri-desktop-primary.md) and [ADR-002](ai_docs/develop/architecture/ADR-002-qt-sources-removed.md).
+
+**Development:**
+
+```bash
+cd frontend
+npm install
+npm run dev
+npm run tauri:dev
+```
+
+**Production build (local):**
+
+```bash
+cd frontend
+npm run tauri:build
+```
+
+Installers and bundles are written to `frontend/src-tauri/target/release/bundle/`.
+
+The legacy **Qt/C++** IDE has been **removed** from this repository. The last revision that still contained the `src/` tree is tagged **`pre-qt-removal-2026-05-01`** (clone and `git checkout` that tag if you need the old sources for reference).
+
+---
 
 ## What is Cremniy?
 
@@ -47,100 +73,14 @@ You constantly **switch** between different windows, and the tools are **not lin
 
 ### Available now
 
-| Feature | Description |
-|---|---|
-| 📝 Code editor | Write and edit low-level code with syntax support |
-| 🔢 HEX editor | Inspect and modify binary data at the byte level (patching) |
-| 🔧 Disassembler | Decode machine instructions into readable assembly |
+Early **Tauri** builds focus on shell, workspace flow, and parity with the former welcome/IDE chrome. Deep tool parity (hex, disassembly UI, integrated terminal, etc.) is tracked in [ROADMAP.md](ROADMAP.md) and `ai_docs/`.
 
 ### Coming soon
 
-- 🐛 **Debugger** — step through execution, inspect registers and memory
-- 🧠 **Memory visualization** — visual maps of memory layout and allocation
-
-## Build
-
-### Prerequisites
-
-| Dependency | Minimum version |
-|---|---|
-| **CMake** | 3.16 |
-| **Qt** | 6.8.3 |
-| **C++ compiler** | C++17 support |
-
-<details>
-<summary><b>🪟 Windows</b></summary>
-
-1. Install [MSYS2](https://www.msys2.org/)
-2. Install MinGW, CMake, Qt6-base via **MSYS2 terminal**:
-```base
-pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-qt6-base
-```
-3. Add MSYS2 package directory to PATH  
-   MSYS2 packages are located in `C:\msys64\ucrt64\bin` by default.
-
-</details>
-
-<details>
-<summary><b>🐧 Linux (Ubuntu / Debian)</b></summary>
-
-```bash
-sudo apt update
-sudo apt install cmake g++ qt6-base-dev
-```
-
-> [!NOTE]
-> If `qt6-base-dev` is unavailable in your distribution's repositories, use the [official Qt installer](https://www.qt.io/download-qt-installer-oss) instead.
-
-</details>
-
-<details>
-<summary><b>🍎 macOS</b></summary>
-
-Using [Homebrew](https://brew.sh/):
-
-```bash
-brew install cmake qt@6
-```
-
-</details>
-
-### Build in Linux
-
-```bash
-git clone https://github.com/igmunv/cremniy.git
-cd cremniy
-
-mkdir build && cd build
-cmake ../src
-cmake --build .
-```
-
-#### Release build
-
-```bash
-cmake ../src -DCMAKE_BUILD_TYPE=Release
-cmake --build . --config Release
-```
-
-### Build in Windows
-
-```bash
-git clone https://github.com/igmunv/cremniy.git
-cd cremniy
-
-mkdir build && cd build
-cmake -G "MinGW Makefiles" ..\src
-cmake --build .
-
-```
-
-#### Release build
-
-```bash
-cmake ..\src -DCMAKE_BUILD_TYPE=Release
-cmake --build . --config Release
-```
+- Full **HEX editor** and binary views in the web UI
+- **Disassembler** UI backed by the Rust subprocess contract
+- **Debugger** — step through execution, inspect registers and memory
+- **Memory visualization** — visual maps of memory layout and allocation
 
 ## Contributing
 

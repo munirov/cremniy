@@ -1,0 +1,47 @@
+.menuBar {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: 1.75rem;
+  max-height: 2rem;
+}
+
+.menuList {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menuItemWrap {
+  display: flex;
+  align-items: stretch;
+}
+
+.menuItem {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0 0.625rem;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  line-height: 1.25;
+  cursor: default;
+}
+
+.menuItem:hover,
+.menuItem:focus-visible {
+  background-color: var(--color-menubar-item-hover);
+  outline: none;
+}
+
+.menuItem:active {
+  background-color: var(--color-menubar-item-selected);
+}
