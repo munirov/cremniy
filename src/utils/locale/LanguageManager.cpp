@@ -24,14 +24,20 @@ void LanguageManager::loadUserDefaultLocale() {
 }
 
 void LanguageManager::setLocale(const QString& locale) {
+    auto base_qt = std::make_unique<QTranslator>();
     auto newTranslator = std::make_unique<QTranslator>();
 
-    if (!newTranslator->load(QLocale(locale), "app", "_", translationsPath()))
-        return;
-
+    QApplication::removeTranslator(_m_base_translator.get());
     QApplication::removeTranslator(_m_translator.get());
-    _m_translator = std::move(newTranslator);
-    QApplication::installTranslator(_m_translator.get());
+
+    if (base_qt->load(QLocale(locale), "qtbase", "_", translationsPath())){
+        _m_base_translator = std::move(base_qt);
+        QApplication::installTranslator(_m_base_translator.get());
+    }
+    if (newTranslator->load(QLocale(locale), "app", "_", translationsPath())){
+        _m_translator = std::move(newTranslator);
+        QApplication::installTranslator(_m_translator.get());
+    }
 
     QJsonObject settings = AppSettings::getSettingsJson();
     settings["language"] = locale;

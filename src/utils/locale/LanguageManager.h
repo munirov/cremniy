@@ -12,7 +12,8 @@
 
 class LanguageManager {
 private:
-   std::unique_ptr<QTranslator> _m_translator;
+    std::unique_ptr<QTranslator> _m_base_translator;
+    std::unique_ptr<QTranslator> _m_translator;
 
 public:
     static LanguageManager& instance();

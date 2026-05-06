@@ -143,7 +143,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 set(TS_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_ru.ts
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_en.ts
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/qtbase_ru.ts
 )
 
 qt6_add_translation(QM_FILES ${TS_FILES})

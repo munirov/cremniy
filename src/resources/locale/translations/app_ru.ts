@@ -720,6 +720,29 @@ Check the Log panel for details.</source>
     </message>
 </context>
 <context>
+    <name>ExclusionFilterProxyModel</name>
+    <message>
+        <location filename="../../../core/settings/exclusionfilterproxymodel.cpp" line="21"/>
+        <source>Confirm move</source>
+        <translation>Подтвердите перемещение</translation>
+    </message>
+    <message>
+        <location filename="../../../core/settings/exclusionfilterproxymodel.cpp" line="22"/>
+        <source>Are you sure you want to move selected files?</source>
+        <translation>Вы действительно хотите переместить выбранные файлы?</translation>
+    </message>
+    <message>
+        <location filename="../../../core/settings/exclusionfilterproxymodel.cpp" line="25"/>
+        <source>Yes</source>
+        <translation>Да</translation>
+    </message>
+    <message>
+        <location filename="../../../core/settings/exclusionfilterproxymodel.cpp" line="26"/>
+        <source>No</source>
+        <translation>Нет</translation>
+    </message>
+</context>
+<context>
     <name>FileCreateDialog</name>
     <message>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="15"/>
@@ -804,58 +827,90 @@ Check the Log panel for details.</source>
     </message>
 </context>
 <context>
-    <name>FileTreeView</name>
+    <name>FileTreePanel</name>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="150"/>
-        <location filename="../../../widgets/filetreeview.cpp" line="168"/>
-        <source>Error</source>
-        <translation>Ошибка</translation>
+        <location filename="../../../widgets/filetreepanel.cpp" line="74"/>
+        <source>Create File</source>
+        <translation>Создать файл</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="150"/>
-        <source>Cannot move a folder into itself.</source>
-        <translation>Невозможно переместить папку внутрь себя.</translation>
+        <location filename="../../../widgets/filetreepanel.cpp" line="75"/>
+        <source>Create Folder</source>
+        <translation>Создать папку</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="154"/>
-        <source>Are you sure you want to move &apos;%1&apos; into &apos;%2&apos;?</source>
-        <translation>Вы действительно хотите перенести &apos;%1&apos; внутрь &apos;%2&apos;?</translation>
+        <location filename="../../../widgets/filetreepanel.cpp" line="76"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="114"/>
+        <source>Delete</source>
+        <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="157"/>
-        <source>Confirm move</source>
-        <translation>Подтвердите перемещение</translation>
+        <location filename="../../../widgets/filetreepanel.cpp" line="77"/>
+        <source>Rename</source>
+        <translation>Переименовать</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="158"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="78"/>
+        <source>Open</source>
+        <translation>Открыть</translation>
+    </message>
+    <message>
+        <location filename="../../../widgets/filetreepanel.cpp" line="112"/>
+        <source>Are you sure you want to delete the file &quot;%1&quot;?</source>
+        <translation>Вы действительно хотите удалить файл &quot;%1&quot;?</translation>
+    </message>
+    <message>
+        <location filename="../../../widgets/filetreepanel.cpp" line="115"/>
         <source>Yes</source>
         <translation>Да</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="159"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="116"/>
         <source>No</source>
         <translation>Нет</translation>
     </message>
+</context>
+<context>
+    <name>FileTreeView</name>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="168"/>
+        <source>Error</source>
+        <translation type="vanished">Ошибка</translation>
+    </message>
+    <message>
+        <source>Cannot move a folder into itself.</source>
+        <translation type="vanished">Невозможно переместить папку внутрь себя.</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to move &apos;%1&apos; into &apos;%2&apos;?</source>
+        <translation type="vanished">Вы действительно хотите перенести &apos;%1&apos; внутрь &apos;%2&apos;?</translation>
+    </message>
+    <message>
+        <source>Confirm move</source>
+        <translation type="vanished">Подтвердите перемещение</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation type="vanished">Да</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation type="vanished">Нет</translation>
+    </message>
+    <message>
         <source>Failed to move the file.</source>
-        <translation>Не удалось переместить файл</translation>
+        <translation type="vanished">Не удалось переместить файл</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="190"/>
-        <location filename="../../../widgets/filetreeview.cpp" line="194"/>
         <source>Undo Failed</source>
-        <translation>Невозможно отменить</translation>
+        <translation type="vanished">Невозможно отменить</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="190"/>
         <source>Could not move the file back.</source>
-        <translation>Не удалось переместить файл обратно.</translation>
+        <translation type="vanished">Не удалось переместить файл обратно.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreeview.cpp" line="194"/>
         <source>The file no longer exists at the moved location.</source>
-        <translation>Файл больше не существует по новому пути.</translation>
+        <translation type="vanished">Файл больше не существует по новому пути.</translation>
     </message>
 </context>
 <context>
@@ -1037,46 +1092,32 @@ Check the Log panel for details.</source>
 <context>
     <name>IDEWindow</name>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="208"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="253"/>
         <source>Open</source>
-        <translation>Открыть</translation>
+        <translation type="vanished">Открыть</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="222"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="256"/>
         <source>Rename</source>
-        <translation>Переименовать</translation>
+        <translation type="vanished">Переименовать</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="235"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="238"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="268"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="270"/>
         <source>Delete</source>
-        <translation>Удалить</translation>
+        <translation type="vanished">Удалить</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="237"/>
         <source>Are you sure you want to delete the folder &quot;%1&quot;?</source>
-        <translation>Вы действительно хотите удалить данную папку &quot;%1&quot;?</translation>
+        <translation type="vanished">Вы действительно хотите удалить данную папку &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="242"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="278"/>
         <source>Create File</source>
-        <translation>Создать файл</translation>
+        <translation type="vanished">Создать файл</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="247"/>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="282"/>
         <source>Create Folder</source>
-        <translation>Создать папку</translation>
+        <translation type="vanished">Создать папку</translation>
     </message>
     <message>
-        <location filename="../../../app/IDEWindow/idewindow.cpp" line="269"/>
         <source>Are you sure you want to delete the file &quot;%1&quot;?</source>
-        <translation>вы действительно хотите удалить файл &quot;%1&quot;?</translation>
+        <translation type="vanished">вы действительно хотите удалить файл &quot;%1&quot;?</translation>
     </message>
 </context>
 <context>
@@ -1377,7 +1418,7 @@ Check the Log panel for details.</source>
 <context>
     <name>ReferencesMenu</name>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/References/referencesmenu.cpp" line="12"/>
+        <location filename="../../../ui/MenuBar/Menus/References/referencesmenu.cpp" line="13"/>
         <source>References</source>
         <translation>Справка</translation>
     </message>
@@ -1945,17 +1986,17 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
 <context>
     <name>ToolsMenu</name>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="12"/>
+        <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="14"/>
         <source>Tools</source>
         <translation>Инструменты</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="13"/>
+        <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="15"/>
         <source>Tabs</source>
         <translation>Вкладки</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="14"/>
+        <location filename="../../../ui/MenuBar/Menus/Tools/toolsmenu.cpp" line="16"/>
         <source>Windows</source>
         <translation>Утилиты</translation>
     </message>
