@@ -63,10 +63,10 @@ WelcomeForm::WelcomeForm(QWidget *parent)
 
     QVBoxLayout *l2 = new QVBoxLayout(pageCreate);
 
-    // --- Grid layout для текста и полей ---
+    // --- Grid layout for text and fields ---
     QGridLayout *grid = new QGridLayout();
 
-    // Первая строка: "Текст" + QLineEdit
+    // First string: "Текст" + QLineEdit
     proj_name_label = new QLabel("Project Name:");
     proj_name_lineEdit = new QLineEdit();
     QRegularExpression re("^[A-Za-z0-9_-]+$");
@@ -75,7 +75,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     grid->addWidget(proj_name_label, 0, 0);
     grid->addWidget(proj_name_lineEdit, 0, 1);
 
-    // Вторая строка: "Текст" + QComboBox
+    // Second string: "Текст" + QComboBox
     language_label = new QLabel("Language:");
     language_comboBox = new QComboBox();
     language_comboBox->addItems({"C", "C++", "ASM", "C + ASM", "Custom"});
@@ -88,7 +88,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     grid->addWidget(path_label, 2, 0);
     grid->addWidget(path_lineEdit, 2, 1);
 
-    // Добавляем grid в основной вертикальный layout
+    // add grid in main vertical layout
     l2->addLayout(grid);
     l2->addStretch(1);
 
@@ -98,7 +98,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     info_label->setAlignment(Qt::AlignCenter);
     l2->addWidget(info_label);
 
-    // --- Горизонтальный layout для кнопок ---
+    // --- Horizontal layout for buttons ---
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *createButton = new QPushButton("Create");
     QPushButton *backButton = new QPushButton("Back");
@@ -106,7 +106,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     buttonLayout->addWidget(createButton);
     buttonLayout->addWidget(backButton);
 
-    // Добавляем кнопки в основной вертикальный layout
+    // add buttons in main vertical layout layout
     l2->addLayout(buttonLayout);
 
     stack->addWidget(pageCreate);

@@ -19,46 +19,46 @@ public:
     bool openFile(const QString& filePath);
     QString filePath() const;
 
-    // Получить все данные (потокобезопасно)
+    // Get all data (thread-safe)
     QByteArray data() const;
 
-    // Прочитать диапазон без материализации всего файла
+    // Read range without materializing the entire file
     QByteArray read(qint64 pos, qint64 length) const;
 
-    // Загрузить данные как исходное состояние документа
+    // Load data as the initial document state
     void loadData(const QByteArray& data);
 
-    // Полностью заменить рабочую копию данных, не сбрасывая dirty-state
+    // Completely replace the working copy of data without resetting the dirty state
     void replaceData(const QByteArray& data);
 
-    // Изменить один байт
+    // Change a single byte
     void setByte(qint64 pos, char byte);
 
-    // Получить один байт
+    // Get a single byte
     char getByte(qint64 pos) const;
 
-    // Изменить диапазон байтов
+    // Change a range of bytes
     void setBytes(qint64 pos, const QByteArray& bytes);
 
-    // Размер буфера
+    // Buffer size
     qint64 size() const;
 
-    // Установить выделение
+    // Set selection
     void setSelection(qint64 pos, qint64 length);
 
-    // Получить текущее выделение
+    // Get current selection
     void getSelection(qint64& pos, qint64& length) const;
 
-    // Получить хеш оригинальных данных (для проверки изменений)
+    // Get hash of the original data (to check for changes)
     uint originalHash() const;
 
-    // Получить хеш текущих данных
+    // Get hash of the current data
     uint currentHash() const;
 
-    // Проверить, изменены ли данные
+    // Check if the data has been modified
     bool isModified() const;
 
-    // Сбросить флаг изменений (после сохранения)
+    // Reset modification flag (after saving)
     void markSaved();
 
     bool saveToFile(const QString& filePath = QString());
@@ -68,16 +68,16 @@ public:
     bool isLargeFile() const;
 
 signals:
-    // Изменился один байт
+    // Single byte changed
     void byteChanged(qint64 pos);
 
-    // Изменился диапазон байтов
+    // Range of bytes changed
     void bytesChanged(qint64 pos, qint64 length);
 
-    // Изменились все данные (например загружен новый файл)
+    // All data changed (e.g., a new file was loaded)
     void dataChanged();
 
-    // Изменилось выделение
+    // Selection changed
     void selectionChanged(qint64 pos, qint64 length);
 
 private:

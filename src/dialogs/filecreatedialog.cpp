@@ -24,10 +24,10 @@ FileCreateDialog::FileCreateDialog(QWidget *parent, QString path, bool _is_dir):
 
     QVBoxLayout *layout = new QVBoxLayout(this);
 
-    // текстовое поле
+    // text field
     layout->addWidget(lineEdit);
 
-    // кнопка
+    // button
     QPushButton *button = new QPushButton("Create", this);
     layout->addWidget(button);
 
@@ -42,7 +42,7 @@ void FileCreateDialog::onCreateClicked() {
         return;
     }
 
-    // тут можно создать файл
+    // here you can create a file
     QString fullPath = QString("%1/%2").arg(dir_path).arg(fileName);
 
     if (is_dir) {
@@ -55,7 +55,7 @@ void FileCreateDialog::onCreateClicked() {
         QFile file(fullPath);
         if(file.open(QIODevice::WriteOnly)) {
             file.close();
-            accept(); // закрыть диалог
+            accept(); // close dialog
         } else {
             QMessageBox::critical(this, "Error", "Failed to create file!");
         }

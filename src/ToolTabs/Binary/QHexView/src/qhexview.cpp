@@ -930,6 +930,13 @@ void QHexView::drawAddressPart(PaintContext* ctx, quint64 line) const {
     ctx->clearFormat();
 }
 
+/*
+*  I was not created for the viral
+*  Set myself upon a downward spiral
+*  Never chose to be an idol
+*  Amalgamation of mechanical, primal
+*/
+
 void QHexView::drawHexPart(PaintContext* ctx, const QByteArray& linebytes,
                            quint64 line) const {
     for(unsigned int col = 0u; col < m_options.line_length;) {

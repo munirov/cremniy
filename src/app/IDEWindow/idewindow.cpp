@@ -183,7 +183,7 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
                 if (!index.isValid())
                     return;
 
-                // Включаем редактирование индекса
+                // Enable index edit
                 m_filesTreeView->edit(index);
             });
             menu.addAction("Delete", [path, this]() {
