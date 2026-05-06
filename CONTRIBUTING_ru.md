@@ -27,7 +27,7 @@
 
 ## Языковая политика
 
-Чтобы проект оставался доступным для международных участников, **все Issues, Pull Requests и сообщения коммитов должны быть написаны на английском языке.**
+Чтобы проект оставался доступным для международных участников, **все Issues, Pull Requests, сообщения коммитов и комментарии в коде должны быть написаны на английском языке.**
 
 ## Работа с ветками
 
@@ -40,6 +40,170 @@
 
 - **feature/...**: ветки для новых функций (создаются от `dev`). После завершения работы создается PR в `dev`.
 - **fix/...**: ветки для исправления багов (создаются от `main`). После завершения работы создается PR в `main`. После мержа в `main` багфикс также мержится в `dev`, чтобы изменения попали в разрабатываемую версию.
+
+## Правила оформления кода
+
+Так же немало важно объявить стиль используемый в проекте. 
+Решения, представленные в разделах ниже основываются на общепринятых правилах, используемых в Qt
+Так как большая доля проекта использует данный фреймворк. Разность стиля в коде
+создает путаницу и мешает дальнейшему анализу и разработке
+
+Во вложенных разделах будут использоваться части проекта, для наглядности
+
+### Комментарии
+
+Вместо однострочных комментариев (`//`) принято использовать многострочные, как показано в листинге ниже.
+Обратите внимание, что комментарии обязаны быть написаны на английском языке.
+
+```cpp
+/* Window setup */
+this->setWindowState(Qt::WindowMaximized);
+this->setWindowTitle("Cremniy"); /* <-- correct */
+
+this->setWindowTitle("") // incorrect
+```
+
+Формат многострочных комментариев обычно исправляет редактор кода, тем не менее,
+последующие строки должны идти ровно за предыдущей, и сопровождаться звездочкой в начале каждой строки комментария
+
+Мы используем Doxygen, и вам советуем. Вот неплохой источник, объясняющий что это такое.
+ - [Documenting C++ Code — LSST DM Developer Guide main...](https://developer.lsst.io/cpp/api-docs.html)  
+
+```cpp
+/**
+ * @brief This is a correct doc comment 
+ * @param projectPath Make sure, your stars follows one by one (and sleep well)
+ */
+IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow(parent)
+```
+
+Далее показаны листинги как оформлять комментарии не допускается
+
+```cpp
+/**
+* @brief This is an incorrect doc comment!
+* @param projectPath Stars are has bad position 
+*/
+IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow(parent)
+
+/**
+ @brief This is an incorrect doc too!! 
+ @param projectPath No stars? ;-; 
+ */
+IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow(parent)
+
+/**
+ * \brief This is an incorrect doc!!! 
+ * \param projectPath Please, use "@" tags instead of "\". And configure your workspace the same way 
+ */
+IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow(parent)
+
+/**
+ * @brief Эта документация прекрасна, но она написана не на английском. Такое недопускается! 
+ * @param projectPath Имейте это ввиду.
+ */
+IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow(parent)
+```
+
+### Определения классов, структур и других единиц
+
+Обратите внимание, что:
+ - Все объекты, что имеют тело, (например функция или условная конструкция), обязательно оформлятся в стиле K&R;
+ - Все переменные, поля и функции, не смотря на свои модификаторы обязаны быть написаны в `camelCase`;
+ - Классы, структуры, перечисления пишутся в `PascalCase` 
+
+Венгерская нотация не допускается, за исключением объявлений закрытых полей внутри класса/структуры.
+
+```cpp
+/* 
+ * PascalCase for classes/structs/enums/unions 
+ */
+class IDEWindow : public QMainWindow { 
+private:
+    /* 
+     * camelCase for others
+     */
+    QMenuBar * m_menuBar;
+    /*
+     * SCREAMING_SNAKE for program constants
+     */
+    const qint64 WINDOW_WIDTH = 900;
+    /*
+     * Local variables definition  
+     */
+    static void setTerminalWidget() {
+        /* Usually, declare it through the "auto" */
+        auto path = model->filePath(index); /* <-- correct. Because filePath(index) returns QString */
+        QString fileName = model->fileName(index); /* <-- not correct! */
+        
+        /* But also, _use explicit declaration_ when it necessary */
+        QMenu menu();
+    }
+}
+```
+
+### Указатели и ссылки и огромные функции
+
+Пожалуй это самое странное и несправедливое решение, которое стоит учесть.
+Указатели всегда объявляются через звездочку, которая стоит ближе к типу данных.
+
+```cpp
+/* correct definition | correct cast style */
+auto* model = dynamic_cast<QFileSystemModel*>(m_filesTreeView->model()); 
+/* incorrect: what is that? | incorrect space in <T *> */
+auto * model = dynamic_cast<QFileSystemModel *>(m_filesTreeView->model()); 
+/* incorrect: this is not dereference */
+auto  *model = dynamic_cast< QFileSystemModel * >(m_filesTreeView->model());
+
+/*bad! we're expecting pointer/reference readability */
+auto model = dynamic_cast<QFileSystemModel *>(m_filesTreeView->model());
+```
+
+Данное правило распространяются на ссылки и битовые поля.
+
+```cpp
+/* correct definition | correct dereference*/
+auto& model = *modelPointer; 
+/* explicit declaration redundant | bad dereference spacing */
+QFileSystemModel& modelRef = * modelPointer; 
+
+#pragma push(pack(1))
+struct UInt48 {
+    /* correct 48-bit field */
+    uint64_t lBytes: 48; 
+    uint64_t hBytes: 16;
+} /*sizeof(UInt48) = 8*/
+#pragma pop()
+```
+
+Последнее правило, это вызов больших функций.
+Функции, агрументы которой не умещаются в 80 символов или принимающие строго больше 3 агрументов, вызываются следующим образом
+```cpp
+/*correct Qt macro call*/
+connect(
+    this,
+    &IDEWindow::saveFileSignal,
+    m_filesTabWidget,
+    &FilesTabWidget::saveFileSlot
+);
+```
+Расстояние между положением названия и аргументами функции ровно один таб.
+
+```cpp
+/*incorrect. 2 tabs size. Closing brace not at the new line.*/
+connect(
+        this,
+        &IDEWindow::saveFileSignal,
+        m_filesTabWidget,
+        &FilesTabWidget::saveFileSlot);
+
+connect(
+    this,
+    &IDEWindow::saveFileSignal,
+    m_filesTabWidget,
+    &FilesTabWidget::saveFileSlot
+    ); /* <-- incorrect. Bad closing brace placement */
+```
 
 ## Pull requests
 

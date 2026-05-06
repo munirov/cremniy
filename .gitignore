@@ -121,7 +121,7 @@ cmake_install.cmake
 *_autogen/
 Testing/
 *.clangd
-*.clang-format
+#*.clang-format
 install_manifest.txt
 compile_commands.json
 
