@@ -20,7 +20,7 @@ FileCreateDialog::FileCreateDialog(QWidget *parent, QString path, bool _is_dir):
         lineEdit->setPlaceholderText("Enter file name...");
     }
 
-    setFixedSize(300, 100); // маленькое окно
+    setFixedSize(300, 100); // small window
 
     QVBoxLayout *layout = new QVBoxLayout(this);
 
