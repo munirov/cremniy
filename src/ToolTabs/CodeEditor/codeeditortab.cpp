@@ -154,7 +154,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
         this->setTabData();
     });
 
-    // ContentsChanged: синхронизируем рабочую копию буфера и dirty-state
+    // ContentsChanged: Sync the working buffer copy and the dirty state flag
     connect(m_codeEditorWidget->document(),
             &QTextDocument::contentsChanged,
             this,
@@ -191,12 +191,12 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
                 }
             });
 
-    // SelectionChanged: уведомляем буфер о выделении
+    // SelectionChanged: Notify the buffer of the selection
     connect(m_codeEditorWidget, &QPlainTextEdit::selectionChanged,
             this, [this](){
                 if (m_updatingSelection) return; // Предотвращаем рекурсию
                 
-                // Устанавливаем флаг перед отправкой сигнала
+                // Set the flag before emitting the signal
                 m_updatingSelection = true;
                 
                 QTextCursor cursor = m_codeEditorWidget->textCursor();
@@ -204,19 +204,19 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
                     int charStart = cursor.selectionStart();
                     int charEnd = cursor.selectionEnd();
                     
-                    // Преобразуем позицию символа в позицию байта
+                    // Convert character position to byte
                     QString text = m_codeEditorWidget->toPlainText();
                     QByteArray utf8Data = text.toUtf8();
                     
-                    // Получаем байтовую позицию начала выделения
+                    // Get the byte position of the selection start
                     QString beforeSelection = text.left(charStart);
                     qint64 byteStart = beforeSelection.toUtf8().size();
                     
-                    // Получаем длину выделения в байтах
+                    // Get the selection length in bytes
                     QString selectedText = text.mid(charStart, charEnd - charStart);
                     qint64 byteLength = selectedText.toUtf8().size();
                     
-                    // Уведомляем буфер о выделении
+                    // Notify the buffer of the selection
                     m_dataBuffer->setSelection(byteStart, byteLength);
                 }
                 
@@ -309,32 +309,32 @@ void CodeEditorTab::saveTabData() {
 
 void CodeEditorTab::showSearchBar()
 {
-    // Если открыта панель "Binary File", поиск не нужен
+    // If the "Binary File" panel is open, search is not required
     if (!m_overlayWidget->isHidden()) return; 
 
     m_searchWidget->show();
     m_searchLineEdit->setFocus();
-    m_searchLineEdit->selectAll(); // Выделяем текст, если там уже что-то было
+    m_searchLineEdit->selectAll(); // Select text if already present
 }
 
 void CodeEditorTab::hideSearchBar()
 {
     m_searchWidget->hide();
-    m_codeEditorWidget->setFocus(); // Возвращаем фокус в редактор
+    m_codeEditorWidget->setFocus(); // Focus the editor
 }
 
 void CodeEditorTab::performSearch(bool backward)
 {
     QString query = m_searchLineEdit->text();
     if (query.isEmpty()) {
-        m_searchLineEdit->setStyleSheet(""); // Сброс стиля
+        m_searchLineEdit->setStyleSheet(""); // Reset style
         return;
     }
 
     QTextDocument::FindFlags flags;
     if (backward) flags |= QTextDocument::FindBackward;
     
-    // Выполняем поиск
+    // Perform search
     bool found = m_codeEditorWidget->find(query, flags);
 
     if (!found) {
@@ -350,7 +350,7 @@ void CodeEditorTab::performSearch(bool backward)
     } else {
         m_searchLineEdit->setProperty("state", "normal");
     }
-    // Обновляем виджет, чтобы Qt применил новые стили из QSS
+    // Repolish widget to apply style changes
     m_searchLineEdit->style()->unpolish(m_searchLineEdit);
     m_searchLineEdit->style()->polish(m_searchLineEdit);
 }

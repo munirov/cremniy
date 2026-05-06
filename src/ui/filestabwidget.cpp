@@ -104,7 +104,7 @@ bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
         break;
     }
 
-    // Mouse Middle Button: для закрытия вкладки
+    // Mouse Middle Button: for close the tab
     case QEvent::MouseButtonRelease: {
         if (obj == tabBar()) {
             auto *me = static_cast<QMouseEvent *>(event);

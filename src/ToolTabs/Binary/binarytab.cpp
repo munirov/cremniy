@@ -71,7 +71,7 @@ BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
                         }
                     });
             
-            // Подключаем сигнал выделения от страницы к буферу
+            // Connect selection signal from page to buffer
             connect(fpage, &FormatPage::selectionChanged, 
                     this, [this](qint64 pos, qint64 length){
                         if (m_updatingSelection) return; // Предотвращаем рекурсию
@@ -144,11 +144,11 @@ void BinaryTab::onDataChanged()
 
 void BinaryTab::onSelectionChanged(qint64 pos, qint64 length)
 {
-    if (m_updatingSelection) return; // Предотвращаем рекурсию
+    if (m_updatingSelection) return; // prevent recursion
     
     m_updatingSelection = true;
     
-    // Устанавливаем выделение на всех страницах
+    // Apply selection to all pages
     for (int pageIndex = 0; pageIndex < pageView->count(); pageIndex++){
         FormatPage* fpage = dynamic_cast<FormatPage*>(pageView->widget(pageIndex));
         if (fpage) {

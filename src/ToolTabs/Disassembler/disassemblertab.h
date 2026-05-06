@@ -64,7 +64,7 @@ public slots:
     void saveTabData() override;
 
 protected slots:
-    // Обработчик изменения выделения из буфера
+    // Buffer selection change handler
     void onSelectionChanged(qint64 pos, qint64 length) override;
     void onDataChanged() override;
 
@@ -104,7 +104,7 @@ private:
     QThread            *m_thread  = nullptr;
     DisassemblerWorker *m_worker  = nullptr;
     bool                m_running = false;
-    bool                m_updatingSelection = false; // Флаг для предотвращения рекурсии
+    bool                m_updatingSelection = false; // Recursion prevention flag
 
     QVector<DisasmSection> m_sections;
     QVector<DisasmFunction> m_functions;

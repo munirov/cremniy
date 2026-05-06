@@ -27,7 +27,7 @@ static QString stripAnsiCodes(const QString &text) {
 
     QString cleaned = text;
     cleaned.remove(ansiRegex);
-    // оставляем \n и \t (не используйте .simplified())
+    // keep \n и \t (don't use .simplified())
     return cleaned;
 }
 
@@ -56,7 +56,7 @@ TerminalWidget::TerminalWidget(QWidget *parent) : QWidget(parent) {
 
 void TerminalWidget::setupShell() {
 #ifdef Q_OS_WIN
-    // Используем полный путь на всякий случай
+    // Use the full path just for case
     m_process->start("powershell.exe", QStringList() << "-NoLogo" << "-NoExit" << "-Command" << "chcp 65001; clear");
 #else
     m_process->start("/bin/bash", QStringList() << "-i");
@@ -82,7 +82,7 @@ bool TerminalWidget::eventFilter(QObject *obj, QEvent *event) {
         // Ctrl+C
         if ((keyEvent->key() == Qt::Key_C) && (keyEvent->modifiers() & Qt::ControlModifier)) {
             if (cursor.hasSelection()) {
-                return false; // Копируем, если выделено
+                return false; // copy if allocated
             } else {
                 if (m_process->state() == QProcess::Running) {
 #ifdef Q_OS_WIN

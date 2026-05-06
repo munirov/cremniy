@@ -14,7 +14,7 @@ class CodeEditorTab : public ToolTab
 
 private:
     /**
-     * @brief Виджет редактора кода
+     * @brief Widget of code editor
     */
     QCodeEditor* m_codeEditorWidget;
     QWidget* m_searchWidget;
@@ -24,20 +24,20 @@ private:
     class QPushButton* m_closeSearchBtn;
 
     /**
-     * @brief Главный виджет страницы "Binary File Detected"
+     * @brief Main page widget "Binary File Detected"
     */
     QWidget* m_overlayWidget;
 
     /**
-     * @brief Флаг принудительной установки данных
+     * @brief Data force-set flag 
      *
-     * Используется при нажатии пользователем на кнопку "Open Anyway" на странице "Binary File Detected"
+     * Used when the user clicks the "Open Anyway" button on the "Binary File Detected" page
     */
     bool forceSetData = false;
     bool m_hasUtf8Bom = false;
     
     /**
-     * @brief Флаг для предотвращения рекурсии при обновлении выделения
+     * @brief Recursion prevention flag for selection update
     */
     bool m_updatingSelection = false;
     bool m_syncingBufferData = false;
@@ -49,8 +49,8 @@ private:
     void applyBufferedSelection();
 
     /**
-     * @brief Выполнить поиск
-     * @param backward Искать в обратном направлении (назад)
+     * @brief Perfor search
+     * @param Backward: Search in the reverse direction (backwards)
      */
     void performSearch(bool backward = false);
 
@@ -63,14 +63,14 @@ public:
 signals:
 
     /**
-     * @brief Переключить на вкладку "Hex View"
+     * @brief Switch to the "Hex View" tab 
      *
-     * Используется при нажатии на кнопку "Open in HexView" на странице "Binary File Detected"
+     * Used when the "Open in HexView" button is clicked on the "Binary File Detected" page
     */
     void switchHexViewTab();
 
 protected slots:
-    // Обработчик изменения выделения из буфера
+    // Selection change handler from buffer
     void onSelectionChanged(qint64 pos, qint64 length) override;
     void onDataChanged() override;
 

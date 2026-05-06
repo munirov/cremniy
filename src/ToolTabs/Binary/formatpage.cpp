@@ -1,4 +1,4 @@
 #include "formatpage.h"
 
-// чтобы Qt создал vtable для FormatPage
+// Ensure vtable generation for FormatPage
 FormatPage::~FormatPage() {}

@@ -172,18 +172,18 @@ QString DisassemblerTab::autoCommentForLine(const LineInfo &li) const
 
 QString DisassemblerTab::formatLine(const LineInfo &li) const
 {
-    // 1. Адрес (18 символов для 64-битных ядер)
+    // 1. Adress (18 symbols for 64-byte cores)
     QString addr = li.address.trimmed();
     if (!addr.startsWith("0x")) addr = "0x" + addr;
     addr = addr.leftJustified(18, ' ');
 
-    // 2. Метки функций (например <sys_get_time_ms>)
+    // 2. Label funciton (e.g. <sys_get_time_ms>)
     QString mnem = li.mnemonic.trimmed();
     if (mnem.startsWith('<') && mnem.endsWith('>')) {
         return QString("%1 %2").arg(addr, mnem);
     }
 
-    // 3. Байты (превью до 8 байт, остальное прячем под '…')
+    // 3. Bytes (preview up to 8 bytes, hide the rest under '..')
     QString bytes;
     const QString b = normalizeBytes(li.bytes);
     const int totalBytes = b.size() / 2;
@@ -197,20 +197,20 @@ QString DisassemblerTab::formatLine(const LineInfo &li) const
         if (totalBytes > previewBytes) spaced += " …";
         bytes = spaced;
     }
-    bytes = bytes.leftJustified(24, ' '); // Фиксированная ширина байтов
+    bytes = bytes.leftJustified(24, ' '); // Fixed byte width
 
-    // 4. Выравнивание мнемоники и операндов
-    mnem = mnem.leftJustified(10, ' '); // 10 символов на мнемонику
+    // 4. Mnemonic and operand alignment
+    mnem = mnem.leftJustified(10, ' '); // 10 characters for mnemonic
     
     QString ops = li.operands.trimmed();
-    if (ops.contains('#')) ops = ops.section('#', 0, 0).trimmed(); // чистим комменты objdump
+    if (ops.contains('#')) ops = ops.section('#', 0, 0).trimmed(); // clean objdump components
     ops = ops.leftJustified(32, ' '); // 32 символа на операнды
 
-    // 5. Комментарии (автокомментарии для строк)
+    // 5. Comments (Auto-Comments for string)
     const QString comment = autoCommentForLine(li);
     const QString c = comment.isEmpty() ? QString() : ("  " + comment);
 
-    // Обработка "invalid" (если встретили сырые данные)
+    // Handle "invalid" if raw data encountered
     if (li.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) == 0 && !li.bytes.trimmed().isEmpty()) {
         QStringList parts;
         for (int i = 0; i + 1 < b.size() && (i / 2) < previewBytes; i += 2)
@@ -224,7 +224,7 @@ QString DisassemblerTab::formatLine(const LineInfo &li) const
         return QString("%1  %2  %3 %4%5").arg(addr, bytes, QString("invalid").leftJustified(10, ' '), data, invInfo);
     }
 
-    // Итоговая сборка с жесткими отступами
+    // Final assembly with hard indentation
     return QString("%1  %2  %3 %4%5").arg(addr, bytes, mnem, ops, c);
 }
 
@@ -492,9 +492,9 @@ void DisassemblerTab::setupUi()
         showInstructionHelpAt(p, true);
     });
 
-    // Обработчик выделения в дизассемблере - уведомляем буфер
+    // Disassembler selection handler — notify buffer
     connect(m_disasmView, &QPlainTextEdit::selectionChanged, this, [this]() {
-        if (m_updatingSelection) return; // Предотвращаем рекурсию
+        if (m_updatingSelection) return; // Recursion prevention
         
         QTextCursor cursor = m_disasmView->textCursor();
         if (!cursor.hasSelection()) return;
@@ -1043,14 +1043,14 @@ void DisassemblerTab::jumpToAddress(const QString &addr)
 {
     if (!m_disasmView || addr.isEmpty()) return;
 
-    // 1. Конвертируем целевой адрес в число для надежного сравнения
+    // 1. Convert target address to number for reliable compraison 
     quint64 targetAddr = 0;
     if (!parseHexU64(addr, &targetAddr)) return;
 
     int targetVisualLine = -1;
 
-    // 2. Ищем в m_visibleLineMap индекс строки, который соответствует этому адресу.
-    // Это гораздо быстрее и точнее, чем парсить текст из QPlainTextEdit.
+    // 2. Search m_visibleMap for the index corresponding to this address.
+    // This is much faster and more accurate than parsing text from QPlainTextEdit
     for (int visLine = 0; visLine < m_visibleLineMap.size(); ++visLine) {
         int lineIdx = m_visibleLineMap[visLine];
         if (lineIdx < 0) continue; // Пропускаем строки-заголовки (где индекс -1)
@@ -1065,7 +1065,7 @@ void DisassemblerTab::jumpToAddress(const QString &addr)
         }
     }
 
-    // 3. Если строка найдена в текущем представлении
+    // 3. If line is found in the current view
     if (targetVisualLine != -1) {
         QTextDocument *doc = m_disasmView->document();
         QTextBlock block = doc->findBlockByNumber(targetVisualLine);
@@ -1075,7 +1075,7 @@ void DisassemblerTab::jumpToAddress(const QString &addr)
             m_disasmView->setTextCursor(cursor);
             m_disasmView->centerCursor();
 
-            // Визуальная подсветка прыжка
+            // Visual jump highlighting
             QList<QTextEdit::ExtraSelection> extra;
             QTextEdit::ExtraSelection sel;
             sel.format.setBackground(m_disasmView->palette().highlight());
@@ -1086,7 +1086,7 @@ void DisassemblerTab::jumpToAddress(const QString &addr)
             m_disasmView->setExtraSelections(extra);
         }
     } else {
-        // Если адрес не найден (например, он в другой секции, которая сейчас скрыта фильтром)
+        // If the address is not found (e.g., it is in another section currently hidden by a filter)
         m_statusLabel->setText(tr("Address %1 is not visible in current view").arg(addr));
     }
 }
@@ -1186,7 +1186,7 @@ void DisassemblerTab::applyFilter()
     QStringList out;
     out.reserve(m_lines.size());
 
-    // Хеш-карта имен функций для быстрой вставки заголовков
+    // Xash-Map of function names for fast header insertion
     QHash<QString, QString> funcByAddr;
     for (const auto &f : m_functions) {
         funcByAddr.insert(f.address.trimmed().toLower(), f.name);
@@ -1197,7 +1197,7 @@ void DisassemblerTab::applyFilter()
     for (int i = 0; i < m_lines.size(); ++i) {
         const LineInfo &li = m_lines[i];
 
-        // Фильтрация по секции и поисковому запросу
+        // Filtering by section and search query
         bool inSection = (m_currentSectionIndex < 0) || (li.sectionIndex == m_currentSectionIndex);
         if (!inSection) continue;
 
@@ -1207,14 +1207,14 @@ void DisassemblerTab::applyFilter()
             if (!match) continue;
         }
 
-        // Вставка заголовка функции (IDA-style)
+        // Function header insertion (IDA-style)
         QString normAddr = li.address.trimmed().toLower();
         if (funcByAddr.contains(normAddr)) {
             out << QString("; --- FUNCTION: %1 (%2) ---").arg(funcByAddr.value(normAddr), li.address.trimmed());
             m_visibleLineMap << -1; 
         }
 
-        // Оптимизация: Склейка идущих подряд "invalid" инструкций в один блок
+        // Optimization: Merging consecutive "invalid" instructions into a single block
         if (li.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) == 0 && !li.bytes.isEmpty()) {
             quint64 curAddr = 0;
             if (parseHexU64(li.address, &curAddr)) {
@@ -1243,18 +1243,18 @@ void DisassemblerTab::applyFilter()
                 out << formatLine(coalesced);
                 m_visibleLineMap << i;
                 shownLines++;
-                i = j - 1; // Пропускаем обработанные строки
+                i = j - 1; // Skip processed lines
                 continue;
             }
         }
 
-        // Обычная строка
+        // Regular string
         out << formatLine(li);
         m_visibleLineMap << i;
         shownLines++;
     }
 
-    // Обновляем UI
+    // Update UI
     m_disasmView->setPlainText(out.join('\n'));
 
     if (shownLines == 0 && haveQuery) {

@@ -293,21 +293,21 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
 {
     QVector<DisasmSection> sections;
 
-    // Секция: разрешаем пробелы в начале и перед двоеточием
+    // Section: allow leading spaces and spaces before colons.
     static const QRegularExpression reSectionHdr(
         R"(^\s*Disassembly of section\s+(\S+)\s*:)", 
         QRegularExpression::MultilineOption);
 
-    // Метка функции: разрешаем любые пробелы
+    // Function label: allow any whitespace
     static const QRegularExpression reFuncLabel(
         R"(^\s*([0-9a-fA-F]+)\s+<([^>]+)>:)",
         QRegularExpression::MultilineOption);
 
-    // ИНСТРУКЦИЯ (Самое важное): заменяем \t на \s+ (любые пробельные символы)
-    // Группа 1: Адрес
-    // Группа 2: Байты (шестнадцатеричные пары)
-    // Группа 3: Мнемоника
-    // Группа 4: Операнды
+    // INSTRUCTION(Crucial): replase \t with \s+ (any whitespace characters)
+    // GROUP 1: Adress
+    // GROUP 2: Bytes (hex pairs)
+    // GROUP 3: Mnemonic
+    // GROUP 4: Operands
     static const QRegularExpression reInsn(
         R"(^\s*([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}\s+)+)\s*(\S+)(?:[ \t]+([^#\n]*))?)",
         QRegularExpression::MultilineOption);
@@ -320,7 +320,7 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
         if (m_cancelled) break;
         if (line.trimmed().isEmpty()) continue;
 
-        // 1. Поиск заголовка секции
+        // 1. Searct for section header
         QRegularExpressionMatch m = reSectionHdr.match(line);
         if (m.hasMatch()) {
             const QString name = m.captured(1);
@@ -333,7 +333,7 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
             continue;
         }
 
-        // 2. Поиск инструкции (проверяем ПЕРЕД меткой функции, так как они похожи)
+        // 2. Instruction lookup (check BEFORE function labelm as they're similar)
         m = reInsn.match(line);
         if (m.hasMatch()) {
             if (curSectionIdx == -1) {
@@ -347,7 +347,7 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
             insn.mnemonic = m.captured(3);
             insn.operands = m.captured(4).trimmed();
 
-            // Считаем размер в байтах (каждые 2 символа + пробел = 1 байт)
+            // Calculate size in bytes. Every two characters prepresent one byte (accouring for spaces)
             QString b = insn.bytes;
             b.remove(' ');
             insn.size = b.size() / 2;
@@ -366,7 +366,7 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
             continue;
         }
 
-        // 3. Поиск метки функции (например, <main>:)
+        // Function labe lookup (e.g. <main>:) 
         m = reFuncLabel.match(line);
         if (m.hasMatch()) {
             if (curSectionIdx == -1) {

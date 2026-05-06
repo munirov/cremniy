@@ -10,7 +10,7 @@
 ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
     {
 
-    // Создаем общий буфер данных для всех вкладок
+    // Create a shared data buffer for all tabs
     m_sharedBuffer = new FileDataBuffer(this);
 
     m_sharedBuffer->openFile(path);

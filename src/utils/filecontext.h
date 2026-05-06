@@ -8,7 +8,7 @@ class FileContext
     friend class FileManager;
 
 public:
-    // Класс который хранит информацию об открытом файле. Для каждого ToolTab отдельно (codeEditor, hexView и т.д)
+    // A class that stores state for an open file. Unique per ToolTab (codeEditor, hexView, etc.)
     FileContext(QString filepath) :
         m_filePath(filepath)
     {
@@ -33,13 +33,13 @@ public:
     }
 
 private:
-    // путь к файлу (ссылка на FileTab->m_filePath)
+    // file path (ref to FileTab->m_filePath)
     QString m_filePath;
-    // количество загруженных (текущих отображаемых) байтов
+    // number of loaded (currently displayed) bytes
     uint64_t m_bytesCount;
-    // начало в файле (номер байта)
+    // start in file (byte number)
     uint64_t m_startOffset;
-    // конец в файле (номер байта)
+    // end in file (byte number)
     uint64_t m_endOffset;
 
 };
