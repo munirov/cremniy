@@ -29,12 +29,10 @@ QIcon IconProvider::icon(const QFileInfo &info) const {
     bool isFolder = info.isDir();
 
     if (isFolder) {
-        iconName = "folder"; // или "folder-simple"
+        iconName = "folder";
     } else {
         QString ext = info.suffix().toLower();
         QString name = info.fileName();
-
-        // --- Phosphor ---
         if (ext == "c") iconName = "file-c";
         else if (ext == "cpp" || ext == "cxx") iconName = "file-cpp";
         else if (ext == "h" || ext == "hpp") iconName = "file-code";
@@ -51,24 +49,33 @@ QIcon IconProvider::icon(const QFileInfo &info) const {
         else iconName = "file";
     }
 
-    // Достаем иконку из темы
+    // 1. Пытаемся достать из темы (как положено)
+    qDebug() << "[IconProvider] Filename:" << info.fileName() << "| Expected Icon:" << iconName;
+
+    // 1. Пробуем тему
     QIcon ic = QIcon::fromTheme(iconName);
     
-    // Если папка не нашлась как "folder", пробуем "folder-simple"
-    if (isFolder && (ic.isNull() || ic.name().isEmpty())) {
-        ic = QIcon::fromTheme("folder-simple");
-    }
-
-    // --- ФИНАЛЬНАЯ ПОКРАСКА ---
-    if (!ic.isNull() && !ic.name().isEmpty()) {
-        if (isFolder) {
-            return paintIcon(ic, QColor("#FFFFFF")); 
+    if (ic.isNull()) {
+        qDebug() << "[IconProvider] fromTheme FAILED for" << iconName;
+        
+        // 2. Пробуем прямой путь (этот дебаг самый важный)
+        QString directPath = QString(":/icons/phoicons/icons/%1.svg").arg(iconName);
+        if (QFile::exists(directPath)) {
+            qDebug() << "[IconProvider] Found direct file at" << directPath << ". Attempting to load...";
+            ic = QIcon(directPath);
+            if (ic.isNull()) {
+                qWarning() << "[IconProvider] CRITICAL: File exists but QIcon failed to load it! (SVG plugin issue?)";
+            }
         } else {
-            // Красим файлы в БЕЛЫЙ
-            return paintIcon(ic, Qt::white);
+            qDebug() << "[IconProvider] Resource file NOT FOUND at" << directPath;
         }
+    } else {
+        qDebug() << "[IconProvider] fromTheme SUCCESS for" << iconName;
     }
 
-    // Если иконка темы не нашлась, возвращаем дефолт ОС
+    if (!ic.isNull()) {
+        return paintIcon(ic, isFolder ? QColor("#FFFFFF") : Qt::white);
+    }
+
     return QFileIconProvider::icon(info);
 }

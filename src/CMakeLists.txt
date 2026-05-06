@@ -97,12 +97,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/FilesTabWidget
 )
 
-file(GLOB_RECURSE PHOICONS_FILES
-    "resources/icons/phoicons/*.svg"
-    "resources/icons/phoicons/*.theme"
+file(GLOB_RECURSE PHOICONS_FILES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/phoicons/*"
 )
 
-qt_add_resources(${PROJECT_NAME} "phoicons_icons"
+qt_add_resources(${PROJECT_NAME} "phoicons"
     PREFIX "/icons"
     BASE "resources/icons"
     FILES ${PHOICONS_FILES}
