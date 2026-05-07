@@ -1,0 +1,12 @@
+/build/
+/.vs/
+*.user
+*.VC.db
+*.VC.opendb
+*.obj
+*.pdb
+*.ilk
+*.lib
+*.dll
+*.exe
+./qtcreator/

@@ -29,6 +29,14 @@ desktop.ini
 *.pro.user*
 *.qbs.user*
 CMakeLists.txt.user*
+*CMakeSettings.json
+# xemacs temporary files
+*.flc
+
+# Vim temporary files
+.*.swp
+
+# Visual Studio generated files
 /.qtcreator/
 **/.qmlls.ini
 
@@ -113,7 +121,7 @@ cmake_install.cmake
 *_autogen/
 Testing/
 *.clangd
-*.clang-format
+#*.clang-format
 install_manifest.txt
 compile_commands.json
 

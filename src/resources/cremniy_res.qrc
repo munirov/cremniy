@@ -1,11 +1,12 @@
 <RCC>
     <qresource prefix="/">
-        <file>styles/style.qss</file>
-        <file>icons/icon.png</file>
-        <file>icons/binary.png</file>
-        <file>icons/dasm.png</file>
-        <file>icons/code.png</file>
-        <file>icons/close.png</file>
         <file>data/instructions_ru.json</file>
+        <file>icons/close.svg</file>
+        <file>icons/code.svg</file>
+        <file>icons/binary.svg</file>
+        <file>icons/dasm.svg</file>
+        <file>icons/icon.svg</file>
+        <file>styles/base.qss</file>
+        <file>styles/dark.qss</file>
     </qresource>
 </RCC>

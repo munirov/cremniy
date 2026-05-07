@@ -49,7 +49,7 @@ jobs:
             libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-render-util0 libxcb-xinerama0 libxcb-cursor0 \
             libxcb-xkb1 libdbus-1-3 \
-            libfuse2 file imagemagick
+            libfuse2 file imagemagick librsvg2-bin
 
       - name: Download linuxdeploy tools
         if: runner.os == 'Linux'
@@ -80,11 +80,9 @@ jobs:
         run: |
           echo -e "[Desktop Entry]\nType=Application\nName=Cremniy\nExec=cremniy\nIcon=cremniy\nCategories=Utility;" > cremniy.desktop
 
-          convert src/resources/icons/icon.png -resize 256x256 cremniy.png
+          rsvg-convert src/resources/icons/icon.svg -w 256 -h 256 -o cremniy.png
 
           export QML_SOURCES_PATHS=${{ github.workspace }}/src
-          export QMAKE=$Qt6_DIR/bin/qmake
-          export LD_LIBRARY_PATH=$Qt6_DIR/lib:$LD_LIBRARY_PATH
 
           ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run \
             --appdir AppDir \
@@ -104,7 +102,7 @@ jobs:
             throw "build/Release/cremniy.exe was not produced"
           }
           Copy-Item build/Release/cremniy.exe package/
-          & "$env:Qt6_DIR/bin/windeployqt.exe" package/cremniy.exe
+          & "$env:QT_ROOT_DIR\bin\windeployqt.exe" package\cremniy.exe
           Compress-Archive -Path package/* -DestinationPath cremniy-windows-${{ github.ref_name }}.zip
 
       - name: Package (macOS)

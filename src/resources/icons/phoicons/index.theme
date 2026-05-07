@@ -1,0 +1,14 @@
+[Icon Theme]
+Name=phoicons
+Inherits=hicolor
+Directories=icons,icons-light
+
+[icons]
+Size=22
+Context=MimeTypes
+Type=Fixed
+
+[icons-light]
+Size=22
+Context=MimeTypes
+Type=Fixed

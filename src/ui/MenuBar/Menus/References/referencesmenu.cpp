@@ -1,4 +1,6 @@
 #include "referencesmenu.h"
+#include "core/modules/ModuleManager.h"
+#include "core/modules/ReferenceBase.h"
 #include "ui/MenuBar/menufactory.h"
 
 static bool registered = [](){
@@ -8,10 +10,25 @@ static bool registered = [](){
     return true;
 }();
 
-ReferencesMenu::ReferencesMenu() : BaseMenu("References") {
-    m_asciiChars = new QAction("ASCII characters", this);
-    m_keybScancodes = new QAction("Keyboard Scancodes", this);
+ReferencesMenu::ReferencesMenu() : BaseMenu(tr("References")) {
+    QList<QString> groups = ModuleManager::instance().getGroups<ReferenceBase>();
+    for (QString group : groups){
 
-    this->addAction(m_asciiChars);
-    this->addAction(m_keybScancodes);
+        const QVector<ModuleDescription<ReferenceBase>>& descRefModules = ModuleManager::instance().getByGroup<ReferenceBase>(group);
+
+        QMenu* groupMenu;
+        if (group == "") groupMenu = this;
+        else groupMenu = new QMenu(group);
+
+        for (const ModuleDescription<ReferenceBase>& desc : descRefModules){
+            QAction* newAction = new QAction(desc.name(), this);
+            groupMenu->addAction(newAction);
+            connect(newAction, &QAction::triggered, this, [this, desc](){
+                auto* module = desc.creator();
+                module->showWindow();
+            });
+        }
+        if (group != "") this->addMenu(groupMenu);
+
+    }
 }

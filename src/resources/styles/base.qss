@@ -1,0 +1,125 @@
+
+QWidget {
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 12px;
+}
+
+QHexView {
+    font-size: 16px;
+}
+
+QPushButton {
+    padding: 6px 12px;
+}
+
+QComboBox {
+    padding: 2px;
+}
+
+QComboBox::drop-down {
+    border: 0px;
+    width: 0px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+}
+
+QLineEdit, QTextEdit, QPlainTextEdit {
+    padding: 2px;
+}
+
+#filesTabWidget QTabBar::close-button {
+    subcontrol-position: right;
+    padding: 2px;
+}
+
+#filesTabWidget QTabBar::close-button:hover {
+    padding: 1px;
+}
+
+#filesTabWidget QTabBar::tab {
+    padding: 5px;
+    height: 10px;
+    min-width: 200px;
+}
+
+#toolTabWidget QTabBar::tab {
+    padding: 5px;
+    height: 20px;
+    min-width: 100px;
+    max-width: 200px;
+}
+
+#toolTabWidget QTabBar::tab:selected {
+    height: 20px;
+}
+
+QListWidget#hexTabsList {
+    min-width: 120px;
+    max-width: 200px;
+    font-size: 12px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+QListWidget#hexTabsList::item {
+    padding: 6px;
+    margin: 4px;
+    outline: none;
+}
+
+QListWidget#hexTabsList::item:selected {
+    outline: none;
+}
+
+QListWidget#hexTabsList::item:focus {
+    outline: none;
+}
+
+QTreeView {
+    qproperty-iconRedraw: true;
+}
+
+QMenu::item {
+    padding: 4px 20px 4px 4px;
+}
+
+QMenu::indicator {
+    width: 12px;
+    height: 12px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+/* Vertical QScrollBar */
+
+QScrollBar:vertical {
+    width: 16px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 16px;
+}
+
+/* Horizontal QScrollBar */
+
+QScrollBar:horizontal {
+    height: 16px;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 16px;
+}
+
+QWidget#searchWidget QLineEdit {
+    padding: 3px 6px;
+}
+
+QWidget#searchWidget QPushButton {
+    padding: 4px 10px;
+}
+
+QDialog#settingsDialog QLabel#settingsHintLabel {
+    font-size: 11px;
+}

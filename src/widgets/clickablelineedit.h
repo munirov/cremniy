@@ -7,15 +7,14 @@
 class ClickableLineEdit : public QLineEdit {
     Q_OBJECT
 public:
-    explicit ClickableLineEdit();
+    explicit ClickableLineEdit() {};
     using QLineEdit::QLineEdit;
 
 protected:
     void mousePressEvent(QMouseEvent *event) override {
-        // Здесь будем вызывать FIleDialog и полученное значение из диалога подставлять в Text данного виждета
         QString dir = QFileDialog::getExistingDirectory(
             this,
-            "Choose Directory",
+            tr("Choose Directory"),
             QDir::homePath(),
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
             );

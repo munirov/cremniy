@@ -6,7 +6,10 @@ On macOS, use `Cmd` instead of `Ctrl` for standard sequences!
 |---|---|
 | Ctrl+S | File: Save File |
 | Ctrl+, | Edit: Settings |
+| Ctrl+B | Files Tree: show/hide |
 | Ctrl+Shift+R | Tools: Reverse Calculator |
+| Ctrl+Shift+D | Tools: Data Converter |
+| Ctrl+Shift+S | Tools: Shellcode Generator |
 | F5 | Disassembler: re-run disassembly |
 | Ctrl+F | Code Editor: open search |
 | Esc | Code Editor: close search |

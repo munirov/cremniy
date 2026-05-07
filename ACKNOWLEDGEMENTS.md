@@ -3,7 +3,12 @@
 Huge thanks to everyone who supports and contributes to the **Cremniy** project.
 Your time, ideas, and effort help the project grow and move forward.
 
----
+> [!TIP]
+> Want to contribute? Check out our [contribution guidelines](CONTRIBUTING.md) or open a pull request!
+> 
+> Want to financially support the project? Check out our donation page and donate [here](https://dalink.to/igmunv)!
+
+### Thanks everyone ❤️
 
 ## 👥 Contributors
 
@@ -39,8 +44,6 @@ People who contributed their time and code to Cremniy.
 
 [@Anstrofonik](https://github.com/Anstrofonik)
 
----
-
 ## 💸 Donators
 
 People who financially supported the development of Cremniy.
@@ -52,7 +55,3 @@ NeXxRT
 Vordeferst_company
 
 Тапки в кедах
-
----
-
-> Want to contribute? Check out our [contribution guidelines](CONTRIBUTING.md) or open a pull request!

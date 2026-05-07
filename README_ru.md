@@ -11,7 +11,7 @@
 [![Community](https://img.shields.io/badge/Community-Telegram-blue?logo=telegram&style=flat-square)](https://t.me/cremniy_com)
 <br>
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue?style=flat-square&logo=cplusplus)](https://en.cppreference.com/w/cpp/17)
-[![Qt 6](https://img.shields.io/badge/Qt-6.8.3-41CD52?style=flat-square&logo=qt)](https://www.qt.io/)
+[![Qt 6](https://img.shields.io/badge/Qt-6.8.2-41CD52?style=flat-square&logo=qt)](https://www.qt.io/)
 
 [English](README.md) • Русский
 
@@ -65,7 +65,7 @@
 | Зависимость | Мин. версия |
 |---|---|
 | **CMake** | 3.16 |
-| **Qt** | 6.8.3 |
+| **Qt** | 6.8.2 |
 | **Компилятор C++** | Поддержка C++17 |
 
 <details>

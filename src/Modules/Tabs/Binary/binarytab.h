@@ -1,0 +1,56 @@
+#ifndef BINARYTAB_H
+#define BINARYTAB_H
+
+#include <QShortcut>
+#include <QWidget>
+#include <QIcon>
+#include <qfileinfo.h>
+#include <qlistwidget.h>
+#include <qstackedwidget.h>
+
+#include <core/modules/TabBase.h>
+
+class BinaryTab : public TabBase
+{
+    Q_OBJECT
+
+private:
+
+    QStackedWidget* pageView;
+    bool m_updatingSelection = false; // Флаг для предотвращения рекурсии
+    bool m_syncingBufferData = false;
+    bool m_pageDataDirty = true;
+    QShortcut* m_findShortcut = nullptr;
+    QListWidget* m_pageList;
+
+    void openFindDialog();
+    void createPages();
+
+protected slots:
+    // Обработчик изменения выделения из буфера
+    void onSelectionChanged(qint64 pos, qint64 length) override;
+    void onDataChanged() override;
+
+public:
+    explicit BinaryTab(QWidget *parent = nullptr);
+
+    QIcon icon() const override { return QIcon(":/icons/binary.svg"); };
+
+    void setFileDataBuffer(FileDataBuffer* newFileDataBuffer) override;
+
+public slots:
+
+    // From Parrent Class: ToolTab
+    void setFile(QString filepath) override;
+    void setTabData() override;
+    void saveTabData() override;
+
+    void pageModifyDataSlot();
+
+    void setWordWrapSlot(bool checked) override {};
+    void setTabReplaceSlot(bool checked) override {};
+    void setTabWidthSlot(int width) override {};
+
+};
+
+#endif // BINARYTAB_H

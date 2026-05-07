@@ -25,6 +25,7 @@ private slots:
     void onImportIni();
     void onAccept();
     void onBackendChanged(int index);
+    void onLanguageSwitched(const QString &locale);
 
 private:
     void loadFromSettings();
@@ -45,6 +46,9 @@ private:
     // radare2 options
     QComboBox     *m_r2AnalysisCombo = nullptr;
     QPlainTextEdit *m_r2PreCommands = nullptr;
+
+    // File-tree exclusion
+    QPlainTextEdit *m_excludedPatterns = nullptr;
 
     QPushButton *m_testBtn      = nullptr;
     QPushButton *m_exportBtn    = nullptr;

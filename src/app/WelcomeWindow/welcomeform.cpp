@@ -27,7 +27,6 @@ WelcomeForm::WelcomeForm(QWidget *parent)
 
     // Base
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    this->setLayout(mainLayout);
 
     stack = new QStackedWidget(this);
     mainLayout->addWidget(stack);
@@ -44,15 +43,21 @@ WelcomeForm::WelcomeForm(QWidget *parent)
 
     QHBoxLayout *btnLayout = new QHBoxLayout();
 
-    open_recent_proj_btn = new QPushButton("Open", pageWelcome);
+    open_recent_proj_btn = new QPushButton(tr("Open"), pageWelcome);
     btnLayout->addWidget(open_recent_proj_btn);
     open_recent_proj_btn->setEnabled(false);
 
-    QPushButton *open_browse_proj_btn = new QPushButton("Open...", pageWelcome);
+    QPushButton *open_browse_proj_btn = new QPushButton(tr("Open..."), pageWelcome);
     btnLayout->addWidget(open_browse_proj_btn);
 
-    QPushButton *create_proj_btn = new QPushButton("Create", pageWelcome);
+    QPushButton *create_proj_btn = new QPushButton(tr("Create"), pageWelcome);
     btnLayout->addWidget(create_proj_btn);
+
+    remove_recent_proj_btn = new QPushButton("×", pageWelcome);
+    remove_recent_proj_btn->setFixedWidth(28);
+    remove_recent_proj_btn->setStyleSheet("QPushButton { padding: 5px 0px; }");
+    btnLayout->addWidget(remove_recent_proj_btn);
+    remove_recent_proj_btn->setEnabled(false);
 
     l1->addLayout(btnLayout);
 
@@ -67,7 +72,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     QGridLayout *grid = new QGridLayout();
 
     // Первая строка: "Текст" + QLineEdit
-    proj_name_label = new QLabel("Project Name:");
+    proj_name_label = new QLabel(tr("Project Name:"));
     proj_name_lineEdit = new QLineEdit();
     QRegularExpression re("^[A-Za-z0-9_-]+$");
     QValidator *validator = new QRegularExpressionValidator(re, this);
@@ -76,13 +81,13 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     grid->addWidget(proj_name_lineEdit, 0, 1);
 
     // Вторая строка: "Текст" + QComboBox
-    language_label = new QLabel("Language:");
+    language_label = new QLabel(tr("Language:"));
     language_comboBox = new QComboBox();
     language_comboBox->addItems({"C", "C++", "ASM", "C + ASM", "Custom"});
     grid->addWidget(language_label, 1, 0);
     grid->addWidget(language_comboBox, 1, 1);
 
-    path_label = new QLabel("Path:");
+    path_label = new QLabel(tr("Path:"));
     path_lineEdit = new ClickableLineEdit();
     path_lineEdit->setReadOnly(true);
     grid->addWidget(path_label, 2, 0);
@@ -100,8 +105,8 @@ WelcomeForm::WelcomeForm(QWidget *parent)
 
     // --- Горизонтальный layout для кнопок ---
     QHBoxLayout *buttonLayout = new QHBoxLayout();
-    QPushButton *createButton = new QPushButton("Create");
-    QPushButton *backButton = new QPushButton("Back");
+    QPushButton *createButton = new QPushButton(tr("Create"));
+    QPushButton *backButton = new QPushButton(tr("Back"));
 
     buttonLayout->addWidget(createButton);
     buttonLayout->addWidget(backButton);
@@ -118,6 +123,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     connect(RecentProjectsList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &WelcomeForm::SelectProjectInList);
 
     connect(open_recent_proj_btn, &QPushButton::clicked, this, &WelcomeForm::OpenRecentProjectHandler);
+    connect(remove_recent_proj_btn, &QPushButton::clicked, this, &WelcomeForm::RemoveRecentProjectHandler);
     connect(open_browse_proj_btn, &QPushButton::clicked, this, &WelcomeForm::OpenProjectHandler);
     connect(create_proj_btn, &QPushButton::clicked, this, &WelcomeForm::CreateProjectHandler);
 
@@ -135,6 +141,10 @@ void WelcomeForm::SelectProjectInList(){
     open_recent_proj_btn->setEnabled(true);
     open_recent_proj_btn->setProperty("state", "green");
     open_recent_proj_btn->style()->polish(open_recent_proj_btn);
+
+    remove_recent_proj_btn->setEnabled(true);
+    remove_recent_proj_btn->setProperty("state", "red");
+    remove_recent_proj_btn->style()->polish(remove_recent_proj_btn);
 }
 
 void WelcomeForm::OpenRecentProjectHandler(){
@@ -144,11 +154,33 @@ void WelcomeForm::OpenRecentProjectHandler(){
         OpenProject(index.data().toString());
 }
 
+void WelcomeForm::RemoveRecentProjectHandler(){
+    QModelIndex index = RecentProjectsList->currentIndex();
+
+    if (index.isValid()) {
+        QString projectPath = index.data(Qt::DisplayRole).toString();
+        RecentProjectsList->model()->removeRow(index.row());
+        utils::ProjectsHistoryManager::removeProjectFromHistory(projectPath);
+    }
+
+    index = RecentProjectsList->currentIndex();
+    if (!index.isValid()) {
+        open_recent_proj_btn->setEnabled(false);
+        open_recent_proj_btn->setProperty("state", QVariant());
+        open_recent_proj_btn->style()->polish(open_recent_proj_btn);
+
+        remove_recent_proj_btn->setEnabled(false);
+        remove_recent_proj_btn->setProperty("state", QVariant());
+        remove_recent_proj_btn->style()->polish(remove_recent_proj_btn);
+    }
+}
+
+
 void WelcomeForm::OpenProjectHandler()
 {
     QString dir = QFileDialog::getExistingDirectory(
         this,
-        "Choose Directory",
+        tr("Choose Directory"),
         QDir::homePath(),
         QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
         );
@@ -168,7 +200,12 @@ void WelcomeForm::OpenProject(QString path){
     mw->setWindowState(Qt::WindowMaximized);
 
     connect(mw, &IDEWindow::CloseProject, this, [this, mw]() {
+        RecentProjectsList->clearSelection();
+        open_recent_proj_btn->setEnabled(false);
+        open_recent_proj_btn->setProperty("state", "");
+        open_recent_proj_btn->style()->polish(open_recent_proj_btn);
         this->show();
+        SetProjectHistoryList();
     });
 
     mw->show();
@@ -196,7 +233,7 @@ void WelcomeForm::L2CreateButton()
     // Check Project Name
     if (project_name.isEmpty()) {
         proj_name_label->setStyleSheet("color: #bf3131;");
-        info_label->setText("Please enter project name");
+        info_label->setText(tr("Please enter project name"));
         info_label->setVisible(true);
         return;
     }
@@ -205,7 +242,7 @@ void WelcomeForm::L2CreateButton()
     QFileInfo dirinfo(path_lineEdit->text());
     if (!dirinfo.exists() || !dirinfo.isDir()) {
         path_label->setStyleSheet("color: #bf3131;");
-        info_label->setText("Directory is invalid");
+        info_label->setText(tr("Directory is invalid"));
         info_label->setVisible(true);
         return;
     }
@@ -216,13 +253,13 @@ void WelcomeForm::L2CreateButton()
     if (dir.exists(new_project_path)){
         path_label->setStyleSheet("color: #bf3131;");
         proj_name_label->setStyleSheet("color: #bf3131;");
-        info_label->setText("Directory is exists!");
+        info_label->setText(tr("Directory is exists!"));
         info_label->setVisible(true);
         return;
     }
 
     if (!dir.mkdir(new_project_path)) {
-        info_label->setText("Failed to create project directory!");
+        info_label->setText(tr("Failed to create project directory!"));
         info_label->setVisible(true);
         return;
     }

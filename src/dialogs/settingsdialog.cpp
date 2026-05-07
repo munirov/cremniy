@@ -1,11 +1,12 @@
 #include "settingsdialog.h"
 
-#include "utils/appsettings.h"
+#include "core/settings/appsettings.h"
 
 #include <QComboBox>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -15,7 +16,8 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QStandardPaths>
-#include <QVBoxLayout>
+
+#include "core/locale/LanguageManager.h"
 
 static QString resolvedExecutable(const QString &userPath, const QString &exeName)
 {
@@ -35,14 +37,18 @@ static bool isRunnableExecutable(const QString &path)
 static void setStatusLabel(QLabel *lbl, bool ok, const QString &text)
 {
     // Text-only status to avoid adding icon resources.
-    // Use a monospace-friendly glyph and color.
+    // Use a monospace-friendly glyph; the color comes from QSS.
     lbl->setText(ok ? QStringLiteral("✓ ") + text : QStringLiteral("✗ ") + text);
-    lbl->setStyleSheet(ok ? "color: #39d353;" : "color: #f85149;");
+    lbl->setProperty("statusState", ok ? "ok" : "missing");
+    lbl->style()->unpolish(lbl);
+    lbl->style()->polish(lbl);
+    lbl->update();
 }
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
 {
+    setObjectName("settingsDialog");
     setWindowTitle(tr("Settings"));
     setModal(true);
     setMinimumSize(760, 520);
@@ -80,6 +86,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         m_objdumpPath = new QLineEdit(row);
         m_objdumpPath->setPlaceholderText(tr("Leave empty to use PATH lookup"));
         m_objdumpStatus = new QLabel(row);
+        m_objdumpStatus->setObjectName("settingsStatusLabel");
         m_objdumpStatus->setMinimumWidth(150);
         m_objdumpStatus->setTextInteractionFlags(Qt::TextSelectableByMouse);
         auto *browse = new QPushButton(tr("Browse…"), row);
@@ -100,6 +107,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         m_radare2Path = new QLineEdit(row);
         m_radare2Path->setPlaceholderText(tr("Path to r2 (radare2) executable"));
         m_radare2Status = new QLabel(row);
+        m_radare2Status->setObjectName("settingsStatusLabel");
         m_radare2Status->setMinimumWidth(150);
         m_radare2Status->setTextInteractionFlags(Qt::TextSelectableByMouse);
         auto *browse = new QPushButton(tr("Browse…"), row);
@@ -118,6 +126,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         auto *rowLayout = new QHBoxLayout(row);
         rowLayout->setContentsMargins(0, 0, 0, 0);
         m_fileStatus = new QLabel(row);
+        m_fileStatus->setObjectName("settingsStatusLabel");
         m_fileStatus->setTextInteractionFlags(Qt::TextSelectableByMouse);
         rowLayout->addWidget(m_fileStatus, 1);
         form->addRow(tr("Dependency: file(1)"), row);
@@ -139,7 +148,40 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         form->addRow(tr("radare2 pre-commands"), m_r2PreCommands);
     }
 
+
+    // LANGUAGE
+    auto * languageSwitcherBox = new QComboBox(this);
+
+    languageSwitcherBox->setPlaceholderText(tr("Choose:"));
+    for (auto const & locale : LanguageManager::supportedLanguages())
+        languageSwitcherBox->addItem(QLocale(locale).nativeLanguageName(), QVariant::fromValue(locale));
+
+    languageSwitcherBox->setMinimumWidth(250);
+    form->addRow(tr("Language"), languageSwitcherBox);
+
     root->addLayout(form);
+
+    // ── Excluded Files section ──
+    {
+        auto *separator = new QFrame(this);
+        separator->setFrameShape(QFrame::HLine);
+        separator->setFrameShadow(QFrame::Sunken);
+        root->addWidget(separator);
+
+        auto *lbl = new QLabel(tr("Excluded Files / Folders"), this);
+        lbl->setObjectName("settingsSectionTitle");
+        root->addWidget(lbl);
+
+        auto *hint = new QLabel(tr("One pattern per line. Examples: node_modules, .git, *.log, dist/"), this);
+        hint->setObjectName("settingsHintLabel");
+        hint->setWordWrap(true);
+        root->addWidget(hint);
+
+        m_excludedPatterns = new QPlainTextEdit(this);
+        m_excludedPatterns->setPlaceholderText(tr("node_modules\n.git\n*.log"));
+        m_excludedPatterns->setFixedHeight(90);
+        root->addWidget(m_excludedPatterns);
+    }
 
     // buttons
     auto *btnRow = new QHBoxLayout();
@@ -168,6 +210,9 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     connect(m_syntaxCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
     connect(m_r2AnalysisCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
     connect(m_r2PreCommands, &QPlainTextEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
+    connect(languageSwitcherBox, &QComboBox::currentTextChanged, this, [languageSwitcherBox, this] {
+        onLanguageSwitched(languageSwitcherBox->currentData().value<QString>());
+    });
 
     loadFromSettings();
     updateUiEnabledState();
@@ -239,6 +284,8 @@ void SettingsDialog::loadFromSettings()
     }
 
     m_r2PreCommands->setPlainText(AppSettings::radare2PreCommands().replace(';', '\n'));
+
+    m_excludedPatterns->setPlainText(AppSettings::excludedPatterns().join('\n'));
 }
 
 void SettingsDialog::updateUiEnabledState()
@@ -340,6 +387,13 @@ void SettingsDialog::onAccept()
                             .join(';');
     AppSettings::setRadare2PreCommands(pre);
 
+    // Excluded patterns
+    {
+        const QStringList patterns = m_excludedPatterns->toPlainText()
+                                         .split('\n', Qt::SkipEmptyParts);
+        AppSettings::setExcludedPatterns(patterns);
+    }
+
     // emit GlobalWidgetsManager::instance().actionTriggered("settingsChanged");
     accept();
 }
@@ -377,3 +431,8 @@ void SettingsDialog::updateDependencyStatus()
     }
 }
 
+void SettingsDialog::onLanguageSwitched(const QString &locale) {
+    qDebug() << locale;
+    LanguageManager::instance().setLocale(locale);
+    QMessageBox::information(this, tr("Information"), tr("Please restart IDE to apply the settings."), QMessageBox::Ok);
+}

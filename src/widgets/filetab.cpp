@@ -17,9 +17,24 @@ FileTab::FileTab(QWidget* parent, QString path)
     // - - Connects - -
     connect(m_tooltabWidget, &ToolsTabWidget::removeStarSignal, this, &FileTab::removeStar);
     connect(m_tooltabWidget, &ToolsTabWidget::setupStarSignal, this, &FileTab::setupStar);
+    connect(m_tooltabWidget, &ToolsTabWidget::statusBarInfoChanged, this, &FileTab::statusBarInfoChanged);
 
     connect(this, &FileTab::saveFileSignal, m_tooltabWidget, &ToolsTabWidget::saveCurrentTabData);
 
+    connect(this, &FileTab::setWordWrapSignal, m_tooltabWidget, &ToolsTabWidget::setWordWrapSlot);
+    connect(this, &FileTab::setTabReplaceSignal, m_tooltabWidget, &ToolsTabWidget::setTabReplaceSlot);
+    connect(this, &FileTab::setTabWidthSignal, m_tooltabWidget, &ToolsTabWidget::setTabWidthSlot);
+
+    connect(this, &FileTab::openTabModule, m_tooltabWidget, &ToolsTabWidget::openTabModule);
+
+}
+
+void FileTab::setPinned(bool pinned){
+    if (m_pinned == pinned) {
+        return;
+    }
+    m_pinned = pinned;
+    emit pinnedChanged(this);
 }
 
 void FileTab::removeStar(){
@@ -36,4 +51,16 @@ void FileTab::saveFile(){
     qDebug() << "FileTab::saveFile()";
     emit removeStarSignal(this);
     emit saveFileSignal();
+}
+
+void FileTab::setWordWrapSlot(bool checked){
+    emit setWordWrapSignal(checked);
+}
+
+void FileTab::setTabReplaceSlot(bool checked){
+    emit setTabReplaceSignal(checked);
+}
+
+void FileTab::setTabWidthSlot(int width){
+    emit setTabWidthSignal(width);
 }

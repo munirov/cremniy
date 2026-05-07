@@ -1,0 +1,4 @@
+[*.{c,cc,cpp,cxx,h,hh,hpp,hxx}]
+indent_style = space
+indent_size = 4
+brace_style = end_of_line

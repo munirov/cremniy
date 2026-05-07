@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="90"
+   height="90"
+   viewBox="0 0 89.999999 90"
+   fill="none"
+   version="1.1"
+   id="svg4"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4" />
+  <g
+     id="g4"
+     transform="translate(-4.0949463,-5.2332004)">
+    <text
+       x="22.138844"
+       y="45.106796"
+       fill="#FFFFFF"
+       font-size="36.0041px"
+       font-family="monospace"
+       id="text1"
+       style="fill:#ffffff;stroke:#ffffff;stroke-width:2;stroke-dasharray:none;stroke-opacity:1">0</text>
+    <text
+       x="54.374752"
+       y="81.427589"
+       fill="#FFFFFF"
+       font-size="36.0041px"
+       font-family="monospace"
+       id="text1-9"
+       style="fill:#ffffff;stroke:#ffffff;stroke-width:2;stroke-dasharray:none;stroke-opacity:1">0</text>
+    <text
+       x="53.452908"
+       y="44.945782"
+       fill="#FFFFFF"
+       font-size="36.2264px"
+       font-family="monospace"
+       id="text2"
+       style="fill:#ffffff;stroke:#ffffff;stroke-width:2;stroke-dasharray:none;stroke-opacity:1">1</text>
+    <text
+       x="22.976955"
+       y="82.081398"
+       fill="#FFFFFF"
+       font-size="36.2264px"
+       font-family="monospace"
+       id="text2-1"
+       style="fill:#ffffff;stroke:#ffffff;stroke-width:2;stroke-dasharray:none;stroke-opacity:1">1</text>
+  </g>
+</svg>
