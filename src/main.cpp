@@ -1,18 +1,20 @@
 #include <QApplication>
 #include <QCoreApplication>
-#include <QFile>
-#include <QIcon>
 #include <QImageReader>
 #include <QDirIterator>
 #include <QDebug>
 #include <QResource>
 
 #include "app/WelcomeWindow/welcomeform.h"
+#include "core/locale/LanguageManager.h"
 
 int main(int argc, char *argv[])
 {
     qputenv("QT_QPA_PLATFORMTHEME", "generic");
     QApplication a(argc, argv);
+    QCoreApplication::setOrganizationName("Munirov");
+    LanguageManager::instance().loadUserDefaultLocale();
+
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");
     a.setWindowIcon(QIcon(":/icons/icon.svg"));
@@ -20,20 +22,20 @@ int main(int argc, char *argv[])
     // - - Themes - -
 
     // Icons
-    Q_INIT_RESOURCE(phoicons); 
+    Q_INIT_RESOURCE(phoicons);
     QIcon::setThemeSearchPaths({":/icons"});
     QIcon::setThemeName("phoicons");         // маленькими буквами!
-    
+
     qDebug() << "=== SYSTEM DEBUG ===";
     qDebug() << "Supported formats:" << QImageReader::supportedImageFormats();
     qDebug() << "=== THEME DEBUG ===";
     qDebug() << "Theme Search Paths:" << QIcon::themeSearchPaths();
     qDebug() << "Current Theme Name:" << QIcon::themeName();
-    
+
     // Переименовал в checkTheme, чтобы не было конфликта
     QFile checkTheme(":/icons/phoicons/index.theme");
     qDebug() << "index.theme exists in resources:" << checkTheme.exists();
-    
+
     qDebug() << "=== RESOURCE TREE ===";
     QDirIterator it(":/icons", QDirIterator::Subdirectories);
     while (it.hasNext()) {

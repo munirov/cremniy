@@ -8,12 +8,12 @@ static bool registered = [](){
     return true;
 }();
 
-FileMenu::FileMenu() : BaseMenu("File") {
+FileMenu::FileMenu() : BaseMenu(tr("File")) {
 
-    m_openProject = new QAction("New Project", this);
-    m_newProject = new QAction("Open Project", this);
-    m_saveFile = new QAction("Save File", this);
-    m_closeProject = new QAction("Close Project", this);
+    m_openProject = new QAction(tr("New Project"), this);
+    m_newProject = new QAction(tr("Open Project"), this);
+    m_saveFile = new QAction(tr("Save File"), this);
+    m_closeProject = new QAction(tr("Close Project"), this);
 
     m_saveFile->setShortcut(QKeySequence::Save);
 

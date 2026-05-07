@@ -16,7 +16,8 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QStandardPaths>
-#include <QVBoxLayout>
+
+#include "core/locale/LanguageManager.h"
 
 static QString resolvedExecutable(const QString &userPath, const QString &exeName)
 {
@@ -147,6 +148,17 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         form->addRow(tr("radare2 pre-commands"), m_r2PreCommands);
     }
 
+
+    // LANGUAGE
+    auto * languageSwitcherBox = new QComboBox(this);
+
+    languageSwitcherBox->setPlaceholderText(tr("Choose:"));
+    for (auto const & locale : LanguageManager::supportedLanguages())
+        languageSwitcherBox->addItem(QLocale(locale).nativeLanguageName(), QVariant::fromValue(locale));
+
+    languageSwitcherBox->setMinimumWidth(250);
+    form->addRow(tr("Language"), languageSwitcherBox);
+
     root->addLayout(form);
 
     // ── Excluded Files section ──
@@ -198,6 +210,9 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     connect(m_syntaxCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
     connect(m_r2AnalysisCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
     connect(m_r2PreCommands, &QPlainTextEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
+    connect(languageSwitcherBox, &QComboBox::currentTextChanged, this, [languageSwitcherBox, this] {
+        onLanguageSwitched(languageSwitcherBox->currentData().value<QString>());
+    });
 
     loadFromSettings();
     updateUiEnabledState();
@@ -414,4 +429,10 @@ void SettingsDialog::updateDependencyStatus()
         setStatusLabel(m_fileStatus, ok, ok ? tr("found") : tr("missing"));
         m_fileStatus->setToolTip(ok ? fileExe : tr("The objdump backend uses 'file -b <path>' for arch detection"));
     }
+}
+
+void SettingsDialog::onLanguageSwitched(const QString &locale) {
+    qDebug() << locale;
+    LanguageManager::instance().setLocale(locale);
+    QMessageBox::information(this, tr("Information"), tr("Please restart IDE to apply the settings."), QMessageBox::Ok);
 }

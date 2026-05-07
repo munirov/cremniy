@@ -204,7 +204,115 @@ connect(
     &FilesTabWidget::saveFileSlot
     ); /* <-- incorrect. Bad closing brace placement */
 ```
+---
+## Оформление текстовых элементов пользовательского интерфейса
 
+Все видимые для пользователя элементы текста должны быть обёрнуты при помощи стандартных средств Qt:
+
+- `tr()` – для обычных текстовых элементов, не являющихся константами и `static`.
+- `QT_TRANSLATE_NOOP(context, text)` – объявление для Qt, чтобы текст попал в файл переводов.
+- `QCoreApplication::translate(context, text)` – для статических констант, перевод будет применён сразу.
+---
+
+#### `tr()`
+
+```c++
+m_createFile = new QAction(tr("Create File"), this);
+m_createDir  = new QAction(tr("Create Folder"), this);
+m_delete     = new QAction(tr("Delete"), this);
+m_rename     = new QAction(tr("Rename"), this);
+m_open       = new QAction(tr("Open"), this);
+```
+
+---
+
+#### `QT_TRANSLATE_NOOP(context, text)`
+
+Используется для статических массивов и констант. Сам по себе не переводит – лишь помечает строку для `lupdate`. Перевод применяется позже через `QCoreApplication::translate()` или `tr()`.
+
+> ⚠️ Контекст в `QT_TRANSLATE_NOOP` и `QCoreApplication::translate()` должен совпадать.
+
+```c++
+static const RefRow kRefRows[] = {
+    {"Esc", "01", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "Break code: 81")},
+    {"1",   "02", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "… 0 (top row) 0B")},
+    // ...
+};
+
+for (int i = 0; i < n; ++i) {
+    // ....
+    m_table->setItem(i, 2, new QTableWidgetItem(
+        QCoreApplication::translate("KeyboardScanCodesRef", kRefRows[i].notes)
+    ));
+}
+```
+
+Если отрисовка происходит в том же классе, можно использовать `tr()` напрямую:
+> Ключевой момент заключается в том, что контекст, который вы определяете для статических элементов, имеет то же имя, что и класс. В примере с `DataConverterDialog`, согласно стандарту Qt, имя контекста указывается именно таким образом.
+```c++
+static const UnitInfo kUnits[] = {
+    { QT_TRANSLATE_NOOP("DataConverterDialog", "Bits"),      "Bit", 1.0 / 8.0 },
+    { QT_TRANSLATE_NOOP("DataConverterDialog", "Bytes"),     "Byte", 1.0 },
+    { QT_TRANSLATE_NOOP("DataConverterDialog", "Kilobytes"), "KB",   1024.0 },
+    // ...
+};
+
+for (int i = 0; i < kUnitCount; ++i) {
+    m_form->addRow(tr(kUnits[i].label), rowWidget);
+}
+```
+
+---
+
+#### `QMessageBox` с кастомными кнопками
+
+Если вы определяете собственные кнопки – оборачивайте их текст в `tr()`:
+
+```c++
+QMessageBox question_save_file(
+    QMessageBox::Question,
+    tr("Save File"),
+    tr("Do you want to save this file?"),
+    QMessageBox::NoButton,
+    this
+);
+
+const auto yes    = question_save_file.addButton(tr("Yes"),    QMessageBox::YesRole);
+const auto no     = question_save_file.addButton(tr("No"),     QMessageBox::NoRole);
+const auto cancel = question_save_file.addButton(tr("Cancel"), QMessageBox::RejectRole);
+
+question_save_file.exec();
+
+const auto reply = question_save_file.clickedButton();
+if (reply == yes)    tab->saveFile();
+else if (reply == cancel) return;
+```
+
+---
+
+#### Обновление файла переводов
+
+После завершения работы с кодом запустите утилиту `lupdate`:
+
+```bash
+lupdate src -ts src/resources/locale/translations/app_ru.ts
+```
+
+Затем откройте файл перевода и заполните все поля со статусом `unfinished`:
+
+```xml
+<context>
+    <name>QHexView</name> <-- Это ваш контекст
+    <message>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="378"/> <-- Места где вы пометили строку как `tr()`
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="397"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="405"/>
+        <source>Go to</source> <-- текст который был помечен tr()
+        <translation type="unfinished">тут должен быть перевод</translation>
+    </message>
+ </context>
+```
+---
 ## Pull requests
 
 ### Требования

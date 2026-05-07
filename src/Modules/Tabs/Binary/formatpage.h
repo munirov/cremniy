@@ -24,7 +24,7 @@ public:
     virtual QByteArray getPageData() const = 0;
     virtual bool showFind() { return false; }
     virtual void setSharedBuffer(FileDataBuffer* buffer);
-    
+
     // Установить выделение (pos - позиция байта, length - длина)
     virtual void setSelection(qint64 pos, qint64 length) = 0;
 

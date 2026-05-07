@@ -2,7 +2,6 @@
 #define ASCIICHARSREF_H
 
 #include "core/modules/ReferenceBase.h"
-#include <QWidget>
 
 class AsciiCharsRef : public ReferenceBase
 {
