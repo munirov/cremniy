@@ -98,7 +98,9 @@ void FileTreePanel::setupConnections() {
 }
 
 QString FileTreePanel::currentPath() const {
-    return m_fileModel->filePath(getSourceIndex());
+    const auto path = m_fileModel->filePath(getSourceIndex());
+    if (path.isEmpty()) return m_root_path;
+    return path;
 }
 
 void FileTreePanel::open() {
@@ -123,10 +125,11 @@ void FileTreePanel::remove() const {
 }
 
 QModelIndex FileTreePanel::getSourceIndex() const{
-    const QModelIndex idx = m_treeView->currentIndex();
+    const QModelIndexList selected = m_treeView->selectionModel()->selectedIndexes();
+    if (selected.isEmpty()) return {};
+    const QModelIndex idx = selected.first();
     if (!idx.isValid()) return {};
-    const QModelIndex srcIdx = m_proxy->mapToSource(idx);
-    return srcIdx;
+    return m_proxy->mapToSource(idx);
 }
 
 void FileTreePanel::showMenu(const QPoint& point) const {
