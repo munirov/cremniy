@@ -1,6 +1,6 @@
-//
-// Created by Dmitriy on 3/27/26.
-//
+/*
+Created by Dmitriy on 3/27/26.
+*/
 
 #ifndef CREMNIY_PROJECTS_HISTORY_MANAGER_H
 #define CREMNIY_PROJECTS_HISTORY_MANAGER_H
@@ -29,6 +29,6 @@ public:
     static void checkDirectoryExists();
 };
 
-} // utils
+} /* utils */
 
 #endif //CREMNIY_PROJECTS_HISTORY_MANAGER_H

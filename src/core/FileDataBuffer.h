@@ -19,46 +19,46 @@ public:
     bool openFile(const QString& filePath);
     QString filePath() const;
 
-    // Get all data (thread-safe)
+    /* Get all data (thread-safe) */
     QByteArray data() const;
 
-    // Read range without materializing the entire file
+    /* Read range without materializing the entire file */
     QByteArray read(qint64 pos, qint64 length) const;
 
-    // Load data as the initial document state
+    /* Load data as the initial document state */
     void loadData(const QByteArray& data);
 
-    // Completely replace the working copy of data without resetting the dirty state
+    /* Completely replace the working copy of data without resetting the dirty state */
     void replaceData(const QByteArray& data);
 
-    // Change a single byte
+    /* Change a single byte */
     void setByte(qint64 pos, char byte);
 
-    // Get a single byte
+    /* Get a single byte */
     char getByte(qint64 pos) const;
 
-    // Change a range of bytes
+    /* Change a range of bytes */
     void setBytes(qint64 pos, const QByteArray& bytes);
 
-    // Buffer size
+    /* Buffer size */
     qint64 size() const;
 
-    // Set selection
+    /* Set selection */
     void setSelection(qint64 pos, qint64 length);
 
-    // Get current selection
+    /* Get current selection */
     void getSelection(qint64& pos, qint64& length) const;
 
-    // Get hash of the original data (to check for changes)
+    /* Get hash of the original data (to check for changes) */
     uint originalHash() const;
 
-    // Get hash of the current data
+    /* Get hash of the current data */
     uint currentHash() const;
 
-    // Check if the data has been modified
+    /* Check if the data has been modified */
     bool isModified() const;
 
-    // Reset modification flag (after saving)
+    /* Reset modification flag (after saving) */
     void markSaved();
 
     bool saveToFile(const QString& filePath = QString());
@@ -68,16 +68,16 @@ public:
     bool isLargeFile() const;
 
 signals:
-    // Single byte changed
+    /* Single byte changed */
     void byteChanged(qint64 pos);
 
-    // Range of bytes changed
+    /* Range of bytes changed */
     void bytesChanged(qint64 pos, qint64 length);
 
-    // All data changed (e.g., a new file was loaded)
+    /* All data changed (e.g., a new file was loaded) */
     void dataChanged();
 
-    // Selection changed
+    /* Selection changed */
     void selectionChanged(qint64 pos, qint64 length);
 
 private:

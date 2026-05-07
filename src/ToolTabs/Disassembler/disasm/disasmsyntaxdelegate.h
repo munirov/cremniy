@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: MIT */
 #ifndef DISASMSYNTAXDELEGATE_H
 #define DISASMSYNTAXDELEGATE_H
 

@@ -1,10 +1,9 @@
 #pragma once
 
-// QCodeEditor
-#include <QStyleSyntaxHighlighter.hpp> // Required for inheritance
+/* QCodeEditor */
+#include <QStyleSyntaxHighlighter.hpp> /* Required for inheritance */
 #include <QHighlightRule.hpp>
 
-// Qt
 #include <QVector>
 
 /**

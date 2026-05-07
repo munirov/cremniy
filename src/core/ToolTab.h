@@ -10,35 +10,35 @@ class ToolTab : public QWidget {
 
 protected:
     /**
-     * @brief Общий буфер данных
+     * @brief Shared data buffer
      *
-     * Хранит все данные файла и обеспечивает синхронизацию между вкладками
+     * Stores file data and ensures sync between tabs
      */
     FileDataBuffer* m_dataBuffer;
 
     /**
-     * @brief Контекст файла
+     * @brief File context
      */
     FileContext* m_fileContext = nullptr;
 
     /**
-     * @brief Флаг означающий изменения в данных
+     * @brief Data modified flag
      *
-     * Если true - данные изменены, false - данные равны данным в файле
+     * If true - data modified, false - data equials data in file
      */
     bool m_modifyIndicator = false;
 
 public:
     /**
-     * @brief Конструктор класса
+     * @brief Class constructor
      *
-     * @param buffer указатель на общий буфер данных
-     * @param parent родительский виджет
+     * @param buffer Pointer to shared data buffer
+     * @param parent Parent widget
      */
     explicit ToolTab(FileDataBuffer* buffer, QWidget* parent = nullptr)
         : QWidget(parent), m_dataBuffer(buffer)
     {
-        // Подписываемся на сигналы буфера
+        /* Connect to buffer signals */ 
         connect(m_dataBuffer, &FileDataBuffer::byteChanged,
             this, &ToolTab::onByteChanged);
         connect(m_dataBuffer, &FileDataBuffer::bytesChanged,
@@ -50,24 +50,24 @@ public:
     }
 
     /**
-     * @brief Получить название инструмента для вкладки
+     * @brief Get tool name for the tab
      */
     virtual QString toolName() const = 0;
 
     /**
-     * @brief Получить лого инструмента для вкладки
+     * @brief Get tool icon for the tab
      */
     virtual QIcon toolIcon() const = 0;
 
     /**
-     * @brief Получить значение индикатора изменений
+     * @brief Check modified status
      */
     bool getModifyIndicator() {
         return m_modifyIndicator;
     }
 
     /**
-     * @brief Установить значение индикатора изменений
+     * @brief Set the data modified flag
      */
     void setModifyIndicator(bool value) {
         m_modifyIndicator = value;
@@ -75,77 +75,78 @@ public:
 
 protected slots:
     /**
-     * @brief Обработчик изменения байта
+     * @brief Byte change handler
      *
-     * Вызывается при изменении байта в буфере
-     * @param pos позиция измененного байта
+     * Triggered when a byte in the buffer is modified
+     * @param pos position of the modified byte
      */
     virtual void onByteChanged(qint64 pos) { Q_UNUSED(pos); }
 
     /**
-     * @brief Обработчик изменения диапазона байтов
+     * @brief Byte range change handler
      *
-     * Вызывается при изменении диапазона байтов в буфере
-     * @param pos начальная позиция
-     * @param length длина диапазона
+     * Triggered when a range of bytes in the buffer is modified
+     * @param pos start position
+     * @param length range length
      */
     virtual void onBytesChanged(qint64 pos, qint64 length) { Q_UNUSED(pos); Q_UNUSED(length); }
 
     /**
-     * @brief Обработчик изменения выделения
+     * @brief Selection change handler
      *
-     * Вызывается при изменении выделения в буфере
-     * @param pos начальная позиция выделения
-     * @param length длина выделения
+     * Triggered when the selection within the buffer is modified
+     * @param pos start position of the selection
+     * @param length selection length
      */
     virtual void onSelectionChanged(qint64 pos, qint64 length) { Q_UNUSED(pos); Q_UNUSED(length); }
 
     /**
-     * @brief Обработчик полного изменения данных
+     * @brief Full data change handler
      *
-     * Вызывается при загрузке нового файла
+     * Triggered when a new file is loaded
      */
     virtual void onDataChanged() {}
 
 public slots:
     /**
-     * @brief Установить файл инструменту
+     * @brief Set file-tool
      *
-     * @param filepath путь к файлу
+     * @param filepath path to file
      */
     virtual void setFile(QString filepath) = 0;
 
     /**
-     * @brief Установить данные из файла во вкладку
+     * @brief Set data from the file in the tab
      */
     virtual void setTabData() = 0;
 
     /**
-     * @brief Сохраняет данные из вкладки в файл
+     * @brief Save tab data to a file
      */
     virtual void saveTabData() = 0;
 
 signals:
     /**
-     * @brief Обновить данные из файла во всех вкладках
+     * @brief Update file data across all tabs
      *
-     * Эмиттируется, когда нужно обновить данные на всех вкладках интерфейса
-     * Например, при сохранении данных текущего ToolTab в файл, необходимо обновить данные на всех остальных ToolTab
+     * Emitted when interface tabs need to synchronize their data
+     * For example, when saving the current ToolTab to a file all
+     * other ToolTabs must be updated to reflect the changes
      */
     void refreshDataAllTabsSignal();
 
     /**
-     * @brief Изменение изначальных данных
+     * @brief Original data modification signal
      *
-     * Эмиттится, каждый раз когда происходит изменение данных и они не равны изначальным данным
+     * Emitted whenever data changes and no longer matches the original state
      */
     void modifyData();
 
     /**
-     * @brief Изначальные данные не отличаются от текущих
+     * @brief Data reverted to original state
      *
-     * Эмиттится, каждый раз когда происходит изменение данных и они равны изначальным данным
-     * Также эмиттится после вызова функции setTabData, чтобы убрать звезду
+     * Emitted whenever data changes and matches the original state. 
+     * Also emitted after calling setTabData to clear the modified indicator (asterisk)
      */
     void dataEqual();
 };

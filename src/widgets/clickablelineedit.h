@@ -12,7 +12,7 @@ public:
 
 protected:
     void mousePressEvent(QMouseEvent *event) override {
-        // Здесь будем вызывать FIleDialog и полученное значение из диалога подставлять в Text данного виждета
+        /* Populate widget text from FileDialog */
         QString dir = QFileDialog::getExistingDirectory(
             this,
             "Choose Directory",

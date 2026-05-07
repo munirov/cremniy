@@ -1,7 +1,6 @@
-// QCodeEditor
+/* QCodeEditor */
 #include <QLanguage.hpp>
 
-// Qt
 #include <QIODevice>
 #include <QXmlStreamReader>
 

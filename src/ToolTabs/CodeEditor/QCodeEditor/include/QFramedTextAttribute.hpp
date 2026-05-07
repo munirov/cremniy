@@ -1,8 +1,7 @@
 #pragma once
 
-// Qt
-#include <QObject> // Required for inheritance
-#include <QTextObjectInterface> // Required for inheritance
+#include <QObject> /* Required for inheritance */
+#include <QTextObjectInterface> /* Required for inheritance */
 
 class QSyntaxStyle;
 
@@ -35,7 +34,7 @@ public:
      */
     explicit QFramedTextAttribute(QObject* parent=nullptr);
 
-    // Disable copying
+    /* Disable copying */
     QFramedTextAttribute(const QFramedTextAttribute&) = delete;
     QFramedTextAttribute& operator=(const QFramedTextAttribute&) = delete;
 

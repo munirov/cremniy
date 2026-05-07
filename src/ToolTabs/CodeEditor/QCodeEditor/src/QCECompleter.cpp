@@ -1,15 +1,14 @@
-// QCodeEditor
+/* QCodeEditor */
 #include <QCECompleter.hpp>
 #include <QLanguage.hpp>
 
-// Qt
 #include <QStringListModel>
 #include <QFile>
 
 QCECompleter::QCECompleter(QString langFile, QObject *parent) :
     QCompleter(parent)
 {
-    // Setting up Python types
+    /* Setting up Python types */
     QStringList list;
 
     Q_INIT_RESOURCE(codeeditor_res);

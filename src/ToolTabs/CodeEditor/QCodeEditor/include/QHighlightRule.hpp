@@ -1,6 +1,5 @@
 #pragma once
 
-// Qt
 #include <QRegularExpression>
 #include <QString>
 

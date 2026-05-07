@@ -21,13 +21,13 @@
 static QString stripAnsiCodes(const QString &text) {
     if (text.isEmpty()) return text;
     static QRegularExpression ansiRegex(
-        "(\x1b\\][0-9];.*?\x07|"       // OSC (Operating System Commands)
-        "\x1b\\[[0-9;?]*[A-Za-z])"      // CSI (Control Sequence Introducer)
+        "(\x1b\\][0-9];.*?\x07|"       /* OSC (Operating System Commands) */
+        "\x1b\\[[0-9;?]*[A-Za-z])"      /* CSI (Control Sequence Introducer) */
     );
 
     QString cleaned = text;
     cleaned.remove(ansiRegex);
-    // keep \n и \t (don't use .simplified())
+    /* keep \n и \t (don't use .simplified()) */
     return cleaned;
 }
 
@@ -56,7 +56,7 @@ TerminalWidget::TerminalWidget(QWidget *parent) : QWidget(parent) {
 
 void TerminalWidget::setupShell() {
 #ifdef Q_OS_WIN
-    // Use the full path just for case
+    /* Use the full path just for case */
     m_process->start("powershell.exe", QStringList() << "-NoLogo" << "-NoExit" << "-Command" << "chcp 65001; clear");
 #else
     m_process->start("/bin/bash", QStringList() << "-i");
@@ -79,7 +79,7 @@ bool TerminalWidget::eventFilter(QObject *obj, QEvent *event) {
         auto *keyEvent = static_cast<QKeyEvent *>(event);
         QTextCursor cursor = m_display->textCursor();
 
-        // Ctrl+C
+        /* Ctrl+C */
         if ((keyEvent->key() == Qt::Key_C) && (keyEvent->modifiers() & Qt::ControlModifier)) {
             if (cursor.hasSelection()) {
                 return false; // copy if allocated

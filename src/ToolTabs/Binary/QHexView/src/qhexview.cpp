@@ -58,7 +58,7 @@ void QHexView::PaintContext::drawText(const QString& s,
                                       const QHexCharFormat& cf, bool pad) {
     this->format = cf;
 
-    // Always apply a valid foreground color
+    /* Always apply a valid foreground color */
     if(!this->format.foreground.isValid()) {
         this->format.foreground =
             this->hexview->palette().color(QPalette::WindowText);
@@ -591,11 +591,11 @@ void QHexView::checkOptions() {
     if(m_options.group_length > m_options.line_length)
         m_options.group_length = m_options.line_length;
 
-    // Only auto-calculate if not manually set
+    /* Only auto-calculate if not manually set */
     if(m_options.address_width == 0)
         m_options.address_width = this->calcAddressWidth();
 
-    // Round to nearest multiple of 2
+    /* Round to nearest multiple of 2 */
     m_options.group_length =
         1u << (static_cast<unsigned int>(qFloor(m_options.group_length / 2.0)));
 
@@ -667,7 +667,7 @@ void QHexView::calcColumns() {
     m_hexcolumns.clear();
     m_hexcolumns.reserve(m_options.line_length);
 
-    qreal x = this->hexColumnX() + this->cellWidth(); // Pad to align
+    qreal x = this->hexColumnX() + this->cellWidth(); /* Pad to align */
     qreal cw = this->cellWidth() * 2;
 
     for(unsigned int i = 0u; i < m_options.line_length;) {
@@ -686,10 +686,10 @@ void QHexView::ensureVisible() {
     int vlines = this->visibleLines();
     int vscroll = this->verticalScrollBar()->value();
 
-    // Calculate target scroll position to center the cursor
+    /* Calculate target scroll position to center the cursor */
     qint64 tgtscroll = pos.line - (vlines / 2);
 
-    // Ensure we don't scroll past the beginning or end
+    /* Ensure we don't scroll past the beginning or end */
     if(tgtscroll < 0)
         tgtscroll = 0;
     else if(tgtscroll > this->lines() - vlines)
@@ -746,8 +746,8 @@ void QHexView::drawHeader(PaintContext* ctx) const {
 
     QHexCharFormat hcf = m_options.header_format;
 
-    // NOTE: QBrush::gradient() const-casting is also done
-    // inside Qt codebase (see qplaintextedit.cpp)
+    /* NOTE: QBrush::gradient() const-casting is also done */
+    /* inside Qt codebase (see qplaintextedit.cpp) */
     auto* g = const_cast<QGradient*>(hcf.background.gradient());
 
     if(m_options.hasFlag(QHexFlags::StyledHeader))
@@ -863,13 +863,13 @@ void QHexView::drawDocument(PaintContext* ctx) const {
     ctx->painter->setClipRect(this->documentRect());
 
     auto do_draw_document = [&](qint64 line) {
-        // Draw background
+        /* Draw background */
         if(m_options.linealt_background.isValid() && line % 2)
             ctx->fillLine(m_options.linealt_background);
         else if(m_options.line_background.isValid() && !(line % 2))
             ctx->fillLine(m_options.line_background);
 
-        // Draw contents
+        /* Draw contents */
         this->drawAddressPart(ctx, line);
         QByteArray linebytes = this->getLine(line);
         this->drawHexPart(ctx, linebytes, line);
@@ -877,7 +877,7 @@ void QHexView::drawDocument(PaintContext* ctx) const {
     };
 
     if(this->atBottom()) {
-        // Seek to end of viewport
+        /* Seek to end of viewport */
         ctx->y = this->viewport()->height() - this->lineHeight();
         quint64 line = this->lines();
 
@@ -902,7 +902,7 @@ void QHexView::drawAddressPart(PaintContext* ctx, quint64 line) const {
                           .rightJustified(this->addressWidth(), '0')
                           .toUpper();
 
-    // Address Part
+    /* Address Part */
     QHexCharFormat acf = m_options.address_format;
 
     if(m_options.hasFlag(QHexFlags::StyledAddress))
@@ -929,13 +929,6 @@ void QHexView::drawAddressPart(PaintContext* ctx, quint64 line) const {
     ctx->advanceX();
     ctx->clearFormat();
 }
-
-/*
-*  I was not created for the viral
-*  Set myself upon a downward spiral
-*  Never chose to be an idol
-*  Amalgamation of mechanical, primal
-*/
 
 void QHexView::drawHexPart(PaintContext* ctx, const QByteArray& linebytes,
                            quint64 line) const {
@@ -1199,7 +1192,7 @@ QHexPosition QHexView::positionFromPoint(QPoint pt) const {
 
     qreal hdrheight = this->headerRect().height();
     qreal contenty = abspt.y() - hdrheight;
-    if(contenty < 0) // Click in header area
+    if(contenty < 0) /* Click in header area */
         return {};
 
     if(this->atBottom()) {
@@ -1291,7 +1284,7 @@ QHexCharFormat QHexView::drawFormat(PaintContext* ctx, quint8 b,
                             : this->palette().color(QPalette::WindowText);
                 }
 
-                // Remove previous metadata's style, if needed
+                /* Remove previous metadata's style, if needed */
                 if(offset == metadata.begin) {
                     if(metadata.comment.isEmpty())
                         selcf.underline = QColor{};
@@ -1327,7 +1320,7 @@ QHexCharFormat QHexView::drawFormat(PaintContext* ctx, quint8 b,
         }
     }
 
-    // Check: user select bytes?
+    /* Check: user select bytes? */
     if(this->hexCursor()->isSelected(line, column)) {
         qint64 offset = this->hexCursor()->positionToOffset(pos);
         qint64 selend = this->hexCursor()->selectionEndOffset();
@@ -1533,7 +1526,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e) {
 
     bool atend = m_hexcursor->offset() >= m_hexdocument->length();
     if(atend && m_hexcursor->mode() == QHexCursor::Mode::Overwrite){
-        // return false;
+        /* return false; */
     }
 
     char key = e->text().at(0).toLatin1();
@@ -1689,18 +1682,19 @@ void QHexView::paintEvent(QPaintEvent*) {
     else
         this->paint(&painter);
 
-    // DEBUG: Render hex-columns area
-    // int i = 0;
-    //
-    // for(const auto& col : m_hexcolumns) {
-    //     QRectF r = col;
-    //     r.setY(0);
-    //     r.setHeight(this->viewport()->height());
-    //
-    //     QColor c{i++ % 2 ? Qt::darkRed : Qt::darkGreen};
-    //     c.setAlpha(128);
-    //     painter.fillRect(r, c);
-    // }
+    /* DEBUG: Render hex-columns area
+     * int i = 0;
+     *
+     * for(const auto& col : m_hexcolumns) {
+     *     QRectF r = col;
+     *     r.setY(0);
+     *     r.setHeight(this->viewport()->height());
+     *
+     *     QColor c{i++ % 2 ? Qt::darkRed : Qt::darkGreen};
+     *     c.setAlpha(128);
+     *     painter.fillRect(r, c);
+     * }
+     */
 }
 
 void QHexView::resizeEvent(QResizeEvent* e) {
@@ -1825,18 +1819,19 @@ void QHexView::wheelEvent(QWheelEvent* e) {
     e->ignore();
 
 #if defined(Q_OS_OSX)
-    // In macOS scrollbar invisibility should not prevent
-    // scrolling from working
+    /* In macOS scrollbar invisibility should not prevent */
+    /* scrolling from working */
 #else
     if(!m_hexdocument || !this->verticalScrollBar()->isVisible())
         return;
 #endif
 
-    // https://doc.qt.io/qt-6/qwheelevent.html
-    // "Returns the relative amount that the wheel was rotated, in eighths
-    // of a degree." "Most mouse types work in steps of 15 degrees, in which
-    // case the delta value is a multiple of 120; i.e., 120 units * 1/8 = 15
-    // degrees."
+    /* https://doc.qt.io/qt-6/qwheelevent.html
+    * "Returns the relative amount that the wheel was rotated, in eighths
+    * of a degree." "Most mouse types work in steps of 15 degrees, in which
+    * case the delta value is a multiple of 120; i.e., 120 units * 1/8 = 15
+    * degrees."
+    */ 
     int const ydelta = e->angleDelta().y();
     if(0 != ydelta) {
         int const ydeltaAbsolute = qAbs(ydelta);

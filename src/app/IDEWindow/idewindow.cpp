@@ -13,15 +13,15 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     : QMainWindow(parent)
 {
 
-    // - - Window Settings - -
+    /* - - Window Settings - - */
     this->setWindowState(Qt::WindowMaximized);
     this->setWindowTitle("Cremniy");
 
-    // - - Menu Bar - -
+    /* - - Menu Bar - - */
     MenuBarBuilder* menuBarBuilder = new MenuBarBuilder(menuBar(), this);
 
     menuBar()->setNativeMenuBar(false);
-    // - - Widgets - -
+    /* - - Widgets - - */
     m_statusBar = statusBar();
 
     m_mainWidget = new QWidget(this);
@@ -32,9 +32,9 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
 
     m_verticalSplitter = new QSplitter(Qt::Vertical, m_mainWidget);
 
-    // Terminal is initialized lazily on demand (see on_Toggle_Terminal)
-    // m_terminal = new TerminalWidget(this, ProjectPath);
-    // m_terminal->setVisible(false);
+    /* Terminal is initialized lazily on demand (see on_Toggle_Terminal)
+    * m_terminal = new TerminalWidget(this, ProjectPath);
+    */ m_terminal->setVisible(false);
     m_terminal = nullptr;
 
     QWidget* leftWidget = new QWidget(this);
@@ -50,15 +50,15 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_mainSplitter->addWidget(m_filesTabWidget);
     m_mainSplitter->setSizes({200, 1000});
 
-    m_verticalSplitter->addWidget(m_mainSplitter); // Сверху все наше IDE
-    m_verticalSplitter->setSizes({800, 200});      // пр
+    m_verticalSplitter->addWidget(m_mainSplitter); /* Entire IDE UI on top */
+    m_verticalSplitter->setSizes({800, 200});      /* Initial proportions  */
 
     m_mainLayout->addWidget(m_verticalSplitter);
     setCentralWidget(m_mainWidget);
 
     leftLayout->addWidget(m_filesTreeView);
 
-    // - - Tunning Widgets/Layouts - -
+    /* - - Tunning Widgets/Layouts - - */
     m_mainSplitter->setSizes({200, 1000});
     m_mainSplitter->setCollapsible(0, false);
     m_mainSplitter->setCollapsible(1, false);
@@ -96,7 +96,7 @@ IDEWindow::IDEWindow(QString ProjectPath, QWidget *parent)
     m_filesTabWidget->setTabsClosable(true);
     m_filesTabWidget->setMovable(true);
 
-    // - - Connects - -
+    /* - - Connects - - */
 
     connect(this, &IDEWindow::saveFileSignal, m_filesTabWidget, &FilesTabWidget::saveFileSlot);
 
@@ -183,7 +183,7 @@ void IDEWindow::on_Tree_ContextMenu(const QPoint &pos)
                 if (!index.isValid())
                     return;
 
-                // Enable index edit
+                /* Enable index edit */
                 m_filesTreeView->edit(index);
             });
             menu.addAction("Delete", [path, this]() {

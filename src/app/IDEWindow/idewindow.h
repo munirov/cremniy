@@ -21,23 +21,23 @@ public:
 private slots:
 
     /**
-     * @brief Двойной клик
+     * @brief Double click
      *
-     * Обрабатывает открытие файла или разворачивание директории
+     * Handles file opening or directory expansion
     */
     void on_treeView_doubleClicked(const QModelIndex &index);
 
     /**
-     * @brief Открытие контекстного меню
+     * @brief Open context menu
      *
-     * Нужен при клике на ПКМ для открытия контекстного меню
+     * Required for context menu on right click (RMB)
     */
     void on_Tree_ContextMenu(const QPoint &pos);
 
 
 private:
 
-    // - - Main Widgets - -
+    /* - - Main Widgets - - */
     QMenuBar* m_menuBar;
     QStatusBar* m_statusBar;
     QWidget* m_mainWidget;
@@ -45,45 +45,45 @@ private:
     QSplitter* m_verticalSplitter;  // splitter (вверх вниз)
     QSplitter* m_mainSplitter; 
 
-    // - - General Widgets - -
+    /* - - General Widgets - - */
     FilesTabWidget* m_filesTabWidget;
     FileTreeView* m_filesTreeView;
 
-    // - - Terminal Widget - -
+    /* - - Terminal Widget - - */
     TerminalWidget* m_terminal;
 
 
 public slots:
 
     /**
-     * @brief Создать новый проект (QMenuBar->File->NewProject)
+     * @brief Create new project (QMenuBar->File->NewProject)
     */
     void on_NewProject();
 
     /**
-     * @brief Открыть другой проект (QMenuBar->File->OpenProject)
+     * @brief Open another project (QMenuBar->File->OpenProject)
     */
     void on_OpenProject();
 
     /**
-     * @brief Сохранить файл (QMenuBar->File->SaveFile)
+     * @brief Save file (QMenuBar->File->SaveFile)
     */
     void on_SaveFile();
 
     /**
-     * @brief Закрыть проект (QMenuBar->File->CloseProject)
+     * @brief Close project (QMenuBar->File->CloseProject)
     */
     void on_ClosingProject();
 
     /**
-     * @brief Нажатие на Settings (QMenuBar->Edit->Settings)
+     * @brief Triggered on Settings (QMenuBar->Edit->Settings)
      *
-     * Открывает окно Settings
+     * Opens the settings window
     */
     void on_openSettings();
 
     /**
-     * @brief Отображение терминала
+     * @brief Terminal Display
     */
     void on_Toggle_Terminal(bool checked);
 

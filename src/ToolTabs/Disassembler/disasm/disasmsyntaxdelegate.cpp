@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: MIT */
 #include "disasmsyntaxdelegate.h"
 
 #include <QAbstractTextDocumentLayout>
@@ -44,8 +44,8 @@ static QString highlightWithRegex(const QString &src,
 
 QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool selected)
 {
-    // Palette: strictly avoid black/gray for *text*.
-    // Use only red/green/blue for syntax highlighting (white when selected for readability).
+    /* Palette: strictly avoid black/gray for *text*. */
+    /* Use only red/green/blue for syntax highlighting (white when selected for readability). */
     const QString cText   = selected ? "#ffffff" : "#4aa3ff"; // blue base text
     const QString cAddr   = selected ? "#ffffff" : "#2f7bff"; // blue
     const QString cBytes  = selected ? "#ffffff" : "#21c55d"; // green
@@ -58,14 +58,14 @@ QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool 
 
     const QString base = text.toHtmlEscaped();
 
-    // Columns in DisassemblerTab: 0 addr, 1 bytes, 2 mnemonic, 3 operands
+    /* Columns in DisassemblerTab: 0 addr, 1 bytes, 2 mnemonic, 3 operands */
     if (column == 0) {
         return wrapSpan(base, cAddr, true);
     }
     if (column == 1) {
-        // Highlight hex bytes (pairs)
+        /* Highlight hex bytes (pairs) */
         static const QRegularExpression reByte(R"(\b[0-9a-fA-F]{2}\b)");
-        // Also wrap the whole cell so spaces don't fall back to default (black) text color.
+        /* Also wrap the whole cell so spaces don't fall back to default (black) text color. */
         const QString s = highlightWithRegex(base, reByte, cBytes, true);
         return QString("<span style=\"color:%1;\">%2</span>").arg(cBytes, s);
     }
@@ -73,10 +73,10 @@ QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool 
         return wrapSpan(base, cMnem, true);
     }
 
-    // Operands: build HTML from raw text to avoid corrupting tags by later regex passes.
+    /* Operands: build HTML from raw text to avoid corrupting tags by later regex passes. */
     const QString raw = text;
 
-    // Split comment (first '#' or ';')
+    /* Split comment (first '#' or ';') */
     int cut = -1;
     {
         const int hash = raw.indexOf('#');
@@ -88,8 +88,8 @@ QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool 
     const QString codePart = (cut >= 0) ? raw.left(cut) : raw;
     const QString commPart = (cut >= 0) ? raw.mid(cut) : QString();
 
-    // One-pass token matcher over the *raw* code part.
-    // Order matters: symbols, registers, immediates, punctuation.
+    /* One-pass token matcher over the *raw* code part. */
+    /* Order matters: symbols, registers, immediates, punctuation. */
     static const QRegularExpression reTok(
         R"(<[^>]+>|(?:\$\s*)?(?:0x[0-9a-fA-F]+|\b\d+\b|\b-\d+\b)|\b(?:r(?:1[0-5]|[0-9])d?|r(?:1[0-5]|[0-9])w|r(?:1[0-5]|[0-9])b|r(?:ip|flags)|rax|rbx|rcx|rdx|rsi|rdi|rbp|rsp|eax|ebx|ecx|edx|esi|edi|ebp|esp|ax|bx|cx|dx|si|di|bp|sp|al|ah|bl|bh|cl|ch|dl|dh|xmm\d+|ymm\d+|zmm\d+|st\(\d+\)|cs|ds|es|fs|gs|ss)\b|[\[\]\(\)\+\-\*\:])",
         QRegularExpression::CaseInsensitiveOption);
@@ -110,7 +110,7 @@ QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool 
         const QString tok = m.captured(0);
         QString htmlTok = tok.toHtmlEscaped();
 
-        // Classify token
+        /* Classify token */
         if (tok.startsWith('<') && tok.endsWith('>')) {
             htmlTok = wrapSpan(htmlTok, cSym, true);
         } else if (tok.size() == 1 && QStringLiteral("[]()+-*:")
@@ -123,7 +123,7 @@ QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool 
                    || (tok.startsWith('-') && tok.size() > 1 && tok.at(1).isDigit())) {
             htmlTok = wrapSpan(htmlTok, cImm, false);
         } else {
-            // Assume register-like
+            /* Assume register-like */
             htmlTok = wrapSpan(htmlTok, cReg, true);
         }
 
@@ -136,7 +136,7 @@ QString DisasmSyntaxDelegate::htmlForCell(int column, const QString &text, bool 
         out += wrapSpan(commPart.toHtmlEscaped(), cComm, false);
     }
 
-    // Wrap whole string so any non-highlighted chars never fall back to default (black).
+    /* Wrap whole string so any non-highlighted chars never fall back to default (black). */
     return QString("<span style=\"color:%1;\">%2</span>").arg(cText, out);
 }
 
@@ -151,13 +151,13 @@ void DisasmSyntaxDelegate::paint(QPainter *painter,
 
     painter->save();
 
-    // Draw default background (incl. selection)
+    /* Draw default background (incl. selection) */
     if (opt.widget)
         opt.widget->style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &opt, painter, opt.widget);
     else
         QStyledItemDelegate::paint(painter, option, index);
 
-    // Rich text paint on top
+    /* Rich text paint on top */
     QTextDocument doc;
     doc.setDefaultFont(opt.font);
     doc.setHtml(htmlForCell(index.column(), opt.text, selected));
@@ -169,7 +169,7 @@ void DisasmSyntaxDelegate::paint(QPainter *painter,
 
     QAbstractTextDocumentLayout::PaintContext ctx;
     if (selected) {
-        // Ensure selection keeps readable foreground; background already drawn.
+        /* Ensure selection keeps readable foreground; background already drawn. */
         ctx.palette.setColor(QPalette::Text, Qt::white);
     }
     doc.documentLayout()->draw(painter, ctx);

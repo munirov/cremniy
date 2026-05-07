@@ -30,7 +30,7 @@ qint64 QDeviceBuffer::length() const { return m_device->size(); }
 void QDeviceBuffer::insert(qint64 offset, const QByteArray& data) {
     Q_UNUSED(offset)
     Q_UNUSED(data)
-    // Not implemented
+    /* Not implemented */
 }
 
 void QDeviceBuffer::replace(qint64 offset, const QByteArray& data) {
@@ -41,7 +41,7 @@ void QDeviceBuffer::replace(qint64 offset, const QByteArray& data) {
 void QDeviceBuffer::remove(qint64 offset, int length) {
     Q_UNUSED(offset)
     Q_UNUSED(length)
-    // Not implemented
+    /* Not implemented */
 }
 
 QByteArray QDeviceBuffer::read(qint64 offset, int length) {
@@ -60,7 +60,7 @@ bool QDeviceBuffer::read(QIODevice* device) {
 
 void QDeviceBuffer::write(QIODevice* device) {
     Q_UNUSED(device)
-    // Not implemented
+    /* Not implemented */
 }
 
 qint64 QDeviceBuffer::indexOf(const QByteArray& ba, qint64 from) {

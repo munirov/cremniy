@@ -1,7 +1,6 @@
 #pragma once
 
-// Qt
-#include <QObject> // Required for inheritance
+#include <QObject> /* Required for inheritance */
 #include <QMap>
 #include <QString>
 #include <QTextCharFormat>

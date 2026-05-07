@@ -12,7 +12,7 @@
 QHexDocument::QHexDocument(QHexBuffer* buffer, QObject* parent)
     : QObject(parent) {
     m_buffer = buffer;
-    m_buffer->setParent(this); // Take Ownership
+    m_buffer->setParent(this); /* Take Ownership */
 
     m_undostack = new QUndoStack(this);
 
@@ -52,7 +52,7 @@ qsizetype QHexDocument::findChange(qint64 offset) const {
         else if(offset >= r.end)
             left = mid + 1;
         else
-            return mid; // found
+            return mid; /* found */
     }
 
     return -1;
@@ -167,7 +167,7 @@ void QHexDocument::replace(qint64 offset, const QByteArray& data) {
     m_undostack->push(
         new QHexViewReplaceCommand(m_buffer, m_changes, this, offset, data));
 
-    // NOTE: Mark replacements only if no change has been found
+    /* NOTE: Mark replacements only if no change has been found */
     if(m_trackchanges && this->findChange(offset) == -1) {
         m_changes.push_back({
             QHexChangeReason::Replace,
@@ -210,15 +210,15 @@ void QHexDocument::removeChange(qint64 offset, qint64 n) {
 
     for(const QHexChangeRange& cr : m_changes) {
         if(cr.end <= offset)
-            newchanges.push_back(cr); // before removed range
+            newchanges.push_back(cr); /* before removed range */
         else if(cr.start >= offset + n) {
             newchanges.push_back({
                 cr.reason,
                 cr.start - n,
                 cr.end - n,
-            }); // after: shift back
+            }); /* after: shift back */
         }
-        else { // overlaps
+        else { /* overlaps */
             if(cr.start < offset)
                 newchanges.push_back(
                     {cr.reason, cr.start, offset}); // left part
@@ -227,7 +227,7 @@ void QHexDocument::removeChange(qint64 offset, qint64 n) {
                     cr.reason,
                     offset,
                     cr.end - n,
-                }); // right part
+                }); /* right part */
         }
     }
 

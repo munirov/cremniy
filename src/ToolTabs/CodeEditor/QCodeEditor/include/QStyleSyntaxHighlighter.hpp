@@ -1,7 +1,6 @@
 #pragma once
 
-// Qt
-#include <QSyntaxHighlighter> // Required for inheritance
+#include <QSyntaxHighlighter> /* Required for inheritance */
 
 class QSyntaxStyle;
 

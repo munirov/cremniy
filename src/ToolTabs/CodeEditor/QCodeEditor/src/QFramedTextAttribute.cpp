@@ -1,8 +1,7 @@
-// QCodeEditor
+/* QCodeEditor */
 #include <QFramedTextAttribute.hpp>
 #include <QSyntaxStyle.hpp>
 
-// Qt
 #include <QFontMetrics>
 #include <QPainter>
 #include <QDebug>
@@ -41,23 +40,23 @@ void QFramedTextAttribute::drawObject(QPainter* painter,
                                       int,
                                       const QTextFormat& format)
 {
-    // Casting
+    /* Casting */
     auto textCharFormat = reinterpret_cast<const QTextCharFormat&>(format);
 
-    // Getting font data
+    /* Getting font data */
     auto font = textCharFormat.font();
     QFontMetrics metrics(font);
 
-    // Getting required size
+    /* Getting required size */
     auto string = format.property(FramedString).toString();
     auto stringSize = metrics.boundingRect(string).size();
 
-    // Creating frame rect
+    /* Creating frame rect */
     QRectF drawRect(rect.topLeft(), stringSize);
     drawRect.moveTop(rect.top() - stringSize.height());
     drawRect.adjust(0, 4, 0, 4);
 
-    // Drawing
+    /* Drawing */
     painter->setPen(m_style->getFormat("Occurrences").background().color());
     painter->setRenderHint(QPainter::Antialiasing);
     painter->drawRoundedRect(drawRect, 4, 4);

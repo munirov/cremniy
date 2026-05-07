@@ -26,12 +26,12 @@ struct DisasmSection {
 
 struct DisasmFunction {
     QString name;
-    QString address; // string like 0x...
+    QString address; /* string like 0x... */
 };
 
 struct DisasmString {
-    QString address; // string like 0x...
-    QString value;   // decoded string
+    QString address; /* string like 0x... */
+    QString value;   /* decoded string */
 };
 
 class DisassemblerWorker : public QObject
@@ -52,7 +52,7 @@ signals:
     void finished();
     void errorOccurred(const QString &errorMsg);
     void progressUpdated(int percent);
-    void logLine(const QString &line);   // diagnostic log line
+    void logLine(const QString &line);   /* diagnostic log line */
 
 private:
     bool m_cancelled = false;

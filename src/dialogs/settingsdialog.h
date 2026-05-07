@@ -38,11 +38,11 @@ private:
     QLabel      *m_radare2Status = nullptr;
     QLabel      *m_fileStatus    = nullptr;
 
-    // Disassembler options
+    /* Disassembler options */
     QSpinBox   *m_insnLimit = nullptr;
     QComboBox  *m_syntaxCombo = nullptr;
 
-    // radare2 options
+    /* radare2 options */
     QComboBox     *m_r2AnalysisCombo = nullptr;
     QPlainTextEdit *m_r2PreCommands = nullptr;
 

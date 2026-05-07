@@ -1,7 +1,6 @@
 #pragma once
 
-// Qt
-#include <QCompleter> // Required for inheritance
+#include <QCompleter> /* Required for inheritance */
 
 /**
  * @brief Class, that describes completer with

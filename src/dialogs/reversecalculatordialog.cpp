@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: MIT */
 #include "reversecalculatordialog.h"
 
 #include <QCheckBox>
@@ -52,7 +52,8 @@ ReverseCalculatorDialog::ReverseCalculatorDialog(QWidget *parent)
     m_width->addItem("64", 64);
     m_width->setCurrentIndex(2);
     m_width->setMinimumWidth(64);
-    // Ensure items are visible in dark themes.
+    
+    /* Ensure items are visible in dark themes */
     m_width->setStyleSheet(
         "QComboBox { background:#1a1a1a; color:#60a5fa; border:1px solid #262626; padding:2px 6px; }"
         "QComboBox::drop-down { border: none; width: 18px; }"
@@ -85,12 +86,12 @@ ReverseCalculatorDialog::ReverseCalculatorDialog(QWidget *parent)
 
     for (QLabel *l : {m_hex, m_decU, m_decS, m_bin}) {
         l->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        l->setStyleSheet("color: #60a5fa;"); // blue, no gray/black
+        l->setStyleSheet("color: #60a5fa;"); /* blue, no gray/black */
     }
-    m_hex->setStyleSheet("color: #21c55d;");  // green
-    m_decU->setStyleSheet("color: #60a5fa;"); // blue
-    m_decS->setStyleSheet("color: #ef4444;"); // red
-    m_bin->setStyleSheet("color: #21c55d;");  // green
+    m_hex->setStyleSheet("color: #21c55d;");  /* green */
+    m_decU->setStyleSheet("color: #60a5fa;"); /* blue  */
+    m_decS->setStyleSheet("color: #ef4444;"); /* red   */
+    m_bin->setStyleSheet("color: #21c55d;");  /* green */
 
     m_form->addRow(tr("Hex"), m_hex);
     m_form->addRow(tr("Dec (unsigned)"), m_decU);
@@ -157,7 +158,7 @@ bool ReverseCalculatorDialog::parseValue(const QString &text, qulonglong *outVal
     const QString t = text.trimmed();
     if (t.isEmpty()) return false;
 
-    // Accept: -123, 123, 0x..., 0b...
+    /* Accept: -123, 123, 0x..., 0b... */
     static const QRegularExpression re(
         R"(^\s*([+-]?)\s*(0x[0-9a-fA-F]+|0b[01]+|\d+)\s*$)");
     auto m = re.match(t);
@@ -178,7 +179,7 @@ bool ReverseCalculatorDialog::parseValue(const QString &text, qulonglong *outVal
     if (!ok) return false;
 
     if (sign == "-") {
-        // Keep as 64-bit two's complement; width masking applied later.
+        /* Keep as 64-bit two's complement; width masking applied later */
         *outValue = static_cast<qulonglong>(-static_cast<qlonglong>(v));
     } else {
         *outValue = v;

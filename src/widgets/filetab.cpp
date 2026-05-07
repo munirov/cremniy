@@ -14,7 +14,7 @@ FileTab::FileTab(QWidget* parent, QString path)
     vlayout->setContentsMargins(0,0,0,0);
     this->setLayout(vlayout);
 
-    // - - Connects - -
+    /* - - Connects - - */
     connect(m_tooltabWidget, &ToolsTabWidget::removeStarSignal, this, &FileTab::removeStar);
     connect(m_tooltabWidget, &ToolsTabWidget::setupStarSignal, this, &FileTab::setupStar);
 

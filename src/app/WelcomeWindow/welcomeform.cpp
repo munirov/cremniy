@@ -25,14 +25,14 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     this->setBaseSize(400, 300);
     this->resize(400, 300);
 
-    // Base
+    /* Base */
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     this->setLayout(mainLayout);
 
     stack = new QStackedWidget(this);
     mainLayout->addWidget(stack);
 
-    // Page "Welcome"
+    /* Page "Welcome" */
     QWidget *pageWelcome = new QWidget();
     QVBoxLayout *l1 = new QVBoxLayout(pageWelcome);
 
@@ -58,15 +58,15 @@ WelcomeForm::WelcomeForm(QWidget *parent)
 
     stack->addWidget(pageWelcome);
 
-    // Page "Create Project"
+    /* Page "Create Project" */
     QWidget *pageCreate = new QWidget();
 
     QVBoxLayout *l2 = new QVBoxLayout(pageCreate);
 
-    // --- Grid layout for text and fields ---
+    /* --- Grid layout for text and fields --- */
     QGridLayout *grid = new QGridLayout();
 
-    // First string: "Текст" + QLineEdit
+    /* First string: "Текст" + QLineEdit */
     proj_name_label = new QLabel("Project Name:");
     proj_name_lineEdit = new QLineEdit();
     QRegularExpression re("^[A-Za-z0-9_-]+$");
@@ -75,7 +75,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     grid->addWidget(proj_name_label, 0, 0);
     grid->addWidget(proj_name_lineEdit, 0, 1);
 
-    // Second string: "Текст" + QComboBox
+    /* Second string: "Текст" + QComboBox */
     language_label = new QLabel("Language:");
     language_comboBox = new QComboBox();
     language_comboBox->addItems({"C", "C++", "ASM", "C + ASM", "Custom"});
@@ -88,7 +88,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     grid->addWidget(path_label, 2, 0);
     grid->addWidget(path_lineEdit, 2, 1);
 
-    // add grid in main vertical layout
+    /* add grid in main vertical layout */ 
     l2->addLayout(grid);
     l2->addStretch(1);
 
@@ -98,7 +98,7 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     info_label->setAlignment(Qt::AlignCenter);
     l2->addWidget(info_label);
 
-    // --- Horizontal layout for buttons ---
+    /* --- Horizontal layout for buttons ---  */
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *createButton = new QPushButton("Create");
     QPushButton *backButton = new QPushButton("Back");
@@ -106,15 +106,15 @@ WelcomeForm::WelcomeForm(QWidget *parent)
     buttonLayout->addWidget(createButton);
     buttonLayout->addWidget(backButton);
 
-    // add buttons in main vertical layout layout
+    /* add buttons in main vertical layout layout */
     l2->addLayout(buttonLayout);
 
     stack->addWidget(pageCreate);
 
-    // Set Default Page (Welcome)
+    /* Set Default Page (Welcome) */
     stack->setCurrentIndex(0);
 
-    // Events
+    /* Events */
     connect(RecentProjectsList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &WelcomeForm::SelectProjectInList);
 
     connect(open_recent_proj_btn, &QPushButton::clicked, this, &WelcomeForm::OpenRecentProjectHandler);
@@ -201,7 +201,7 @@ void WelcomeForm::L2CreateButton()
         return;
     }
 
-    // Check Directory Path
+    /* Check Directory Path */
     QFileInfo dirinfo(path_lineEdit->text());
     if (!dirinfo.exists() || !dirinfo.isDir()) {
         path_label->setStyleSheet("color: #bf3131;");

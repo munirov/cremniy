@@ -20,10 +20,10 @@ void FilesTabWidget::tabSelect(int index) {
         return;
 }
 
-// Create new tab and open file if he is not open already
+/* Create new tab and open file if he is not open already */
 void FilesTabWidget::openFile(QString filePath, QString tabTitle) {
 
-    // check already open
+    /* check already open */
     for (int i = 0; i < this->count(); ++i) {
         FileTab *t = qobject_cast<FileTab *>(this->widget(i));
         if (t && t->filePath == filePath) {
@@ -32,12 +32,12 @@ void FilesTabWidget::openFile(QString filePath, QString tabTitle) {
         }
     }
 
-    // else if file is not opened
+    /* else if file is not opened */
     FileTab *filetab = new FileTab(this, filePath);
     int new_tab_index = this->addTab(filetab, tabTitle);
     this->setCurrentIndex(new_tab_index);
 
-    // - - Connects - -
+    /* - - Connects - - */
     connect(filetab, &FileTab::removeStarSignal, this, &FilesTabWidget::removeStar);
     connect(filetab, &FileTab::setupStarSignal, this, &FilesTabWidget::setupStar);
 }
@@ -69,7 +69,7 @@ void FilesTabWidget::saveFileSlot() {
 bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
     switch (event->type()) {
 
-    // ALT + Mouse Wheel UP/DOWN: для переключения между вкладками
+    /* ALT + Mouse Wheel UP/DOWN: switch between tabs */
     case QEvent::Wheel: {
         auto *we = static_cast<QWheelEvent *>(event);
         if (we->modifiers() == Qt::AltModifier && count() > 1) {
@@ -87,7 +87,7 @@ bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
 
     case QEvent::KeyPress: {
         auto *keyEvent = static_cast<QKeyEvent *>(event);
-        // ALT + Arrows: для переключения между вкладками
+        /* ALT + Arrows: tab swhitching */
         if (keyEvent->modifiers() == Qt::AltModifier) {
             if (keyEvent->key() == Qt::Key_Left) {
                 switchTab(-1);
@@ -96,7 +96,7 @@ bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
                 switchTab(1);
                 return true;
             }
-            // CTRL + W: для закрытия вкладки
+            /* CTRL + W: для закрытия вкладки */
         } else if (keyEvent->modifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_W) {
             closeTab(currentIndex());
             return true;
@@ -104,7 +104,7 @@ bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
         break;
     }
 
-    // Mouse Middle Button: for close the tab
+    /* Mouse Middle Button: for close the tab */
     case QEvent::MouseButtonRelease: {
         if (obj == tabBar()) {
             auto *me = static_cast<QMouseEvent *>(event);

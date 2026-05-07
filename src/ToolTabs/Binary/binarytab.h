@@ -13,11 +13,11 @@ class BinaryTab : public ToolTab
 private:
 
     QStackedWidget* pageView;
-    bool m_updatingSelection = false; // Flag to prevent recursion
+    bool m_updatingSelection = false; /* Flag to prevent recursion */
     bool m_syncingBufferData = false;
 
 protected slots:
-    // Selection change handler from the buffer
+    /* Selection change handler from the buffer */
     void onSelectionChanged(qint64 pos, qint64 length) override;
     void onDataChanged() override;
 
@@ -29,7 +29,7 @@ public:
 
 public slots:
 
-    // From Parrent Class: ToolTab
+    /* From Parrent Class: ToolTab */
     void setFile(QString filepath) override;
     void setTabData() override;
     void saveTabData() override;

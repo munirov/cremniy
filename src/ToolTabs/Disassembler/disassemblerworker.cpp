@@ -104,7 +104,7 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
 {
     m_cancelled = false;
 
-    // ── backend selection ─────────────────────────────────────────────────
+  /*  ── backend selection ─────────────────────────────────────────────────*/
     if (AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2) {
         QString r2 = AppSettings::radare2Path();
         if (r2.isEmpty())
@@ -159,7 +159,7 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
 
     emit logLine("[disasm] backend   : objdump");
 
-    // ── arch detection ────────────────────────────────────────────────────
+   /* ── arch detection ────────────────────────────────────────────────────*/
     QString effectiveArch = arch.isEmpty() ? detectArch(filePath) : arch;
 
     if (effectiveArch.isEmpty()) {
@@ -169,7 +169,7 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
     emit logLine("[disasm] file      : " + filePath);
     emit logLine("[disasm] arch-hint : " + (effectiveArch.isEmpty() ? "(auto)" : effectiveArch));
 
-    // ── build objdump command ─────────────────────────────────────────────
+    /*── build objdump command ─────────────────────────────────────────────*/
     QString objdumpExe = AppSettings::objdumpPath();
     if (objdumpExe.isEmpty())
         objdumpExe = QStandardPaths::findExecutable("objdump");
@@ -192,9 +192,9 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
     emit logLine("[disasm] objdump   : " + objdumpExe);
     emit logLine("[disasm] command   : " + objdumpExe + " " + args.join(' '));
 
-    // ── launch process ────────────────────────────────────────────────────
-    // Force C locale: ensures English section headers ("Disassembly of section")
-    // and standard tab-separated format regardless of system locale.
+    /*── launch process ────────────────────────────────────────────────────
+    Force C locale: ensures English section headers ("Disassembly of section")
+    and standard tab-separated format regardless of system locale. */
     QProcess proc;
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("LANG",   "C");
@@ -246,7 +246,7 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
 
     if (m_cancelled) { emit finished(); return; }
 
-    // ── dump first 30 lines of raw output to log ──────────────────────────
+    /*── dump first 30 lines of raw output to log ──────────────────────────*/
     emit logLine("[disasm] --- raw output (first 30 lines) ---");
     const QStringList rawLines = QString::fromUtf8(output).split('\n');
     int preview = qMin(30, rawLines.size());
@@ -256,7 +256,7 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
         emit logLine(QString("[disasm] ... (%1 more lines)").arg(rawLines.size() - 30));
     emit logLine("[disasm] --- end raw output ---");
 
-    // ── parse ─────────────────────────────────────────────────────────────
+    /*── parse ─────────────────────────────────────────────────────────────*/
     QVector<DisasmSection> sections = parseSections(output, sectionHeaders);
 
     emit logLine(QString("[disasm] sections parsed: %1").arg(sections.size()));
@@ -274,40 +274,40 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
     emit finished();
 }
 
-// ---------------------------------------------------------------------------
-// Parser
-// ---------------------------------------------------------------------------
-// Verified objdump -d format (cat -A shows ^I for TAB):
-//
-// Disassembly of section .text:
-//
-// 0000000000001040 <_start>:
-//     1040:^If3 0f 1e fa          ^Iendbr64
-//     1004:^I48 83 ec 08          ^Isub    $0x8,%rsp
-//     1008:^I48 8b 05 d9 2f 00 00 ^Imov    0x2fd9(%rip),%rax   # 3fe8 <sym>
+/*---------------------------------------------------------------------------
+Parser
+---------------------------------------------------------------------------
+Verified objdump -d format (cat -A shows ^I for TAB):
 
-// ---------------------------------------------------------------------------
-// Parser
-// ---------------------------------------------------------------------------
+Disassembly of section .text:
+
+0000000000001040 <_start>:
+    1040:^If3 0f 1e fa          ^Iendbr64
+    1004:^I48 83 ec 08          ^Isub    $0x8,%rsp
+    1008:^I48 8b 05 d9 2f 00 00 ^Imov    0x2fd9(%rip),%rax   # 3fe8 <sym>
+
+---------------------------------------------------------------------------
+Parser
+---------------------------------------------------------------------------*/
 QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, const QHash<QString, DisasmSection> &sectionMap)
 {
     QVector<DisasmSection> sections;
 
-    // Section: allow leading spaces and spaces before colons.
+    /* Section: allow leading spaces and spaces before colons. */
     static const QRegularExpression reSectionHdr(
         R"(^\s*Disassembly of section\s+(\S+)\s*:)", 
         QRegularExpression::MultilineOption);
 
-    // Function label: allow any whitespace
+    /* Function label: allow any whitespace */
     static const QRegularExpression reFuncLabel(
         R"(^\s*([0-9a-fA-F]+)\s+<([^>]+)>:)",
         QRegularExpression::MultilineOption);
 
-    // INSTRUCTION(Crucial): replase \t with \s+ (any whitespace characters)
-    // GROUP 1: Adress
-    // GROUP 2: Bytes (hex pairs)
-    // GROUP 3: Mnemonic
-    // GROUP 4: Operands
+    /*INSTRUCTION(Crucial): replase \t with \s+ (any whitespace characters)
+    GROUP 1: Adress
+    GROUP 2: Bytes (hex pairs)
+    GROUP 3: Mnemonic
+    GROUP 4: Operands*/
     static const QRegularExpression reInsn(
         R"(^\s*([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}\s+)+)\s*(\S+)(?:[ \t]+([^#\n]*))?)",
         QRegularExpression::MultilineOption);
@@ -320,7 +320,7 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
         if (m_cancelled) break;
         if (line.trimmed().isEmpty()) continue;
 
-        // 1. Searct for section header
+        /* 1. Searct for section header */
         QRegularExpressionMatch m = reSectionHdr.match(line);
         if (m.hasMatch()) {
             const QString name = m.captured(1);
@@ -333,7 +333,7 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
             continue;
         }
 
-        // 2. Instruction lookup (check BEFORE function labelm as they're similar)
+        /* 2. Instruction lookup (check BEFORE function labelm as they're similar) */
         m = reInsn.match(line);
         if (m.hasMatch()) {
             if (curSectionIdx == -1) {
@@ -347,7 +347,7 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
             insn.mnemonic = m.captured(3);
             insn.operands = m.captured(4).trimmed();
 
-            // Calculate size in bytes. Every two characters prepresent one byte (accouring for spaces)
+            /* Calculate size in bytes. Every two characters prepresent one byte (accouring for spaces) */
             QString b = insn.bytes;
             b.remove(' ');
             insn.size = b.size() / 2;
@@ -366,7 +366,7 @@ QVector<DisasmSection> DisassemblerWorker::parseSections(const QByteArray &raw, 
             continue;
         }
 
-        // Function labe lookup (e.g. <main>:) 
+        /* Function labe lookup (e.g. <main>:) */
         m = reFuncLabel.match(line);
         if (m.hasMatch()) {
             if (curSectionIdx == -1) {

@@ -7,7 +7,7 @@
 
 namespace QHexFlags {
 
-// clang-format off
+/* clang-format off */
 enum : unsigned int {
     None              = 1 << 0,
     HSeparator        = 1 << 1,
@@ -24,9 +24,9 @@ enum : unsigned int {
     Separators = HSeparator | VSeparator,
     Styled     = StyledHeader | StyledAddress,
 };
-// clang-format on
+/* clang-format on */
 
-} // namespace QHexFlags
+} /* namespace QHexFlags */
 
 struct QHexCharFormat {
     QBrush background;
@@ -35,7 +35,7 @@ struct QHexCharFormat {
 };
 
 struct QHexOptions {
-    // Appearance
+    /* Appearance */
     QChar unprintable_char{'.'};
     QChar invalid_char{'?'};
     QString address_label{""};
@@ -48,7 +48,7 @@ struct QHexOptions {
     unsigned int group_length{1};
     int scroll_steps{1};
 
-    // Colors & Styles
+    /* Colors & Styles */
     QHash<quint8, QHexCharFormat> byte_colors;
     QColor linealt_background;
     QColor line_background;

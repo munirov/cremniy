@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: MIT */
 #ifndef DISASMTEXTHIGHLIGHTER_H
 #define DISASMTEXTHIGHLIGHTER_H
 

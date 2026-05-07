@@ -137,7 +137,7 @@ bool AppSettings::importFromIni(const QString &filePath, QString *error)
         return false;
     }
 
-    // Only import known keys (so random settings won't pollute).
+    /* Only import known keys (so random settings won't pollute). */
     const QStringList allowed = {
         keyDisasmBackend(),
         keyObjdumpPath(),

@@ -19,8 +19,8 @@ static bool parseU64FromJson(const QJsonValue &v, quint64 *out)
     if (!out) return false;
 
     if (v.isDouble()) {
-        // Note: JSON numbers are represented as double in Qt. This is safe for typical
-        // in-file offsets, but may lose precision for very large values.
+        /* Note: JSON numbers are represented as double in Qt. This is safe for typical */
+        /* in-file offsets, but may lose precision for very large values. */
         const double d = v.toDouble();
         if (d < 0) return false;
         *out = static_cast<quint64>(d);
@@ -55,8 +55,8 @@ QByteArray Radare2Backend::runR2JsonCommand(const QString &r2Path,
         return {};
     }
 
-    // We run a fresh r2 for each command (MVP simplicity).
-    // Use '-q' to reduce noise; add explicit 'q' to exit cleanly.
+    /* We run a fresh r2 for each command (MVP simplicity). */
+    /* Use '-q' to reduce noise; add explicit 'q' to exit cleanly. */
     const QStringList args = {
         "-q",
         "-c", cmd,
@@ -72,7 +72,7 @@ QByteArray Radare2Backend::runR2JsonCommand(const QString &r2Path,
         return {};
     }
 
-    // Small polling loop to allow cancellation.
+    /* Small polling loop to allow cancellation. */
     while (!proc.waitForFinished(50)) {
         if (cancelled && *cancelled) {
             proc.kill();
@@ -94,8 +94,8 @@ QByteArray Radare2Backend::runR2JsonCommand(const QString &r2Path,
     }
 
     if (!stderrData.isEmpty()) {
-        // Some builds may output warnings to stderr even on success; keep them for debugging.
-        // We don't fail on that.
+        /* Some builds may output warnings to stderr even on success; keep them for debugging. */
+        /* We don't fail on that. */
     }
 
     return stdoutData;
@@ -108,26 +108,26 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
 {
     Result res;
 
-    // Build a prelude command that applies settings and optional analysis,
-    // then runs the actual JSON command. We keep it per-invocation since
-    // MVP uses a fresh r2 process per command.
+    /* Build a prelude command that applies settings and optional analysis, */
+    /* then runs the actual JSON command. We keep it per-invocation since */
+    /* MVP uses a fresh r2 process per command. */
     auto buildPrelude = [&](const QString &jsonCmd) -> QString {
         QStringList cmds;
 
-        // Apply syntax preference
+        /* Apply syntax preference */
         if (opt.asmSyntax == 1)
             cmds << "e asm.syntax=att";
         else
             cmds << "e asm.syntax=intel";
 
-        // Optional user pre-commands (semicolon-separated)
+        /* Optional user pre-commands (semicolon-separated) */
         if (!opt.preCommands.trimmed().isEmpty()) {
             const QStringList extra = opt.preCommands.split(';', Qt::SkipEmptyParts);
             for (const QString &c : extra)
                 cmds << c.trimmed();
         }
 
-        // Optional analysis
+        /* Optional analysis */
         if (opt.analysisLevel == 2)
             cmds << "aaa";
         else if (opt.analysisLevel == 1)
@@ -137,7 +137,7 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
         return cmds.join(';');
     };
 
-    // Functions list (best-effort). We fetch it once so UI can show navigation like IDA/Ghidra.
+    /* Functions list (best-effort). We fetch it once so UI can show navigation like IDA/Ghidra. */
     {
         QString err;
         const QByteArray funcJson = runR2JsonCommand(r2Path, filePath, buildPrelude("aflj"), &err, cancelled);
@@ -163,10 +163,10 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
                 }
             }
         }
-        // If empty, keep going; disassembly still works.
+        /* If empty, keep going; disassembly still works. */
     }
 
-    // Strings list (best-effort) for auto-comments like ; "Hello world"
+    /* Strings list (best-effort) for auto-comments like ; "Hello world" */
     {
         QString err;
         const QByteArray strJson = runR2JsonCommand(r2Path, filePath, buildPrelude("izj"), &err, cancelled);
@@ -231,8 +231,8 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
             parseU64FromJson(o.value("size"), &vsize);
 
         if (name.isEmpty()) continue;
-        // Disassemble only code-like sections to avoid garbage disassembly of data sections.
-        // Some binaries / r2 configs may mark non-code sections oddly; keep a conservative whitelist.
+        /* Disassemble only code-like sections to avoid garbage disassembly of data sections. */
+        /* Some binaries / r2 configs may mark non-code sections oddly; keep a conservative whitelist. */
         static const QRegularExpression reCodeSec(R"(^\.(text|init|fini|plt(\..*)?)$)");
         if (!reCodeSec.match(name).hasMatch())
             continue;
@@ -248,8 +248,8 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
         sec.size = vsize;
         sec.hasFileMapping = true;
 
-        // pDj returns array of objects: {offset, bytes, opcode, ...}
-        // Use address of section as start.
+        /* pDj returns array of objects: {offset, bytes, opcode, ...} */
+        /* Use address of section as start. */
         const QString cmd = QString("pDj %1 @ 0x%2")
                                 .arg(insnLimit)
                                 .arg(QString::number(vaddr, 16));
@@ -257,7 +257,7 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
         QString cmdErr;
         const QByteArray insnJson = runR2JsonCommand(r2Path, filePath, buildPrelude(cmd), &cmdErr, cancelled);
         if (insnJson.isEmpty()) {
-            // Not all sections are disassemblable; skip but keep going.
+            /* Not all sections are disassemblable; skip but keep going. */
             continue;
         }
 
@@ -283,17 +283,17 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
                         || parseU64FromJson(io.value("address"), &off)
                         || parseU64FromJson(io.value("at"), &off);
             if (gotAddr) {
-                // Stop once we leave section bounds; r2 can continue disassembling into next sections/data.
+                /* Stop once we leave section bounds; r2 can continue disassembling into next sections/data. */
                 if (off < vaddr)
                     continue;
                 if (off >= endAddr)
                     break;
             }
 
-            // Keep something visible even if JSON misses address field.
+            /* Keep something visible even if JSON misses address field. */
             insn.address = QString("0x%1").arg(QString::number(gotAddr ? off : 0, 16));
 
-            // radare2 provides fields like "bytes" (hex string) and "opcode" (full asm)
+            /* radare2 provides fields like "bytes" (hex string) and "opcode" (full asm) */
             insn.bytes = io.value("bytes").toString();
             insn.size = normalizeHexBytes(insn.bytes).size() / 2;
             if (gotAddr)

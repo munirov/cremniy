@@ -38,7 +38,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
         applyBufferedSelection();
     });
 
-    // - - Create "Code Editor" Page - -
+    /* - - Create "Code Editor" Page - - */
 
     m_codeEditorWidget = new QCodeEditor(this);
 
@@ -49,7 +49,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     m_codeEditorWidget->document()->markContentsDirty(0, m_codeEditorWidget->document()->characterCount());
     m_codeEditorWidget->viewport()->update();
 
-    // - - Create "Binary File Detected" Page - -
+    /* - - Create "Binary File Detected" Page - - */
 
     m_overlayWidget = new QWidget(this);
 
@@ -71,7 +71,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     btnLayout->addWidget(anywayOpenBtn);
     overlayLayout->addLayout(btnLayout);
 
-    // - - Create Search Bar Widget - -
+    /* - - Create Search Bar Widget - - */
     m_searchWidget = new QWidget(this);
     m_searchWidget->setObjectName("searchWidget");
 
@@ -96,7 +96,7 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     
     m_searchWidget->hide();
 
-    // - - Create and Init Stacked Layout Widget - -
+    /* - - Create and Init Stacked Layout Widget - - */
     auto stack = new QStackedLayout;
     stack->setStackingMode(QStackedLayout::StackAll);
     stack->addWidget(m_codeEditorWidget);
@@ -112,14 +112,14 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
 
     this->setLayout(mainLayout);
 
-    // - - Search Bar Connects & Shortcuts - -
+    /* - - Search Bar Connects & Shortcuts - - */
 
-    // Ctrl+F
+    /* Ctrl+F */
     QShortcut* searchShortcut = new QShortcut(QKeySequence("Ctrl+F"), this);
     searchShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     connect(searchShortcut, &QShortcut::activated, this, &CodeEditorTab::showSearchBar);
 
-    // Esc
+    /* Esc */
     QShortcut* escapeShortcut = new QShortcut(QKeySequence("Esc"), m_searchWidget);
     escapeShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     connect(escapeShortcut, &QShortcut::activated, this, &CodeEditorTab::hideSearchBar);
@@ -138,23 +138,24 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
     });
 
 
-    // Trigger: Menu Bar: View->wordWrap - setWordWrapMode
-    // connect(GlobalWidgetsManager::instance().get_IDEWindow_menuBar_view_wordWrap(),
-    //         &QAction::changed,
-    //         this, [this]{
-    //             if (GlobalWidgetsManager::instance().get_IDEWindow_menuBar_view_wordWrap()->isChecked())
-    //                 m_codeEditorWidget->setWordWrapMode(QTextOption::WordWrap);
-    //             else
-    //                 m_codeEditorWidget->setWordWrapMode(QTextOption::NoWrap);
-    //         });
+    /* Trigger: Menu Bar: View->wordWrap - setWordWrapMode
+    * connect(GlobalWidgetsManager::instance().get_IDEWindow_menuBar_view_wordWrap(),
+    *         &QAction::changed,
+    *         this, [this]{
+    *             if (GlobalWidgetsManager::instance().get_IDEWindow_menuBar_view_wordWrap()->isChecked())
+    *                 m_codeEditorWidget->setWordWrapMode(QTextOption::WordWrap);
+    *             else
+    *                 m_codeEditorWidget->setWordWrapMode(QTextOption::NoWrap);
+    *         });
+    */
 
-    // Clicked: Open File Anyway Button
+    /* Clicked: Open File Anyway Button */
     connect(anywayOpenBtn, &QPushButton::clicked, this, [this]{
         forceSetData = true;
         this->setTabData();
     });
 
-    // ContentsChanged: Sync the working buffer copy and the dirty state flag
+    /* ContentsChanged: Sync the working buffer copy and the dirty state flag */
     connect(m_codeEditorWidget->document(),
             &QTextDocument::contentsChanged,
             this,
@@ -191,12 +192,12 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
                 }
             });
 
-    // SelectionChanged: Notify the buffer of the selection
+    /* SelectionChanged: Notify the buffer of the selection */
     connect(m_codeEditorWidget, &QPlainTextEdit::selectionChanged,
             this, [this](){
-                if (m_updatingSelection) return; // Предотвращаем рекурсию
+                if (m_updatingSelection) return; /* Recurtion guard */
                 
-                // Set the flag before emitting the signal
+                /* Set the flag before emitting the signal */
                 m_updatingSelection = true;
                 
                 QTextCursor cursor = m_codeEditorWidget->textCursor();
@@ -204,19 +205,19 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
                     int charStart = cursor.selectionStart();
                     int charEnd = cursor.selectionEnd();
                     
-                    // Convert character position to byte
+                    /* Convert character position to byte */
                     QString text = m_codeEditorWidget->toPlainText();
                     QByteArray utf8Data = text.toUtf8();
                     
-                    // Get the byte position of the selection start
+                    /* Get the byte position of the selection start */
                     QString beforeSelection = text.left(charStart);
                     qint64 byteStart = beforeSelection.toUtf8().size();
                     
-                    // Get the selection length in bytes
+                    /* Get the selection length in bytes */
                     QString selectedText = text.mid(charStart, charEnd - charStart);
                     qint64 byteLength = selectedText.toUtf8().size();
                     
-                    // Notify the buffer of the selection
+                    /* Notify the buffer of the selection */
                     m_dataBuffer->setSelection(byteStart, byteLength);
                 }
                 
@@ -225,9 +226,9 @@ CodeEditorTab::CodeEditorTab(FileDataBuffer* buffer, QWidget *parent)
 
 }
 
-// - - override functions - -
+/* - - override functions - - */
 
-// - public slots -
+/* - - public slots - - */
 
 void CodeEditorTab::setFile(QString filepath){
     m_fileContext = new FileContext(filepath);
@@ -309,32 +310,32 @@ void CodeEditorTab::saveTabData() {
 
 void CodeEditorTab::showSearchBar()
 {
-    // If the "Binary File" panel is open, search is not required
+    /* If the "Binary File" panel is open, search is not required */
     if (!m_overlayWidget->isHidden()) return; 
 
     m_searchWidget->show();
     m_searchLineEdit->setFocus();
-    m_searchLineEdit->selectAll(); // Select text if already present
+    m_searchLineEdit->selectAll(); /* Select text if already present */
 }
 
 void CodeEditorTab::hideSearchBar()
 {
     m_searchWidget->hide();
-    m_codeEditorWidget->setFocus(); // Focus the editor
+    m_codeEditorWidget->setFocus(); /* Focus the editor */
 }
 
 void CodeEditorTab::performSearch(bool backward)
 {
     QString query = m_searchLineEdit->text();
     if (query.isEmpty()) {
-        m_searchLineEdit->setStyleSheet(""); // Reset style
+        m_searchLineEdit->setStyleSheet(""); /* Reset style */
         return;
     }
 
     QTextDocument::FindFlags flags;
     if (backward) flags |= QTextDocument::FindBackward;
     
-    // Perform search
+    /* Perform search */
     bool found = m_codeEditorWidget->find(query, flags);
 
     if (!found) {
@@ -350,7 +351,7 @@ void CodeEditorTab::performSearch(bool backward)
     } else {
         m_searchLineEdit->setProperty("state", "normal");
     }
-    // Repolish widget to apply style changes
+    /* Repolish widget to apply style changes */
     m_searchLineEdit->style()->unpolish(m_searchLineEdit);
     m_searchLineEdit->style()->polish(m_searchLineEdit);
 }

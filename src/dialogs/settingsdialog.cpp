@@ -34,8 +34,9 @@ static bool isRunnableExecutable(const QString &path)
 
 static void setStatusLabel(QLabel *lbl, bool ok, const QString &text)
 {
-    // Text-only status to avoid adding icon resources.
-    // Use a monospace-friendly glyph and color.
+    /* Text-only status to avoid adding icon resources
+     *  Use a monospace-friendly glyph and color 
+     */
     lbl->setText(ok ? QStringLiteral("✓ ") + text : QStringLiteral("✗ ") + text);
     lbl->setStyleSheet(ok ? "color: #39d353;" : "color: #f85149;");
 }
@@ -58,7 +59,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     m_backendCombo->addItem(tr("radare2"),  static_cast<int>(AppSettings::DisasmBackend::Radare2));
     form->addRow(tr("Disassembler backend"), m_backendCombo);
 
-    // Common disassembler options
+    /* Common disassembler options */
     {
         m_insnLimit = new QSpinBox(this);
         m_insnLimit->setRange(50, 200000);
@@ -72,7 +73,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         form->addRow(tr("Assembly syntax"), m_syntaxCombo);
     }
 
-    // objdump path row
+    /* objdump path row */
     {
         auto *row = new QWidget(this);
         auto *rowLayout = new QHBoxLayout(row);
@@ -92,7 +93,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         connect(m_objdumpPath, &QLineEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
     }
 
-    // radare2 path row
+    /* radare2 path row */
     {
         auto *row = new QWidget(this);
         auto *rowLayout = new QHBoxLayout(row);
@@ -112,7 +113,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         connect(m_radare2Path, &QLineEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
     }
 
-    // 'file' tool is used by objdump backend for arch detection.
+    /* 'file' tool is used by objdump backend for arch detection. */
     {
         auto *row = new QWidget(this);
         auto *rowLayout = new QHBoxLayout(row);
@@ -123,7 +124,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         form->addRow(tr("Dependency: file(1)"), row);
     }
 
-    // radare2 options
+    /* radare2 options */
     {
         m_r2AnalysisCombo = new QComboBox(this);
         m_r2AnalysisCombo->addItem(tr("None (fast)"), static_cast<int>(AppSettings::Radare2AnalysisLevel::None));
@@ -141,7 +142,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
     root->addLayout(form);
 
-    // buttons
     auto *btnRow = new QHBoxLayout();
     m_testBtn = new QPushButton(tr("Test"), this);
     btnRow->addWidget(m_testBtn);
@@ -209,7 +209,7 @@ void SettingsDialog::onImportIni()
     loadFromSettings();
     updateUiEnabledState();
     updateDependencyStatus();
-    // emit GlobalWidgetsManager::instance().actionTriggered("settingsChanged");
+    /* emit GlobalWidgetsManager::instance().actionTriggered("settingsChanged"); */
     QMessageBox::information(this, tr("Import"), tr("Settings imported from:\n%1").arg(file));
 }
 
@@ -246,14 +246,14 @@ void SettingsDialog::updateUiEnabledState()
     const bool useRadare2 =
         (m_backendCombo->currentData().toInt() == static_cast<int>(AppSettings::DisasmBackend::Radare2));
 
-    // Keep both configurable, but emphasize the active one.
+    /* Keep both configurable, but emphasize the active one */
     m_radare2Path->setEnabled(true);
     m_objdumpPath->setEnabled(true);
 
     m_radare2Path->setToolTip(useRadare2 ? tr("Active backend") : tr("Inactive backend (still configurable)"));
     m_objdumpPath->setToolTip(useRadare2 ? tr("Inactive backend (still configurable)") : tr("Active backend"));
 
-    // r2-specific options enabled only when radare2 is selected
+    /* r2-specific options enabled only when radare2 is selected */
     m_r2AnalysisCombo->setEnabled(useRadare2);
     m_r2PreCommands->setEnabled(useRadare2);
 }
@@ -294,7 +294,7 @@ void SettingsDialog::onTestTools()
 
     QStringList lines;
 
-    // objdump
+    /* objdump */
     {
         QString out, err;
         const bool ok = !objdumpExe.isEmpty() && runVersionCheck(objdumpExe, {"--version"}, &out, &err);
@@ -304,7 +304,7 @@ void SettingsDialog::onTestTools()
             lines << "  " + err;
     }
 
-    // r2
+    /* r2 */
     {
         QString out, err;
         const bool ok = !r2Exe.isEmpty() && runVersionCheck(r2Exe, {"-v"}, &out, &err);
@@ -340,7 +340,7 @@ void SettingsDialog::onAccept()
                             .join(';');
     AppSettings::setRadare2PreCommands(pre);
 
-    // emit GlobalWidgetsManager::instance().actionTriggered("settingsChanged");
+    /* emit GlobalWidgetsManager::instance().actionTriggered("settingsChanged"); */
     accept();
 }
 
@@ -352,7 +352,7 @@ void SettingsDialog::onBackendChanged(int)
 
 void SettingsDialog::updateDependencyStatus()
 {
-    // objdump
+    /* objdump */
     {
         const QString resolved = resolvedExecutable(m_objdumpPath->text(), "objdump");
         const bool ok = isRunnableExecutable(resolved);
@@ -360,7 +360,7 @@ void SettingsDialog::updateDependencyStatus()
         m_objdumpStatus->setToolTip(ok ? resolved : tr("Not found in PATH and no valid path set"));
     }
 
-    // radare2
+    /* radare2 */
     {
         const QString resolved = resolvedExecutable(m_radare2Path->text(), "r2");
         const bool ok = isRunnableExecutable(resolved);
@@ -368,7 +368,7 @@ void SettingsDialog::updateDependencyStatus()
         m_radare2Status->setToolTip(ok ? resolved : tr("Not found in PATH and no valid path set"));
     }
 
-    // file(1) dependency
+    /* file(1) dependency */
     {
         const QString fileExe = QStandardPaths::findExecutable("file");
         const bool ok = isRunnableExecutable(fileExe);

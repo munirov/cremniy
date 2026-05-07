@@ -23,7 +23,7 @@ public:
         QString error;
     };
 
-    // r2Path: path to r2 executable (may be "r2" or absolute)
+    /* r2Path: path to r2 executable (may be "r2" or absolute) */
     static Result disassembleFile(const QString &r2Path, const QString &filePath, const Options &opt, bool *cancelled = nullptr);
 
 private:

@@ -1,6 +1,6 @@
-//
-// Created by Dmitriy on 3/27/26.
-//
+/*
+Created by Dmitriy on 3/27/26.
+*/
 
 #include "projectshistorymanager.h"
 
@@ -52,4 +52,4 @@ namespace utils {
 
         formatedDataRawAndSave(formatedList);
     }
-}; // utils
+}; /* utils */

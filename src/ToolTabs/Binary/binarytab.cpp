@@ -21,25 +21,25 @@ static bool registered = [](){
 BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
     : ToolTab{buffer, parent}
 {
-    // - - Tab Widgets - -
+    /* - - Tab Widgets - - */
 
-    // Create Layout
+    /* Create Layout */
     auto mainHexTabLayout = new QHBoxLayout(this);
     mainHexTabLayout->setSpacing(0);
     mainHexTabLayout->setContentsMargins(0,0,0,0);
     this->setLayout(mainHexTabLayout);
 
-    // Create Tab Widgets
+    /* Create Tab Widgets */
     QListWidget* pageList = new QListWidget();
     pageList->setObjectName("hexTabsList");
     pageList->setFocusPolicy(Qt::NoFocus);
     pageView = new QStackedWidget();
 
-    // Add TabWidgets in Layout
+    /* Add TabWidgets in Layout */
     mainHexTabLayout->addWidget(pageView);
     mainHexTabLayout->addWidget(pageList);
 
-    // - - Create Pages - -
+    /*- - Create Pages - - */
     auto& formatFactory = FormatPageFactory::instance();
 
     qDebug() << "FormatPageFactory constr: for id in avPages";
@@ -71,7 +71,7 @@ BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
                         }
                     });
             
-            // Connect selection signal from page to buffer
+            /* Connect selection signal from page to buffer */
             connect(fpage, &FormatPage::selectionChanged, 
                     this, [this](qint64 pos, qint64 length){
                         if (m_updatingSelection) return; // Предотвращаем рекурсию
@@ -83,22 +83,22 @@ BinaryTab::BinaryTab(FileDataBuffer* buffer, QWidget *parent)
         }
     }
 
-    // - - End Configurate Tab Widgets - -
+    /* - - End Configurate Tab Widgets - - */
 
-    // Configurate
+    /* Configurate */
     pageList->setCurrentRow(0);
 
-    // - - Connects - -
+    /* - - Connects - - */
 
-    // TabList: select tab
+    /* TabList: select tab */
     connect(pageList, &QListWidget::currentRowChanged,
                      pageView, &QStackedWidget::setCurrentIndex);
 }
 
 
-// - - override functions - -
+/* - - override functions - - */
 
-// - public slots -
+/* - - public slots - - */
 
 void BinaryTab::pageModifyDataSlot(){
     setModifyIndicator(true);
@@ -144,11 +144,11 @@ void BinaryTab::onDataChanged()
 
 void BinaryTab::onSelectionChanged(qint64 pos, qint64 length)
 {
-    if (m_updatingSelection) return; // prevent recursion
+    if (m_updatingSelection) return; /* prevent recursion */
     
     m_updatingSelection = true;
     
-    // Apply selection to all pages
+    /* Apply selection to all pages */
     for (int pageIndex = 0; pageIndex < pageView->count(); pageIndex++){
         FormatPage* fpage = dynamic_cast<FormatPage*>(pageView->widget(pageIndex));
         if (fpage) {

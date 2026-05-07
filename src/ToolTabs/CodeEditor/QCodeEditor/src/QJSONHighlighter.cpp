@@ -1,4 +1,4 @@
-// QCodeEditor
+/* QCodeEditor */
 #include <QJSONHighlighter.hpp>
 #include <QSyntaxStyle.hpp>
 
@@ -19,13 +19,13 @@ QJSONHighlighter::QJSONHighlighter(QTextDocument* document) :
         });
     }
 
-    // Numbers
+    /* Numbers */
     m_highlightRules.append({
         QRegularExpression(R"(\b(0b|0x){0,1}[\d.']+\b)"),
         "Number"
     });
 
-    // Strings
+    /* Strings */
     m_highlightRules.append({
         QRegularExpression(R"("[^\n"]*")"),
         "String"
@@ -50,7 +50,7 @@ void QJSONHighlighter::highlightBlock(const QString& text)
         }
     }
 
-    // Special treatment for key regex
+    /* Special treatment for key regex */
     auto matchIterator = m_keyRegex.globalMatch(text);
 
     while (matchIterator.hasNext())

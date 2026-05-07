@@ -1,4 +1,4 @@
-// QCodeEditor
+/* QCodeEditor */
 #include "QCECompleter.hpp"
 #include <QLineNumberArea.hpp>
 #include <QSyntaxStyle.hpp>
@@ -7,8 +7,6 @@
 #include <QFramedTextAttribute.hpp>
 #include <QCXXHighlighter.hpp>
 
-
-// Qt
 #include <QTextBlock>
 #include <QPaintEvent>
 #include <QFontDatabase>
@@ -55,25 +53,25 @@ void QCodeEditor::setFileExt(QString ext){
 }
 
 void QCodeEditor::initLanguages(){
-    // C / C++
+    /* C / C++ */
     m_completers["c"]   = new QCECompleter(":/languages/c.xml");
     m_completers["h"]   = new QCECompleter(":/languages/c.xml");
     m_completers["cpp"] = new QCECompleter(":/languages/cpp.xml");
     m_completers["hpp"] = new QCECompleter(":/languages/cpp.xml");
 
-    // Assembler (Intel / AT&T) — один словарь для .asm и .s
+    /* Assembler (Intel / AT&T) — a single dict used for both .asm, .s files */
     m_completers["asm"] = new QCECompleter(":/languages/asm.xml");
     m_completers["s"]   = new QCECompleter(":/languages/asm.xml");
 
-    // Rust
+    /* Rust */
     m_completers["rs"]  = new QCECompleter(":/languages/rust.xml");
 
-    // Build / config
-    m_completers[""]        = new QCECompleter(":/languages/gnumake.xml"); // "Makefile" (no extension)
+    /* Build / config */
+    m_completers[""]        = new QCECompleter(":/languages/gnumake.xml"); /* "Makefile" (no extension) */
     m_completers["mk"]      = new QCECompleter(":/languages/gnumake.xml");
     m_completers["make"]    = new QCECompleter(":/languages/gnumake.xml");
     m_completers["cmake"]   = new QCECompleter(":/languages/cmake.xml");
-    m_completers["txt"]     = new QCECompleter(":/languages/cmake.xml");    // CMakeLists.txt
+    m_completers["txt"]     = new QCECompleter(":/languages/cmake.xml");    /* CMakeLists.txt */
 
     m_highlighters["c"]   = new QCXXHighlighter;
     m_highlighters["h"]   = new QCXXHighlighter;
@@ -192,19 +190,19 @@ void QCodeEditor::updateStyle()
     {
         auto currentPalette = palette();
 
-        // Setting text format/color
+        /* Setting text format/color */
         currentPalette.setColor(
             QPalette::ColorRole::Text,
             m_syntaxStyle->getFormat("Text").foreground().color()
         );
 
-        // Setting common background
+        /* Setting common background */
         currentPalette.setColor(
             QPalette::Base,
             m_syntaxStyle->getFormat("Text").background().color()
         );
 
-        // Setting selection color
+        /* Setting selection color */
         currentPalette.setColor(
             QPalette::Highlight,
             m_syntaxStyle->getFormat("Selection").background().color()
@@ -218,8 +216,8 @@ void QCodeEditor::updateStyle()
 
 void QCodeEditor::onSelectionChanged()
 {
-    // Do not mutate the document on pure selection changes.
-    // Linked views rely on the editor text remaining byte-stable.
+    /* Do not mutate the document on pure selection changes. */
+    /* Linked views rely on the editor text remaining byte-stable. */
 }
 
 void QCodeEditor::resizeEvent(QResizeEvent* e)
@@ -320,7 +318,7 @@ void QCodeEditor::highlightParenthesis(QList<QTextEdit::ExtraSelection>& extraSe
 
         int counter = 1;
 
-        // Safe bounds for QPlainTextEdit
+        /* Safe bounds for QPlainTextEdit */
         const int lastPos = document()->characterCount() - 1;
         while (counter != 0 && position > 0 && position < lastPos)
         {
@@ -334,7 +332,7 @@ void QCodeEditor::highlightParenthesis(QList<QTextEdit::ExtraSelection>& extraSe
                 --counter;
         }
 
-        // If found
+        /* If found */
         if (counter == 0)
         {
             QTextCharFormat format = m_syntaxStyle->getFormat("Parentheses");
@@ -347,13 +345,13 @@ void QCodeEditor::highlightParenthesis(QList<QTextEdit::ExtraSelection>& extraSe
                 QTextCursor c = textCursor();
                 c.clearSelection();
 
-                // Move to the symbol
+                /* Move to the symbol */
                 if (pos < textCursor().position())
                     c.setPosition(pos, QTextCursor::KeepAnchor);
                 else
                     c.setPosition(pos, QTextCursor::MoveAnchor);
 
-                // Select one character
+                /* Select one character */
                 c.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 1);
                 sel.cursor = c;
 
@@ -364,7 +362,7 @@ void QCodeEditor::highlightParenthesis(QList<QTextEdit::ExtraSelection>& extraSe
             extraSelection.append(makeSelection(position));
         }
 
-        break; // Only first matching pair
+        break; /* Only first matching pair */
     }
 }
 
@@ -386,17 +384,17 @@ void QCodeEditor::highlightCurrentLine(QList<QTextEdit::ExtraSelection>& extraSe
 
 void QCodeEditor::paintEvent(QPaintEvent* e)
 {
-    // updateLineNumberArea(e->rect());
+    /* updateLineNumberArea(e->rect()); */
     QPlainTextEdit::paintEvent(e);
 }
 
 int QCodeEditor::getFirstVisibleBlock()
 {
-    // Detect the first block for which bounding rect - once translated
-    // in absolute coordinated - is contained by the editor's text area
+    /* Detect the first block for which bounding rect - once translated */
+    /* in absolute coordinated - is contained by the editor's text area */
 
-    // Costly way of doing but since "blockBoundingGeometry(...)" doesn't
-    // exists for "QTextEdit"...
+    /* Costly way of doing but since "blockBoundingGeometry(...)" doesn't */
+    /* exists for "QTextEdit"... */
 
     QTextCursor curs = QTextCursor(document());
     curs.movePosition(QTextCursor::Start);
@@ -437,13 +435,13 @@ bool QCodeEditor::proceedCompleterBegin(QKeyEvent *e)
         case Qt::Key_Tab:
         case Qt::Key_Backtab:
             e->ignore();
-            return true; // let the completer do default behavior
+            return true; /* let the completer do default behavior */
         default:
             break;
         }
     }
 
-    // todo: Replace with modifiable QShortcut
+    /* TODO: Replace with modifiable QShortcut */
     auto isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_Space);
 
     return !(!m_completer || !isShortcut);
@@ -501,7 +499,7 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
 
   if (!completerSkip) {
 
-    // Ctrl+Plus / Ctrl+Minus zoom
+    /* Ctrl+Plus / Ctrl+Minus zoom */
     if ((e->modifiers() & Qt::ControlModifier) &&
         (e->key() == Qt::Key_Plus || e->key() == Qt::Key_Equal || e->key() == Qt::Key_Minus)) {
       double delta = (e->key() == Qt::Key_Minus) ? 1 / 1.1 : 1.1;
@@ -519,14 +517,14 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
       return;
     }
 
-    // Replace: tab -> 4 space
+    /* Replace: tab -> 4 space  */
     if (m_replaceTab && e->key() == Qt::Key_Tab &&
         e->modifiers() == Qt::NoModifier) {
       insertPlainText(m_tabReplace);
       return;
     }
 
-    // Auto indentation
+    /* Auto indentation */
     int indentationLevel = getIndentationSpaces();
 
 #if QT_VERSION >= 0x050A00
@@ -537,8 +535,7 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
         indentationLevel * fontMetrics().averageCharWidth() / tabStopWidth();
 #endif
 
-    // Have Qt Edior like behaviour, if {|} and enter is pressed indent the two
-    // parenthesis
+    /* Have Qt Edior like behaviour, if {|} and enter is pressed indent the two parenthesis */
     if (m_autoIndentation && 
        (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) &&
         charUnderCursor() == '}' && charUnderCursor(-1) == '{') 
@@ -553,23 +550,24 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
       insertPlainText("\n");
       charsBack++;
 
-      // if (m_replaceTab)
-      // {
-      //   insertPlainText(QString(indentationLevel, ' '));
-      //   charsBack += indentationLevel;
-      // }
-      // else
-      // {
-      //   insertPlainText(QString(tabCounts, '\t'));
-      //   charsBack += tabCounts;
-      // }
+      /* if (m_replaceTab)
+      * {
+      *   insertPlainText(QString(indentationLevel, ' '));
+      *   charsBack += indentationLevel;
+      * }
+      * else
+      * {
+      *   insertPlainText(QString(tabCounts, '\t'));
+      *   charsBack += tabCounts;
+      * }
+      */
 
       while (charsBack--)
         moveCursor(QTextCursor::MoveOperation::Left);
       return;
     }
 
-    // Shortcut for moving line to left
+    /* Shortcut for moving line to left **
     if (m_replaceTab && e->key() == Qt::Key_Backtab) {
       indentationLevel = qMin(indentationLevel, m_tabReplace.size());
 
@@ -596,7 +594,7 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
     {
       for (auto&& el : parentheses) 
       {
-                // Inserting closed brace
+                /* Inserting closed brace */
                 if (el.first == e->text()) 
                 {
                   insertPlainText(el.second);
@@ -604,7 +602,7 @@ void QCodeEditor::keyPressEvent(QKeyEvent* e) {
                   break;
                 }
 
-                // If it's close brace - check parentheses
+                /* If it's close brace - check parentheses */
                 if (el.second == e->text())
                 {
                     auto symbol = charUnderCursor();

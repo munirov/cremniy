@@ -9,5 +9,5 @@ QIcon IconProvider::icon(const QFileInfo &info) const {
     } else if (info.suffix() == "txt") {
         return QIcon(":/icons/code.png");
     }
-    return QIcon(":/icons/code.png"); // дефолтная иконка
+    return QIcon(":/icons/code.png"); /* default icon */
 }

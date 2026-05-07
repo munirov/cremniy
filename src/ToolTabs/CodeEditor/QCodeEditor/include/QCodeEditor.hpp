@@ -1,8 +1,7 @@
 #pragma once
 
-// Qt
 #include "QStyleSyntaxHighlighter.hpp"
-#include <QTextEdit> // Required for inheritance
+#include <QTextEdit> /* Required for inheritance */
 #include <qplaintextedit.h>
 #include <qtimer.h>
 #include <toolwidget.hpp>
@@ -29,7 +28,7 @@ public:
      */
     explicit QCodeEditor(QWidget* widget=nullptr);
 
-    // Disable copying
+    /* Disable copying */
     QCodeEditor(const QCodeEditor&) = delete;
     QCodeEditor& operator=(const QCodeEditor&) = delete;
     bool m_ignoreModification = false;

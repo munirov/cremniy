@@ -24,10 +24,9 @@ FileCreateDialog::FileCreateDialog(QWidget *parent, QString path, bool _is_dir):
 
     QVBoxLayout *layout = new QVBoxLayout(this);
 
-    // text field
+    /* text field */
     layout->addWidget(lineEdit);
 
-    // button
     QPushButton *button = new QPushButton("Create", this);
     layout->addWidget(button);
 
@@ -42,7 +41,7 @@ void FileCreateDialog::onCreateClicked() {
         return;
     }
 
-    // here you can create a file
+    /* here you can create a file */
     QString fullPath = QString("%1/%2").arg(dir_path).arg(fileName);
 
     if (is_dir) {

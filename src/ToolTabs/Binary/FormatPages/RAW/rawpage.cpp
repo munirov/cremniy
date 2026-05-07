@@ -35,14 +35,14 @@ RAWPage::RAWPage(QWidget *parent)
                 }
             });
 
-    // Monitor hex view selection changes
+    /* Monitor hex view selection changes */
     connect(m_hexViewWidget->hexCursor(), &QHexCursor::positionChanged,
             this, [this](){
-                // if (m_hexViewWidget->hexCursor()->hasSelection()) {
+                /* if (m_hexViewWidget->hexCursor()->hasSelection()) { */
                     qint64 start = m_hexViewWidget->hexCursor()->selectionStartOffset();
                     qint64 length = m_hexViewWidget->hexCursor()->selectionLength();
                     emit selectionChanged(start, length);
-                // }
+                /* } */
             });
 
 }
@@ -58,7 +58,7 @@ QByteArray RAWPage::getPageData() const {
 }
 
 void RAWPage::setSelection(qint64 pos, qint64 length) {
-    // Set selection in Hex View
+    /* Set selection in Hex View */
     m_hexViewWidget->setSelectFromFormatPage(true);
     m_hexViewWidget->hexCursor()->setSelectFromFormatPage(true);
     m_hexViewWidget->hexCursor()->move(pos);

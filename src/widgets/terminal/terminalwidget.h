@@ -21,11 +21,11 @@ private:
     void setupShell();
     void handleEnter();
     
-    // История
+    /* History */
     void showHistory(int direction);
     void replaceCurrentCommand(const QString &cmd);
-    void loadHistory(); // Загрузка
-    void saveHistory(); //Сохранение
+    void loadHistory();
+    void saveHistory();
     
     bool eventFilter(QObject *obj, QEvent *event) override;
 

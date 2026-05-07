@@ -86,7 +86,7 @@ bool DisassemblerTab::tryResolveStringRefAddr(const LineInfo &li, quint64 *outAd
     *outAddr = 0;
     if (m_stringByAddr.isEmpty()) return false;
 
-    // Direct absolute address in operands.
+    /* Direct absolute address in operands. */
     {
         static const QRegularExpression reHex(R"((0x[0-9a-fA-F]+))");
         auto it = reHex.globalMatch(li.operands);
@@ -102,7 +102,7 @@ bool DisassemblerTab::tryResolveStringRefAddr(const LineInfo &li, quint64 *outAd
         }
     }
 
-    // RIP-relative (AT&T): disp(%rip)
+    /* RIP-relative (AT&T): disp(%rip) **
     {
         static const QRegularExpression reRip(R"(([+-]?(?:0x[0-9a-fA-F]+|\d+))\s*\(%rip\))",
                                             QRegularExpression::CaseInsensitiveOption);
@@ -147,7 +147,7 @@ bool DisassemblerTab::tryResolveStringRefAddr(const LineInfo &li, quint64 *outAd
 
 QString DisassemblerTab::autoCommentForLine(const LineInfo &li) const
 {
-    // Auto-comment string references like IDA: ; "Hello world"
+    /* Auto-comment string references like IDA: ; "Hello world" */
     if (m_stringByAddr.isEmpty())
         return {};
     if (li.operands.isEmpty())
@@ -172,18 +172,18 @@ QString DisassemblerTab::autoCommentForLine(const LineInfo &li) const
 
 QString DisassemblerTab::formatLine(const LineInfo &li) const
 {
-    // 1. Adress (18 symbols for 64-byte cores)
+    /* 1. Adress (18 symbols for 64-byte cores) */
     QString addr = li.address.trimmed();
     if (!addr.startsWith("0x")) addr = "0x" + addr;
     addr = addr.leftJustified(18, ' ');
 
-    // 2. Label funciton (e.g. <sys_get_time_ms>)
+    /* 2. Label funciton (e.g. <sys_get_time_ms>) */
     QString mnem = li.mnemonic.trimmed();
     if (mnem.startsWith('<') && mnem.endsWith('>')) {
         return QString("%1 %2").arg(addr, mnem);
     }
 
-    // 3. Bytes (preview up to 8 bytes, hide the rest under '..')
+    /* 3. Bytes (preview up to 8 bytes, hide the rest under '..') */
     QString bytes;
     const QString b = normalizeBytes(li.bytes);
     const int totalBytes = b.size() / 2;
@@ -199,18 +199,18 @@ QString DisassemblerTab::formatLine(const LineInfo &li) const
     }
     bytes = bytes.leftJustified(24, ' '); // Fixed byte width
 
-    // 4. Mnemonic and operand alignment
+    /* 4. Mnemonic and operand alignment */
     mnem = mnem.leftJustified(10, ' '); // 10 characters for mnemonic
     
     QString ops = li.operands.trimmed();
     if (ops.contains('#')) ops = ops.section('#', 0, 0).trimmed(); // clean objdump components
     ops = ops.leftJustified(32, ' '); // 32 символа на операнды
 
-    // 5. Comments (Auto-Comments for string)
+    /* 5. Comments (Auto-Comments for string) */
     const QString comment = autoCommentForLine(li);
     const QString c = comment.isEmpty() ? QString() : ("  " + comment);
 
-    // Handle "invalid" if raw data encountered
+    /* Handle "invalid" if raw data encountered */
     if (li.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) == 0 && !li.bytes.trimmed().isEmpty()) {
         QStringList parts;
         for (int i = 0; i + 1 < b.size() && (i / 2) < previewBytes; i += 2)
@@ -224,7 +224,7 @@ QString DisassemblerTab::formatLine(const LineInfo &li) const
         return QString("%1  %2  %3 %4%5").arg(addr, bytes, QString("invalid").leftJustified(10, ' '), data, invInfo);
     }
 
-    // Final assembly with hard indentation
+    /* Final assembly with hard indentation */
     return QString("%1  %2  %3 %4%5").arg(addr, bytes, mnem, ops, c);
 }
 
@@ -258,8 +258,8 @@ DisassemblerTab::DisassemblerTab(FileDataBuffer* buffer, QWidget *parent)
 
     m_thread->start();
 
-    // connect(&GlobalWidgetsManager::instance(), &GlobalWidgetsManager::actionTriggered,
-            // this, &DisassemblerTab::onGlobalActionTriggered);
+    /*connect(&GlobalWidgetsManager::instance(), &GlobalWidgetsManager::actionTriggered,
+            this, &DisassemblerTab::onGlobalActionTriggered);*/
 
     updateBackendUiHint();
 }
@@ -349,7 +349,7 @@ void DisassemblerTab::onDataChanged()
         m_refreshDebounce->start(150);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+/*─────────────────────────────────────────────────────────────────────────────*/
 void DisassemblerTab::setupUi()
 {
     
@@ -357,7 +357,7 @@ void DisassemblerTab::setupUi()
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
 
-    // ── Toolbar ──────────────────────────────────────────────────────────────
+    /*── Toolbar ──────────────────────────────────────────────────────────────*/
     m_toolbar = new QWidget(this);
     m_toolbar->setObjectName("dasmToolbar");
     m_toolbar->setFixedHeight(36);
@@ -405,7 +405,7 @@ void DisassemblerTab::setupUi()
 
     mainLayout->addWidget(m_toolbar);
 
-    // ── Progress bar ──────────────────────────────────────────────────────────
+    /*── Progress bar ──────────────────────────────────────────────────────────*/
     m_progressBar = new QProgressBar(this);
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(0);
@@ -414,12 +414,12 @@ void DisassemblerTab::setupUi()
     m_progressBar->setVisible(false);
     mainLayout->addWidget(m_progressBar);
 
-    // ── Splitter: disasm table (top) + log panel (bottom) ────────────────────
+    /*── Splitter: disasm table (top) + log panel (bottom) ────────────────────*/
     m_splitter = new QSplitter(Qt::Vertical, this);
     m_splitter->setHandleWidth(4);
     mainLayout->addWidget(m_splitter, 1);
 
-    // ── Top: stack (listing / placeholder) ───────────────────────────────────
+    /*── Top: stack (listing / placeholder) ───────────────────────────────────*/
     QWidget *topWidget = new QWidget(m_splitter);
     auto *topLayout = new QVBoxLayout(topWidget);
     topLayout->setContentsMargins(0, 0, 0, 0);
@@ -432,7 +432,7 @@ void DisassemblerTab::setupUi()
     m_placeholderLbl->setAlignment(Qt::AlignCenter);
     m_stack->addWidget(m_placeholderLbl);
 
-    // Functions panel + listing
+    /* Functions panel + listing */
     m_topSplitter = new QSplitter(Qt::Horizontal, topWidget);
     m_topSplitter->setHandleWidth(4);
 
@@ -492,7 +492,7 @@ void DisassemblerTab::setupUi()
         showInstructionHelpAt(p, true);
     });
 
-    // Disassembler selection handler — notify buffer
+    /* Disassembler selection handler — notify buffer */
     connect(m_disasmView, &QPlainTextEdit::selectionChanged, this, [this]() {
         if (m_updatingSelection) return; // Recursion prevention
         
@@ -531,7 +531,7 @@ void DisassemblerTab::setupUi()
             });
         }
 
-        // Safe patching: only for radare2 backend where address is an offset we can write to.
+        /* Safe patching: only for radare2 backend where address is an offset we can write to. **
         const bool canPatchAtLine = (AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2);
         if (canPatchAtLine) {
             menu.addSeparator();
@@ -608,7 +608,7 @@ void DisassemblerTab::setupUi()
                 setModifyIndicator(m_dataBuffer->isModified());
                 emit modifyData();
 
-                // Update cached bytes and refresh view.
+                /* Update cached bytes and refresh view. */
                 m_lines[idx].bytes = normalizeBytes(text);
                 m_lines[idx].bytesL = m_lines[idx].bytes.toLower();
                 m_lines[idx].size = newBytes.size();
@@ -619,7 +619,7 @@ void DisassemblerTab::setupUi()
             });
         }
 
-        // Show raw bytes for referenced string (helps confirm full length incl. 00).
+        /* Show raw bytes for referenced string (helps confirm full length incl. 00). */
         quint64 saddr = 0;
         if (tryResolveStringRefAddr(li, &saddr)) {
             menu.addSeparator();
@@ -718,13 +718,13 @@ void DisassemblerTab::setupUi()
     m_stack->addWidget(m_topSplitter);
     m_splitter->addWidget(topWidget);
 
-    // ── Bottom: log panel ─────────────────────────────────────────────────────
+    /*── Bottom: log panel ─────────────────────────────────────────────────────*/
     m_logPanel = new QWidget(m_splitter);
     auto *logLayout = new QVBoxLayout(m_logPanel);
     logLayout->setContentsMargins(0, 0, 0, 0);
     logLayout->setSpacing(0);
 
-    // Log header bar
+    /* Log header bar */
     QWidget *logHeader = new QWidget(m_logPanel);
     logHeader->setFixedHeight(24);
     auto *logHeaderLayout = new QHBoxLayout(logHeader);
@@ -745,12 +745,12 @@ void DisassemblerTab::setupUi()
     logLayout->addWidget(m_logView, 1);
     m_splitter->addWidget(m_logPanel);
 
-    // Hide log panel initially; give table all the space
+    /* Hide log panel initially; give table all the space */
     m_logPanel->setVisible(false);
     m_splitter->setStretchFactor(0, 1);
     m_splitter->setStretchFactor(1, 0);
 
-    // ── Status bar ─────────────────────────────────────────────────────────────
+    /*── Status bar ─────────────────────────────────────────────────────────────*/
     m_statusLabel = new QLabel(this);
     m_statusLabel->setFixedHeight(20);
     m_statusLabel->setStyleSheet("font-size: 11px; padding: 0 6px;");
@@ -760,12 +760,12 @@ void DisassemblerTab::setupUi()
     m_statusLabel->setText(tr("Backend: %1").arg(
         AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2 ? tr("radare2") : tr("objdump")));
 
-    // ── Connections ───────────────────────────────────────────────────────────
+    /*── Connections ───────────────────────────────────────────────────────────*/
     connect(m_runBtn,       &QPushButton::clicked,
             this,           &DisassemblerTab::startDisassembly);
     connect(m_cancelBtn,    &QPushButton::clicked,
             this,           &DisassemblerTab::cancelDisassembly);
-    // Debounced search: avoids rebuilding UI on every keystroke.
+    /* Debounced search: avoids rebuilding UI on every keystroke. */
     m_searchDebounce = new QTimer(this);
     m_searchDebounce->setSingleShot(true);
     m_searchDebounce->setInterval(150);
@@ -778,7 +778,7 @@ void DisassemblerTab::setupUi()
         const QString q = m_searchEdit->text().trimmed();
         if (q.isEmpty()) return;
         if (!m_disasmView->find(q)) {
-            // wrap-around
+            /* wrap-around */
             QTextCursor c = m_disasmView->textCursor();
             c.movePosition(QTextCursor::Start);
             m_disasmView->setTextCursor(c);
@@ -790,14 +790,14 @@ void DisassemblerTab::setupUi()
     connect(m_logToggleBtn, &QPushButton::toggled, this, [this](bool checked) {
         m_logPanel->setVisible(checked);
         if (checked) {
-            // Give log panel ~30% of space
+            /* Give log panel ~30% of space */
             int total = m_splitter->height();
             m_splitter->setSizes({total * 70 / 100, total * 30 / 100});
         }
     });
     connect(clearBtn, &QPushButton::clicked, m_logView, &QPlainTextEdit::clear);
 
-    // F5: re-analyze / disassemble again
+    /* F5: re-analyze / disassemble again */
     auto *reanalyze = new QShortcut(QKeySequence(Qt::Key_F5), this);
     reanalyze->setContext(Qt::WidgetWithChildrenShortcut);
     connect(reanalyze, &QShortcut::activated, this, [this]() {
@@ -855,7 +855,7 @@ void DisassemblerTab::onGlobalActionTriggered(const QString &actionName)
     updateBackendUiHint();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+/*─────────────────────────────────────────────────────────────────────────────*/
 void DisassemblerTab::startDisassembly()
 {
     if (m_running) return;
@@ -903,7 +903,7 @@ void DisassemblerTab::startDisassembly()
             ? tr("Running radare2…")
             : tr("Running objdump…"));
 
-    // Auto-open log panel when disassembly starts so user sees progress
+    /* Auto-open log panel when disassembly starts so user sees progress */
     if (!m_logToggleBtn->isChecked()) {
         m_logToggleBtn->setChecked(true);
     }
@@ -924,7 +924,7 @@ void DisassemblerTab::cancelDisassembly()
     if (m_worker) m_worker->cancel();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+/*─────────────────────────────────────────────────────────────────────────────*/
 void DisassemblerTab::onLogLine(const QString &line)
 {
     appendLog(line);
@@ -933,7 +933,7 @@ void DisassemblerTab::onLogLine(const QString &line)
 void DisassemblerTab::appendLog(const QString &line)
 {
     m_logView->appendPlainText(line);
-    // Auto-scroll to bottom
+    /* Auto-scroll to bottom */
     QTextCursor c = m_logView->textCursor();
     c.movePosition(QTextCursor::End);
     m_logView->setTextCursor(c);
@@ -947,7 +947,7 @@ void DisassemblerTab::onSectionFound(const DisasmSection &section)
     m_sections.append(section);
 
     if (m_sections.size() == 1) {
-        // Listing UI is hosted inside m_topSplitter which is a direct child of m_stack.
+        /* Listing UI is hosted inside m_topSplitter which is a direct child of m_stack. */
         m_stack->setCurrentWidget(m_topSplitter);
         populateSectionCombo();
     }
@@ -968,7 +968,7 @@ void DisassemblerTab::onSectionFound(const DisasmSection &section)
             li.opsL   = insn.operands.toLower();
             m_lines.append(std::move(li));
         }
-        // Render incrementally in "All sections" mode for responsiveness.
+        /* Render incrementally in "All sections" mode for responsiveness. */
         applyFilter();
     }
 
@@ -1005,7 +1005,7 @@ void DisassemblerTab::setFunctionsList(const QVector<DisasmFunction> &funcs)
     if (!m_funcList) return;
     m_funcList->clear();
 
-    // Sort by address (hex) when possible
+    /* Sort by address (hex) when possible **
     QVector<DisasmFunction> sorted = m_functions;
     std::sort(sorted.begin(), sorted.end(), [](const DisasmFunction &a, const DisasmFunction &b) {
         quint64 va = 0, vb = 0;
@@ -1023,7 +1023,7 @@ void DisassemblerTab::setFunctionsList(const QVector<DisasmFunction> &funcs)
 
 void DisassemblerTab::rebuildFunctionsFromLines()
 {
-    // For objdump backend: function labels come as mnemonic "<name>" with empty bytes.
+    /* For objdump backend: function labels come as mnemonic "<name>" with empty bytes. **
     QVector<DisasmFunction> funcs;
     funcs.reserve(256);
     for (const auto &li : m_lines) {
@@ -1043,14 +1043,14 @@ void DisassemblerTab::jumpToAddress(const QString &addr)
 {
     if (!m_disasmView || addr.isEmpty()) return;
 
-    // 1. Convert target address to number for reliable compraison 
+    /* 1. Convert target address to number for reliable compraison 
     quint64 targetAddr = 0;
     if (!parseHexU64(addr, &targetAddr)) return;
 
     int targetVisualLine = -1;
 
-    // 2. Search m_visibleMap for the index corresponding to this address.
-    // This is much faster and more accurate than parsing text from QPlainTextEdit
+    /* 2. Search m_visibleMap for the index corresponding to this address. */
+    /* This is much faster and more accurate than parsing text from QPlainTextEdit */
     for (int visLine = 0; visLine < m_visibleLineMap.size(); ++visLine) {
         int lineIdx = m_visibleLineMap[visLine];
         if (lineIdx < 0) continue; // Пропускаем строки-заголовки (где индекс -1)
@@ -1065,7 +1065,7 @@ void DisassemblerTab::jumpToAddress(const QString &addr)
         }
     }
 
-    // 3. If line is found in the current view
+    /* 3. If line is found in the current view */
     if (targetVisualLine != -1) {
         QTextDocument *doc = m_disasmView->document();
         QTextBlock block = doc->findBlockByNumber(targetVisualLine);
@@ -1086,7 +1086,7 @@ void DisassemblerTab::jumpToAddress(const QString &addr)
             m_disasmView->setExtraSelections(extra);
         }
     } else {
-        // If the address is not found (e.g., it is in another section currently hidden by a filter)
+        /* If the address is not found (e.g., it is in another section currently hidden by a filter) */
         m_statusLabel->setText(tr("Address %1 is not visible in current view").arg(addr));
     }
 }
@@ -1134,7 +1134,7 @@ void DisassemblerTab::onProgressUpdated(int percent)
     m_progressBar->setValue(percent);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+/*─────────────────────────────────────────────────────────────────────────────*/
 void DisassemblerTab::setRunningState(bool running)
 {
     m_running = running;
@@ -1186,7 +1186,7 @@ void DisassemblerTab::applyFilter()
     QStringList out;
     out.reserve(m_lines.size());
 
-    // Xash-Map of function names for fast header insertion
+    /* Xash-Map of function names for fast header insertion */
     QHash<QString, QString> funcByAddr;
     for (const auto &f : m_functions) {
         funcByAddr.insert(f.address.trimmed().toLower(), f.name);
@@ -1197,7 +1197,7 @@ void DisassemblerTab::applyFilter()
     for (int i = 0; i < m_lines.size(); ++i) {
         const LineInfo &li = m_lines[i];
 
-        // Filtering by section and search query
+        /* Filtering by section and search query */
         bool inSection = (m_currentSectionIndex < 0) || (li.sectionIndex == m_currentSectionIndex);
         if (!inSection) continue;
 
@@ -1207,14 +1207,14 @@ void DisassemblerTab::applyFilter()
             if (!match) continue;
         }
 
-        // Function header insertion (IDA-style)
+        /* Function header insertion (IDA-style) */
         QString normAddr = li.address.trimmed().toLower();
         if (funcByAddr.contains(normAddr)) {
             out << QString("; --- FUNCTION: %1 (%2) ---").arg(funcByAddr.value(normAddr), li.address.trimmed());
             m_visibleLineMap << -1; 
         }
 
-        // Optimization: Merging consecutive "invalid" instructions into a single block
+        /* Optimization: Merging consecutive "invalid" instructions into a single block */
         if (li.mnemonic.trimmed().compare("invalid", Qt::CaseInsensitive) == 0 && !li.bytes.isEmpty()) {
             quint64 curAddr = 0;
             if (parseHexU64(li.address, &curAddr)) {
@@ -1243,18 +1243,18 @@ void DisassemblerTab::applyFilter()
                 out << formatLine(coalesced);
                 m_visibleLineMap << i;
                 shownLines++;
-                i = j - 1; // Skip processed lines
+                i = j - 1; /* Skip processed lines */
                 continue;
             }
         }
 
-        // Regular string
+        /* Regular string */
         out << formatLine(li);
         m_visibleLineMap << i;
         shownLines++;
     }
 
-    // Update UI
+    /* Update UI */
     m_disasmView->setPlainText(out.join('\n'));
 
     if (shownLines == 0 && haveQuery) {

@@ -1,7 +1,6 @@
-// QCodeEditor
+/* QCodeEditor */
 #include <QSyntaxStyle.hpp>
 
-// Qt
 #include <QDebug>
 #include <QXmlStreamReader>
 #include <QFile>

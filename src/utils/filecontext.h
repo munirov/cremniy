@@ -8,14 +8,14 @@ class FileContext
     friend class FileManager;
 
 public:
-    // A class that stores state for an open file. Unique per ToolTab (codeEditor, hexView, etc.)
+    /* A class that stores state for an open file. Unique per ToolTab (codeEditor, hexView, etc.) */
     FileContext(QString filepath) :
         m_filePath(filepath)
     {
 
     }
 
-    // - - Getters - -
+    /* - - Getters - - */
     QString filePath(){
         return m_filePath;
     }
@@ -33,13 +33,13 @@ public:
     }
 
 private:
-    // file path (ref to FileTab->m_filePath)
+    /* file path (ref to FileTab->m_filePath) */
     QString m_filePath;
-    // number of loaded (currently displayed) bytes
+    /* number of loaded (currently displayed) bytes */
     uint64_t m_bytesCount;
-    // start in file (byte number)
+    /* start in file (byte number) */
     uint64_t m_startOffset;
-    // end in file (byte number)
+    /* end in file (byte number) */
     uint64_t m_endOffset;
 
 };

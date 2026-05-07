@@ -38,7 +38,7 @@ public:
     void setTabData(QByteArray &data);
 
     struct LineInfo {
-        int sectionIndex = -1; // index in m_sections
+        int sectionIndex = -1; /* index in m_sections */
         QString address;
         QString bytes;
         QString mnemonic;
@@ -46,7 +46,7 @@ public:
         qint64 fileOffset = -1;
         qint64 size = 0;
 
-        // Cached lowercase for fast search
+        /* Cached lowercase for fast search */
         QString addrL;
         QString bytesL;
         QString mnemL;
@@ -104,18 +104,18 @@ private:
     QThread            *m_thread  = nullptr;
     DisassemblerWorker *m_worker  = nullptr;
     bool                m_running = false;
-    bool                m_updatingSelection = false; // Recursion prevention flag
+    bool                m_updatingSelection = false; /* Recursion prevention flag */
 
     QVector<DisasmSection> m_sections;
     QVector<DisasmFunction> m_functions;
     QVector<DisasmString> m_strings;
-    QHash<quint64, QString> m_stringByAddr; // for fast auto-comments
+    QHash<quint64, QString> m_stringByAddr; /* for fast auto-comments */
 
     QVector<LineInfo> m_lines;
-    QVector<int> m_visibleLineMap; // visible line idx -> m_lines idx
+    QVector<int> m_visibleLineMap; /* visible line idx -> m_lines idx */
     QTimer *m_searchDebounce = nullptr;
 
-    // UI
+    /* UI */
     QWidget        *m_toolbar        = nullptr;
     QComboBox      *m_sectionCombo   = nullptr;
     QLineEdit      *m_searchEdit     = nullptr;
@@ -126,7 +126,7 @@ private:
     QLabel         *m_statusLabel    = nullptr;
     QSplitter      *m_splitter       = nullptr;
     QStackedWidget *m_stack          = nullptr;
-    QSplitter      *m_topSplitter    = nullptr; // functions | listing
+    QSplitter      *m_topSplitter    = nullptr; /* functions | listing */
     QWidget        *m_funcPanel      = nullptr;
     QLineEdit      *m_funcFilterEdit = nullptr;
     QListWidget    *m_funcList       = nullptr;

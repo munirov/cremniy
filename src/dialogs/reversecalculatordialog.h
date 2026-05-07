@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: MIT */
 #ifndef REVERSECALCULATORDIALOG_H
 #define REVERSECALCULATORDIALOG_H
 

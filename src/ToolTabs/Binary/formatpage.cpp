@@ -1,4 +1,4 @@
 #include "formatpage.h"
 
-// Ensure vtable generation for FormatPage
+/* Ensure vtable generation for FormatPage */
 FormatPage::~FormatPage() {}

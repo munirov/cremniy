@@ -1,4 +1,4 @@
-// QCodeEditor
+/* QCodeEditor */
 #include <QCXXHighlighter.hpp>
 #include <QSyntaxStyle.hpp>
 #include <QLanguage.hpp>
@@ -44,25 +44,25 @@ QCXXHighlighter::QCXXHighlighter(QTextDocument* document) :
         }
     }
 
-    // Numbers
+    /* Numbers */
     m_highlightRules.append({
         QRegularExpression(R"((?<=\b|\s|^)(?i)(?:(?:(?:(?:(?:\d+(?:'\d+)*)?\.(?:\d+(?:'\d+)*)(?:e[+-]?(?:\d+(?:'\d+)*))?)|(?:(?:\d+(?:'\d+)*)\.(?:e[+-]?(?:\d+(?:'\d+)*))?)|(?:(?:\d+(?:'\d+)*)(?:e[+-]?(?:\d+(?:'\d+)*)))|(?:0x(?:[0-9a-f]+(?:'[0-9a-f]+)*)?\.(?:[0-9a-f]+(?:'[0-9a-f]+)*)(?:p[+-]?(?:\d+(?:'\d+)*)))|(?:0x(?:[0-9a-f]+(?:'[0-9a-f]+)*)\.?(?:p[+-]?(?:\d+(?:'\d+)*))))[lf]?)|(?:(?:(?:[1-9]\d*(?:'\d+)*)|(?:0[0-7]*(?:'[0-7]+)*)|(?:0x[0-9a-f]+(?:'[0-9a-f]+)*)|(?:0b[01]+(?:'[01]+)*))(?:u?l{0,2}|l{0,2}u?)))(?=\b|\s|$))"),
         "Number"
     });
 
-    // Strings
+    /* Strings */
     m_highlightRules.append({
         QRegularExpression(R"("[^\n"]*")"),
         "String"
     });
 
-    // Define
+    /* Define */
     m_highlightRules.append({
         QRegularExpression(R"(#[a-zA-Z_]+)"),
         "Preprocessor"
     });
 
-    // Single line
+    /* Single line */
     m_highlightRules.append({
         QRegularExpression(R"(//[^\n]*)"),
         "Comment"
@@ -71,7 +71,7 @@ QCXXHighlighter::QCXXHighlighter(QTextDocument* document) :
 
 void QCXXHighlighter::highlightBlock(const QString& text)
 {
-    // Checking for include
+    /* Checking for include */
     {
         auto matchIterator = m_includePattern.globalMatch(text);
 
@@ -92,7 +92,7 @@ void QCXXHighlighter::highlightBlock(const QString& text)
             );
         }
     }
-    // Checking for function
+    /* Checking for function */
     {
         auto matchIterator = m_functionPattern.globalMatch(text);
 

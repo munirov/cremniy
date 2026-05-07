@@ -1,9 +1,8 @@
-// QCodeEditor
+/* QCodeEditor */
 #include <QLineNumberArea.hpp>
 #include <QSyntaxStyle.hpp>
 #include <QCodeEditor.hpp>
 
-// Qt
 #include <QTextEdit>
 #include <QPainter>
 #include <QPaintEvent>
@@ -26,7 +25,7 @@ QSize QLineNumberArea::sizeHint() const
         return QWidget::sizeHint();
     }
 
-    // Calculating width
+    /* Calculating width */
     int digits = 1;
     int max = qMax(1, m_codeEditParent->document()->blockCount());
     while (max >= 10) {
