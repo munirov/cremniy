@@ -16,33 +16,47 @@ People who contributed their time and code to Cremniy.
 
 [@teenageswag](https://github.com/teenageswag)
 
-[@mansar1337](https://github.com/mansar1337)
+[@Altro-O](https://github.com/Altro-O)
 
 [@ewasion137](https://github.com/ewasion137)
 
+[@faketri33](https://github.com/faketri33)
+
 [@Kleshzz](https://github.com/Kleshzz)
+
+[@mansar1337](https://github.com/mansar1337)
 
 [@encryrose](https://github.com/encryrose)
 
-[@Altro-O](https://github.com/Altro-O)
-
-[@faketri33](https://github.com/faketri33)
+[@zylo-code](https://github.com/zylo-code)
 
 [@mystergaif](https://github.com/mystergaif)
 
 [@niki-gor](https://github.com/niki-gor)
 
+[@Alexandr153](https://github.com/Alexandr153)
+
+[@irekgab](https://github.com/irekgab)
+
 [@KaVoshnik](https://github.com/KaVoshnik)
 
-[@zylo-code](https://github.com/zylo-code)
+[@lovlygod](https://github.com/lovlygod)
+
+[@alexcircuits](https://github.com/alexcircuits)
 
 [@Keqy](https://github.com/Keqy)
 
 [@Pawmii](https://github.com/Pawmii)
 
-[@Alexandr153](https://github.com/Alexandr153)
-
 [@Anstrofonik](https://github.com/Anstrofonik)
+
+[@AlexeyTolstopyatov](https://github.com/AlexeyTolstopyatov)
+
+[@Maksim-Sebelev](https://github.com/Maksim-Sebelev)
+
+[@cluedesc](https://github.com/cluedesc)
+
+[@zaedalbal](https://github.com/zaedalbal)
 
 ## 💸 Donators
 

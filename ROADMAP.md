@@ -9,14 +9,6 @@ English • [Русский](ROADMAP_ru.md)
 ## 🎯 Project Goal
 Create a **unified tool for system programming** that eliminates the need for scattered solutions and simplifies the development process.
 
-## 📦 Current Version
-[v0.1.3](https://github.com/Cremniy-Project/cremniy/releases/tag/v0.1.3) — basic development environment with:
-- Code editor (full support for low-level languages)
-- HEX editor (view bytes in RAW format)
-- Disassembler (can use `objdump` and `radare2`)
-- Calculator for converting between number systems
-- Integrated toolset
-
 ## 🛠 Short-Term Tasks
 
 ### 🐞 Bugs
@@ -27,19 +19,8 @@ Create a **unified tool for system programming** that eliminates the need for sc
 
 - [ ] 🟡 [Display numbers in different numeral systems on hover](https://github.com/Cremniy-Project/cremniy/issues/28)
 - [ ] 🟡 [Improve Terminal](https://github.com/munirov/cremniy/issues/100)
-- [ ] 🟢 [Add multilingual support](https://github.com/Cremniy-Project/cremniy/issues/67)
 - [ ] 🟢 [Search string across all project files](https://github.com/Cremniy-Project/cremniy/issues/76)
 - [ ] 🟢 [Git integration](https://github.com/Cremniy-Project/cremniy/issues/42)
-- [x] 🔴 [Implement custom QPlainText for Code Editor](https://github.com/Cremniy-Project/cremniy/issues/56)
-- [x] 🔴 [Optimize data storage in QHexView](https://github.com/Cremniy-Project/cremniy/issues/57)
-- [x] 🟡 [Improve the design of the search bar in the editor](https://github.com/munirov/cremniy/issues/177)
-- [x] 🟡 [Improve Disassembler design](https://github.com/Cremniy-Project/cremniy/issues/55)
-- [x] 🟡 [Keyboard scancode reference guide](https://github.com/munirov/cremniy/issues/89)
-- [x] 🟡 [Add a data storage unit converter](https://github.com/munirov/cremniy/issues/104)
-- [x] 🟡 [Use Breeze icons for files in QTreeView](https://github.com/Cremniy-Project/cremniy/issues/72)
-- [x] 🟡 [Implement StatusBar](https://github.com/Cremniy-Project/cremniy/issues/73)
-- [x] 🟢 [Pin file tabs (FileTab)](https://github.com/Cremniy-Project/cremniy/issues/75)
-- [x] 🟢 [Move files between directories in QTreeView](https://github.com/Cremniy-Project/cremniy/issues/77)
 
 ## 🕓 Long-Term Tasks
 
