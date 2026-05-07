@@ -104,7 +104,7 @@ jobs:
             throw "build/Release/cremniy.exe was not produced"
           }
           Copy-Item build/Release/cremniy.exe package/
-          & "$env:Qt6_DIR/bin/windeployqt.exe" package/cremniy.exe
+          & "$env:QT_ROOT_DIR\bin\windeployqt.exe" package\cremniy.exe
           Compress-Archive -Path package/* -DestinationPath cremniy-windows-${{ github.ref_name }}.zip
 
       - name: Package (macOS)
