@@ -83,8 +83,6 @@ jobs:
           rsvg-convert src/resources/icons/icon.svg -w 256 -h 256 -o cremniy.png
 
           export QML_SOURCES_PATHS=${{ github.workspace }}/src
-          export QMAKE=$Qt6_DIR/bin/qmake
-          export LD_LIBRARY_PATH=$Qt6_DIR/lib:$LD_LIBRARY_PATH
 
           ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run \
             --appdir AppDir \
