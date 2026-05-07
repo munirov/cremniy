@@ -17,7 +17,7 @@
 #include <QSpinBox>
 #include <QStandardPaths>
 
-#include "locale/LanguageManager.h"
+#include "core/locale/LanguageManager.h"
 
 static QString resolvedExecutable(const QString &userPath, const QString &exeName)
 {

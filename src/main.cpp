@@ -1,14 +1,12 @@
 #include <QApplication>
 #include <QCoreApplication>
-#include <QFile>
-#include <QIcon>
 #include <QImageReader>
 #include <QDirIterator>
 #include <QDebug>
 #include <QResource>
 
 #include "app/WelcomeWindow/welcomeform.h"
-#include "locale/LanguageManager.h"
+#include "core/locale/LanguageManager.h"
 
 int main(int argc, char *argv[])
 {

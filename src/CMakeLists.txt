@@ -46,8 +46,8 @@ qt_add_executable(${PROJECT_NAME}
     # Utils
     utils/utils.h
     utils/utils.cpp
-    utils/locale/LanguageManager.cpp
-    utils/locale/LanguageManager.h
+        core/locale/LanguageManager.cpp
+        core/locale/LanguageManager.h
 
     # Core
     core/file/filecontext.h
