@@ -30,7 +30,8 @@ bool FileDataBuffer::openFile(const QString& filePath)
     m_materialized = false;
     m_data.clear();
     m_chunkCache.clear();
-    m_chunkLru.clear();
+    m_chunkLruList.clear();
+    m_chunkLruIter.clear();
     resetOverlayLocked();
     m_originalHash = computeCurrentHashLocked();
     locker.unlock();
@@ -67,7 +68,7 @@ void FileDataBuffer::loadData(const QByteArray& data)
     m_fileBacked = false;
     m_materialized = true;
     resetOverlayLocked();
-    m_originalHash = qHash(data, 0);
+    m_originalHash = computeCurrentHashLocked();
     locker.unlock();
     emit dataChanged();
 }
@@ -78,7 +79,7 @@ void FileDataBuffer::replaceData(const QByteArray& data)
     if (m_fileBacked && !m_materialized)
         promoteToMemoryModeLocked();
 
-    if (m_data == data)
+    if (m_data.size() == data.size() && m_data == data)
         return;
 
     m_data = data;
@@ -211,13 +212,13 @@ bool FileDataBuffer::saveToFile(const QString& filePath)
     QString targetPath;
     QByteArray payload;
     bool keepFileBacked = false;
-    bool sourceWasOpen = false;
+    bool sourceWasOpen  = false;
     {
         QMutexLocker locker(&m_mutex);
-        targetPath = filePath.isEmpty() ? m_filePath : filePath;
-        payload = materializeLocked();
+        targetPath    = filePath.isEmpty() ? m_filePath : filePath;
+        payload       = materializeLocked();
         keepFileBacked = m_fileBacked;
-        sourceWasOpen = m_file.isOpen();
+        sourceWasOpen  = m_file.isOpen();
         if (sourceWasOpen)
             m_file.close();
     }
@@ -225,33 +226,17 @@ bool FileDataBuffer::saveToFile(const QString& filePath)
     if (targetPath.isEmpty())
         return false;
 
+    auto reopenSource = [&] {
+        if (!sourceWasOpen) return;
+        QMutexLocker locker(&m_mutex);
+        m_file.setFileName(m_filePath);
+        m_file.open(QIODevice::ReadOnly);
+    };
+
     QSaveFile out(targetPath);
-    if (!out.open(QIODevice::WriteOnly)) {
-        if (sourceWasOpen) {
-            QMutexLocker locker(&m_mutex);
-            m_file.setFileName(m_filePath);
-            m_file.open(QIODevice::ReadOnly);
-        }
-        return false;
-    }
-
-    if (out.write(payload) != payload.size()) {
-        if (sourceWasOpen) {
-            QMutexLocker locker(&m_mutex);
-            m_file.setFileName(m_filePath);
-            m_file.open(QIODevice::ReadOnly);
-        }
-        return false;
-    }
-
-    if (!out.commit()) {
-        if (sourceWasOpen) {
-            QMutexLocker locker(&m_mutex);
-            m_file.setFileName(m_filePath);
-            m_file.open(QIODevice::ReadOnly);
-        }
-        return false;
-    }
+    if (!out.open(QIODevice::WriteOnly)) { reopenSource(); return false; }
+    if (out.write(payload) != payload.size()) { reopenSource(); return false; }
+    if (!out.commit())                        { reopenSource(); return false; }
 
     {
         QMutexLocker locker(&m_mutex);
@@ -264,22 +249,21 @@ bool FileDataBuffer::saveToFile(const QString& filePath)
             m_file.setFileName(targetPath);
             if (m_file.open(QIODevice::ReadOnly)) {
                 m_data.clear();
-                m_fileBacked = true;
+                m_fileBacked  = true;
                 m_materialized = false;
             } else {
-                m_data = payload;
-                m_fileBacked = false;
+                m_data        = payload;
+                m_fileBacked  = false;
                 m_materialized = true;
             }
         } else {
-            m_data = payload;
-            m_fileBacked = false;
+            m_data        = payload;
+            m_fileBacked  = false;
             m_materialized = true;
         }
 
         m_originalHash = computeCurrentHashLocked();
     }
-
     return true;
 }
 
@@ -330,6 +314,7 @@ QByteArray FileDataBuffer::materializeLocked() const
         result.append(readLocked(offset, len));
         offset += len;
     }
+    
     return result;
 }
 
@@ -380,15 +365,21 @@ QByteArray FileDataBuffer::chunkLocked(qint64 chunkIndex) const
 
 void FileDataBuffer::touchChunkLocked(qint64 chunkIndex) const
 {
-    m_chunkLru.removeAll(chunkIndex);
-    m_chunkLru.prepend(chunkIndex);
+    auto it = m_chunkLruIter.find(chunkIndex);
+    if (it != m_chunkLruIter.end())
+        m_chunkLruList.erase(it.value());
+    
+    m_chunkLruList.push_front(chunkIndex);
+    m_chunkLruIter[chunkIndex] = m_chunkLruList.begin();
 }
 
 void FileDataBuffer::trimChunkCacheLocked() const
 {
-    while (m_chunkLru.size() > m_maxCachedChunks) {
-        const qint64 chunkIndex = m_chunkLru.takeLast();
-        m_chunkCache.remove(chunkIndex);
+    while ((int)m_chunkLruList.size() > m_maxCachedChunks) {
+        qint64 oldest = m_chunkLruList.back();
+        m_chunkLruList.pop_back();
+        m_chunkLruIter.remove(oldest);
+        m_chunkCache.remove(oldest);
     }
 }
 
@@ -415,7 +406,8 @@ void FileDataBuffer::closeFileLocked()
     if (m_file.isOpen())
         m_file.close();
     m_chunkCache.clear();
-    m_chunkLru.clear();
+    m_chunkLruList.clear();
+    m_chunkLruIter.clear();
     m_fileBacked = false;
     m_materialized = true;
     m_baseSize = m_data.size();
@@ -423,15 +415,18 @@ void FileDataBuffer::closeFileLocked()
 
 uint FileDataBuffer::computeCurrentHashLocked() const
 {
-    if (m_materialized)
-        return qHash(m_data, 0);
-
     QCryptographicHash hash(QCryptographicHash::Sha256);
-    qint64 offset = 0;
-    while (offset < m_baseSize) {
-        const qint64 len = qMin<qint64>(m_chunkSize, m_baseSize - offset);
-        hash.addData(readLocked(offset, len));
-        offset += len;
+
+    if (m_materialized)
+        hash.addData(m_data);
+    else
+    {
+        qint64 offset = 0;
+        while (offset < m_baseSize) {
+            const qint64 len = qMin<qint64>(m_chunkSize, m_baseSize - offset);
+            hash.addData(readLocked(offset, len));
+            offset += len;
+        }
     }
 
     const QByteArray digest = hash.result();
