@@ -204,8 +204,125 @@ connect(
     &FilesTabWidget::saveFileSlot
     ); /* <-- incorrect. Bad closing brace placement */
 ```
+---
+## Styling UI Text Elements
 
+All user-visible text elements should be wrapped using standard Qt tools:
 
+- `tr()` – for regular text elements that are not constants or static.
+- `QT_TRANSLATE_NOOP(context, text)` – declaration for Qt to ensure the text is included in the translation file.
+- `QCoreApplication::translate(context, text)` – for static constants, the translation will be applied immediately.
+
+---
+
+#### `tr()`
+
+```C++
+m_createFile = new QAction(tr("Create File"), this);
+m_createDir = new QAction(tr("Create Folder"), this);
+m_delete = new QAction(tr("Delete"), this);
+m_rename = new QAction(tr("Rename"), this);
+m_open = new QAction(tr("Open"), this);
+```
+
+---
+
+#### `QT_TRANSLATE_NOOP(context, text)`
+
+Used for static arrays and constants. It doesn't translate itself; it marks the text for `lupdate`. The translation is applied later via `QCoreApplication::translate()` or `tr()`.
+
+> ⚠️ The context in `QT_TRANSLATE_NOOP` and `QCoreApplication::translate()` must match.
+
+```c++
+static const RefRow kRefRows[] = {
+
+{"Esc", "01", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "Break code: 81")},
+
+{"1", "02", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "... 0 (top row) 0B")},
+
+// ...
+};
+
+for (int i = 0; i < n; ++i) {
+// .....
+m_table->setItem(i, 2, new QTableWidgetItem(
+QCoreApplication::translate("KeyboardScanCodesRef", kRefRows[i].notes)
+));
+}
+```
+
+If rendering occurs in the same class, you can use `tr()` directly:
+> The key is that the context you define for static elements has the same name as the class. In the `DataConverterDialog` example, according to the Qt standard, the context name is specified exactly this way.
+```c++
+static const UnitInfo kUnits[] = {
+
+{ QT_TRANSLATE_NOOP("DataConverterDialog", "Bits"), "Bit", 1.0 / 8.0 },
+
+{ QT_TRANSLATE_NOOP("DataConverterDialog", "Bytes"), "Byte", 1.0 },
+
+{ QT_TRANSLATE_NOOP("DataConverterDialog", "Kilobytes"), "KB", 1024.0 },
+
+// ...
+};
+
+for (int i = 0; i < kUnitCount; ++i) {
+// ....
+m_form->addRow(tr(kUnits[i].label), rowWidget);
+
+}
+```
+
+---
+
+#### `QMessageBox` with custom buttons
+
+If you've installed your own buttons, wrap their text in `tr()`:
+
+```C++
+QMessageBox question_save_file(
+QMessageBox::Question,
+tr("Save file"),
+tr("Do you want to save this file?"),
+QMessageBox::NoButton,
+this
+);
+
+const auto yes = questions_save_file.addButton(tr("Yes"), QMessageBox::YesRole);
+const auto no = questions_save_file.addButton(tr("No"), QMessageBox::NoRole);
+const auto cancel = questions_save_file.addButton(tr("Cancel"), QMessageBox::RejectRole);
+
+question_save_file.exec();
+
+const auto reply = question_save_file.clickedButton();
+if (reply == yes) tab->saveFile();
+else if (reply == cancel) return;
+```
+
+---
+
+#### Updating file translations
+
+After finishing working with the code, run the `lupdate` utility:
+
+``` bash
+lupdate src -ts src/resources/locale/translations/app_ru.ts
+```
+
+Then you need to process the file and fill in all fields with the "unfinished" status:
+
+```xml
+<context>
+<name>QHexView</name> <-- This is your context
+<message>
+<location filename="../../../libs/HexEditor/src/qhexview.cpp" line="378"/> <-- The place where you marked the expression as `tr()`
+<location filename="../../../libs/HexEditor/src/qhexview.cpp" line="397"/>
+<location filename="../../../libs/HexEditor/src/qhexview.cpp" line="405"/>
+<source>Go to</source> <-- text that was marked with tr()
+<translation type="unfinished">this text must be translated</translation>
+</message>
+</context>
+```
+---
 ## Pull Requests
 
 ### Requirements
