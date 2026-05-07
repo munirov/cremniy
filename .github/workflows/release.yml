@@ -49,7 +49,7 @@ jobs:
             libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-render-util0 libxcb-xinerama0 libxcb-cursor0 \
             libxcb-xkb1 libdbus-1-3 \
-            libfuse2 file imagemagick
+            libfuse2 file imagemagick librsvg2-bin
 
       - name: Download linuxdeploy tools
         if: runner.os == 'Linux'
@@ -80,7 +80,7 @@ jobs:
         run: |
           echo -e "[Desktop Entry]\nType=Application\nName=Cremniy\nExec=cremniy\nIcon=cremniy\nCategories=Utility;" > cremniy.desktop
 
-          convert src/resources/icons/icon.png -resize 256x256 cremniy.png
+          rsvg-convert src/resources/icons/icon.svg -w 256 -h 256 -o cremniy.png
 
           export QML_SOURCES_PATHS=${{ github.workspace }}/src
           export QMAKE=$Qt6_DIR/bin/qmake
