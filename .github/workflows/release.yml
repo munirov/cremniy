@@ -102,7 +102,11 @@ jobs:
             throw "build/Release/cremniy.exe was not produced"
           }
           Copy-Item build/Release/cremniy.exe package/
-          & "$env:QT_ROOT_DIR\bin\windeployqt.exe" package\cremniy.exe
+          
+          New-Item -ItemType Directory -Path "package/Resources/translations" -Force
+          Copy-Item build/*.qm "package/Resources/translations/"
+          
+          & "$env:QT_ROOT_DIR\bin\windeployqt.exe" --release --no-translations package\cremniy.exe
           Compress-Archive -Path package/* -DestinationPath cremniy-windows-${{ github.ref_name }}.zip
 
       - name: Package (macOS)
