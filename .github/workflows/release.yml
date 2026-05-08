@@ -29,15 +29,15 @@ jobs:
         if: runner.os == 'Windows'
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.7.3'
-          arch: 'win64_msvc2019_64'
+          version: '6.8.2'
+          arch: 'win64_msvc2022_64'
           cache: true
       
       - name: Install Qt (Linux/macOS)
         if: runner.os != 'Windows'
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: '6.8.2'
           cache: true
 
       - name: Install Linux dependencies
@@ -64,7 +64,7 @@ jobs:
         shell: pwsh
         env:
           SCCACHE_GHA_ENABLED: "true"
-        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
       
       - name: Configure CMake (Linux/macOS)
         if: runner.os != 'Windows'
