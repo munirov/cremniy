@@ -1,24 +1,23 @@
 #include <QApplication>
 #include <QCoreApplication>
-#include <QImageReader>
-#include <QDirIterator>
 #include <QDebug>
+#include <QDirIterator>
+#include <QImageReader>
 #include <QResource>
 
 #include "app/WelcomeWindow/welcomeform.h"
 #include "core/locale/LanguageManager.h"
 
-int main(int argc, char *argv[])
-{
-    #ifdef Q_OS_LINUX
+int main(int argc, char* argv[]) {
+#ifdef Q_OS_LINUX
     qputenv("QT_QPA_PLATFORMTHEME", "generic");
-    #endif
+#endif
     QApplication a(argc, argv);
     QCoreApplication::setOrganizationName("Munirov");
+    QCoreApplication::setApplicationName("Cremniy");
+
     LanguageManager::instance().loadUserDefaultLocale();
 
-    QCoreApplication::setOrganizationName("Munirov");
-    QCoreApplication::setApplicationName("Cremniy");
     a.setWindowIcon(QIcon(":/icons/icon.svg"));
 
     // - - Themes - -
@@ -26,7 +25,7 @@ int main(int argc, char *argv[])
     // Icons
     Q_INIT_RESOURCE(phoicons);
     QIcon::setThemeSearchPaths({":/icons"});
-    QIcon::setThemeName("phoicons");         // маленькими буквами!
+    QIcon::setThemeName("phoicons");
 
     qDebug() << "=== SYSTEM DEBUG ===";
     qDebug() << "Supported formats:" << QImageReader::supportedImageFormats();
@@ -34,7 +33,6 @@ int main(int argc, char *argv[])
     qDebug() << "Theme Search Paths:" << QIcon::themeSearchPaths();
     qDebug() << "Current Theme Name:" << QIcon::themeName();
 
-    // Переименовал в checkTheme, чтобы не было конфликта
     QFile checkTheme(":/icons/phoicons/index.theme");
     qDebug() << "index.theme exists in resources:" << checkTheme.exists();
 
@@ -52,7 +50,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Переименовал в qssThemeFile
     QFile qssThemeFile(":/styles/dark.qss");
     if (!qssThemeFile.open(QFile::ReadOnly)) {
         qWarning() << "Failed to open the theme file: " << qssThemeFile.errorString();
@@ -63,7 +60,7 @@ int main(int argc, char *argv[])
     QString themeData = QLatin1String(qssThemeFile.readAll());
 
     baseStyleFile.close();
-    qssThemeFile.close(); // Теперь закрываем правильный файл
+    qssThemeFile.close();
 
     a.setStyleSheet(baseStyle + "\n" + themeData);
 
