@@ -308,3 +308,83 @@ QDialog#settingsDialog QLabel#settingsStatusLabel[statusState="ok"] {
 QDialog#settingsDialog QLabel#settingsStatusLabel[statusState="missing"] {
     color: #f85149;
 }
+
+/* --- Shellcode Generator --- */
+
+QWidget#shellcodeToolbar {
+    background-color: #2b2b2b;
+    border-bottom: 1px solid #1f1f1f;
+}
+
+QWidget#shellcodeToolbar QLabel {
+    background: transparent;
+}
+
+QPushButton#copyResultBtn {
+    font-weight: bold;
+}
+
+QWidget#shellcodeStatusBar {
+    background-color: #262626;
+    border-top: 1px solid #1f1f1f;
+}
+
+QLabel#statusLabel {
+    color: #888;
+    font-size: 11px;
+}
+
+QLabel#statusLabel[error="true"] {
+    color: #f85149;
+}
+
+QLabel#archInfoLabel {
+    color: #aaa;
+    font-size: 11px;
+    margin-right: 10px;
+}
+
+QLabel#byteCountLabel {
+    color: #39d353;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+QWidget#errorPanel {
+    background-color: #1e1e1e;
+    border-top: 1px solid #2d2d2d;
+}
+
+QLabel#errorTitle {
+    color: #f85149;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 2px 8px;
+    background: #252525;
+    border-bottom: 1px solid #2d2d2d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+QListWidget#errorList {
+    background: transparent;
+    color: #f85149;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 11px;
+    border: none;
+    outline: none;
+}
+
+QListWidget#errorList::item {
+    padding: 3px 8px;
+    border-bottom: 1px solid #252525;
+}
+
+QListWidget#errorList::item:hover {
+    background: #2a2a2a;
+}
+
+QListWidget#errorList::item:selected {
+    background: #333;
+    color: #ffb3b0;
+}

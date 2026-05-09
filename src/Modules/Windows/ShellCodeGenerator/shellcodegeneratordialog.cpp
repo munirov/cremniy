@@ -3,424 +3,360 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QComboBox>
-#include <QDir>
-#include <QFile>
-#include <QFontDatabase>
 #include <QGuiApplication>
+#include <QHBoxLayout>
 #include <QLabel>
+#include <QListWidget>
 #include <QMessageBox>
-#include <QProcess>
 #include <QPushButton>
-#include <QRegularExpression>
-#include <QStandardPaths>
-#include <QTextEdit>
-#include <QTextStream>
+#include <QSplitter>
+#include <QStyle>
 #include <QTimer>
 #include <QVBoxLayout>
+
+#include "core/file/FileDataBuffer.h"
 #include "core/modules/ModuleManager.h"
+#include "widgets/CustomCodeEditor.h"
 
-static QString displayName() {
-    return QCoreApplication::translate("ShellCodeGenerator","Shell code");
-}
+// --- Module registration ---
 
-static bool registered = []() {
-    ModuleManager::instance().registerModule<WindowBase>(
-        &displayName, "", []() { return new ShellcodeGeneratorDialog(); });
-    return true;
-}();
+namespace {
 
-struct ArchEntry {
-    const char *label;
-    const char *bits;
-};
-static const ArchEntry kArchEntries[] = {
-    {"x86 (16-bit)", "16"},
-    {"x86 (32-bit)", "32"},
-    {"x86 (64-bit)", "64"},
-};
-static constexpr int kArchCount = std::size(kArchEntries);
-
-struct StyleEntry {
-    const char *label;
-    int id;
-};
-static const StyleEntry kStyles[] = {
-    {"C", 0},
-    {"C++", 1},
-    {"RAW", 2},
-};
-static constexpr int kStyleCount = std::size(kStyles);
-
-QString ShellcodeGeneratorDialog::findTool(const QString &name) {
-    QString sysPath = QStandardPaths::findExecutable(name);
-    if (!sysPath.isEmpty()) {
-        return sysPath;
+    QString shellcodeGeneratorDisplayName() {
+        return QCoreApplication::translate("ShellCodeGenerator", "Shell code");
     }
 
-    // for win, macOS, linux
-    const QStringList candidates = {
-        QString("C:/Program Files/NASM/%1.exe").arg(name),
-        QString("C:/Program Files (x86)/NASM/%1.exe").arg(name),
-        QString("C:/nasm/%1.exe").arg(name),
-        QString("/opt/homebrew/bin/%1").arg(name),
-        QString("/usr/local/bin/%1").arg(name),
-        QString("/usr/bin/%1").arg(name),
+    void registerShellcodeGeneratorModule() {
+        ModuleManager::instance().registerModule<WindowBase>(
+            &shellcodeGeneratorDisplayName, "",
+            [] {
+                return new ShellcodeGeneratorDialog();
+            });
+    }
+
+    const bool s_registered = (registerShellcodeGeneratorModule(), true);
+
+    // --- Combo-box tables ---
+
+    struct ArchEntry {
+        const char* label;
+        ShellcodeEngine::Architecture arch;
     };
 
-    for (const QString &p : candidates) {
-        if (QFile::exists(p))
-            return p;
-    }
+    constexpr ArchEntry kArchEntries[] = {
+        {"x86 (16-bit)", ShellcodeEngine::Architecture::X86_16},
+        {"x86 (32-bit)", ShellcodeEngine::Architecture::X86_32},
+        {"x86 (64-bit)", ShellcodeEngine::Architecture::X86_64},
+    };
 
-    return name;
-}
+    struct StyleEntry {
+        const char* label;
+        ShellcodeEngine::OutputStyle style;
+    };
 
-ShellcodeGeneratorDialog::ShellcodeGeneratorDialog(QWidget *parent) : WindowBase(parent) {
+    constexpr StyleEntry kStyleEntries[] = {
+        {"C Array", ShellcodeEngine::OutputStyle::C},
+        {"C++ Array", ShellcodeEngine::OutputStyle::Cpp},
+        {"Raw Hex", ShellcodeEngine::OutputStyle::Raw},
+    };
+
+    constexpr int kDebounceMs = 500;
+    constexpr int kToolbarHeight = 45;
+    constexpr int kStatusBarHeight = 28;
+    constexpr int kErrorPanelMinH = 80;
+    constexpr int kErrorPanelMaxH = 200;
+
+}// namespace
+
+// --- Constructor / destructor ---
+
+ShellcodeGeneratorDialog::ShellcodeGeneratorDialog(QWidget* parent)
+    : WindowBase(parent), m_engine(new ShellcodeEngine(this)), m_asmBuffer(new FileDataBuffer(this)), m_outputBuffer(new FileDataBuffer(this)) {
     setWindowTitle(tr("Shellcode Generator"));
     setModal(false);
-    setMinimumSize(QSize(1400, 760));
+    setMinimumSize(1000, 600);
+    resize(1200, 700);
 
-    const QFont monoFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    auto* root = new QVBoxLayout(this);
+    root->setSpacing(0);
+    root->setContentsMargins(0, 0, 0, 0);
 
-    auto *root = new QVBoxLayout(this);
-    root->setSpacing(8);
-    root->setContentsMargins(12, 12, 12, 12);
+    setupToolbar(root);
+    setupEditors(root);
+    setupStatusBar(root);
 
-    // --- Toolbar ---
-    auto *toolbar = new QHBoxLayout();
-    toolbar->setSpacing(10);
-    toolbar->addWidget(new QLabel(tr("Architecture:"), this));
-    m_archCombo = new QComboBox(this);
-    m_archCombo->setMinimumWidth(100);
-    for (int i = 0; i < kArchCount; ++i)
-        m_archCombo->addItem(kArchEntries[i].label);
-    m_archCombo->setCurrentIndex(2);
-    toolbar->addWidget(m_archCombo);
-
-    toolbar->addSpacing(10);
-    toolbar->addWidget(new QLabel(tr("Output style:"), this));
-    m_shellcodeStyle = new QComboBox(this);
-    m_shellcodeStyle->setMinimumWidth(80);
-    m_shellcodeStyle->setMinimumContentsLength(10);
-	for (int i = 0; i < kStyleCount; ++i) {
-    	m_shellcodeStyle->addItem(QString::fromUtf8(kStyles[i].label), kStyles[i].id);
-	}
-    toolbar->addWidget(m_shellcodeStyle);
-
-    toolbar->addStretch(1);
-    m_byteCountLabel = new QLabel(tr("0 bytes"), this);
-    m_byteCountLabel->setStyleSheet("font-weight: bold;");
-    toolbar->addWidget(m_byteCountLabel);
-
-    m_copyBtn = new QPushButton(tr("Copy"), this);
-    m_copyBtn->setCursor(Qt::PointingHandCursor);
-    toolbar->addWidget(m_copyBtn);
-
-    m_clearBtn = new QPushButton(tr("Clear"), this);
-    m_clearBtn->setCursor(Qt::PointingHandCursor);
-    toolbar->addWidget(m_clearBtn);
-    root->addLayout(toolbar);
-
-    auto *editorsLayout = new QHBoxLayout();
-    editorsLayout->setSpacing(8);
-
-    m_asmInput = new QTextEdit(this);
-    m_asmInput->setPlaceholderText(tr("; Enter x86/x64 assembly here..."));
-    m_asmInput->setFont(monoFont);
-    m_asmInput->setTabStopDistance(32);
-    m_asmInput->setStyleSheet("background-color: #202020; color: #ececec; border: 1px solid #505050;");
-
-    m_shellcodeOutput = new QTextEdit(this);
-    m_shellcodeOutput->setPlaceholderText(tr("// Shellcode output will appear here..."));
-    m_shellcodeOutput->setFont(monoFont);
-    m_shellcodeOutput->setReadOnly(true);
-    m_shellcodeOutput->setStyleSheet("background-color: #202020; color: #ececec; border: 1px solid #505050;");
-
-    editorsLayout->addWidget(m_asmInput, 1);
-    editorsLayout->addWidget(m_shellcodeOutput, 1);
-
-    root->addLayout(editorsLayout, 1);
-
-    m_statusLabel = new QLabel(tr("Ready. Make sure nasm and ndisasm are in PATH."), this);
-    m_statusLabel->setStyleSheet("color: gray; font-size: 11px;");
-    root->addWidget(m_statusLabel);
-
-    auto *debounce = new QTimer(this);
+    auto* debounce = new QTimer(this);
     debounce->setSingleShot(true);
-    debounce->setInterval(500);
+    debounce->setInterval(kDebounceMs);
+    setupConnections(debounce);
 
-    connect(m_asmInput, &QTextEdit::textChanged, this, [=]() { debounce->start(); });
-    connect(debounce, &QTimer::timeout, this, &ShellcodeGeneratorDialog::onAssemble);
-    connect(m_copyBtn, &QPushButton::clicked, this, &ShellcodeGeneratorDialog::onCopyOutput);
-    connect(m_clearBtn, &QPushButton::clicked, this, &ShellcodeGeneratorDialog::onClear);
-
-    auto triggerReassemble = [this](int) {
-        if (!m_shellcodeOutput->toPlainText().isEmpty())
-            onAssemble();
-    };
-    connect(m_shellcodeStyle, qOverload<int>(&QComboBox::currentIndexChanged), this, triggerReassemble);
-    connect(m_archCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, triggerReassemble);
-
-    QTimer::singleShot(0, this, [this]() {
+    QTimer::singleShot(0, this, [this] {
         if (!checkDependencies())
             close();
+        else
+            onAssemble();
     });
 }
 
+ShellcodeGeneratorDialog::~ShellcodeGeneratorDialog() = default;
+
+// --- Setup helpers ---
+
+void ShellcodeGeneratorDialog::setupToolbar(QVBoxLayout* root) {
+    auto* container = new QWidget(this);
+    container->setObjectName("shellcodeToolbar");
+    container->setFixedHeight(kToolbarHeight);
+
+    auto* layout = new QHBoxLayout(container);
+    layout->setContentsMargins(12, 0, 12, 0);
+    layout->setSpacing(12);
+
+    auto addLabel = [&](const QString& text) {
+        auto* lbl = new QLabel(text, container);
+        layout->addWidget(lbl);
+    };
+
+    addLabel(tr("Architecture:"));
+    m_archCombo = new QComboBox(container);
+    m_archCombo->setMinimumWidth(120);
+    for (const auto& e: kArchEntries)
+        m_archCombo->addItem(e.label, QVariant::fromValue(e.arch));
+    m_archCombo->setCurrentIndex(2);
+    layout->addWidget(m_archCombo);
+
+    addLabel(tr("Output style:"));
+    m_shellcodeStyle = new QComboBox(container);
+    m_shellcodeStyle->setMinimumWidth(110);
+    for (const auto& e: kStyleEntries)
+        m_shellcodeStyle->addItem(tr(e.label), QVariant::fromValue(e.style));
+    layout->addWidget(m_shellcodeStyle);
+
+    layout->addStretch();
+
+    m_clearBtn = new QPushButton(tr("Clear"), container);
+    m_clearBtn->setCursor(Qt::PointingHandCursor);
+    layout->addWidget(m_clearBtn);
+
+    m_copyBtn = new QPushButton(tr("Copy Result"), container);
+    m_copyBtn->setObjectName("copyResultBtn");
+    m_copyBtn->setCursor(Qt::PointingHandCursor);
+    layout->addWidget(m_copyBtn);
+
+    root->addWidget(container);
+}
+
+void ShellcodeGeneratorDialog::setupEditors(QVBoxLayout* root) {
+    m_mainSplitter = new QSplitter(Qt::Vertical, this);
+    m_mainSplitter->setHandleWidth(1);
+    m_mainSplitter->setChildrenCollapsible(false);
+
+    auto* editorContainer = new QWidget(this);
+    auto* editorLayout = new QHBoxLayout(editorContainer);
+    editorLayout->setContentsMargins(0, 0, 0, 0);
+    editorLayout->setSpacing(1);
+
+    m_asmInput = new CustomCodeEditor(this);
+    m_asmInput->setBuffer(m_asmBuffer);
+    m_asmInput->setFileExt("asm");
+    m_asmInput->setWordWrapEnabled(false);
+
+    m_shellcodeOutput = new CustomCodeEditor(this);
+    m_shellcodeOutput->setBuffer(m_outputBuffer);
+    m_shellcodeOutput->setFileExt("cpp");
+    m_shellcodeOutput->setWordWrapEnabled(true);
+
+    editorLayout->addWidget(m_asmInput, 1);
+    editorLayout->addWidget(m_shellcodeOutput, 1);
+
+    // Error panel
+    m_errorPanel = new QWidget(this);
+    m_errorPanel->setObjectName("errorPanel");
+    m_errorPanel->setMinimumHeight(kErrorPanelMinH);
+    m_errorPanel->setMaximumHeight(kErrorPanelMaxH);
+    m_errorPanel->setVisible(false);
+
+    auto* errorPanelLayout = new QVBoxLayout(m_errorPanel);
+    errorPanelLayout->setContentsMargins(0, 0, 0, 0);
+    errorPanelLayout->setSpacing(0);
+
+    auto* errorTitle = new QLabel(tr("Problems"), m_errorPanel);
+    errorTitle->setObjectName("errorTitle");
+    errorPanelLayout->addWidget(errorTitle);
+
+    m_errorList = new QListWidget(m_errorPanel);
+    m_errorList->setObjectName("errorList");
+    m_errorList->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_errorList->setFocusPolicy(Qt::NoFocus);
+    m_errorList->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    errorPanelLayout->addWidget(m_errorList);
+
+    m_mainSplitter->addWidget(editorContainer);
+    m_mainSplitter->addWidget(m_errorPanel);
+    m_mainSplitter->setStretchFactor(0, 4);
+    m_mainSplitter->setStretchFactor(1, 1);
+
+    root->addWidget(m_mainSplitter, 1);
+}
+
+void ShellcodeGeneratorDialog::setupStatusBar(QVBoxLayout* root) {
+    auto* bar = new QWidget(this);
+    bar->setObjectName("shellcodeStatusBar");
+    bar->setFixedHeight(kStatusBarHeight);
+
+    auto* layout = new QHBoxLayout(bar);
+    layout->setContentsMargins(10, 0, 10, 0);
+
+    m_statusLabel = new QLabel(tr("Ready"), bar);
+    m_statusLabel->setObjectName("statusLabel");
+    layout->addWidget(m_statusLabel);
+
+    layout->addStretch();
+
+    m_archInfoLabel = new QLabel(bar);
+    m_archInfoLabel->setObjectName("archInfoLabel");
+    layout->addWidget(m_archInfoLabel);
+
+    m_byteCountLabel = new QLabel(tr("0 bytes"), bar);
+    m_byteCountLabel->setObjectName("byteCountLabel");
+    layout->addWidget(m_byteCountLabel);
+
+    root->addWidget(bar);
+}
+
+void ShellcodeGeneratorDialog::setupConnections(QTimer* debounce) {
+    connect(m_asmBuffer, &FileDataBuffer::dataChanged,
+            debounce, qOverload<>(&QTimer::start));
+    connect(debounce, &QTimer::timeout,
+            this, &ShellcodeGeneratorDialog::onAssemble);
+
+    connect(m_copyBtn, &QPushButton::clicked, this, &ShellcodeGeneratorDialog::onCopyOutput);
+    connect(m_clearBtn, &QPushButton::clicked, this, &ShellcodeGeneratorDialog::onClear);
+
+    auto onComboChanged = [this](int) {
+        if (m_outputBuffer->size() > 0)
+            onAssemble();
+    };
+    connect(m_shellcodeStyle, qOverload<int>(&QComboBox::currentIndexChanged), this, onComboChanged);
+    connect(m_archCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, onComboChanged);
+
+    connect(m_engine, &ShellcodeEngine::finished,
+            this, &ShellcodeGeneratorDialog::onEngineFinished);
+    connect(m_engine, &ShellcodeEngine::errorOccurred,
+            this, &ShellcodeGeneratorDialog::onEngineError);
+
+    connect(m_errorList, &QListWidget::currentRowChanged,
+            this, &ShellcodeGeneratorDialog::onErrorItemClicked);
+}
+
+// --- Error panel ---
+
+void ShellcodeGeneratorDialog::showErrorPanel(const QList<ShellcodeEngine::AsmError>& errors) {
+    m_errorList->clear();
+
+    for (const auto& e: errors) {
+        const QString text = (e.line > 0)
+                                 ? QString("Line %1:  %2").arg(e.line).arg(e.message)
+                                 : e.message;
+
+        auto* item = new QListWidgetItem(QString("⚠  %1").arg(text), m_errorList);
+        item->setData(Qt::UserRole, e.line);
+        if (e.message.contains("warning", Qt::CaseInsensitive))
+            item->setForeground(QColor("#e3b341"));
+    }
+
+    m_errorPanel->setVisible(true);
+}
+
+void ShellcodeGeneratorDialog::hideErrorPanel() {
+    m_errorPanel->setVisible(false);
+    m_errorList->clear();
+}
+
+// --- Slots ---
+
 void ShellcodeGeneratorDialog::onAssemble() {
-    const QString asmText = m_asmInput->toPlainText().trimmed();
+    const QString asmText = QString::fromUtf8(m_asmBuffer->data()).trimmed();
     if (asmText.isEmpty()) {
-        m_shellcodeOutput->clear();
-        m_byteCountLabel->setText("0 bytes");
+        m_outputBuffer->loadData({});
+        m_byteCountLabel->setText(tr("0 bytes"));
+        hideErrorPanel();
         setStatus(tr("Ready."));
         return;
     }
 
-    const int archIdx = m_archCombo->currentIndex();
-    const QString bits = kArchEntries[archIdx].bits;
+    setStatus(tr("Assembling…"));
 
-    const QString tmpAsm = QDir::tempPath() + "/shellgen_input.asm";
-    const QString tmpBin = QDir::tempPath() + "/shellgen_output.bin";
+    m_engine->assemble(
+        asmText,
+        m_archCombo->currentData().value<ShellcodeEngine::Architecture>(),
+        m_shellcodeStyle->currentData().value<ShellcodeEngine::OutputStyle>());
+}
 
-    {
-        QFile f(tmpAsm);
-        if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            setStatus(tr("Failed to create temp file."), true);
-            return;
-        }
-        QTextStream s(&f);
-        s << "BITS " << bits << "\n" << asmText << "\n";
-    }
+void ShellcodeGeneratorDialog::onEngineFinished(const QString& output, int byteCount) {
+    hideErrorPanel();
+    m_outputBuffer->loadData(output.toUtf8());
+    m_byteCountLabel->setText(tr("%1 bytes").arg(byteCount));
+    m_archInfoLabel->setText(m_archCombo->currentText());
+    setStatus(tr("Assembly successful."));
+}
 
-    const QString nasmExe = findTool("nasm");
-    QProcess proc;
-    proc.start(nasmExe, {"-f", "bin", "-o", tmpBin, tmpAsm});
+void ShellcodeGeneratorDialog::onEngineError(const QList<ShellcodeEngine::AsmError>& errors) {
+    const QString brief = errors.isEmpty()
+                              ? tr("Assembly failed.")
+                              : (errors.first().line > 0
+                                     ? tr("Line %1: %2").arg(errors.first().line).arg(errors.first().message)
+                                     : errors.first().message);
 
-    if (!proc.waitForStarted(3000)) {
-        setStatus(tr("nasm not found. Ensure it is installed and in PATH."), true);
-        QFile::remove(tmpAsm);
+    setStatus(brief, /*isError=*/true);
+    showErrorPanel(errors);
+}
+
+void ShellcodeGeneratorDialog::onErrorItemClicked(int row) {
+    if (row < 0 || !m_errorList->item(row))
         return;
-    }
-    proc.waitForFinished(5000);
-
-    if (proc.exitCode() != 0) {
-        const QString err = QString::fromUtf8(proc.readAllStandardError()).trimmed().replace(tmpAsm, "<input>");
-        setStatus("Error: " + err, true);
-        QFile::remove(tmpAsm);
-        QFile::remove(tmpBin);
-        return;
-    }
-
-    QFile binFile(tmpBin);
-    if (!binFile.open(QIODevice::ReadOnly)) {
-        setStatus(tr("Failed to read nasm output."), true);
-        QFile::remove(tmpAsm);
-        return;
-    }
-
-    const QByteArray raw = binFile.readAll();
-    binFile.close();
-    QFile::remove(tmpAsm);
-    QFile::remove(tmpBin);
-
-    if (raw.isEmpty()) {
-        setStatus(tr("Assembled 0 bytes."), true);
-        return;
-    }
-
-    m_byteCountLabel->setText(tr("%1 bytes").arg(raw.size()));
-
-    const int styleId = m_shellcodeStyle->currentData().toInt();
-    QString output;
-
-    switch (styleId) {
-    case 0:
-        output = generateC(raw, bits);
-        break;
-    case 1:
-        output = generateCpp(raw, bits);
-        break;
-    case 2:
-        output = generateRaw(raw);
-        break;
-    default:
-        output = generateC(raw, bits);
-    }
-
-    m_shellcodeOutput->setPlainText(output);
+    const int line = m_errorList->item(row)->data(Qt::UserRole).toInt();
+    if (line > 0)
+        m_asmInput->goToLine(line);
 }
 
 void ShellcodeGeneratorDialog::onCopyOutput() {
-    const QString text = m_shellcodeOutput->toPlainText();
-    if (!text.isEmpty()) {
-        QGuiApplication::clipboard()->setText(text);
-        setStatus(tr("Copied to clipboard."));
-    }
+    const QByteArray data = m_outputBuffer->data();
+    if (data.isEmpty())
+        return;
+    QGuiApplication::clipboard()->setText(QString::fromUtf8(data));
+    setStatus(tr("Copied to clipboard."));
 }
 
 void ShellcodeGeneratorDialog::onClear() {
-    m_asmInput->clear();
-    m_shellcodeOutput->clear();
-    m_byteCountLabel->setText("0 bytes");
+    m_asmBuffer->loadData({});
+    m_outputBuffer->loadData({});
+    m_byteCountLabel->setText(tr("0 bytes"));
+    m_archInfoLabel->clear();
+    hideErrorPanel();
     setStatus(tr("Ready."));
 }
 
-QList<ShellcodeGeneratorDialog::DisasmEntry> ShellcodeGeneratorDialog::disassemble(const QByteArray &raw, const QString &bits) const {
-    QList<DisasmEntry> result;
-    const QString ndisasmExe = findTool("ndisasm");
-
-    const QString tmpBin = QDir::tempPath() + "/shellgen_disasm.bin";
-    {
-        QFile f(tmpBin);
-        if (!f.open(QIODevice::WriteOnly))
-            return result;
-        f.write(raw);
-    }
-
-    QProcess proc;
-    proc.start(ndisasmExe, {"-b", bits, tmpBin});
-
-    if (!proc.waitForStarted(3000) || !proc.waitForFinished(5000)) {
-        QFile::remove(tmpBin);
-        return result;
-    }
-
-    QFile::remove(tmpBin);
-
-    const QString output = QString::fromUtf8(proc.readAllStandardOutput());
-    const QStringList lines = output.split('\n', Qt::SkipEmptyParts);
-
-    for (const QString &line : lines) {
-        const QStringList parts = line.trimmed().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
-        if (parts.size() < 3)
-            continue;
-
-        bool ok = false;
-        const int offset = parts[0].toInt(&ok, 16);
-        if (!ok)
-            continue;
-
-        const QByteArray rawBytes = QByteArray::fromHex(parts[1].toLatin1());
-        if (rawBytes.isEmpty())
-            continue;
-
-        const QString mnemonic = parts.mid(2).join(' ').toLower();
-        result.append({offset, static_cast<int>(rawBytes.size()), mnemonic});
-    }
-    return result;
-}
-
-QString ShellcodeGeneratorDialog::formatAnnotated(const QByteArray &raw, const QList<DisasmEntry> &entries) {
-    if (!entries.isEmpty()) {
-        int maxByteLength = 0;
-        for (const auto &e : entries) {
-            // calc max block width with bytes for alignment
-            maxByteLength = qMax(maxByteLength, e.size * 6);
-        }
-
-        QString result;
-        for (int i = 0; i < entries.size(); ++i) {
-            const auto &e = entries[i];
-            const bool isLastInstruction = (i + 1 == entries.size());
-
-            QString bytePart;
-            for (int b = 0; b < e.size; ++b) {
-                const uint8_t byte = static_cast<uint8_t>(raw[e.offset + b]);
-                bytePart += QString("0x%1").arg(byte, 2, 16, QChar('0'));
-
-                if (!(isLastInstruction && b + 1 == e.size)) {
-                    bytePart += ", ";
-                }
-            }
-
-            QString comment = (e.offset == 0) ? QString("// %1").arg(e.mnemonic) : QString("// %1 (+0x%2)").arg(e.mnemonic).arg(e.offset, 0, 16);
-
-            // dynamic cacl of spaces for alignment
-            int paddingLen = maxByteLength - bytePart.length() + 2;
-            if (paddingLen < 2)
-                paddingLen = 2;
-
-            result += "    " + bytePart + QString(paddingLen, ' ') + comment + "\n";
-        }
-        return result;
-    }
-
-    // FALLBACK: if NDISASM fails, print raw lines (12 bytes each)
-    QString result;
-    const int cols = 12;
-    for (int i = 0; i < raw.size(); ++i) {
-        if (i % cols == 0)
-            result += "    ";
-        result += QString("0x%1").arg(static_cast<uint8_t>(raw[i]), 2, 16, QChar('0'));
-
-        if (i + 1 < raw.size()) {
-            result += ", ";
-        }
-        if ((i + 1) % cols == 0 && i + 1 < raw.size()) {
-            result += "\n";
-        }
-    }
-    result += "\n";
-    return result;
-}
-
-QString ShellcodeGeneratorDialog::generateC(const QByteArray &raw, const QString &bits) const {
-    const auto entries = disassemble(raw, bits);
-    QString s = tr("unsigned char shellcode[] = {  // %1 bytes\n").arg(raw.size());
-    s += formatAnnotated(raw, entries);
-    s += "};\n";
-    return s;
-}
-
-QString ShellcodeGeneratorDialog::generateCpp(const QByteArray &raw, const QString &bits) const {
-    const auto entries = disassemble(raw, bits);
-    QString s = tr("std::array<std::uint8_t, %1> shellcode = {  // %1 bytes\n").arg(raw.size());
-    s += formatAnnotated(raw, entries);
-    s += "};\n";
-    return s;
-}
-
-QString ShellcodeGeneratorDialog::generateRaw(const QByteArray &raw) const {
-    QString s;
-    for (int i = 0; i < raw.size(); ++i) {
-        s += QString("%1").arg(static_cast<uint8_t>(raw[i]), 2, 16, QChar('0'));
-        if ((i + 1) % 16 == 0)
-            s += "\n";
-        else if (i + 1 < raw.size())
-            s += " ";
-    }
-    return s;
-}
-
-void ShellcodeGeneratorDialog::setStatus(const QString &msg, bool error) {
+void ShellcodeGeneratorDialog::setStatus(const QString& msg, bool isError) {
     m_statusLabel->setText(msg);
-    m_statusLabel->setStyleSheet(error ? "color: #dc3545; font-size: 11px;" : "color: gray; font-size: 11px;");
+    m_statusLabel->setProperty("error", isError);
+    m_statusLabel->style()->unpolish(m_statusLabel);
+    m_statusLabel->style()->polish(m_statusLabel);
 
-    if (error) {
+    if (isError)
         QApplication::beep();
-    }
 }
 
 bool ShellcodeGeneratorDialog::checkDependencies() {
-    const QString nasmPath = findTool("nasm");
-    const QString ndisasmPath = findTool("ndisasm");
+    const QStringList missing = m_engine->checkDependencies();
+    if (missing.isEmpty())
+        return true;
 
-    auto isAvailable = [](const QString &path) { return !QStandardPaths::findExecutable(QFileInfo(path).fileName()).isEmpty() || QFile::exists(path); };
-
-    QStringList missing;
-    if (!isAvailable(nasmPath))
-        missing << "nasm (assembler)";
-    if (!isAvailable(ndisasmPath))
-        missing << "ndisasm (disassembler)";
-
-    if (!missing.isEmpty()) {
-        QMessageBox::warning(this,
-            tr("Missing dependencies"),
-            tr("The following tools were not found on your system:\n\n"
-            " - %1\n\n"
-            "Please install them or add their location to PATH.\n\n"
-            "Download: https://www.nasm.us/pub/nasm/releasebuilds/").arg(missing.join("\n - ")));
-        return false;
-    }
-    return true;
+    QMessageBox::warning(
+        this,
+        tr("Missing dependencies"),
+        tr("The following tools were not found:\n\n - %1\n\n"
+           "Install them or add their location to PATH.\n\n"
+           "Download: https://www.nasm.us/pub/nasm/releasebuilds/")
+            .arg(missing.join("\n - ")));
+    return false;
 }

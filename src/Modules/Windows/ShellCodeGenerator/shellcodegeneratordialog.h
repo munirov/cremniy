@@ -1,51 +1,59 @@
-#ifndef SHELLCODEGENERATORDIALOG_H
-#define SHELLCODEGENERATORDIALOG_H
+#pragma once
 
 #include "core/modules/WindowBase.h"
-#include <QComboBox>
-#include <QLabel>
-#include <QPushButton>
-#include <QTextEdit>
+#include "shellcodeengine.h"
+
+class QComboBox;
+class QLabel;
+class QPushButton;
+class QVBoxLayout;
+class QListWidget;
+class QSplitter;
+class CustomCodeEditor;
+class FileDataBuffer;
 
 class ShellcodeGeneratorDialog : public WindowBase {
     Q_OBJECT
-  public:
-    explicit ShellcodeGeneratorDialog(QWidget *parent = nullptr);
 
-  private slots:
+public:
+    explicit ShellcodeGeneratorDialog(QWidget* parent = nullptr);
+    ~ShellcodeGeneratorDialog() override;
+
+private slots:
     void onAssemble();
     void onCopyOutput();
     void onClear();
+    void onEngineFinished(const QString& output, int byteCount);
+    void onEngineError(const QList<ShellcodeEngine::AsmError>& errors);
+    void onErrorItemClicked(int row);
 
-  private:
-    struct DisasmEntry {
-        int offset;
-        int size;
-        QString mnemonic;
-        DisasmEntry(int o, int s, const QString &m) : offset(o), size(s), mnemonic(m) {}
-    };
+private:
+    void setStatus(const QString& msg, bool isError = false);
+    [[nodiscard]] bool checkDependencies();
 
-    QList<DisasmEntry> disassemble(const QByteArray &raw, const QString &bits) const;
+    void setupToolbar(QVBoxLayout* root);
+    void setupEditors(QVBoxLayout* root);
+    void setupStatusBar(QVBoxLayout* root);
+    void setupConnections(QTimer* debounce);
 
-    static QString formatAnnotated(const QByteArray &raw, const QList<DisasmEntry> &entries);
+    void showErrorPanel(const QList<ShellcodeEngine::AsmError>& errors);
+    void hideErrorPanel();
 
-    QString generateC(const QByteArray &raw, const QString &bits) const;
-    QString generateCpp(const QByteArray &raw, const QString &bits) const;
-    QString generateRaw(const QByteArray &raw) const;
+    CustomCodeEditor* m_asmInput = nullptr;
+    CustomCodeEditor* m_shellcodeOutput = nullptr;
+    QListWidget* m_errorList = nullptr;
+    QWidget* m_errorPanel = nullptr;
+    QSplitter* m_mainSplitter = nullptr;
 
-    void setStatus(const QString &msg, bool error = false);
+    QComboBox* m_archCombo = nullptr;
+    QComboBox* m_shellcodeStyle = nullptr;
+    QPushButton* m_copyBtn = nullptr;
+    QPushButton* m_clearBtn = nullptr;
+    QLabel* m_statusLabel = nullptr;
+    QLabel* m_byteCountLabel = nullptr;
+    QLabel* m_archInfoLabel = nullptr;
 
-    static QString findTool(const QString &name);
-    bool checkDependencies();
-
-    QTextEdit *m_asmInput = nullptr;
-    QTextEdit *m_shellcodeOutput = nullptr;
-    QComboBox *m_shellcodeStyle = nullptr;
-    QComboBox *m_archCombo = nullptr;
-    QPushButton *m_copyBtn = nullptr;
-    QPushButton *m_clearBtn = nullptr;
-    QLabel *m_statusLabel = nullptr;
-    QLabel *m_byteCountLabel = nullptr;
+    FileDataBuffer* m_asmBuffer = nullptr;
+    FileDataBuffer* m_outputBuffer = nullptr;
+    ShellcodeEngine* m_engine = nullptr;
 };
-
-#endif // SHELLCODEGENERATORDIALOG_H
