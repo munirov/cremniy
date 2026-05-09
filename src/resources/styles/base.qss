@@ -1,6 +1,6 @@
 
 QWidget {
-    font-family: "Segoe UI";
+    font-family: "Segoe UI", "Consolas", monospace;
     font-size: 12px;
 }
 
