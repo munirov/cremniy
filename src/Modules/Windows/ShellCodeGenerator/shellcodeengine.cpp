@@ -128,7 +128,9 @@ QList<ShellcodeEngine::AsmError> ShellcodeEngine::parseErrors(const QString& std
     for (const QString& line: stderrText.split('\n', Qt::SkipEmptyParts)) {
         const auto m = kErrRe.match(line);
         if (m.hasMatch()) {
-            result.append({m.captured(1).toInt(), m.captured(2).trimmed()});
+            const int lineNum = m.captured(1).toInt();
+            // Subtract 1 because we prepend "BITS XX\n" in assemble()
+            result.append({lineNum - 1, m.captured(2).trimmed()});
             anyParsed = true;
         }
     }
