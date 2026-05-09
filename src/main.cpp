@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
     qputenv("QT_QPA_PLATFORMTHEME", "generic");
     #endif
     QApplication a(argc, argv);
-    QCoreApplication::setOrganizationName("Munirov");
     LanguageManager::instance().loadUserDefaultLocale();
 
     QCoreApplication::setOrganizationName("Munirov");
@@ -47,6 +46,7 @@ int main(int argc, char *argv[])
 
     // Style
     QApplication::setStyle("Fusion");
+    QApplication::setFont(QApplication::font());
 
     QFile baseStyleFile(":/styles/base.qss");
     if (!baseStyleFile.open(QFile::ReadOnly)) {
