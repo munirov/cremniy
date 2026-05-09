@@ -4,6 +4,7 @@
 #include <QDirIterator>
 #include <QDebug>
 #include <QResource>
+#include <QFontDatabase>
 
 #include "app/WelcomeWindow/welcomeform.h"
 #include "core/locale/LanguageManager.h"
@@ -19,6 +20,16 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");
     a.setWindowIcon(QIcon(":/icons/icon.svg"));
+
+    // - - Fonts - -
+
+    int jbFontRegId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Regular.ttf");
+    int jbFontBoldId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Bold.ttf");
+    int jbFontItalId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Italic.ttf");
+
+    QString jbFontFamily = QFontDatabase::applicationFontFamilies(jbFontRegId).at(0);
+
+    qDebug() << jbFontFamily;
 
     // - - Themes - -
 
@@ -46,7 +57,6 @@ int main(int argc, char *argv[])
 
     // Style
     QApplication::setStyle("Fusion");
-    QApplication::setFont(QApplication::font());
 
     QFile baseStyleFile(":/styles/base.qss");
     if (!baseStyleFile.open(QFile::ReadOnly)) {
