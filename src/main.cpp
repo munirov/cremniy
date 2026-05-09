@@ -46,6 +46,8 @@ int main(int argc, char *argv[])
     qDebug() << "====================";
 
     // Style
+    QApplication::setStyle("Fusion");
+
     QFile baseStyleFile(":/styles/base.qss");
     if (!baseStyleFile.open(QFile::ReadOnly)) {
         qWarning() << "Failed to open the baseStyle file: " << baseStyleFile.errorString();
