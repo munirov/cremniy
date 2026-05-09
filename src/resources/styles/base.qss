@@ -5,6 +5,7 @@ QWidget {
 }
 
 QHexView {
+    font-family: "Consolas", monospace;
     font-size: 16px;
 }
 
