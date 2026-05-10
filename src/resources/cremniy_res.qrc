@@ -8,5 +8,8 @@
         <file>icons/icon.svg</file>
         <file>styles/base.qss</file>
         <file>styles/dark.qss</file>
+        <file>fonts/JetBrainsMono-Italic.ttf</file>
+        <file>fonts/JetBrainsMono-Regular.ttf</file>
+        <file>fonts/JetBrainsMono-Bold.ttf</file>
     </qresource>
 </RCC>

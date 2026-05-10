@@ -4,6 +4,7 @@
 #include <QDirIterator>
 #include <QImageReader>
 #include <QResource>
+#include <QFontDatabase>
 
 #include "app/WelcomeWindow/welcomeform.h"
 #include "core/locale/LanguageManager.h"
@@ -19,6 +20,16 @@ int main(int argc, char* argv[]) {
     LanguageManager::instance().loadUserDefaultLocale();
 
     a.setWindowIcon(QIcon(":/icons/icon.svg"));
+
+    // - - Fonts - -
+
+    int jbFontRegId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Regular.ttf");
+    int jbFontBoldId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Bold.ttf");
+    int jbFontItalId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Italic.ttf");
+
+    QString jbFontFamily = QFontDatabase::applicationFontFamilies(jbFontRegId).at(0);
+
+    qDebug() << jbFontFamily;
 
     // - - Themes - -
 
@@ -44,6 +55,8 @@ int main(int argc, char* argv[]) {
     qDebug() << "====================";
 
     // Style
+    QApplication::setStyle("Fusion");
+
     QFile baseStyleFile(":/styles/base.qss");
     if (!baseStyleFile.open(QFile::ReadOnly)) {
         qWarning() << "Failed to open the baseStyle file: " << baseStyleFile.errorString();

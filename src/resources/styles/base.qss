@@ -1,10 +1,11 @@
 
 QWidget {
-    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-family: "Segoe UI", "Consolas", monospace;
     font-size: 12px;
 }
 
 QHexView {
+    font-family: "Consolas", monospace;
     font-size: 16px;
 }
 

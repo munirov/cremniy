@@ -1,0 +1,29 @@
+name: Create tag push on main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+
+  workflow_dispatch:
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump tag
+        uses: anothrNick/github-tag-action@1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TAG_ADD_TOKEN }}
+          DEFAULT_BUMP: patch
+          TAG_PREFIX: v

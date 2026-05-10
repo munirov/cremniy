@@ -254,6 +254,21 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     background: none;
 }
 
+QScrollBar::groove:vertical {
+    background: #1f1f1f;
+}
+
+QScrollBar::groove:horizontal {
+    background: #1f1f1f;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: #1f1f1f;
+}
+
 QWidget#searchWidget {
     background-color: #2b2b2b;
     border-top: 1px solid #333333;
