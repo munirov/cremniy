@@ -1,0 +1,122 @@
+WelcomeForm {
+    background: #1e1e1e;
+}
+
+#CardsScrollArea,
+#CardsScrollArea > QWidget > QWidget {
+    background: transparent;
+    border: none;
+}
+
+QScrollBar:vertical {
+    background: #1a1a1a;
+    width: 5px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #3a3a3a;
+    border-radius: 2px;
+    min-height: 24px;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+#ProjectCard {
+    background: #232323;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+#ProjectCard:hover {
+    background: #292929;
+}
+
+#ProjectCardBadge {
+    background: #3a3a3a;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 10px;
+    border-radius: 5px;
+}
+
+#ProjectCardBadge[language="C"] {
+    background: #4a6fa5;
+}
+
+#ProjectCardBadge[language="C++"] {
+    background: #00599c;
+}
+
+#ProjectCardBadge[language="ASM"] {
+    background: #8b0000;
+}
+
+#ProjectCardBadge[language="C + ASM"] {
+    background: #6a0dad;
+}
+
+#ProjectCardBadge[language="Custom"] {
+    background: #2e7d32;
+}
+
+#ProjectCardName {
+    color: #e8e8e8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#ProjectCardPath {
+    color: #808080;
+    font-size: 11px;
+}
+
+#ProjectCardLastOpened {
+    color: #5f5f5f;
+    font-size: 10px;
+}
+
+#WelcomeToolbar {
+    background: #141414;
+    border-top: 1px solid #2a2a2a;
+}
+
+#CreateProjectPage {
+    background: #1e1e1e;
+}
+
+#CreateProjectPage QLabel {
+    color: #aaa;
+    font-size: 12px;
+}
+
+#CreateProjectPage QLabel[error="true"] {
+    color: #cf4444;
+}
+
+#CreateProjectPage QLineEdit,
+#CreateProjectPage QComboBox {
+    background: #252525;
+    color: #e0e0e0;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+
+#CreateProjectPage QLineEdit:focus,
+#CreateProjectPage QComboBox:focus {
+    border-color: #1e4a72;
+}
+
+#CreateProjectPage QComboBox::drop-down {
+    border: none;
+}
+
+#CreateProjectInfoLabel {
+    color: #cf4444;
+    font-size: 12px;
+    font-weight: bold;
+}

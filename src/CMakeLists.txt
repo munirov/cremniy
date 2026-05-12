@@ -22,8 +22,14 @@ qt_add_executable(${PROJECT_NAME}
     # App
     app/IDEWindow/idewindow.cpp
     app/IDEWindow/idewindow.h
-    app/WelcomeWindow/welcomeform.cpp
-    app/WelcomeWindow/welcomeform.h
+    app/WelcomeWindow/WelcomeForm/welcome_form.cpp
+    app/WelcomeWindow/WelcomeForm/welcome_form.h
+    app/WelcomeWindow/RecentProjectsPage/recent_projects_page.cpp
+    app/WelcomeWindow/RecentProjectsPage/recent_projects_page.h
+    app/WelcomeWindow/CreateProjectPage/create_project_page.cpp
+    app/WelcomeWindow/CreateProjectPage/create_project_page.h
+    app/WelcomeWindow/ProjectCard/project_card.cpp
+    app/WelcomeWindow/ProjectCard/project_card.h
 
     # Dialogs
     dialogs/filecreatedialog.cpp
@@ -56,8 +62,8 @@ qt_add_executable(${PROJECT_NAME}
     core/file/filemanager.cpp
     core/file/filemanager.h
 
-    core/project/projectshistorymanager.cpp
-    core/project/projectshistorymanager.h
+    core/project/projects_history_manager.cpp
+    core/project/projects_history_manager.h
 
     core/settings/appsettings.cpp
     core/settings/appsettings.h
@@ -96,6 +102,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/ui
     ${CMAKE_CURRENT_SOURCE_DIR}/ToolsTabWidget
     ${CMAKE_CURRENT_SOURCE_DIR}/FilesTabWidget
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/WelcomeWindow/WelcomeForm
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/WelcomeWindow/RecentProjectsPage
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/WelcomeWindow/CreateProjectPage
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/WelcomeWindow/ProjectCard
 )
 
 file(GLOB_RECURSE PHOICONS_FILES 

@@ -6,7 +6,7 @@
 #include <QResource>
 #include <QFontDatabase>
 
-#include "app/WelcomeWindow/welcomeform.h"
+#include "app/WelcomeWindow/WelcomeForm/welcome_form.h"
 #include "core/locale/LanguageManager.h"
 
 int main(int argc, char *argv[])
