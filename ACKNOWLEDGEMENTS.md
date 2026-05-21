@@ -69,3 +69,5 @@ NeXxRT
 Vordeferst_company
 
 Тапки в кедах
+
+[AlexseyPip](https://github.com/AlexseyPip)
