@@ -1,0 +1,154 @@
+.treeRoot {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+}
+
+.treeList,
+.nestedList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.treeItem {
+  margin: 0;
+}
+
+.stateBox {
+  margin: 0;
+  padding: 0.25rem 0;
+  opacity: 0.85;
+}
+
+.stateLine {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+}
+
+.stateHint,
+.stateDetail {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  opacity: 0.75;
+}
+
+.dirBlock {
+  width: 100%;
+}
+
+.dirRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.2rem 0.25rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.dirRow:hover {
+  background-color: var(--color-hover-surface);
+}
+
+.chevron {
+  flex-shrink: 0;
+  width: 0.9rem;
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
+.dirName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dirBusy {
+  opacity: 0.7;
+}
+
+.leafButton {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.2rem 0.25rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+}
+
+/* Qt parity: QTreeView::item:hover:!selected -> #333333. */
+.leafButton:not(.leafButtonActive):hover {
+  background-color: var(--color-hover-surface);
+}
+
+/* Qt parity: QTreeView::item:selected -> #262626 with white text. */
+.leafButtonActive,
+.leafButtonActive:hover {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+}
+
+.leafIcon {
+  flex-shrink: 0;
+  width: 0.9rem;
+}
+
+.leafName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.childError {
+  margin: 0.15rem 0 0.35rem;
+  font-size: calc(var(--font-size-base) * 0.92);
+  color: inherit;
+  opacity: 0.85;
+}
+
+.ctxMenu {
+  position: fixed;
+  z-index: 50;
+  min-width: 9rem;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-pane);
+  border-radius: 3px;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.25);
+}
+
+.ctxMenuItem {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0.65rem;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ctxMenuItem:hover {
+  background: var(--color-bg-base);
+}

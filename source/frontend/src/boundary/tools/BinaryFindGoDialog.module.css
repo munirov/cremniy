@@ -1,0 +1,115 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.panel {
+  min-width: 22rem;
+  max-width: 32rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border-pane);
+  border-radius: 4px;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.fieldset {
+  margin: 0 0 0.85rem;
+  padding: 0;
+  border: none;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.label {
+  flex: 0 0 4rem;
+  font-size: 0.85rem;
+  opacity: 0.88;
+}
+
+.input,
+.inputWide {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 3px;
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+}
+
+.radixRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-left: 4.5rem;
+}
+
+.radioLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btnRowLeft {
+  display: flex;
+  margin-left: 4.5rem;
+}
+
+.btn,
+.btnPrimary {
+  padding: 0.35rem 0.65rem;
+  border-radius: 3px;
+  border: 1px solid var(--color-border-muted);
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.btnPrimary {
+  background: var(--color-bg-elevated, var(--color-bg-base));
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.status {
+  min-height: 1.25rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-error, #c44);
+}

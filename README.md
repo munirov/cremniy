@@ -1,10 +1,9 @@
 <div align="center">
 
-<img src="docs/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
+<img src="documentation/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
 
 <br>
 <h3>Cremniy</h3>
-<h6>All tools for low-level development are combined and linked in a single application — write code, edit bytes, and analyze binaries without extra windows</h6>
 
 [![License](https://img.shields.io/github/license/igmunv/cremniy?color=orange&style=flat-square)](LICENSE)
 [![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
@@ -13,20 +12,28 @@
 [![Tauri](https://img.shields.io/badge/Tauri-2-24C8D8?style=flat-square&logo=tauri)](https://tauri.app/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev/)
 
-English • [Русский](README_ru.md)
+**Language / Язык:** use one section below (only one stays open in modern browsers).  
+**English** — open the first block · **Русский** — откройте второй блок.
 
 </div>
 
 <br>
 
+<details name="readme-lang" open>
+<summary><strong>English</strong></summary>
+
+<h6 align="center">All tools for low-level development are combined and linked in a single application — write code, edit bytes, and analyze binaries without extra windows</h6>
+
+<br>
+
 ## Desktop app (Tauri + React)
 
-The in-repo desktop product is **Tauri 2 + React + TypeScript** under [`frontend/`](frontend/). See [ADR-001](ai_docs/develop/architecture/ADR-001-tauri-desktop-primary.md) and [ADR-002](ai_docs/develop/architecture/ADR-002-qt-sources-removed.md).
+The in-repo desktop product is **Tauri 2 + React + TypeScript** under [`source/frontend/`](source/frontend/). See [ADR-001](ai_docs/develop/architecture/ADR-001-tauri-desktop-primary.md) and [ADR-002](ai_docs/develop/architecture/ADR-002-qt-sources-removed.md).
 
 **Development:**
 
 ```bash
-cd frontend
+cd source/frontend
 npm install
 npm run dev
 npm run tauri:dev
@@ -35,13 +42,27 @@ npm run tauri:dev
 **Production build (local):**
 
 ```bash
-cd frontend
+cd source/frontend
 npm run tauri:build
 ```
 
-Installers and bundles are written to `frontend/src-tauri/target/release/bundle/`.
+Installers and bundles are written to `source/backend/target/release/bundle/`.
 
 The legacy **Qt/C++** IDE has been **removed** from this repository. The last revision that still contained the `src/` tree is tagged **`pre-qt-removal-2026-05-01`** (clone and `git checkout` that tag if you need the old sources for reference).
+
+## Repository layout
+
+| Path | Role |
+|------|------|
+| [`source/frontend/`](source/frontend/) | Tauri + React app (BMFP inside `source/frontend/src/`). |
+| [`source/backend/`](source/backend/) | Rust Tauri crate — native shell (IPC, window, plugins). |
+| [`documentation/`](documentation/) | User & contributor documentation (EN/RU); [architecture index](documentation/architecture/README.md). |
+| [`ai_docs/`](ai_docs/) | ADRs, audits, migration notes. |
+| [`tools/`](tools/) | Repository tooling (e.g. scripts under `tools/scripts/`). |
+| [`tests/`](tests/) | Repository-level tests and orchestration (package tests stay next to each app). |
+| [`.github/workflows/`](.github/workflows/) | CI and release. |
+
+**Top-level meta-model:** [BMAP — Base Multi Application Platform](documentation/architecture/BMAP.md) (how BMFP and optional BMSP-style services fit in one repo).
 
 ---
 
@@ -95,3 +116,107 @@ For guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 ## License
 
 Distributed under the terms described in [LICENSE](LICENSE).
+
+</details>
+
+<details name="readme-lang">
+<summary><strong>Русский</strong></summary>
+
+<h6 align="center">Все инструменты для низкоуровневой разработки объединены и связаны в одном приложении — пишите код, редактируйте байты и анализируйте бинарники без лишних окон</h6>
+
+<br>
+
+## Десктопное приложение (Tauri + React)
+
+В репозитории официальная десктопная сборка — **Tauri 2 + React + TypeScript** в каталоге [`source/frontend/`](source/frontend/). См. [ADR-001](ai_docs/develop/architecture/ADR-001-tauri-desktop-primary.md) и [ADR-002](ai_docs/develop/architecture/ADR-002-qt-sources-removed.md).
+
+**Разработка:**
+
+```bash
+cd source/frontend
+npm install
+npm run dev
+npm run tauri:dev
+```
+
+**Продакшен-сборка локально:**
+
+```bash
+cd source/frontend
+npm run tauri:build
+```
+
+Установщики и бандлы — в `source/backend/target/release/bundle/`.
+
+Историческое приложение на **Qt/C++** из каталога **`src/` удалено** из этого репозитория. Последняя ревизия с деревом `src/` помечена тегом **`pre-qt-removal-2026-05-01`** (`git checkout` по тегу — если нужны исходники для справки).
+
+> **Важно:** Qt отвечал не только за «внешний вид», а за весь старый стек десктопа (виджеты, окна, интеграция инструментов). Текущая кодовая база переносит функциональность в веб-UI и Rust-оболочку Tauri.
+
+## Структура репозитория
+
+| Путь | Роль |
+|------|------|
+| [`source/frontend/`](source/frontend/) | Приложение Tauri + React (BMFP внутри `source/frontend/src/`). |
+| [`source/backend/`](source/backend/) | Крейт Tauri на Rust — нативная оболочка (IPC, окно, плагины). |
+| [`documentation/`](documentation/) | Документация (EN/RU); [индекс архитектуры](documentation/architecture/README.md). |
+| [`ai_docs/`](ai_docs/) | ADR, аудиты, миграции. |
+| [`tools/`](tools/) | Вспомогательные скрипты и утилиты репозитория (`tools/scripts/` и др.). |
+| [`tests/`](tests/) | Тесты уровня репозитория; тесты пакетов — рядом с приложением. |
+| [`.github/workflows/`](.github/workflows/) | CI и релиз. |
+
+**Мета-модель репозитория:** [BMAP](documentation/architecture/BMAP.md) — как BMFP и возможный в будущем BMSP-сервис уживаются в одном репо.
+
+---
+
+## Что такое Cremniy?
+
+**Cremniy** — интегрированная среда для низкоуровневой разработки. Вместо того чтобы держать HEX-редактор в одном окне, дизассемблер в другом, а редактор кода в третьем — всё это объединено и связано в одном удобном приложении.
+
+**Ориентирован на:**
+
+- 🛠 Разработчиков системного ПО
+- 🔍 Reverse-инженеров
+- 🔐 Специалистов по информационной безопасности
+- 📡 Разработчиков embedded-систем
+
+## Почему Cremniy?
+
+Низкоуровневая разработка сегодня — это редактор кода, HEX-редактор, дизассемблер, отладчик, открытые **в разных окнах**.
+
+Вы постоянно **переключаетесь** между разными окнами, и при этом инструменты **не связаны** между собой.
+
+#### **Cremniy решает это!**
+- 🔘 Всё находится в одном месте
+- 🔗 Всё связано между собой
+- 💻 Единый workflow
+
+![out](https://github.com/user-attachments/assets/f5e9c520-fb31-45cc-ab11-17eff66d7069)
+
+## Возможности
+
+### Доступно сейчас
+
+Ранние сборки **Tauri** закрывают оболочку, сценарий воркспейса и визуальный паритет стартового/IDE-хрома. Полный паритет инструментов (HEX, дизассемблер, терминал и т.д.) — в [ROADMAP.md](ROADMAP.md) и `ai_docs/`.
+
+### В планах
+
+- Полноценный **HEX-редактор** и просмотр бинарных форматов в UI
+- UI **дизассемблера** поверх Rust-контракта subprocess
+- **Отладчик** — пошаговое выполнение, просмотр регистров и памяти
+- **Визуализация памяти** — наглядные карты расположения и выделения памяти
+
+## Участие в разработке
+
+Вклад в проект **приветствуется**.
+
+Будь то исправление ошибок, новая функциональность или улучшение документации — открывайте issue или отправляйте pull request.
+
+Все участники указываются в [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) и упоминаются в видео на [YouTube-канале](https://www.youtube.com/@igmunv).
+
+Подробнее — в [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Лицензия
+
+Распространяется на условиях, описанных в [LICENSE](LICENSE).
+
+</details>

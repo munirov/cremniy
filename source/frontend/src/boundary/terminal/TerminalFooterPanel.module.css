@@ -1,0 +1,92 @@
+.terminalPanel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.status {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  opacity: 0.75;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interruptButton {
+  flex-shrink: 0;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 0.25rem;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+.interruptButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.output {
+  flex: 1;
+  min-height: 4rem;
+  margin: 0;
+  padding: 0.5rem;
+  overflow: auto;
+  border: 1px solid var(--color-border-muted);
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+}
+
+.errorMessage {
+  margin: 0;
+  color: var(--color-danger, #ff6b6b);
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prompt {
+  flex-shrink: 0;
+  color: var(--color-text-primary);
+  opacity: 0.75;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 0.25rem;
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+.sendButton {
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 0.25rem;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font: inherit;
+}

@@ -1,0 +1,144 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.dialog {
+  min-width: 22rem;
+  max-width: 32rem;
+  max-height: min(42rem, calc(100vh - 2rem));
+  overflow: auto;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border-pane);
+  border-radius: 4px;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.35);
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.field {
+  margin-bottom: 0.85rem;
+}
+
+.section {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-border-muted);
+}
+
+.sectionTitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 3px;
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+}
+
+.inlineControl {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.inlineControl .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.helpText {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.actionsSpacer {
+  flex: 1;
+}
+
+.btn {
+  padding: 0.35rem 0.75rem;
+  border-radius: 3px;
+  border: 1px solid var(--color-border-muted);
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.btnPrimary {
+  padding: 0.35rem 0.75rem;
+  border-radius: 3px;
+  border: 1px solid var(--color-border-pane);
+  background: var(--color-menubar-item-selected);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.error {
+  margin: 0.5rem 0 0;
+  color: #ef4444;
+  font-size: 0.85rem;
+}
+
+.success {
+  margin: 0.35rem 0 0;
+  color: #22c55e;
+  font-size: 0.85rem;
+}

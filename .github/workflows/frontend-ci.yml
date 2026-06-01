@@ -4,15 +4,15 @@ on:
   push:
     branches: [main, dev]
     paths:
-      - 'frontend/**'
+      - 'source/**'
       - '.github/workflows/frontend-ci.yml'
-      - 'scripts/**'
+      - 'tools/**'
   pull_request:
     branches: [main, dev]
     paths:
-      - 'frontend/**'
+      - 'source/**'
       - '.github/workflows/frontend-ci.yml'
-      - 'scripts/**'
+      - 'tools/**'
 
 jobs:
   frontend:
@@ -27,10 +27,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: source/frontend/package-lock.json
 
       - name: Install, test, and build frontend
-        working-directory: frontend
+        working-directory: source/frontend
         run: |
           npm ci
           npm test
@@ -49,6 +49,6 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cargo check (src-tauri)
-        working-directory: frontend/src-tauri
+      - name: Cargo check (Tauri backend crate)
+        working-directory: source/backend
         run: cargo check

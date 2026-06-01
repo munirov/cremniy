@@ -135,3 +135,9 @@ CMakeDetermineCompilerABI_CXX.bin
 CMakeDetermineCompilerABI_C.bin
 TargetDirectories.txt
 ParseCache.txt
+
+# Local-only (credentials, machine-specific); not part of the product tree
+.secrets/
+
+# Agent/orchestration scratch (not part of the product tree)
+.cursor/
