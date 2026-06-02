@@ -22,7 +22,7 @@ type RunResult = Awaited<ReturnType<typeof runWorkspaceCommand>>;
 /**
  * Registers the `fs.*` / `process.*` commands. Mounted in the IDE shell to share
  * its workspace/session context; renders nothing. Args are explicit (no prompts).
- * Docs: documentation/EN/agent_control_surface.md
+ * Docs: documentation/architecture/AGENT_CONTROL.md
  */
 export function AgentWorkspaceCommands() {
   const workspaceRoot = useWorkspaceRoot();

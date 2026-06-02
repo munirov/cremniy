@@ -196,7 +196,7 @@ export function WelcomeView() {
   );
 
   // welcome.* commands + `ui` state for window.cremniy.
-  // Docs: documentation/EN/agent_control_surface.md
+  // Docs: documentation/architecture/AGENT_CONTROL.md
   const agentWelcomeRef = useRef({ page, recentPaths, openPathAtIndex, handlePickFolder, setPage });
   useEffect(() => {
     agentWelcomeRef.current = { page, recentPaths, openPathAtIndex, handlePickFolder, setPage };

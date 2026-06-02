@@ -1,5 +1,5 @@
 // Scriptable control layer (`window.cremniy`): registry + API.
-// Docs: documentation/EN/agent_control_surface.md
+// Docs: documentation/architecture/AGENT_CONTROL.md
 
 export type AgentArgs = Record<string, unknown>;
 

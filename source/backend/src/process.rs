@@ -2,7 +2,7 @@
 //!
 //! Hardening: cwd must resolve inside the workspace root; explicit argv (no
 //! shell); wall-clock timeout via watchdog; per-stream output cap.
-//! Docs: documentation/EN/agent_control_surface.md (Process runner safety).
+//! Docs: documentation/architecture/AGENT_CONTROL.md (Safety section).
 
 use std::io::Read;
 use std::path::{Path, PathBuf};

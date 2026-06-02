@@ -1,82 +1,78 @@
-# BMAP — Base Multi Application Platform (Cremniy)
+# BMAP — Cremniy
 
-**Scope:** This document defines the **top-level** organization of the **Cremniy** repository: how a **single deliverable** (desktop `.exe` / `.app` / installer) is produced from a **monorepo** that combines a web UI, native shell, docs, and tooling.
+Архитектура приложения целиком: корни репозитория и способ их сборки в один продукт.
+Внутреннее устройство фронта — в [BMFP](./BMFP.md); бэка — в [BMBP](./BMBP.md) (в Cremniy
+применяется как ментальная карта для нативной оболочки).
 
-It sits **above**:
+Cremniy поставляется как **один процесс** — десктоп-приложение на Tauri. UI в WebView, нативная
+часть на Rust. Отдельного HTTP-API в репозитории нет.
 
-- **BMFP** — frontend layering *inside* [`source/frontend/`](../../source/frontend/README.md) (React / TypeScript).
-- **BMSP** — classic *API service* layering (API → Core → Infrastructure). That pattern applies **only when** a separate HTTP (or similar) backend exists. For the current product, the “server-shaped” concerns are folded into **Native shell** (Rust) instead.
+## Структура репозитория
 
----
+```
+cremniy/
+├── source/
+│   ├── frontend/                # BMFP-фронт: Vite + React + TS
+│   └── backend/                 # нативная оболочка: Rust-крейт Tauri
+├── documentation/               # дока продукта (EN/RU + architecture/)
+├── ai_docs/                     # ADR, аудиты, миграции, внутренние планы
+├── tools/                       # автоматизация репозитория
+├── tests/                       # репо-уровневые / E2E (юнит-тесты — рядом с кодом)
+└── screenshots/                 # ассеты для README/доков
+```
 
-## Why BMAP exists
+| Корень | Что внутри |
+|---|---|
+| `source/frontend/` | UI: страницы, hex, дизассемблер, редактор, терминал, настройки. Слои — [BMFP](./BMFP.md). |
+| `source/backend/` | Нативная оболочка Tauri: окно, IPC-команды, доступ к ФС, запуск процессов. |
+| `documentation/` | Дока продукта и архитектуры. |
+| `ai_docs/` | ADR (`develop/architecture/ADR-*`), аудиты, миграции. |
 
-Many teams are used to **frontend on one host** and **backend on another**. Here, **one process** (Tauri) hosts the UI in a WebView and exposes **commands/events** from Rust. The repo still benefits from **clear roots** (`source/frontend/`, `source/backend/`, `documentation/`, `tools/`) and **consistent mental models** (BMFP in TS, disciplined Rust modules), without pretending there is always a second deployable called “API”.
+## Нативная оболочка
 
----
+`source/backend/` — не HTTP-сервис, а нативный Tauri-крейт. Роль «бэка» свёрнута в него:
 
-## Glossary
+- **IPC** (`#[tauri::command]`) — тонкие хендлеры, валидация на границе.
+- **Логика** — чистые функции на Rust (парсеры, оркестрация процессов) либо `domain` фронта для
+  UI-DTO. Один источник истины на тему.
+- **ОС/ФС** — за обёртками (`process.rs` и т.п.); на фронте — `infrastructure/tauri/`.
 
-| Name | Stands for | Where it applies | Role |
-|------|------------|------------------|------|
-| **BMAP** | Base Multi Application Platform | **Whole repo** | Top-level layout, deliverable boundaries, what “an app” means here. |
-| **BMFP** | *(your)* Base Multi **Front** Platform | **`source/frontend/src/**`** | `boundary` / `domain` / `shared` / `infrastructure`; UI + typed shells, not raw `invoke` in widgets. |
-| **BMSP** | Base Multi **Service** Platform | **Future** local/remote service **or** mental map for shell | API → Core → Infrastructure **when** you have a real service. Not mandatory for v1 desktop. |
+Когда появится настоящий бэк-сервис (локальный демон, удалённый API) — он ляжет отдельным пакетом,
+например `source/services/<service>/`. Текущая инвариант: в репозитории один деплоймент — десктоп.
 
----
+## Связь фронта и оболочки
 
-## Repository layout (authoritative)
+Прикладной код фронта не вызывает `invoke` напрямую — он зовёт обёртки из `infrastructure/tauri/`.
+Подмена транспорта (например, замена IPC на локальный HTTP) прозрачна для прикладного кода.
 
-| Path | Purpose |
-|------|---------|
-| **`source/frontend/`** | **BMFP** web app: Vite + React + TS. **Primary day-one development** for UI. |
-| **`source/frontend/src/`** | React source: BMFP layers (`boundary`, `domain`, `shared`, `infrastructure`). See [BMFP (EN)](../EN/bmfp_and_layers.md). |
-| **`source/backend/`** | **Native shell:** Tauri **Rust crate** — window, IPC `invoke`, plugins (dialog, fs where allowed). Not “BMSP API”, but **transport + OS integration**. |
-| **`documentation/`** | Human-facing product & **contributor** docs (EN/RU), diagrams, release notes. |
-| **`ai_docs/`** | ADRs, audits, migration logs, internal plans (can be promoted to `documentation/` when stable). |
-| **`tools/`** | Small repo automation (e.g. `tools/scripts/` doc smoke checks). Not app runtime. |
-| **`tests/`** | Optional **repo-level** test harness (integration, orchestration). Unit tests stay next to their package. |
-| **`.github/workflows/`** | CI: `frontend-ci.yml`, `release.yml` (Tauri). |
-| **`screenshots/`** | Marketing / docs assets (if present). |
+Поток вызова:
 
-The name **`source/backend/`** is **not** a separate HTTP service: it is the **Tauri host** crate. If you add a real BMSP-style service later (e.g. local daemon or remote API), BMAP expects something like **`services/<name>/`** or **`packages/api/`** — document the new root in this file when introduced.
+```
+действие пользователя в boundary (или команда window.cremniy)
+  → domain-сервис (BMFP)
+    → infrastructure/tauri/<feature> ──invoke──▶ Tauri command (source/backend/src/<area>.rs)
+                                                  → чистая логика / системный вызов
+                                                ◀── result / error ───
+  ◀── DTO в store ── валидация ──┘
+boundary перерисовывается
+```
 
----
+## Агентская поверхность
 
-## Native shell vs BMSP (mapping)
+У каждой UI-способности есть **именованная команда** в `window.cremniy`. Кнопка дёргает ту же
+команду, что и внешний скрипт. Правило, API и примеры — [AGENT_CONTROL](./AGENT_CONTROL.md).
 
-When people say “backend”, map concepts like this **for the current repo**:
+## Тестирование
 
-| BMSP idea | In Cremniy today | Notes |
-|-----------|------------------|-------|
-| **API** (HTTP routes) | *N/A* | No public HTTP API in repo. |
-| **API** (transport) | **Tauri `invoke` + events** | Thin handlers; validate inputs; no business rules duplicated sloppily in TS. |
-| **Core** | **Rust:** pure logic if grown (parsers, safe subprocess orchestration) OR **TS `domain`** for UI-facing DTOs | Prefer **one** source of truth per concern; document which side owns it. |
-| **Infrastructure** | **Rust:** `std::fs` only behind scoped helpers; plugins | **TS:** `infrastructure/tauri` wrappers calling `invoke`. |
+| Слой | Тесты | Где |
+|---|---|---|
+| Фронт | Vitest + Testing Library | `source/frontend/**/*.test.ts(x)` |
+| Нативная оболочка | `cargo test` | `source/backend/` |
+| Репо / E2E (опц.) | Playwright или аналог | `tests/` |
 
-When/if a **real BMSP service** appears: add it as its own package, reference **both** BMAP (repo roots) and **BMSP_ARCHITECTURE** for that package only.
+## Связанные документы
 
----
-
-## Testing layout
-
-| Layer | Tests | Location |
-|-------|--------|----------|
-| React / BMFP | Vitest + Testing Library | `source/frontend/**/*.test.ts(x)` |
-| Native shell | `cargo test` (as modules grow) | `source/backend/` |
-| Repo-level / E2E (optional) | Playwright or similar | `tests/` at repo root — **not** required for MVP |
-
----
-
-## Related documents
-
-- [BMFP layers (English)](../EN/bmfp_and_layers.md) · [Russian](../RU/bmfp_and_layers.md)
-- [ADR-001: Tauri primary](../../ai_docs/develop/architecture/ADR-001-tauri-desktop-primary.md)
-- [ADR-002: Qt removed](../../ai_docs/develop/architecture/ADR-002-qt-sources-removed.md)
-- [Tauri native bridge](../../ai_docs/develop/architecture/tauri-native-bridge.md)
-
----
-
-## Versioning
-
-Introduced **2026-05-02**. Update this file when top-level roots change (new service, moved Tauri crate, etc.). Last layout refresh: **2026-04-29** — `source/frontend` + `source/backend` split.
+- [BMFP](./BMFP.md) — слои фронта.
+- [BMBP](./BMBP.md) — слои бэка (ментальная карта для нативной оболочки).
+- [AGENT_CONTROL](./AGENT_CONTROL.md) — правило «способность = команда», API и карта кода.
+- ADR: [`ai_docs/develop/architecture/`](../../ai_docs/develop/architecture/).

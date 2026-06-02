@@ -410,7 +410,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   );
 
   // file.* / session.* commands + `session` state for window.cremniy.
-  // Docs: documentation/EN/agent_control_surface.md
+  // Docs: documentation/architecture/AGENT_CONTROL.md
   const agentValueRef = useRef(value);
   useEffect(() => {
     agentValueRef.current = value;

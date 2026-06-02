@@ -186,7 +186,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
 
   // IDE chrome commands + `ui` state for window.cremniy. The ref lets the
   // registration effect run once while still reading current values.
-  // Docs: documentation/EN/agent_control_surface.md
+  // Docs: documentation/architecture/AGENT_CONTROL.md
   const agentUiRef = useRef({
     workspaceRoot,
     toolDock,

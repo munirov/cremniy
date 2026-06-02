@@ -1,6 +1,6 @@
 # Qt → React parity checklist (canonical)
 
-**BMFP:** `cremniy/documentation/EN/bmfp_and_layers.md`.  
+**BMFP:** `cremniy/documentation/architecture/BMFP.md`.  
 **Qt snapshot:** tag `pre-qt-removal-2026-05-01`; reference tree `cremniy-main/src/` (see `cremniy/documentation/REFERENCE_QT.md`).  
 **Related:** workspace-root `ai_docs/develop/ui-parity/2026-04-29-react-parity-checklist.md` (dated smoke checklist); this file adds **Qt path** and **BMFP layer** columns for porting.
 

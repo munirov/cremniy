@@ -9,34 +9,38 @@
 <details name="documentation-index-lang" open>
 <summary><strong>English</strong></summary>
 
-🌐 **[Introduction to Cremniy](EN/overview.md)** — purpose, goals, philosophy, and project architecture
+🌐 **[Overview](EN/overview.md)** — what Cremniy is, vision, principles
 
-⌨️ **[Hotkeys](EN/hotkey.md)** — key combinations in the program
+⌨️ **[Hotkeys](EN/hotkey.md)**
 
-🛠️ **[Developer Guide](EN/developer_guide.md)** — architecture, how to change code, and add features
+🛠️ **[Developer guide](EN/developer_guide.md)** — run, build, add a feature
 
-🧱 **[BMFP — frontend layers](EN/bmfp_and_layers.md)**
+🏛️ **Architecture**
+- [Index](architecture/README.md)
+- [BMAP](architecture/BMAP.md) — Cremniy as a whole
+- [BMFP](architecture/BMFP.md) — frontend layers
+- [BMBP](architecture/BMBP.md) — backend layers (mental map for the Tauri shell)
+- [AGENT_CONTROL](architecture/AGENT_CONTROL.md) — capability = command rule + `window.cremniy` API
 
 📦 **[Release notes](RELEASE.md)**
-
-🏛️ **[Architecture index](architecture/README.md)** — BMAP, BMFP, ADR pointers
 
 </details>
 
 <details name="documentation-index-lang">
 <summary><strong>Русский</strong></summary>
 
-🌐 **[Введение в Cremniy](RU/overview.md)** — цели, философия, архитектура
+🌐 **[Обзор](RU/overview.md)** — что такое Cremniy, видение, принципы
 
 ⌨️ **[Горячие клавиши](RU/hotkey.md)**
 
-🛠️ **[Руководство разработчика](RU/developer_guide.md)**
+🛠️ **[Руководство разработчика](RU/developer_guide.md)** — запуск, сборка, добавление фичи
 
-🧱 **[BMFP — слои фронтенда](RU/bmfp_and_layers.md)**
-
-🏛️ **[Индекс архитектуры](architecture/README.md)**
-
-Отдельные страницы «быстрый старт» и «руководство пользователя» для EN/RU можно добавить позже в `documentation/EN/` и `documentation/RU/`.
+🏛️ **Архитектура**
+- [Индекс](architecture/README.md)
+- [BMAP](architecture/BMAP.md) — Cremniy целиком
+- [BMFP](architecture/BMFP.md) — слои фронта
+- [BMBP](architecture/BMBP.md) — слои бэка (ментальная карта для оболочки Tauri)
+- [AGENT_CONTROL](architecture/AGENT_CONTROL.md) — правило «способность = команда» + API `window.cremniy`
 
 </details>
 

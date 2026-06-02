@@ -15,7 +15,7 @@ self.MonacoEnvironment = {
 };
 
 // Install window.cremniy before mount so components register into it.
-// Docs: documentation/EN/agent_control_surface.md
+// Docs: documentation/architecture/AGENT_CONTROL.md
 installAgentBridge();
 
 createRoot(document.getElementById('root')!).render(

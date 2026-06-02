@@ -1,21 +1,27 @@
-# Introduction to Cremniy
+# Cremniy — overview
 
-## Purpose
+## What it is
 
-**Cremniy** is a development environment for low-level programming. It stands out by combining tools for working with binary files, memory, and system code in a single application.
+Cremniy is a development environment for low-level work: binaries, memory, system code.
+Built as a single desktop application (Tauri + React), one process, no tool switching.
 
-The IDE is designed for developers of operating systems, drivers, and system software, as well as for those studying system programming. Cremniy simplifies debugging, memory analysis, and working with binary files, allowing you to focus on system logic rather than tool configuration.
+## Vision
 
-## Goal
+One deep low-level workbench where everything is linked: byte ↔ instruction ↔ source line ↔
+memory address ↔ live register. One model, a click in any view drills into all the others. Not
+only static analysis of a dead file — also a live, running process in real time.
 
-To provide a convenient tool that has everything necessary for system programming, without the need to switch between different programs. Cremniy allows the developer to focus on the system logic and code, rather than setting up and searching for tools.
+The web stack was picked so an AI can work in Cremniy the same way a human does — not through
+buttons, but through commands that those same buttons call. See
+[AGENT_CONTROL](../architecture/AGENT_CONTROL.md).
 
-## Philosophy
+## Principles
 
-### All in one
-
-Do not force the developer to run between different tools. **Everything** necessary for system programming must be **in a single environment**.
-
-### Minimalism
-
-The tool must be **as simple as possible** to learn and use. **Nothing unnecessary**, this applies to both the GUI and the functionality.
+- **All in one.** Everything needed for low-level work in one environment.
+- **Minimal.** Nothing extra — UI and feature set both.
+- **One model, many views.** Byte, instruction, source line, address, register — different views
+  of the same thing. Navigation is bidirectional.
+- **Static and live.** Inspect a file on disk; inspect a running process; same UI, same commands.
+- **Capability first, button second.** Every UI capability is a named command in
+  `window.cremniy`. Buttons call commands. Humans use buttons, scripts and AI use commands —
+  same logic, same data.

@@ -1,69 +1,55 @@
-# Developer Guide
+# Developer guide
 
-> **2026 update:** The **in-repo** desktop app is **Tauri + React** under [`source/frontend/`](../../README.md). Repository structure and layering are described in **[BMAP](../../architecture/BMAP.md)** and **[BMFP](bmfp_and_layers.md)**.  
-> The sections below describe the **historic Qt `src/`** layout (removed from `main`; see git tag **`pre-qt-removal-2026-05-01`**).
+Cremniy is Tauri + React. UI in WebView, native part in Rust. One process, one installer.
 
-The project is being rebuilt into a modular architecture.
-
-Currently, modularity is implemented only for **Tool Tabs**. 
-
-
-## Project structure (historical — Qt `src/`)
-
-
-- `app/` - main windows for display
-- `core/` - base interfaces
-- `ToolTabs/` - modules: tool tabs
-- `widgets/` - reusable widgets
-- `utils/` - helper code
-
-
-
-## Tool Tab for working with a file
-
-### Description
-
-A **ToolTab** is a tool tab for the user to work with a file. Examples of **ToolTab**:
-- **Code Editor**<br>
-<img width="400" height="300" alt="code_tooltab" src="https://github.com/user-attachments/assets/f4d9d9c5-acbb-42ee-a3e1-a2d773c94d89" /><br>
-- **HEX Editor**<br>
-<img width="400" height="300" alt="hex_tooltab" src="https://github.com/user-attachments/assets/cb66ffa9-1852-4200-809e-77ece6687d32" /><br>
-- **Disassembler**<br>
-<img width="400" height="300" alt="dasm_tooltab" src="https://github.com/user-attachments/assets/d72c642b-9b02-4dc8-8f03-0224490b4d3e" /><br>
-
-Each **ToolTab** is an independent module and is registered through the **ToolTabFactory** component.
-
-### Operation of tool tabs
-
-- All **ToolTab** inherit from the `ToolTab` class
-- Each **ToolTab** is registered in `ToolTabFactory`
-- `ToolTabWidget` automatically loads all **ToolTab** through `ToolTabFactory`
+## Layout
 
 ```
-ToolTab (interface)
-    ↓
-Module (CodeEditorTab, HexEditorTab, ...)
-    ↓
-registerTab()
-    ↓
-ToolTabFactory
-    ↓
-ToolTabWidget → create() → addTab()
+source/
+├── frontend/          # BMFP web app: Vite + React + TS
+└── backend/           # Tauri Rust crate: window, IPC, OS access, process runner
 ```
 
-Registration occurs automatically when the application starts via `static initialization` (global static objects).
+Frontend layers — [BMFP](../architecture/BMFP.md). Repository as a whole — [BMAP](../architecture/BMAP.md).
 
-### Adding a tool tab
+## Run / build
 
-1. Create a new directory in `ToolTabs/` for the tool
-2. Create a class inheriting `ToolTab`
-3. Implement `toolName()` and `toolIcon()`
-4. Register the tool in `ToolTabFactory`
-5. Add `CMakeLists.txt`
+```
+cd source/frontend
+npm install
+npm run tauri:dev      # dev
+npm run tauri:build    # installer
+```
 
-### Rules
+`tauri:dev` launches the desktop app with a hot-reloading WebView. `tauri:build` produces a
+platform installer (`.msi`, `.dmg`, `.AppImage`).
 
-- Modules **must not depend** on each other directly
-- It is forbidden to use includes like `../../` or `include/`
-- All dependencies are connected **through CMake**
-- ToolTab is the **only** interaction point with the tabs
+## Adding a feature
+
+For a feature with data, UI, and IPC:
+
+1. **DTO** in `domain/<feature>/` — schema/types.
+2. **Tauri wrapper** in `infrastructure/tauri/<feature>.ts` — typed `invoke` calls.
+3. **Service** in `domain/<feature>/<feature>.service.ts` — orchestrates wrappers and storage.
+4. **UI** in `boundary/<feature>/` — components read via hooks, actions call the service.
+5. **Native command** in `source/backend/src/<feature>.rs` — implements the OS-level work;
+   declare in `lib.rs`.
+6. **Agent command** — register via `registerAgentCommands` per [AGENT_CONTROL](../architecture/AGENT_CONTROL.md).
+7. **Tests** next to the code.
+
+## Native shell
+
+The Rust crate is in `source/backend/`. Each area is a module: `process.rs` (hardened process
+runner), `disassembly.rs`, `terminal.rs`. `lib.rs` registers Tauri commands.
+
+When adding a native command:
+
+- validate inputs at the boundary;
+- keep business logic in a pure function inside the module;
+- never expose raw paths to the UI — resolve and bound them inside the workspace.
+
+## Tests
+
+- Frontend: Vitest + Testing Library, next to the code.
+- Backend: `cargo test`.
+- Repo-level / E2E: `tests/` at repo root (optional).

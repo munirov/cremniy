@@ -1,10 +1,16 @@
-# Architecture docs (index)
+# Архитектура
 
-| Document | Audience |
-|----------|----------|
-| [BMAP.md](./BMAP.md) | **Everyone** — repo layout, desktop vs future services, BMFP/BMSP placement. |
-| [../EN/bmfp_and_layers.md](../EN/bmfp_and_layers.md) | Frontend contributors — BMFP in `source/frontend/`. |
-| [../RU/bmfp_and_layers.md](../RU/bmfp_and_layers.md) | То же по-русски. |
-| [../EN/agent_control_surface.md](../EN/agent_control_surface.md) | Anyone scripting the app — `window.cremniy` commands, state, and the process runner. |
+| Документ | О чём |
+|---|---|
+| [BMAP](./BMAP.md) | Cremniy целиком: корни репо, нативная оболочка, связь фронта и оболочки. |
+| [BMFP](./BMFP.md) | Слои фронта: `boundary / domain / infrastructure / shared`. |
+| [BMBP](./BMBP.md) | Слои бэка: `api / core / infrastructure / shared`. В Cremniy — ментальная карта для нативной оболочки. |
+| [AGENT_CONTROL](./AGENT_CONTROL.md) | Правило «способность = команда», API `window.cremniy`, карта кода. |
 
-Product ADRs and audits live under [`../../ai_docs/develop/architecture/`](../../ai_docs/develop/architecture/).
+## Что брать с чего
+
+- Делаешь UI → [BMFP](./BMFP.md).
+- Добавляешь способность (кнопка/хоткей/инструмент) → [AGENT_CONTROL](./AGENT_CONTROL.md).
+- Трогаешь Tauri-крейт или меняешь корни репо → [BMAP](./BMAP.md).
+
+ADR и аудиты — в [`ai_docs/develop/architecture/`](../../ai_docs/develop/architecture/).

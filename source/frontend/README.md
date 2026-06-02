@@ -1,6 +1,6 @@
 # Frontend (BMFP)
 
-Monorepo context: **[BMAP](../../documentation/architecture/BMAP.md)**. Frontend layering details: **[BMFP (EN)](../../documentation/EN/bmfp_and_layers.md)** / [RU](../../documentation/RU/bmfp_and_layers.md).
+Monorepo context: **[BMAP](../../documentation/architecture/BMAP.md)**. Frontend layering: **[BMFP](../../documentation/architecture/BMFP.md)**. Capability-first rule: **[AGENT_CONTROL](../../documentation/architecture/AGENT_CONTROL.md)**.
 
 ## Toolchain
 

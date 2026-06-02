@@ -1,69 +1,56 @@
-# Developer Guide
+# Руководство разработчика
 
-> **Обновление 2026:** Официальное **десктопное** приложение в репо — **Tauri + React** в [`source/frontend/`](../../README.md). Структура репозитория и слоёв — **[BMAP](../../architecture/BMAP.md)** и **[BMFP (слои фронта)](bmfp_and_layers.md)**.  
-> Ниже — **историческая** структура Qt-дерева `src/` (снято с `main`, см. тег **`pre-qt-removal-2026-05-01`**).
+Cremniy — Tauri + React. UI в WebView, нативная часть на Rust. Один процесс, один инсталлятор.
 
-Проект перестраивается на модульную архитектуру.
-
-На данный момент модульность реализована только для **вкладок инструментов** (**Tool Tabs**). 
-
-
-## Структура проекта (историческая — Qt `src/`)
-
-
-- `app/` - главные окна для отображения
-- `core/` - базовые интерфейсы
-- `ToolTabs/` - модули: вкладки инструментов
-- `widgets/` - переиспользуемые виджеты
-- `utils/` - вспомогательный код
-
-
-
-## Вкладка инструмента для работы с файлом (Tool Tab)
-
-### Описание
-
-**ToolTab** - это вкладка инструмента для работы пользователя с файлом. Примеры **ToolTab**:
-- **Редактор кода**<br>
-<img width="400" height="300" alt="code_tooltab" src="https://github.com/user-attachments/assets/f4d9d9c5-acbb-42ee-a3e1-a2d773c94d89" /><br>
-- **HEX-редактор**<br>
-<img width="400" height="300" alt="hex_tooltab" src="https://github.com/user-attachments/assets/cb66ffa9-1852-4200-809e-77ece6687d32" /><br>
-- **Дизассемблер**<br>
-<img width="400" height="300" alt="dasm_tooltab" src="https://github.com/user-attachments/assets/d72c642b-9b02-4dc8-8f03-0224490b4d3e" /><br>
-
-Каждый **ToolTab** является независимым модулем и регистрируется через компонент **ToolTabFactory**.
-
-### Работа вкладок инструментов
-
-- Все **ToolTab** наследуются от класса `ToolTab`
-- Каждая **ToolTab** регистрируется в `ToolTabFactory`
-- `ToolTabWidget` автоматически загружает все **ToolTab** через `ToolTabFactory`
+## Структура
 
 ```
-ToolTab (интерфейс)
-    ↓
-Модуль (CodeEditorTab, HexEditorTab, ...)
-    ↓
-registerTab()
-    ↓
-ToolTabFactory
-    ↓
-ToolTabWidget → create() → addTab()
+source/
+├── frontend/          # BMFP-фронт: Vite + React + TS
+└── backend/           # Tauri-крейт на Rust: окно, IPC, доступ к ОС, запуск процессов
 ```
 
-Регистрация происходит автоматически при запуске приложения через `static initialization` (глобальные статические объекты).
+Слои фронта — [BMFP](../architecture/BMFP.md). Репозиторий целиком — [BMAP](../architecture/BMAP.md).
 
-### Добавление вкладки инструмента
+## Запуск / сборка
 
-1. Создать новую директорию в `ToolTabs/` для инструмента
-2. Создать класс, наследующий `ToolTab`
-3. Реализовать `toolName()` и `toolIcon()`
-4. Зарегистрировать инструмент в `ToolTabFactory`
-5. Добавить `CMakeLists.txt`
+```
+cd source/frontend
+npm install
+npm run tauri:dev      # dev
+npm run tauri:build    # инсталлятор
+```
 
-### Правила
+`tauri:dev` — десктоп с hot-reload WebView. `tauri:build` — инсталлятор под платформу
+(`.msi`, `.dmg`, `.AppImage`).
 
-- Модули **не должны зависеть** друг от друга напрямую
-- Запрещено использовать include вида `../../` или `include/`
-- Все зависимости подключаются **через CMake**
-- ToolTab - **единственная** точка взаимодействия с вкладками
+## Добавление фичи
+
+Фича с данными, UI и IPC:
+
+1. **DTO** в `domain/<feature>/` — схема и типы.
+2. **Обёртка Tauri** в `infrastructure/tauri/<feature>.ts` — типизированные `invoke`.
+3. **Сервис** в `domain/<feature>/<feature>.service.ts` — оркестрация обёрток и хранилища.
+4. **UI** в `boundary/<feature>/` — компоненты читают через хуки, действия зовут сервис.
+5. **Нативная команда** в `source/backend/src/<feature>.rs` — реализует системную работу;
+   объявляется в `lib.rs`.
+6. **Агентская команда** — регистрируется через `registerAgentCommands` по
+   [AGENT_CONTROL](../architecture/AGENT_CONTROL.md).
+7. **Тесты** рядом с кодом.
+
+## Нативная оболочка
+
+Rust-крейт в `source/backend/`. Каждая область — отдельный модуль: `process.rs` (хардненный
+раннер), `disassembly.rs`, `terminal.rs`. `lib.rs` регистрирует Tauri-команды.
+
+Добавляя нативную команду:
+
+- валидируй входы на границе;
+- бизнес-логику держи в чистой функции внутри модуля;
+- сырые пути наружу не отдавай — разрешай и ограничивай в пределах workspace.
+
+## Тесты
+
+- Фронт: Vitest + Testing Library, рядом с кодом.
+- Бэк: `cargo test`.
+- Репо / E2E: `tests/` в корне (опционально).

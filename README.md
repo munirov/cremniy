@@ -62,7 +62,7 @@ The legacy **Qt/C++** IDE has been **removed** from this repository. The last re
 | [`tests/`](tests/) | Repository-level tests and orchestration (package tests stay next to each app). |
 | [`.github/workflows/`](.github/workflows/) | CI and release. |
 
-**Top-level meta-model:** [BMAP — Base Multi Application Platform](documentation/architecture/BMAP.md) (how BMFP and optional BMSP-style services fit in one repo).
+**Top-level meta-model:** [BMAP — Base Multi Application Platform](documentation/architecture/BMAP.md) (repo roots, native shell, frontend ↔ shell contract).
 
 ---
 
@@ -164,7 +164,7 @@ npm run tauri:build
 | [`tests/`](tests/) | Тесты уровня репозитория; тесты пакетов — рядом с приложением. |
 | [`.github/workflows/`](.github/workflows/) | CI и релиз. |
 
-**Мета-модель репозитория:** [BMAP](documentation/architecture/BMAP.md) — как BMFP и возможный в будущем BMSP-сервис уживаются в одном репо.
+**Мета-модель репозитория:** [BMAP](documentation/architecture/BMAP.md) — корни репо, нативная оболочка, связь фронта и оболочки.
 
 ---
 
