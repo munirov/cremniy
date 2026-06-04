@@ -6,7 +6,7 @@
 <h3>Cremniy</h3>
 <h6>All tools for low-level development are combined and linked in a single application — write code, edit bytes, and analyze binaries without extra windows</h6>
 
-[![License](https://img.shields.io/github/license/igmunv/cremniy?color=orange&style=flat-square)](LICENSE)
+[![License](https://img.shields.io/github/license/munirov/cremniy?color=orange&style=flat-square)](LICENSE)
 [![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
 [![Community](https://img.shields.io/badge/Community-Telegram-blue?logo=telegram&style=flat-square)](https://t.me/cremniy_com)
 <br>
