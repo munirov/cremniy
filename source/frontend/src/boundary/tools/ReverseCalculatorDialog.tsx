@@ -8,8 +8,26 @@ import {
   swapEndian,
   toSigned,
 } from '@domain/reverseCalculator/reverseCalculator';
+import { evalIntExpression } from '@domain/math/expressionEval';
+import { useNotify } from '@boundary/notifications/NotificationContext';
 
 import styles from './ReverseCalculatorDialog.module.css';
+
+const MAX_HISTORY = 20;
+
+// Two-stage parser: cheap literal first (parseNumericInput already handles
+// `123 / 0x.. / 0b.. / -1`), expression fallback (`(0x10 << 2) | 3`) second.
+function parseInputValue(raw: string): { ok: true; value: bigint } | { ok: false } {
+  const trimmed = raw.trim();
+  if (trimmed === '') return { ok: false };
+  const direct = parseNumericInput(trimmed);
+  if (direct.ok) return { ok: true, value: direct.value };
+  try {
+    return { ok: true, value: evalIntExpression(trimmed) };
+  } catch {
+    return { ok: false };
+  }
+}
 
 const BIT_OPTIONS = [8, 16, 32, 64] as const;
 
@@ -18,12 +36,20 @@ export type ReverseCalculatorDialogProps = {
 };
 
 export function ReverseCalculatorDialog({ onClose }: ReverseCalculatorDialogProps) {
+  const notify = useNotify();
   const [input, setInput] = useState('');
   const [bits, setBits] = useState<number>(32);
   const [showSigned, setShowSigned] = useState(true);
+  const [history, setHistory] = useState<string[]>([]);
 
-  const parsed = useMemo(() => parseNumericInput(input), [input]);
+  const parsed = useMemo(() => parseInputValue(input), [input]);
   const empty = input.trim() === '';
+
+  const pushHistory = useCallback((entry: string) => {
+    const trimmed = entry.trim();
+    if (trimmed === '') return;
+    setHistory((prev) => [trimmed, ...prev.filter((x) => x !== trimmed)].slice(0, MAX_HISTORY));
+  }, []);
 
   const display = useMemo(() => {
     if (empty) {
@@ -52,6 +78,8 @@ export function ReverseCalculatorDialog({ onClose }: ReverseCalculatorDialogProp
     setInput(formatHex(swapped, bits));
   }, [bits, parsed]);
 
+  // Wire the literal-fallback `display.*` helpers to use parsed.value directly.
+
   const copyText = useCallback(async (text: string) => {
     if (text === '-' || text === '') {
       return;
@@ -59,9 +87,9 @@ export function ReverseCalculatorDialog({ onClose }: ReverseCalculatorDialogProp
     try {
       await navigator.clipboard.writeText(text);
     } catch {
-      window.alert('Clipboard unavailable');
+      notify.warn('Clipboard unavailable');
     }
-  }, []);
+  }, [notify]);
 
   return (
     <div className={styles.root} role="dialog" aria-modal="true" aria-labelledby="rev-calc-title">
@@ -72,10 +100,15 @@ export function ReverseCalculatorDialog({ onClose }: ReverseCalculatorDialogProp
         <input
           className={styles.input}
           type="text"
-          placeholder="Enter value: 1234, -1, 0xDEADBEEF, 0b1010"
+          placeholder="1234 · -1 · 0xDEADBEEF · 0b1010 · (0x10 << 2) | 3"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          aria-label="Numeric input"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && parsed.ok) {
+              pushHistory(input);
+            }
+          }}
+          aria-label="Numeric input or expression"
         />
         <span className={styles.bitsLabel}>Bits:</span>
         <select
@@ -125,10 +158,41 @@ export function ReverseCalculatorDialog({ onClose }: ReverseCalculatorDialogProp
         <button type="button" className={styles.btn} onClick={handleSwap}>
           Swap endian
         </button>
+        <button type="button" className={styles.btn} onClick={() => pushHistory(input)} disabled={!parsed.ok}>
+          Save to history
+        </button>
         <button type="button" className={styles.btn} onClick={onClose}>
           Close
         </button>
       </div>
+
+      {history.length > 0 ? (
+        <div style={{ marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.25rem' }}>History</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+            {history.map((h, i) => (
+              <button
+                key={`${h}-${i}`}
+                type="button"
+                className={styles.btn}
+                onClick={() => setInput(h)}
+                title={`Restore: ${h}`}
+                style={{ fontSize: 12 }}
+              >
+                {h}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={styles.btn}
+              onClick={() => setHistory([])}
+              style={{ fontSize: 12 }}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
