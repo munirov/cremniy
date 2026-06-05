@@ -1,16 +1,25 @@
+//! Real PTY terminal sessions (Qt parity: TerminalWidget).
+//!
+//! `portable-pty` opens a ConPTY on Windows 10+ and a POSIX PTY on
+//! Linux/macOS. Each session gets a master/slave pair: the shell runs in the
+//! slave (with a real TTY), and we read/write the master from the GUI. With a
+//! real PTY we get echo, line editing, prompts, ANSI escapes, `vim`/`less`
+//! interactivity, and — most importantly — Ctrl+C / Ctrl+D delivered as
+//! signals to the foreground process group, not to the shell.
+
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
-use std::process::{Child, ChildStdin, Command, ExitStatus, Stdio};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
+use portable_pty::{CommandBuilder, NativePtySystem, PtySize, PtySystem};
 use tauri::{AppHandle, Emitter, State};
 
 const TERMINAL_OUTPUT_EVENT: &str = "terminal://output";
-const READ_BUFFER_SIZE: usize = 8192;
+const READ_BUFFER_SIZE: usize = 4096;
 const EXIT_POLL_INTERVAL: Duration = Duration::from_millis(250);
 
 #[derive(Default)]
@@ -24,19 +33,18 @@ impl Drop for TerminalSessions {
         let Ok(mut sessions) = self.sessions.lock() else {
             return;
         };
-
         for (_, session) in sessions.drain() {
-            let Ok(mut child) = session.child.lock() else {
-                continue;
-            };
-            let _ = terminate_child(&mut child);
+            if let Ok(mut child) = session.child.lock() {
+                let _ = child.kill();
+            }
         }
     }
 }
 
 struct TerminalSession {
-    child: Arc<Mutex<Child>>,
-    stdin: ChildStdin,
+    master: Arc<Mutex<Box<dyn portable_pty::MasterPty + Send>>>,
+    writer: Arc<Mutex<Box<dyn Write + Send>>>,
+    child: Arc<Mutex<Box<dyn portable_pty::Child + Send + Sync>>>,
 }
 
 #[derive(serde::Serialize)]
@@ -79,88 +87,122 @@ pub fn start_terminal_session(
     workspace_root: String,
 ) -> Result<TerminalStartDto, String> {
     let cwd = canonical_workspace_directory(&workspace_root)?;
+    // cmd.exe / ConPTY don't understand the Windows `\\?\` extended-length
+    // prefix that `canonicalize()` produces. Without stripping it the shell
+    // silently falls back to %SystemRoot% (C:\Windows). Pass a plain path.
+    let cwd_for_shell = strip_unc_prefix(cwd.clone());
     let shell = default_shell_path();
     let session_id = sessions.next_session_id();
-    let mut command = build_shell_command(&shell, &cwd);
 
-    let mut child = command.spawn().map_err(|e| format!("start shell: {e}"))?;
-    let stdin = match child.stdin.take() {
-        Some(stdin) => stdin,
-        None => {
-            return Err(cleanup_spawned_child(
-                &mut child,
-                "shell stdin is unavailable",
-            ))
-        }
-    };
-    let stdout = match child.stdout.take() {
-        Some(stdout) => stdout,
-        None => {
-            return Err(cleanup_spawned_child(
-                &mut child,
-                "shell stdout is unavailable",
-            ))
-        }
-    };
-    let stderr = match child.stderr.take() {
-        Some(stderr) => stderr,
-        None => {
-            return Err(cleanup_spawned_child(
-                &mut child,
-                "shell stderr is unavailable",
-            ))
-        }
-    };
+    let pty_system = NativePtySystem::default();
+    let pair = pty_system
+        .openpty(PtySize {
+            rows: 24,
+            cols: 80,
+            pixel_width: 0,
+            pixel_height: 0,
+        })
+        .map_err(|e| format!("open pty: {e}"))?;
+
+    let mut cmd = CommandBuilder::new(&shell);
+    cmd.cwd(&cwd_for_shell);
+
+    let child = pair
+        .slave
+        .spawn_command(cmd)
+        .map_err(|e| format!("spawn shell: {e}"))?;
+    drop(pair.slave);
+
+    let mut reader = pair
+        .master
+        .try_clone_reader()
+        .map_err(|e| format!("clone pty reader: {e}"))?;
+    let writer = pair
+        .master
+        .take_writer()
+        .map_err(|e| format!("take pty writer: {e}"))?;
+
+    let master = Arc::new(Mutex::new(pair.master));
+    let writer = Arc::new(Mutex::new(writer));
     let child = Arc::new(Mutex::new(child));
 
-    let mut guard = match sessions.sessions.lock() {
-        Ok(guard) => guard,
-        Err(_) => {
-            cleanup_child_arc(&child);
-            return Err(String::from("terminal session state is unavailable"));
-        }
-    };
-    guard.insert(
-        session_id.clone(),
-        TerminalSession {
-            child: Arc::clone(&child),
-            stdin,
-        },
-    );
-    drop(guard);
+    {
+        let mut guard = sessions
+            .sessions
+            .lock()
+            .map_err(|_| String::from("terminal session state is unavailable"))?;
+        guard.insert(
+            session_id.clone(),
+            TerminalSession {
+                master: Arc::clone(&master),
+                writer: Arc::clone(&writer),
+                child: Arc::clone(&child),
+            },
+        );
+    }
 
-    spawn_output_reader(
-        app.clone(),
-        session_id.clone(),
-        TerminalOutputStream::Stdout,
-        stdout,
-    );
-    spawn_output_reader(
-        app.clone(),
-        session_id.clone(),
-        TerminalOutputStream::Stderr,
-        stderr,
-    );
-    spawn_exit_monitor(
-        app.clone(),
-        Arc::clone(&sessions.sessions),
-        session_id.clone(),
-        child,
-    );
-    emit_system_message(
-        &app,
-        &session_id,
-        &format!(
-            "Terminal started without PTY support. Some interactive shell features may be limited. {}\n",
-            process_termination_message()
-        ),
-    );
+    // Reader thread — stream master output to the frontend as a single
+    // 'stdout' stream (PTY merges stdout+stderr).
+    let app_for_reader = app.clone();
+    let session_for_reader = session_id.clone();
+    thread::spawn(move || {
+        let mut buffer = [0_u8; READ_BUFFER_SIZE];
+        loop {
+            match reader.read(&mut buffer) {
+                Ok(0) => break,
+                Ok(n) => {
+                    let data = String::from_utf8_lossy(&buffer[..n]).into_owned();
+                    let _ = app_for_reader.emit(
+                        TERMINAL_OUTPUT_EVENT,
+                        TerminalOutputDto {
+                            session_id: session_for_reader.clone(),
+                            stream: TerminalOutputStream::Stdout,
+                            data,
+                        },
+                    );
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    // Exit-monitor thread.
+    let app_for_exit = app.clone();
+    let sessions_for_exit = Arc::clone(&sessions.sessions);
+    let session_for_exit = session_id.clone();
+    let child_for_exit = Arc::clone(&child);
+    thread::spawn(move || loop {
+        thread::sleep(EXIT_POLL_INTERVAL);
+        let mut guard = match child_for_exit.lock() {
+            Ok(g) => g,
+            Err(_) => return,
+        };
+        match guard.try_wait() {
+            Ok(Some(status)) => {
+                drop(guard);
+                if let Ok(mut sessions) = sessions_for_exit.lock() {
+                    sessions.remove(&session_for_exit);
+                }
+                let _ = app_for_exit.emit(
+                    TERMINAL_OUTPUT_EVENT,
+                    TerminalOutputDto {
+                        session_id: session_for_exit.clone(),
+                        stream: TerminalOutputStream::Exit,
+                        data: format!("Terminal exited ({status:?}).\n"),
+                    },
+                );
+                return;
+            }
+            Ok(None) => continue,
+            Err(_) => return,
+        }
+    });
 
     Ok(TerminalStartDto {
         session_id,
         shell,
         cwd: cwd.to_string_lossy().into_owned(),
-        supports_interrupt: false,
+        supports_interrupt: true,
     })
 }
 
@@ -170,36 +212,55 @@ pub fn write_terminal_input(
     session_id: String,
     input: String,
 ) -> Result<(), String> {
-    let mut guard = sessions
-        .sessions
-        .lock()
-        .map_err(|_| String::from("terminal session state is unavailable"))?;
-    let session = guard
-        .get_mut(session_id.trim())
-        .ok_or_else(|| String::from("terminal session not found or has exited"))?;
-
-    {
-        let mut child = session
-            .child
+    let writer = {
+        let guard = sessions
+            .sessions
             .lock()
-            .map_err(|_| String::from("terminal session process state is unavailable"))?;
-        if child
-            .try_wait()
-            .map_err(|e| format!("check shell status: {e}"))?
-            .is_some()
-        {
-            return Err(String::from("terminal session has exited"));
-        }
-    }
-
-    session
-        .stdin
+            .map_err(|_| String::from("terminal session state is unavailable"))?;
+        guard
+            .get(session_id.trim())
+            .map(|s| Arc::clone(&s.writer))
+            .ok_or_else(|| String::from("terminal session not found"))?
+    };
+    let mut writer = writer
+        .lock()
+        .map_err(|_| String::from("terminal writer is unavailable"))?;
+    writer
         .write_all(input.as_bytes())
-        .map_err(|e| format!("write shell input: {e}"))?;
-    session
-        .stdin
+        .map_err(|e| format!("write pty: {e}"))?;
+    writer
         .flush()
-        .map_err(|e| format!("flush shell input: {e}"))
+        .map_err(|e| format!("flush pty: {e}"))
+}
+
+#[tauri::command]
+pub fn resize_terminal_session(
+    sessions: State<'_, TerminalSessions>,
+    session_id: String,
+    rows: u16,
+    cols: u16,
+) -> Result<(), String> {
+    let master = {
+        let guard = sessions
+            .sessions
+            .lock()
+            .map_err(|_| String::from("terminal session state is unavailable"))?;
+        guard
+            .get(session_id.trim())
+            .map(|s| Arc::clone(&s.master))
+            .ok_or_else(|| String::from("terminal session not found"))?
+    };
+    let master = master
+        .lock()
+        .map_err(|_| String::from("terminal master is unavailable"))?;
+    master
+        .resize(PtySize {
+            rows: rows.max(1),
+            cols: cols.max(1),
+            pixel_width: 0,
+            pixel_height: 0,
+        })
+        .map_err(|e| format!("resize pty: {e}"))
 }
 
 #[tauri::command]
@@ -207,36 +268,54 @@ pub fn stop_terminal_session(
     sessions: State<'_, TerminalSessions>,
     session_id: String,
 ) -> Result<(), String> {
-    let mut guard = sessions
-        .sessions
-        .lock()
-        .map_err(|_| String::from("terminal session state is unavailable"))?;
-    let Some(session) = guard.remove(session_id.trim()) else {
-        return Ok(());
+    let session = {
+        let mut guard = sessions
+            .sessions
+            .lock()
+            .map_err(|_| String::from("terminal session state is unavailable"))?;
+        guard.remove(session_id.trim())
     };
-
-    let mut child = session
-        .child
-        .lock()
-        .map_err(|_| String::from("terminal session process state is unavailable"))?;
-    terminate_child(&mut child)
+    if let Some(session) = session {
+        if let Ok(mut child) = session.child.lock() {
+            let _ = child.kill();
+        }
+    }
+    Ok(())
 }
 
+/// Send Ctrl+C (0x03) to the master. Inside a real PTY the kernel translates
+/// this to SIGINT on the foreground process group — same as a hardware
+/// terminal would do. cmd.exe / bash / python / vim all react correctly.
 #[tauri::command]
 pub fn interrupt_terminal_session(
-    _sessions: State<'_, TerminalSessions>,
-    _session_id: String,
+    sessions: State<'_, TerminalSessions>,
+    session_id: String,
 ) -> Result<(), String> {
-    Err(String::from(
-        "terminal interrupt is not supported by the current non-PTY process bridge",
-    ))
+    let writer = {
+        let guard = sessions
+            .sessions
+            .lock()
+            .map_err(|_| String::from("terminal session state is unavailable"))?;
+        guard
+            .get(session_id.trim())
+            .map(|s| Arc::clone(&s.writer))
+            .ok_or_else(|| String::from("terminal session not found"))?
+    };
+    let mut writer = writer
+        .lock()
+        .map_err(|_| String::from("terminal writer is unavailable"))?;
+    writer
+        .write_all(&[0x03])
+        .map_err(|e| format!("write interrupt: {e}"))?;
+    let _ = writer.flush();
+    Ok(())
 }
 
 #[tauri::command]
 pub fn get_terminal_capabilities() -> TerminalCapabilityDto {
     TerminalCapabilityDto {
-        supports_interrupt: false,
-        reason: terminal_capability_reason(),
+        supports_interrupt: true,
+        reason: "ConPTY / POSIX PTY: Ctrl+C is delivered as SIGINT to the foreground process group.".to_string(),
     }
 }
 
@@ -262,320 +341,34 @@ fn canonical_workspace_directory(workspace_root: &str) -> Result<PathBuf, String
     Ok(root_canon)
 }
 
+fn strip_unc_prefix(p: PathBuf) -> PathBuf {
+    #[cfg(windows)]
+    {
+        let s = p.to_string_lossy();
+        if let Some(stripped) = s.strip_prefix(r"\\?\") {
+            if !stripped.starts_with("UNC\\") {
+                return PathBuf::from(stripped);
+            }
+        }
+    }
+    p
+}
+
 fn default_shell_path() -> String {
     #[cfg(windows)]
     {
-        String::from("powershell.exe")
+        // With a real PTY both cmd.exe and powershell.exe work beautifully —
+        // they get a TTY, echo, prompts, and proper Ctrl+C handling. cmd is
+        // lighter; PowerShell would also be fine. Pick cmd by default.
+        String::from("cmd.exe")
     }
 
     #[cfg(not(windows))]
     {
-        env_non_empty("SHELL").unwrap_or_else(|| String::from("/bin/sh"))
-    }
-}
-
-#[cfg(not(windows))]
-fn env_non_empty(key: &str) -> Option<String> {
-    std::env::var(key)
-        .ok()
-        .map(|value| value.trim().to_string())
-        .filter(|value| !value.is_empty())
-}
-
-fn build_shell_command(shell: &str, cwd: &Path) -> Command {
-    let mut command = Command::new(shell);
-    add_shell_args(&mut command, shell);
-    command
-        .current_dir(cwd)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    command
-}
-
-fn cleanup_spawned_child(child: &mut Child, error: &str) -> String {
-    let _ = terminate_child(child);
-    String::from(error)
-}
-
-fn cleanup_child_arc(child: &Arc<Mutex<Child>>) {
-    if let Ok(mut child) = child.lock() {
-        let _ = terminate_child(&mut child);
-    }
-}
-
-fn terminate_child(child: &mut Child) -> Result<(), String> {
-    match child.try_wait() {
-        Ok(Some(_)) => Ok(()),
-        Ok(None) => {
-            terminate_running_child(child)?;
-            let _ = child.wait();
-            Ok(())
-        }
-        Err(e) => Err(format!("check shell status: {e}")),
-    }
-}
-
-#[cfg(windows)]
-fn terminate_running_child(child: &mut Child) -> Result<(), String> {
-    // `Child::kill` only terminates the shell. On Windows, taskkill is available
-    // by default and can terminate descendants without adding a fragile dependency.
-    let pid = child.id().to_string();
-    let status = Command::new("taskkill")
-        .args(["/PID", &pid, "/T", "/F"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status();
-
-    if matches!(status, Ok(status) if status.success()) {
-        return Ok(());
-    }
-    if matches!(child.try_wait(), Ok(Some(_))) {
-        return Ok(());
-    }
-    child.kill().map_err(|e| format!("terminate shell: {e}"))
-}
-
-#[cfg(not(windows))]
-fn terminate_running_child(child: &mut Child) -> Result<(), String> {
-    // Without a PTY/process group owner, std::process can reliably kill only
-    // the direct shell process. Surface that limitation in capabilities/UI text.
-    child.kill().map_err(|e| format!("terminate shell: {e}"))
-}
-
-fn terminal_capability_reason() -> String {
-    format!(
-        "The current bridge uses std::process pipes instead of a PTY. {}",
-        process_termination_message()
-    )
-}
-
-#[cfg(windows)]
-fn process_termination_message() -> &'static str {
-    "Stopping a session uses best-effort Windows process-tree termination."
-}
-
-#[cfg(not(windows))]
-fn process_termination_message() -> &'static str {
-    "Stopping a session terminates only the shell process, not its full process tree."
-}
-
-fn add_shell_args(command: &mut Command, shell: &str) {
-    #[cfg(windows)]
-    {
-        if shell.eq_ignore_ascii_case("powershell.exe") {
-            command.args(["-NoLogo", "-NoExit"]);
-        }
-    }
-
-    #[cfg(not(windows))]
-    {
-        if shell.ends_with("/bash") || shell == "bash" {
-            command.arg("-i");
-        }
-    }
-}
-
-fn spawn_output_reader<R>(
-    app: AppHandle,
-    session_id: String,
-    stream: TerminalOutputStream,
-    mut reader: R,
-) where
-    R: Read + Send + 'static,
-{
-    thread::spawn(move || {
-        let mut buffer = [0_u8; READ_BUFFER_SIZE];
-        loop {
-            match reader.read(&mut buffer) {
-                Ok(0) => break,
-                Ok(bytes_read) => {
-                    let data = String::from_utf8_lossy(&buffer[..bytes_read]).into_owned();
-                    let _ = app.emit(
-                        TERMINAL_OUTPUT_EVENT,
-                        TerminalOutputDto {
-                            session_id: session_id.clone(),
-                            stream: stream.clone(),
-                            data,
-                        },
-                    );
-                }
-                Err(e) => {
-                    let _ = app.emit(
-                        TERMINAL_OUTPUT_EVENT,
-                        TerminalOutputDto {
-                            session_id: session_id.clone(),
-                            stream: TerminalOutputStream::System,
-                            data: format!("Terminal stream error: {e}\n"),
-                        },
-                    );
-                    break;
-                }
-            }
-        }
-    });
-}
-
-fn spawn_exit_monitor(
-    app: AppHandle,
-    sessions: Arc<Mutex<HashMap<String, TerminalSession>>>,
-    session_id: String,
-    child: Arc<Mutex<Child>>,
-) {
-    thread::spawn(move || loop {
-        thread::sleep(EXIT_POLL_INTERVAL);
-
-        let exit_status = {
-            let mut child = match child.lock() {
-                Ok(child) => child,
-                Err(_) => {
-                    emit_system_message(
-                        &app,
-                        &session_id,
-                        "Terminal process state is unavailable.\n",
-                    );
-                    return;
-                }
-            };
-
-            match child.try_wait() {
-                Ok(Some(status)) => Some(status),
-                Ok(None) => None,
-                Err(e) => {
-                    emit_system_message(
-                        &app,
-                        &session_id,
-                        &format!("Terminal status check failed: {e}\n"),
-                    );
-                    return;
-                }
-            }
-        };
-
-        if let Some(status) = exit_status {
-            if let Ok(mut sessions) = sessions.lock() {
-                sessions.remove(&session_id);
-            }
-            emit_terminal_exit(&app, &session_id, status);
-            return;
-        }
-    });
-}
-
-fn emit_system_message(app: &AppHandle, session_id: &str, data: &str) {
-    let _ = app.emit(
-        TERMINAL_OUTPUT_EVENT,
-        TerminalOutputDto {
-            session_id: session_id.to_string(),
-            stream: TerminalOutputStream::System,
-            data: data.to_string(),
-        },
-    );
-}
-
-fn emit_terminal_exit(app: &AppHandle, session_id: &str, status: ExitStatus) {
-    let _ = app.emit(
-        TERMINAL_OUTPUT_EVENT,
-        TerminalOutputDto {
-            session_id: session_id.to_string(),
-            stream: TerminalOutputStream::Exit,
-            data: format!("Terminal exited ({status}).\n"),
-        },
-    );
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{
-        canonical_workspace_directory, default_shell_path, get_terminal_capabilities,
-        terminal_capability_reason, TerminalOutputDto, TerminalOutputStream, TerminalStartDto,
-    };
-    use serde_json::json;
-
-    #[test]
-    fn canonical_workspace_directory_rejects_empty_path() {
-        assert_eq!(
-            canonical_workspace_directory("").unwrap_err(),
-            "workspace_root must not be empty"
-        );
-    }
-
-    #[test]
-    fn canonical_workspace_directory_accepts_existing_directory() {
-        let cwd = std::env::current_dir().expect("test cwd");
-        let resolved =
-            canonical_workspace_directory(cwd.to_string_lossy().as_ref()).expect("resolved cwd");
-        assert!(resolved.is_dir());
-    }
-
-    #[test]
-    fn terminal_start_dto_serializes_frontend_contract() {
-        let dto = TerminalStartDto {
-            session_id: String::from("terminal-1"),
-            shell: String::from("powershell.exe"),
-            cwd: String::from("C:\\work"),
-            supports_interrupt: false,
-        };
-
-        assert_eq!(
-            serde_json::to_value(dto).expect("serialized terminal start dto"),
-            json!({
-                "sessionId": "terminal-1",
-                "shell": "powershell.exe",
-                "cwd": "C:\\work",
-                "supportsInterrupt": false,
-            })
-        );
-    }
-
-    #[test]
-    fn terminal_output_dto_serializes_streams_as_domain_values() {
-        let cases = [
-            (TerminalOutputStream::Stdout, "stdout"),
-            (TerminalOutputStream::Stderr, "stderr"),
-            (TerminalOutputStream::System, "system"),
-            (TerminalOutputStream::Exit, "exit"),
-        ];
-
-        for (stream, expected_stream) in cases {
-            let dto = TerminalOutputDto {
-                session_id: String::from("terminal-1"),
-                stream,
-                data: String::from("output"),
-            };
-
-            assert_eq!(
-                serde_json::to_value(dto).expect("serialized terminal output dto"),
-                json!({
-                    "sessionId": "terminal-1",
-                    "stream": expected_stream,
-                    "data": "output",
-                })
-            );
-        }
-    }
-
-    #[test]
-    fn terminal_capabilities_serialize_unsupported_interrupt_contract() {
-        assert_eq!(
-            serde_json::to_value(get_terminal_capabilities())
-                .expect("serialized terminal capabilities"),
-            json!({
-                "supportsInterrupt": false,
-                "reason": terminal_capability_reason(),
-            })
-        );
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn default_shell_path_uses_fixed_windows_shell() {
-        assert_eq!(default_shell_path(), "powershell.exe");
-    }
-
-    #[cfg(not(windows))]
-    #[test]
-    fn default_shell_path_uses_shell_environment_or_sh() {
-        assert!(!default_shell_path().trim().is_empty());
+        std::env::var("SHELL")
+            .ok()
+            .map(|v| v.trim().to_string())
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| String::from("/bin/sh"))
     }
 }
