@@ -23,6 +23,12 @@ export type SplitContainerProps = {
   minSize?: number;
   /** Handle thickness in pixels. Defaults to 6. */
   handleSize?: number;
+  /**
+   * Per-child collapse flags. A collapsed child sizes to its own content
+   * (ignores its weight) and the handle adjacent to it is hidden — used to pin
+   * a pane to a thin strip (e.g. the terminal minimised to its tab bar).
+   */
+  collapsed?: boolean[];
   children: ReactNode;
 };
 
@@ -39,6 +45,7 @@ export function SplitContainer({
   onSizesChange,
   minSize = 80,
   handleSize = 1,
+  collapsed,
   children,
 }: SplitContainerProps) {
   const childArray = useMemo(() => Children.toArray(children), [children]);
@@ -160,9 +167,13 @@ export function SplitContainer({
     >
       {childArray.map((child, i) => {
         const weight = internalSizes[i] ?? 1;
+        const isCollapsed = collapsed?.[i] ?? false;
+        const prevCollapsed = collapsed?.[i - 1] ?? false;
+        // No handle into/out of a collapsed pane — it can't be resized.
+        const showHandle = i > 0 && !isCollapsed && !prevCollapsed;
         return (
           <Fragment key={`split-${i}`}>
-            {i > 0 ? (
+            {showHandle ? (
               <div
                 key={`h-${i}`}
                 className={handleClass}
@@ -182,7 +193,7 @@ export function SplitContainer({
             <div
               key={`c-${i}`}
               className={styles.cell}
-              style={{ flex: `${weight} ${weight} 0` }}
+              style={isCollapsed ? { flex: '0 0 auto' } : { flex: `${weight} ${weight} 0` }}
             >
               {child}
             </div>
