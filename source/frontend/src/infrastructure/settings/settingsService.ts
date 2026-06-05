@@ -1,7 +1,7 @@
 import {
-  parseAppPreferences,
-  stringifyAppPreferences,
-} from '@domain/preferences/appPreferences';
+  parseAppPreferencesIni,
+  stringifyAppPreferencesIni,
+} from '@domain/preferences/iniSerialization';
 import type { SettingsService } from '@domain/preferences/settingsService';
 import { loadPreferences, savePreferences } from '@infrastructure/preferences/preferencesBridge';
 import {
@@ -12,7 +12,8 @@ import {
   writeUserFile,
 } from '@infrastructure/tauri/bridge';
 
-const PREFERENCES_EXPORT_FILE = 'cremniy-settings.json';
+// Qt parity — humans expect a .ini file from File → Export Settings.
+const PREFERENCES_EXPORT_FILE = 'cremniy-settings.ini';
 
 export const settingsService: SettingsService = {
   loadPreferences,
@@ -25,7 +26,7 @@ export const settingsService: SettingsService = {
     if (target == null || target === '') {
       return null;
     }
-    await writeUserFile(target, stringifyAppPreferences(prefs));
+    await writeUserFile(target, stringifyAppPreferencesIni(prefs));
     return target;
   },
 
@@ -35,8 +36,7 @@ export const settingsService: SettingsService = {
       return null;
     }
     const text = await readUserFile(source);
-    // parseAppPreferences normalizes/validates and falls back on bad input.
-    const prefs = parseAppPreferences(text);
+    const prefs = parseAppPreferencesIni(text);
     await savePreferences(prefs);
     return prefs;
   },
