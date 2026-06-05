@@ -10,6 +10,8 @@ pub fn run() {
             read_user_file,
             read_user_file_under_workspace,
             read_workspace_file_bytes,
+            read_workspace_file_chunk,
+            get_workspace_file_size,
             write_workspace_file_bytes,
             write_user_file,
             list_directory,
@@ -25,19 +27,35 @@ pub fn run() {
             save_app_preferences,
             disassembly::disassemble_workspace_file,
             disassembly::test_objdump_tool,
+            radare2::disassemble_with_radare2,
+            reveal_in_file_manager,
+            shellcode::assemble_with_nasm,
+            test_external_tool,
+            create_cremniy_project,
+            read_cremniy_meta,
+            write_cremniy_meta,
             process::run_workspace_command,
             terminal::start_terminal_session,
             terminal::write_terminal_input,
             terminal::stop_terminal_session,
             terminal::interrupt_terminal_session,
+            terminal::resize_terminal_session,
             terminal::get_terminal_capabilities,
+            panes::popout_pane,
+            panes::close_popout_pane,
+            panes::list_popout_panes,
+            binary_analysis::analyze_binary,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
+mod binary_analysis;
 mod disassembly;
+mod panes;
 mod process;
+mod radare2;
+mod shellcode;
 mod terminal;
 
 use std::io::{ErrorKind, Read, Write};
@@ -47,6 +65,23 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
 
 const PREFERENCES_RELATIVE_PATH: &str = "preferences.json";
+
+/// Windows `canonicalize()` returns the extended-length `\\?\C:\foo` form.
+/// That string leaks into every DirectoryEntryDto / workspace root and uglies
+/// up the UI. Strip the prefix when it's safe (drive paths only, not UNC).
+fn pretty_path(p: PathBuf) -> PathBuf {
+    #[cfg(windows)]
+    {
+        let s = p.to_string_lossy();
+        if let Some(stripped) = s.strip_prefix(r"\\?\") {
+            // Don't strip UNC paths (\\?\UNC\server\share → should stay).
+            if !stripped.starts_with("UNC\\") {
+                return PathBuf::from(stripped);
+            }
+        }
+    }
+    p
+}
 
 /// Maximum bytes returned by `read_workspace_file_bytes` (single-shot read for binary tooling).
 const MAX_WORKSPACE_FILE_READ_BYTES: u64 = 64 * 1024 * 1024;
@@ -60,7 +95,7 @@ fn pick_folder(app: AppHandle) -> Option<String> {
         .set_title("Open project folder")
         .blocking_pick_folder()
         .and_then(|fp| fp.into_path().ok())
-        .map(|pb| pb.to_string_lossy().into_owned())
+        .map(|pb| pretty_path(pb).to_string_lossy().into_owned())
 }
 
 #[tauri::command]
@@ -70,7 +105,7 @@ fn pick_file(app: AppHandle) -> Option<String> {
         .set_title("Open file")
         .blocking_pick_file()
         .and_then(|fp| fp.into_path().ok())
-        .map(|pb| pb.to_string_lossy().into_owned())
+        .map(|pb| pretty_path(pb).to_string_lossy().into_owned())
 }
 
 #[tauri::command]
@@ -158,6 +193,69 @@ fn read_workspace_file_bytes(workspace_root: String, path: String) -> Result<Vec
     Ok(buf)
 }
 
+/// Lazy chunk reader for huge binaries — pairs with the future frontend LRU
+/// cache. Frontend asks for `[offset, offset+length)`, we return at most that
+/// many bytes (or less if EOF). No total-size cap, so files of any reasonable
+/// size are addressable as long as the chunk itself fits in memory.
+#[tauri::command]
+fn read_workspace_file_chunk(
+    workspace_root: String,
+    path: String,
+    offset: u64,
+    length: u64,
+) -> Result<Vec<u8>, String> {
+    use std::io::{Seek, SeekFrom};
+
+    const MAX_CHUNK_BYTES: u64 = 4 * 1024 * 1024; // 4 MiB per request
+
+    if length == 0 {
+        return Ok(Vec::new());
+    }
+    if length > MAX_CHUNK_BYTES {
+        return Err(format!(
+            "chunk length {length} exceeds per-request limit ({MAX_CHUNK_BYTES} bytes)"
+        ));
+    }
+
+    let root_canon = canonical_workspace_root(workspace_root.trim())?;
+    let path_canon = PathBuf::from(path.trim())
+        .canonicalize()
+        .map_err(|e| format!("path: {e}"))?;
+    assert_path_starts_with_root(&root_canon, &path_canon)?;
+    let meta = std::fs::metadata(&path_canon).map_err(|e| e.to_string())?;
+    if !meta.is_file() {
+        return Err(String::from("path is not a regular file"));
+    }
+    if offset >= meta.len() {
+        return Ok(Vec::new());
+    }
+    let mut file = std::fs::File::open(&path_canon).map_err(|e| e.to_string())?;
+    file.seek(SeekFrom::Start(offset))
+        .map_err(|e| e.to_string())?;
+    let read_len = length.min(meta.len() - offset) as usize;
+    let mut buf = vec![0_u8; read_len];
+    use std::io::Read as _;
+    let n = file.read(&mut buf).map_err(|e| e.to_string())?;
+    buf.truncate(n);
+    Ok(buf)
+}
+
+/// Stat-like helper — frontend uses this to decide between a full read or a
+/// chunked LRU read for huge files.
+#[tauri::command]
+fn get_workspace_file_size(workspace_root: String, path: String) -> Result<u64, String> {
+    let root_canon = canonical_workspace_root(workspace_root.trim())?;
+    let path_canon = PathBuf::from(path.trim())
+        .canonicalize()
+        .map_err(|e| format!("path: {e}"))?;
+    assert_path_starts_with_root(&root_canon, &path_canon)?;
+    let meta = std::fs::metadata(&path_canon).map_err(|e| e.to_string())?;
+    if !meta.is_file() {
+        return Err(String::from("path is not a regular file"));
+    }
+    Ok(meta.len())
+}
+
 #[tauri::command]
 fn write_workspace_file_bytes(
     workspace_root: String,
@@ -222,7 +320,7 @@ fn list_directory(
         let entry = entry.map_err(|e| e.to_string())?;
         let meta = entry.metadata().map_err(|e| e.to_string())?;
         let name = entry.file_name().to_string_lossy().into_owned();
-        let path = entry.path().to_string_lossy().into_owned();
+        let path = pretty_path(entry.path()).to_string_lossy().into_owned();
         entries.push(DirectoryEntryDto {
             name,
             path,
@@ -295,6 +393,82 @@ fn preserve_temp_permissions(
     _original_metadata: &std::fs::Metadata,
 ) -> Result<(), String> {
     Ok(())
+}
+
+const CREMNIY_META_FILE: &str = ".cremniy";
+
+/// Create a project folder AND drop a `.cremniy` JSON next to it. The file
+/// is the project's home for everything we want to remember across sessions:
+/// language, version, last session state (open files / pane layout / terminal
+/// state, etc). For now we only write whatever the frontend hands us; the
+/// schema lives in `domain/project/cremniyMeta.ts`.
+#[tauri::command]
+fn create_cremniy_project(
+    parent_path: String,
+    folder_name: String,
+    metadata_json: String,
+) -> Result<String, String> {
+    let trimmed_name = folder_name.trim();
+    if trimmed_name.is_empty() {
+        return Err(String::from("folder_name must not be empty"));
+    }
+    if !is_valid_project_folder_name(trimmed_name) {
+        return Err(String::from("invalid folder name"));
+    }
+    let parent = PathBuf::from(parent_path.trim());
+    if parent.as_os_str().is_empty() {
+        return Err(String::from("parent_path must not be empty"));
+    }
+    let parent_canon = parent
+        .canonicalize()
+        .map_err(|e| format!("parent_path: {e}"))?;
+    let meta = std::fs::metadata(&parent_canon).map_err(|e| e.to_string())?;
+    if !meta.is_dir() {
+        return Err(String::from("parent_path is not a directory"));
+    }
+    let dest = parent_canon.join(trimmed_name);
+    if dest.exists() {
+        return Err(String::from("destination already exists"));
+    }
+    // Sanity-check the JSON before writing anything irreversible.
+    serde_json::from_str::<serde_json::Value>(&metadata_json)
+        .map_err(|e| format!("metadata_json: {e}"))?;
+
+    std::fs::create_dir(&dest).map_err(|e| e.to_string())?;
+    let meta_path = dest.join(CREMNIY_META_FILE);
+    std::fs::write(&meta_path, metadata_json.as_bytes())
+        .map_err(|e| format!("write .cremniy: {e}"))?;
+    Ok(pretty_path(dest).to_string_lossy().into_owned())
+}
+
+/// Read `.cremniy` from the given workspace root. Returns the raw JSON text
+/// (or `"{}"` if the file doesn't exist yet — older projects, manually-
+/// created folders) so the frontend's normaliser sees the same empty-shape.
+#[tauri::command]
+fn read_cremniy_meta(workspace_root: String) -> Result<String, String> {
+    let root_canon = canonical_workspace_root(&workspace_root)?;
+    let meta_path = root_canon.join(CREMNIY_META_FILE);
+    match std::fs::read_to_string(&meta_path) {
+        Ok(s) => Ok(s),
+        Err(e) if e.kind() == ErrorKind::NotFound => Ok("{}".to_string()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+/// Overwrite `.cremniy` with a fresh JSON. Called on save / on app close so
+/// the next open can restore session state.
+#[tauri::command]
+fn write_cremniy_meta(workspace_root: String, metadata_json: String) -> Result<(), String> {
+    serde_json::from_str::<serde_json::Value>(&metadata_json)
+        .map_err(|e| format!("metadata_json: {e}"))?;
+    let root_canon = canonical_workspace_root(&workspace_root)?;
+    let meta = std::fs::metadata(&root_canon).map_err(|e| e.to_string())?;
+    if !meta.is_dir() {
+        return Err(String::from("workspace_root is not a directory"));
+    }
+    let meta_path = root_canon.join(CREMNIY_META_FILE);
+    std::fs::write(&meta_path, metadata_json.as_bytes())
+        .map_err(|e| format!("write .cremniy: {e}"))
 }
 
 #[tauri::command]
@@ -436,6 +610,121 @@ fn write_user_file(path: String, contents: String) -> Result<(), String> {
         }
     }
     std::fs::write(&p, contents.as_bytes()).map_err(|e| e.to_string())
+}
+
+/// Generic external-tool availability check used by Settings ("Test
+/// r2 / objdump / nasm / file"). Runs `<exe> <version_arg>` and returns the
+/// first line of output so the user can see "radare2 5.9.0 …" or a clear
+/// error. Honors an explicit override path (Settings text field) before
+/// falling back to PATH.
+#[tauri::command]
+fn test_external_tool(
+    name: String,
+    path: Option<String>,
+    version_arg: Option<String>,
+) -> Result<String, String> {
+    use std::process::Command;
+    let exe = if let Some(p) = path.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+        PathBuf::from(p)
+    } else {
+        which_on_path_lib(&name).ok_or_else(|| format!("`{name}` not found on PATH."))?
+    };
+    if !exe.exists() {
+        return Err(format!("Path does not exist: {}", exe.display()));
+    }
+    let arg = version_arg.unwrap_or_else(|| "--version".to_string());
+    let output = Command::new(&exe)
+        .arg(&arg)
+        .output()
+        .map_err(|e| format!("Failed to spawn {}: {e}", exe.display()))?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = if stdout.trim().is_empty() {
+        stderr.trim().to_string()
+    } else {
+        stdout.trim().to_string()
+    };
+    let first = combined.lines().next().unwrap_or("").trim().to_string();
+    if !output.status.success() {
+        return Err(format!(
+            "{} exited with status {:?}: {first}",
+            exe.display(),
+            output.status.code(),
+        ));
+    }
+    Ok(format!("{} → {first}", exe.display()))
+}
+
+fn which_on_path_lib(name: &str) -> Option<PathBuf> {
+    let path_env = std::env::var_os("PATH")?;
+    let path_ext = std::env::var("PATHEXT").unwrap_or_default();
+    let exts: Vec<String> = if path_ext.is_empty() {
+        vec![String::new()]
+    } else {
+        std::iter::once(String::new())
+            .chain(path_ext.split(';').map(|e| e.to_string()))
+            .collect()
+    };
+    for dir in std::env::split_paths(&path_env) {
+        for ext in &exts {
+            let candidate = if ext.is_empty() {
+                dir.join(name)
+            } else {
+                dir.join(format!("{name}{ext}"))
+            };
+            if candidate.is_file() {
+                return Some(candidate);
+            }
+        }
+    }
+    None
+}
+
+/// Open the platform's native file manager focused on the given path. On
+/// Windows: `explorer /select,<path>` highlights the file. macOS uses
+/// `open -R`. Linux falls back to opening the parent directory because
+/// there's no portable "select" verb.
+#[tauri::command]
+fn reveal_in_file_manager(path: String) -> Result<(), String> {
+    use std::process::Command;
+    let p = PathBuf::from(path.trim());
+    if p.as_os_str().is_empty() {
+        return Err(String::from("path must not be empty"));
+    }
+    if !p.exists() {
+        return Err(format!("path does not exist: {}", p.display()));
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("explorer")
+            .arg(format!("/select,{}", p.display()))
+            .spawn()
+            .map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .args(["-R"])
+            .arg(&p)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
+    {
+        let target = if p.is_file() {
+            p.parent().map(|p| p.to_path_buf()).unwrap_or(p)
+        } else {
+            p
+        };
+        Command::new("xdg-open")
+            .arg(&target)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
 }
 
 #[tauri::command]
