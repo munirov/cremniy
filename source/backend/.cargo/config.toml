@@ -1,0 +1,8 @@
+# Fallback to the git registry protocol when the modern sparse-HTTPS index is
+# blocked at the TLS layer (some VPNs/proxies break crates.io HTTPS handshakes).
+[registries.crates-io]
+protocol = "git"
+
+[net]
+retry = 5
+git-fetch-with-cli = true

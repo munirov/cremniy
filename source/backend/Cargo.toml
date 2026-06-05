@@ -21,3 +21,8 @@ serde_json = "1"
 tauri = { version = "2.10.3", features = [] }
 tauri-plugin-dialog = "2"
 tempfile = "3.27.0"
+# Embedded disassembler — no external objdump required.
+iced-x86 = { version = "1", default-features = false, features = ["std", "decoder", "intel", "gas", "fast_fmt"] }
+goblin = "0.9"
+# Real PTY (ConPTY on Windows 10+, POSIX PTY elsewhere).
+portable-pty = "0.8"
