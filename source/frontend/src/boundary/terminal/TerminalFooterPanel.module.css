@@ -43,7 +43,6 @@
   max-width: 12rem;
   padding: 0 0.3rem 0 0.55rem;
   border: none;
-  border-top: 1px solid transparent;
   background: transparent;
   color: var(--color-text-primary);
   opacity: 0.6;
@@ -59,8 +58,6 @@
 .tabActive {
   opacity: 1;
   background-color: rgba(255, 255, 255, 0.06);
-  /* Thin top accent marks the live tab — monochrome, never blue. */
-  border-top-color: rgba(255, 255, 255, 0.55);
 }
 
 .tabActive:hover {
