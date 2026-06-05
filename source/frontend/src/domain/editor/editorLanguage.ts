@@ -31,14 +31,62 @@ const EXTENSION_TO_LANGUAGE: Readonly<Record<string, string>> = {
   glsl: 'cpp',
   vert: 'cpp',
   frag: 'cpp',
+  // Assembly
+  s: 'mips',
+  asm: 'mips',
+  // Rust / Go / other systems
+  rs: 'rust',
+  go: 'go',
+  // JVM / .NET / scripting
+  java: 'java',
+  kt: 'kotlin',
+  kts: 'kotlin',
+  scala: 'scala',
+  cs: 'csharp',
+  fs: 'fsharp',
+  vb: 'vb',
+  // Shell / dotfiles
+  sh: 'shell',
+  bash: 'shell',
+  zsh: 'shell',
+  ps1: 'powershell',
+  bat: 'bat',
+  cmd: 'bat',
+  // Web
+  js: 'javascript',
+  jsx: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  css: 'css',
+  scss: 'scss',
+  less: 'less',
+  html: 'html',
+  htm: 'html',
+  php: 'php',
   // Markup
   xml: 'xml',
   svg: 'xml',
-  html: 'html',
-  htm: 'html',
-  // Data / scripting
+  xaml: 'xml',
+  sln: 'plaintext',
+  // Data / config
   json: 'json',
+  yaml: 'yaml',
+  yml: 'yaml',
+  toml: 'ini',
+  ini: 'ini',
+  env: 'ini',
+  // Docs / build
+  md: 'markdown',
+  markdown: 'markdown',
+  mk: 'makefile',
+  makefile: 'makefile',
+  cmake: 'plaintext',
+  // SQL / data languages
+  sql: 'sql',
+  // Scripting
   py: 'python',
   python: 'python',
   lua: 'lua',
+  rb: 'ruby',
+  pl: 'perl',
 };

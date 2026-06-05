@@ -14,7 +14,7 @@ export function CodeEditorToolPanel() {
       <Editor
         height="100%"
         language={language}
-        theme="vs"
+        theme="vs-dark"
         value={documentText}
         options={{
           ...IDE_MONACO_BASE_OPTIONS,
