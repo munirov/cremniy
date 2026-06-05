@@ -178,7 +178,20 @@ export function IdeDockview({
   );
 
   const ide = useIdeSession();
-  const { activeToolTab } = useToolDock();
+  const { activeToolTab, setActiveToolTab } = useToolDock();
+
+  // Split the editor slot: show the editor AND the active tool side by side
+  // instead of the tool replacing the editor. Toggling it on with no tool open
+  // defaults the second pane to a code editor (≈ two editors). Local layout
+  // state, not persisted.
+  const [editorSplit, setEditorSplit] = useState(false);
+  const toggleEditorSplit = useCallback(() => {
+    const next = !editorSplit;
+    setEditorSplit(next);
+    if (next && activeToolTab == null) {
+      setActiveToolTab('codeEditor');
+    }
+  }, [editorSplit, activeToolTab, setActiveToolTab]);
 
   const paneVisibility: Record<BuiltinPaneId, boolean> = {
     fileTree: paneVisibilityProp?.fileTree ?? true,
@@ -199,10 +212,9 @@ export function IdeDockview({
     </Pane>
   ) : null;
 
-  // When a tool is selected, it takes over the center column "editor slot"
-  // (same path as the editor — Cursor-style). The editor itself isn't lost:
-  // closing the active tool (clicking it again in the rail) brings it back.
-  const editorNode = paneVisibility.editor && activeToolTab == null ? (
+  // The editor pane (Monaco + tabs + status). Always built when the editor is
+  // visible; how it shares the slot with a tool is decided below.
+  const editorPaneNode = paneVisibility.editor ? (
     <Pane
       id="editor"
       title={ide.activeFilePath ?? 'Editor'}
@@ -218,6 +230,19 @@ export function IdeDockview({
         {ide.openFilePaths.length > 0 ? (
           <div className={styles.tabStrip} role="region" aria-label="Document tabs">
             <IdeEditorTabStrip />
+            <button
+              type="button"
+              className={`${styles.splitBtn} ${editorSplit ? styles.splitBtnActive : ''}`}
+              onClick={toggleEditorSplit}
+              title={editorSplit ? 'Unsplit editor' : 'Split editor (open a tool / second editor beside)'}
+              aria-label={editorSplit ? 'Unsplit editor' : 'Split editor'}
+              aria-pressed={editorSplit}
+            >
+              <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="16" rx="1.5" />
+                <path d="M12 4v16" />
+              </svg>
+            </button>
           </div>
         ) : null}
         <div className={styles.editorBody}>
@@ -239,10 +264,30 @@ export function IdeDockview({
         />
       </div>
     </Pane>
-  ) : activeToolTab != null ? (
-    // Tool pane occupying the same slot as the editor.
-    <IdeToolDock />
   ) : null;
+
+  const toolNode = activeToolTab != null ? <IdeToolDock /> : null;
+
+  // Editor slot: split → editor + tool side by side; otherwise the tool replaces
+  // the editor (legacy) or the editor shows alone.
+  const editorNode: ReactNode = (() => {
+    if (editorSplit && editorPaneNode != null && toolNode != null) {
+      return (
+        <SplitContainer direction="horizontal" defaultSizes={[1, 1]}>
+          <div key="editor-pane" style={{ width: '100%', height: '100%' }}>
+            {editorPaneNode}
+          </div>
+          <div key="tool-pane" style={{ width: '100%', height: '100%' }}>
+            {toolNode}
+          </div>
+        </SplitContainer>
+      );
+    }
+    if (toolNode != null && !editorSplit) {
+      return toolNode;
+    }
+    return editorPaneNode ?? toolNode;
+  })();
 
   const terminalNode = paneVisibility.terminal ? (
     <Pane id="terminal" title="Terminal">
