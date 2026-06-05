@@ -5,12 +5,16 @@ import { FILE_MENU_ENTRIES, type FileMenuActionId } from '@domain/menu/fileMenu'
 import { matchGlobalShortcut, type GlobalShortcutAction } from '@domain/menu/menuShortcuts';
 import { mainMenuEntries, type MainMenuId } from '@domain/menu/mainMenu';
 import { REFERENCES_MENU_ENTRIES, type ReferencesMenuActionId } from '@domain/menu/referencesMenu';
+import { TERMINAL_MENU_ENTRIES, type TerminalMenuActionId } from '@domain/menu/terminalMenu';
 import { TOOLS_MENU_ENTRIES, type ToolsMenuActionId } from '@domain/menu/toolsMenu';
 import { VIEW_MENU_ENTRIES, type ViewMenuActionId } from '@domain/menu/viewMenu';
+import { Menu } from '@boundary/common/Menu';
 import { useT } from '@boundary/i18n/LocaleContext';
 
 import styles from './MenuBar.module.css';
 
+// '7' (Terminal) isn't here — it renders via the shared Menu widget, which owns
+// its own dismissal.
 const DROPDOWN_MENUS = new Set<MainMenuId>(['1', '2', '3', '5', '6']);
 
 export type MenuBarProps = {
@@ -19,6 +23,7 @@ export type MenuBarProps = {
   onViewMenuAction?: (id: ViewMenuActionId) => void;
   onToolsMenuAction?: (id: ToolsMenuActionId) => void;
   onReferencesMenuAction?: (id: ReferencesMenuActionId) => void;
+  onTerminalMenuAction?: (id: TerminalMenuActionId) => void;
   onShortcut?: (action: GlobalShortcutAction) => void;
   terminalPanelVisible?: boolean;
   wordWrapEnabled?: boolean;
@@ -34,6 +39,7 @@ export function MenuBar({
   onViewMenuAction,
   onToolsMenuAction,
   onReferencesMenuAction,
+  onTerminalMenuAction,
   onShortcut,
   terminalPanelVisible = true,
   wordWrapEnabled = true,
@@ -44,6 +50,8 @@ export function MenuBar({
   const t = useT();
   const entries = useMemo(() => mainMenuEntries(), []);
   const [openMenuId, setOpenMenuId] = useState<MainMenuId | null>(null);
+  // Trigger element for the widget-rendered Terminal menu (id '7').
+  const [terminalAnchor, setTerminalAnchor] = useState<HTMLElement | null>(null);
   const wrapRefs = useRef<Partial<Record<MainMenuId, HTMLDivElement | null>>>({});
 
   const closeDropdown = useCallback(() => {
@@ -124,6 +132,14 @@ export function MenuBar({
       closeDropdown();
     },
     [closeDropdown, onReferencesMenuAction],
+  );
+
+  const runTerminal = useCallback(
+    (id: TerminalMenuActionId) => {
+      onTerminalMenuAction?.(id);
+      closeDropdown();
+    },
+    [closeDropdown, onTerminalMenuAction],
   );
 
   const toggleMenu = useCallback((id: MainMenuId) => {
@@ -319,6 +335,39 @@ export function MenuBar({
                         </li>
                       ))}
                     </ul>
+                  ) : null}
+                </div>
+              </li>
+            );
+          }
+          if (id === '7') {
+            return (
+              <li key={id} className={styles.menuItemWrap}>
+                <div className={styles.menuWithDropdown}>
+                  <button
+                    type="button"
+                    className={styles.menuItem}
+                    aria-haspopup="menu"
+                    aria-expanded={openMenuId === '7'}
+                    onClick={(e) => {
+                      setTerminalAnchor(e.currentTarget);
+                      toggleMenu('7');
+                    }}
+                  >
+                    {displayLabel}
+                  </button>
+                  {openMenuId === '7' && terminalAnchor != null && onTerminalMenuAction != null ? (
+                    <Menu
+                      label={displayLabel}
+                      position={{ kind: 'anchor', el: terminalAnchor }}
+                      onClose={closeDropdown}
+                      groups={[
+                        TERMINAL_MENU_ENTRIES.map((item) => ({
+                          label: item.label,
+                          onClick: () => runTerminal(item.id),
+                        })),
+                      ]}
+                    />
                   ) : null}
                 </div>
               </li>
