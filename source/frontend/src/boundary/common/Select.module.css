@@ -1,0 +1,108 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.trigger:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.trigger[aria-expanded='true'] {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.trigger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.triggerLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triggerCaret {
+  flex-shrink: 0;
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  /* Neutral grey, NOT the bluish #1d1f27 — that hex had hue 222 (basically
+     blue-grey), so anything tinted on top read as "selected = blue". */
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.option {
+  display: block;
+  width: 100%;
+  padding: 0.32rem 0.7rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Suppress the global blue :focus-visible ring inside the popup — selection
+   inside the listbox is already conveyed by the hover/selected backgrounds,
+   the extra outline only adds visual noise. */
+.option:focus,
+.option:focus-visible {
+  outline: none;
+}
+
+.trigger:focus,
+.trigger:focus-visible {
+  outline: none;
+}
+
+.optionHover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.optionSelected {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.optionSelected.optionHover {
+  background: rgba(255, 255, 255, 0.1);
+}
