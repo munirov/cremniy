@@ -9,12 +9,13 @@
   --color-text-primary: #ffffff;
   --color-text-on-accent: #ffffff;
 
-  /* Accent / selection */
-  --color-accent: #2626d5;
-  --color-selection: #333333;
-  --color-hover-surface: #333333;
-  --color-hover-tint: #162033;
-  --color-border-accent: #2c4c7c;
+  /* Accent / selection — Cremniy is pure monochrome, "accent" is just a
+     slightly brighter neutral, never a brand-blue. See DESIGN.md. */
+  --color-accent: rgba(255, 255, 255, 0.55);
+  --color-selection: rgba(255, 255, 255, 0.18);
+  --color-hover-surface: rgba(255, 255, 255, 0.06);
+  --color-hover-tint: rgba(255, 255, 255, 0.04);
+  --color-border-accent: rgba(255, 255, 255, 0.28);
 
   /* Borders */
   --color-border-default: #1f1f1f;

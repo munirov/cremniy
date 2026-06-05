@@ -6,10 +6,160 @@
   box-sizing: border-box;
 }
 
+/* Toast / notification slide-in (see boundary/notifications). */
+@keyframes cremniyNotifSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+html,
+body,
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   background-color: var(--color-bg-base);
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
   font-size: var(--font-size-base);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   GLOBAL SYSTEM-COLOR OVERRIDES — every place a Windows/WebView2 default
+   color could leak through is forced to our palette. Rule of the canon:
+   no system blue, no Windows accent, no high-contrast adjustment, no
+   yellow autofill, anywhere.
+   ───────────────────────────────────────────────────────────────────── */
+
+html {
+  /* Force the browser-painted dark variant of native widgets. */
+  color-scheme: dark;
+  /* Win10/11 system accent (usually blue) leaks into form-control hover,
+     selected option highlight, autofill background, etc. Override globally. */
+  accent-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Ignore Windows High Contrast / Forced Colors mode — we own the palette. */
+*,
+*::before,
+*::after {
+  forced-color-adjust: none;
+}
+
+/* Text selection — both standards. */
+::selection {
+  background: var(--color-selection);
+  color: inherit;
+}
+::-moz-selection {
+  background: var(--color-selection);
+  color: inherit;
+}
+
+/* Caret colour everywhere a user can type. */
+input,
+textarea,
+[contenteditable],
+[contenteditable='true'] {
+  caret-color: var(--color-text-primary);
+}
+
+/* Chrome / WebView2 autofill: bright yellow background → our dark surface.
+   The trick is a giant inset shadow that hides the yellow. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-bg-panel) inset !important;
+  -webkit-text-fill-color: var(--color-text-primary) !important;
+  caret-color: var(--color-text-primary) !important;
+  transition: background-color 9999s ease-in-out 0s; /* freeze the fade */
+}
+
+/* Search inputs: hide the OS X / native cancel button + decoration. */
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-results-button,
+input[type='search']::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Number-input spinner — Windows draws a tiny native control. Off. */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Spellcheck underline. */
+::spelling-error,
+::grammar-error {
+  text-decoration: none;
+}
+
+/* Highlight / mark element — used by `<mark>`, by browser find-in-page. */
+mark {
+  background: var(--color-selection);
+  color: inherit;
+}
+
+/*
+ * VSCode/Cursor-style thin overlay scrollbars. The default Windows scrollbar
+ * is fat, intrusive and breaks the desktop-app feeling. Hide the system one,
+ * render our own thin overlay that fades in on hover.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 6px;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.22);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.34);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background-color: rgba(255, 255, 255, 0.42);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@keyframes disasmProgress {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
