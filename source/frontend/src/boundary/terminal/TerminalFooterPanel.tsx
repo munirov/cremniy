@@ -1,4 +1,12 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import {
+  emptyCremniyMeta,
+  parseCremniyMeta,
+  stringifyCremniyMeta,
+  type CremniyMeta,
+} from '@domain/project/cremniyMeta';
+import { readCremniyMeta, writeCremniyMeta } from '@infrastructure/tauri/bridge';
 
 import { TerminalInstance } from './TerminalInstance';
 import styles from './TerminalFooterPanel.module.css';
@@ -19,6 +27,12 @@ function shellLabel(shell: string | null): string | null {
   if (shell == null || shell.trim() === '') return null;
   const base = shell.split(/[\\/]/).pop() ?? shell;
   return base.replace(/\.exe$/i, '');
+}
+
+/** Last path segment, used as the fallback project name for a fresh .cremniy. */
+function basename(path: string): string {
+  const parts = path.split(/[\\/]/).filter((s) => s !== '');
+  return parts.length > 0 ? parts[parts.length - 1] : path;
 }
 
 function TerminalIcon() {
@@ -46,9 +60,82 @@ function TerminalIcon() {
  * their session and scrollback survive switching. "+" spawns another.
  */
 export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps) {
-  const [tabs, setTabs] = useState<TerminalTab[]>([{ id: 1, shell: null }]);
-  const [activeId, setActiveId] = useState<number>(1);
-  const nextIdRef = useRef(2);
+  const [tabs, setTabs] = useState<TerminalTab[]>([]);
+  const [activeId, setActiveId] = useState<number>(0);
+  // Gates rendering until .cremniy has been read, so we don't start a throwaway
+  // session before knowing how many tabs to restore.
+  const [loaded, setLoaded] = useState(false);
+  const nextIdRef = useRef(1);
+  // Last known full project meta — we read-modify-write it so persisting the
+  // terminal layout never clobbers other session fields.
+  const metaRef = useRef<CremniyMeta | null>(null);
+
+  // Restore tab layout from .cremniy when the workspace opens / changes.
+  useEffect(() => {
+    const root = workspaceRoot?.trim() ?? '';
+    let cancelled = false;
+    setLoaded(false);
+
+    if (root === '') {
+      // No workspace — one tab that shows its own "open a folder" prompt.
+      metaRef.current = null;
+      setTabs([{ id: 1, shell: null }]);
+      setActiveId(1);
+      nextIdRef.current = 2;
+      setLoaded(true);
+      return;
+    }
+
+    void (async () => {
+      let meta: CremniyMeta;
+      try {
+        meta = parseCremniyMeta(await readCremniyMeta(root), basename(root));
+      } catch {
+        meta = emptyCremniyMeta(basename(root));
+      }
+      if (cancelled) return;
+      metaRef.current = meta;
+      const persisted = meta.session.terminals;
+      const count = Math.max(1, persisted?.count ?? 1);
+      const restored: TerminalTab[] = Array.from({ length: count }, (_, i) => ({
+        id: i + 1,
+        shell: null,
+      }));
+      const activeIndex = Math.min(Math.max(0, persisted?.activeIndex ?? 0), count - 1);
+      nextIdRef.current = count + 1;
+      setTabs(restored);
+      setActiveId(restored[activeIndex].id);
+      setLoaded(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceRoot]);
+
+  // Persist tab count + active index back to .cremniy (debounced) whenever they
+  // change. Shell-label updates also fire this, but the guard skips no-op writes.
+  useEffect(() => {
+    const root = workspaceRoot?.trim() ?? '';
+    const meta = metaRef.current;
+    if (!loaded || root === '' || meta == null) return;
+
+    const activeIndex = Math.max(0, tabs.findIndex((t) => t.id === activeId));
+    const prev = meta.session.terminals;
+    if (prev != null && prev.count === tabs.length && prev.activeIndex === activeIndex) {
+      return;
+    }
+    const next: CremniyMeta = {
+      ...meta,
+      session: { ...meta.session, terminals: { count: tabs.length, activeIndex } },
+    };
+    metaRef.current = next;
+
+    const handle = window.setTimeout(() => {
+      void writeCremniyMeta(root, stringifyCremniyMeta(next)).catch(() => undefined);
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [tabs, activeId, loaded, workspaceRoot]);
 
   const addTerminal = useCallback(() => {
     const id = nextIdRef.current;
@@ -154,7 +241,7 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
             />
           </div>
         ))}
-        {tabs.length === 0 ? (
+        {loaded && tabs.length === 0 ? (
           <div className={styles.emptyState}>
             <button type="button" className={styles.emptyStateBtn} onClick={addTerminal}>
               New terminal
