@@ -1,9 +1,9 @@
-/** Qt MenuFactory registrations: top-level menu keys "1".."6". */
-export const MAIN_MENU_IDS = ['1', '2', '3', '4', '5', '6'] as const;
+/** Qt MenuFactory registrations: top-level menu keys "1".."7". */
+export const MAIN_MENU_IDS = ['1', '2', '3', '4', '5', '6', '7'] as const;
 
 export type MainMenuId = (typeof MAIN_MENU_IDS)[number];
 
-export const MAIN_MENU_LABELS = ['File', 'Edit', 'View', 'Build', 'Tools', 'References'] as const;
+export const MAIN_MENU_LABELS = ['File', 'Edit', 'View', 'Build', 'Tools', 'References', 'Terminal'] as const;
 
 // i18n keys parallel to MAIN_MENU_LABELS — MenuBar runs each through t() so
 // the menu strip switches language when prefs.locale flips.
@@ -14,6 +14,7 @@ export const MAIN_MENU_I18N_KEYS = [
   'menu.build',
   'menu.tools',
   'menu.references',
+  'menu.terminal',
 ] as const;
 
 export type MainMenuEntry = { id: MainMenuId; label: string; i18nKey: string };
