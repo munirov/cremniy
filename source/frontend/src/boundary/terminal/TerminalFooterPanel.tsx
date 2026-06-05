@@ -368,9 +368,17 @@ export function TerminalFooterPanel({
               title={collapsed ? 'Expand terminal' : 'Hide terminal (minimise to tab strip)'}
               aria-label={collapsed ? 'Expand terminal' : 'Hide terminal'}
             >
-              <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d={collapsed ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
-              </svg>
+              {collapsed ? (
+                // Expand — chevron up out of the strip.
+                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 15l6-6 6 6" />
+                </svg>
+              ) : (
+                // Minimise — same underscore bar as the window's minimize control.
+                <svg aria-hidden width="14" height="14" viewBox="0 0 12 12">
+                  <rect x="2" y="6" width="8" height="1" fill="currentColor" />
+                </svg>
+              )}
             </button>
             <button
               type="button"
@@ -379,8 +387,9 @@ export function TerminalFooterPanel({
               title="Close terminal (starts fresh next time)"
               aria-label="Close terminal"
             >
-              <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+              {/* Cross — same as the window's close control. */}
+              <svg aria-hidden width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                <path d="M3 3l8 8M11 3l-8 8" />
               </svg>
             </button>
           </div>
