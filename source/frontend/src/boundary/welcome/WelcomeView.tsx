@@ -7,11 +7,42 @@ import {
   type CreateProjectValidationIssue,
 } from '@domain/project/createProjectValidation';
 import { DEFAULT_APP_PREFERENCES, withOpenedWorkspacePinned, type AppPreferences } from '@domain/preferences/appPreferences';
-import { createProjectFolder, pickFolder } from '@infrastructure/tauri/bridge';
+import {
+  createCremniyProject,
+  pickFile,
+  pickFolder,
+} from '@infrastructure/tauri/bridge';
 import { loadPreferences, savePreferences } from '@infrastructure/preferences/preferencesBridge';
 import { registerAgentCommands, registerAgentState } from '@shared/agent/agentBridge';
+import { Select } from '@boundary/common/Select';
+import {
+  emptyCremniyMeta,
+  stringifyCremniyMeta,
+  type CremniyLanguage,
+} from '@domain/project/cremniyMeta';
 
 import styles from './WelcomeView.module.css';
+
+/**
+ * Strip Windows extended-length / UNC prefixes (`\\?\`, `\\?\UNC\`) before
+ * showing a path. Tauri's canonicalize() returns the long form even for plain
+ * drive paths; we don't want that leaking into the UI.
+ */
+function prettify(path: string): string {
+  return path.replace(/^\\\\\?\\(UNC\\)?/, '').replace(/^\/\/\?\/(UNC\/)?/, '');
+}
+
+function fileNameOf(path: string): string {
+  const p = prettify(path);
+  const m = p.match(/[^\\/]+$/);
+  return m ? m[0] : p;
+}
+
+function parentOf(path: string): string {
+  const p = prettify(path);
+  const m = p.match(/^(.*)[\\/][^\\/]+$/);
+  return m ? m[1] : '';
+}
 
 type WelcomePage = 'welcome' | 'create';
 
@@ -37,8 +68,30 @@ export function WelcomeView() {
   useEffect(() => {
     let cancelled = false;
     void loadPreferences().then(
-      (loaded) => {
-        if (!cancelled) {
+      async (loaded) => {
+        if (cancelled) return;
+        // Drop recent paths whose folder no longer exists (Qt parity:
+        // ProjectsHistoryManager.checkDirectoryExists). list_directory throws
+        // when the path is gone, so a successful call means the folder is
+        // still reachable.
+        const checks = await Promise.all(
+          loaded.recentWorkspacePaths.map(async (path) => {
+            try {
+              const { listDirectoryEntries } = await import('@infrastructure/tauri/bridge');
+              await listDirectoryEntries(path, path);
+              return path;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const survivors = checks.filter((p): p is string => p != null);
+        if (cancelled) return;
+        if (survivors.length !== loaded.recentWorkspacePaths.length) {
+          const pruned = { ...loaded, recentWorkspacePaths: survivors };
+          setPrefs(pruned);
+          void savePreferences(pruned).catch(() => undefined);
+        } else {
           setPrefs(loaded);
         }
       },
@@ -116,7 +169,13 @@ export function WelcomeView() {
     }
     setBusy(true);
     try {
-      const newRoot = await createProjectFolder(parentPath.trim(), projectName.trim());
+      const trimmedName = projectName.trim();
+      const meta = emptyCremniyMeta(trimmedName, language as CremniyLanguage);
+      const newRoot = await createCremniyProject(
+        parentPath.trim(),
+        trimmedName,
+        stringifyCremniyMeta(meta),
+      );
       const base = prefs ?? DEFAULT_APP_PREFERENCES;
       const next = withOpenedWorkspacePinned(base, newRoot);
       await savePreferences(next);
@@ -134,7 +193,7 @@ export function WelcomeView() {
     } finally {
       setBusy(false);
     }
-  }, [navigate, parentPath, prefs, projectName, showCreateIssue]);
+  }, [language, navigate, parentPath, prefs, projectName, showCreateIssue]);
 
   const handlePickParent = useCallback(async () => {
     const path = await pickFolder();
@@ -143,6 +202,18 @@ export function WelcomeView() {
       setInfo(null);
     }
   }, []);
+
+  const handlePickFile = useCallback(async () => {
+    const path = await pickFile();
+    if (path == null || path === '') return;
+    const parent = parentOf(path);
+    if (parent === '') return;
+    const base = prefs ?? DEFAULT_APP_PREFERENCES;
+    const next = withOpenedWorkspacePinned(base, parent);
+    await savePreferences(next);
+    setPrefs(next);
+    navigate(`/ide?root=${encodeURIComponent(parent)}`);
+  }, [navigate, prefs]);
 
   const handleRecentListKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
@@ -239,8 +310,18 @@ export function WelcomeView() {
   if (page === 'create') {
     return (
       <div className={styles.welcomeRoot}>
-        <div className={styles.welcomeInner}>
-          <h1 className={styles.title}>Create project</h1>
+        <div className={styles.welcomeCenter}>
+          <div className={styles.hero}>
+            <img
+              src="/cremniy-logo.svg"
+              alt=""
+              aria-hidden
+              className={styles.heroLogo}
+              draggable={false}
+            />
+            <div className={styles.heroName}>NEW PROJECT</div>
+          </div>
+
           <div className={styles.createGrid}>
             <label className={styles.fieldLabel} htmlFor="proj-name">
               Project name
@@ -255,39 +336,45 @@ export function WelcomeView() {
               }}
               autoComplete="off"
               spellCheck={false}
+              placeholder="my-project"
             />
+
             <label className={styles.fieldLabel} htmlFor="proj-lang">
               Language
             </label>
-            <select
+            <Select<(typeof LANGUAGE_OPTIONS)[number]>
               id="proj-lang"
-              className={styles.fieldInput}
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-            >
-              {LANGUAGE_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
+              value={language as (typeof LANGUAGE_OPTIONS)[number]}
+              options={LANGUAGE_OPTIONS.map((opt) => ({ value: opt, label: opt }))}
+              onChange={(v) => setLanguage(v)}
+              ariaLabel="Project language"
+            />
+
             <span className={styles.fieldLabel}>Path</span>
             <div className={styles.pathRow}>
-              <input className={styles.fieldInput} readOnly value={parentPath} placeholder="Choose parent folder…" />
-              <button type="button" className={styles.actionBtn} onClick={() => void handlePickParent()}>
+              <input
+                className={styles.fieldInput}
+                readOnly
+                value={parentPath}
+                placeholder="Choose parent folder…"
+              />
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={() => void handlePickParent()}
+              >
                 Browse…
               </button>
             </div>
           </div>
+
           {info != null ? (
             <p className={styles.infoLabel} role="alert">
               {info}
             </p>
           ) : null}
+
           <div className={styles.buttonRow}>
-            <button type="button" className={styles.actionBtn} disabled={busy} onClick={() => void handleCreateProject()}>
-              Create
-            </button>
             <button
               type="button"
               className={styles.actionBtn}
@@ -299,6 +386,14 @@ export function WelcomeView() {
             >
               Back
             </button>
+            <button
+              type="button"
+              className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
+              disabled={busy}
+              onClick={() => void handleCreateProject()}
+            >
+              Create
+            </button>
           </div>
         </div>
       </div>
@@ -306,61 +401,87 @@ export function WelcomeView() {
   }
 
   const activeOptionId = selectedIndex !== null ? `${listId}-opt-${selectedIndex}` : undefined;
+  // Recent list is capped at 5 visible rows like Cursor; the rest live behind
+  // the "View all" link (which currently jumps to the same list — Recent
+  // window is a follow-up).
+  const visibleRecents = recentPaths.slice(0, 5);
+  const overflowCount = recentPaths.length;
 
   return (
     <div className={styles.welcomeRoot}>
-      <div className={styles.welcomeInner}>
-        <h1 className={styles.title}>Cremniy</h1>
-        <p className={styles.subtitle}>Recent workspaces</p>
-        <div
-          className={styles.recentList}
-          role="listbox"
-          tabIndex={0}
-          aria-label="Recent workspaces"
-          aria-activedescendant={activeOptionId}
-          onKeyDown={handleRecentListKeyDown}
-        >
-          {recentPaths.length === 0 ? (
-            <div className={styles.emptyState}>No recent workspaces yet. Use Open… or Create.</div>
-          ) : (
-            recentPaths.map((path, index) => (
-              <div
-                key={path}
-                id={`${listId}-opt-${index}`}
-                role="option"
-                aria-selected={selectedIndex === index}
-                className={`${styles.listOption} ${selectedIndex === index ? styles.listOptionSelected : ''}`}
-                onClick={() => setSelectedIndex(index)}
-                onDoubleClick={() => void openPathAtIndex(index)}
-              >
-                {path}
-              </div>
-            ))
-          )}
+      <div className={styles.welcomeCenter}>
+        <div className={styles.hero}>
+          <img src="/cremniy-logo.svg" alt="" aria-hidden className={styles.heroLogo} draggable={false} />
+          <div className={styles.heroName}>CREMNIY</div>
+          <div className={styles.heroPlan}>Low-level IDE</div>
         </div>
-        <div className={styles.buttonRow}>
-          <button
-            type="button"
-            className={`${styles.actionBtn} ${selectedIndex !== null ? styles.actionBtnOpenReady : ''}`}
-            disabled={selectedIndex === null}
-            onClick={() => void handleOpenRecent()}
-          >
-            Open
-          </button>
-          <button type="button" className={styles.actionBtn} onClick={() => void handlePickFolder()}>
-            Open...
+
+        <div className={styles.cardGrid}>
+          <button type="button" className={styles.card} onClick={() => void handlePickFolder()}>
+            <svg className={styles.cardIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            </svg>
+            <span className={styles.cardLabel}>Open project</span>
           </button>
           <button
             type="button"
-            className={styles.actionBtn}
+            className={styles.card}
             onClick={() => {
               resetCreateForm();
               setPage('create');
             }}
           >
-            Create
+            <svg className={styles.cardIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <path d="M12 10v6M9 13h6" />
+            </svg>
+            <span className={styles.cardLabel}>New project</span>
+          </button>
+          <button type="button" className={styles.card} onClick={() => void handlePickFile()}>
+            <svg className={styles.cardIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+              <path d="M14 3v5h5" />
+            </svg>
+            <span className={styles.cardLabel}>Open file</span>
           </button>
         </div>
+
+        <section className={styles.recentSection} aria-label="Recent projects">
+          <header className={styles.recentHeader}>
+            <span>Recent projects</span>
+            {overflowCount > 0 ? (
+              <span className={styles.recentViewAll}>View all ({overflowCount})</span>
+            ) : null}
+          </header>
+          <div
+            className={styles.recentList}
+            role="listbox"
+            tabIndex={0}
+            aria-label="Recent workspaces"
+            aria-activedescendant={activeOptionId}
+            onKeyDown={handleRecentListKeyDown}
+          >
+            {visibleRecents.length === 0 ? (
+              <div className={styles.emptyState}>No recent projects yet.</div>
+            ) : (
+              visibleRecents.map((path, index) => (
+                <div
+                  key={path}
+                  id={`${listId}-opt-${index}`}
+                  role="option"
+                  aria-selected={selectedIndex === index}
+                  className={`${styles.recentRow} ${selectedIndex === index ? styles.recentRowSelected : ''}`}
+                  onClick={() => setSelectedIndex(index)}
+                  onDoubleClick={() => void openPathAtIndex(index)}
+                  title={path}
+                >
+                  <span className={styles.recentName}>{fileNameOf(path)}</span>
+                  <span className={styles.recentPath}>{parentOf(path) || path}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );
