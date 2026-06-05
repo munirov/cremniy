@@ -17,7 +17,9 @@
   align-items: stretch;
   flex-shrink: 0;
   height: 30px;
-  padding: 0 0.25rem 0 0.35rem;
+  /* No left padding — the first tab sits flush against the panel edge so
+     there's no stray gap before it. */
+  padding: 0 0.25rem 0 0;
   background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
