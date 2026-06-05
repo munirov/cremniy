@@ -2,7 +2,7 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0;
   min-width: 0;
   min-height: 0;
   font-family: var(--font-family-mono);
@@ -10,54 +10,177 @@
   background: #1e1e1e;
 }
 
-.toolbar {
+/* Tab bar — one row of terminal tabs + a "new terminal" button, sitting on
+   the terminal surface with a hairline beneath. Windows-Terminal-like. */
+.tabBar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  align-items: stretch;
   flex-shrink: 0;
-  /* No separator line — terminal blends straight into the toolbar surface
-     so there are no visual "slot" lines around the History icon. */
-  padding: 0.15rem 0.5rem;
-  min-width: 0;
+  height: 30px;
+  padding: 0 0.25rem 0 0.35rem;
   background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.status {
+.tabList {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  flex: 1;
+  gap: 1px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabList::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 12rem;
+  padding: 0 0.3rem 0 0.55rem;
+  border: none;
+  border-top: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-primary);
+  opacity: 0.6;
+  cursor: default;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.tab:hover {
+  opacity: 0.85;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.tabActive {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.06);
+  /* Thin top accent marks the live tab — monochrome, never blue. */
+  border-top-color: rgba(255, 255, 255, 0.55);
+}
+
+.tabActive:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.tabIcon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.tabLabel {
   min-width: 0;
   overflow: hidden;
-  color: var(--color-text-primary);
-  opacity: 0.75;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 12px;
 }
 
-.interruptButton {
-  flex-shrink: 0;
+.tabClose {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.5rem;
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
   padding: 0;
-  border: 1px solid transparent;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.tab:hover .tabClose,
+.tabActive .tabClose {
+  opacity: 0.7;
+}
+
+.tabClose:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin-left: 0.15rem;
+  padding: 0;
+  border: none;
   border-radius: 3px;
   background: transparent;
   color: var(--color-text-primary);
-  opacity: 0.65;
-  font: inherit;
+  opacity: 0.55;
   cursor: pointer;
-  transition: opacity 0.12s ease, background 0.12s ease;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
 }
 
-.interruptButton:hover {
+.addBtn:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
-.interruptButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
+/* Instance stack — every terminal is mounted; only the active wrap is shown
+   (display toggled inline) so hidden sessions/scrollback stay alive. */
+.instances {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.instanceWrap {
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+}
+
+.instance {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: #1e1e1e;
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.emptyStateBtn {
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-primary);
+  opacity: 0.75;
+  font: inherit;
+  font-family: var(--font-family-mono);
+  cursor: pointer;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.emptyStateBtn:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 .xtermHost {
