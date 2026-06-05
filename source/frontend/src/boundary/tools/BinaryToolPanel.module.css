@@ -68,7 +68,8 @@
   min-height: 18px;
   padding: 0 0.5rem;
   font-family: var(--font-family-mono);
-  font-size: 0.8125rem;
+  font-size: 14px; /* Qt parity: bigger hex cells for legibility. */
+  line-height: 1.4;
   line-height: 18px;
 }
 
@@ -118,11 +119,22 @@
   text-align: center;
 }
 
+/* Modified bytes — Qt parity: yellow background on changed cells, bold text. */
 .hexByteDirty {
-  color: var(--color-accent, #8ab4ff);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
+  color: #ffd864;
+  background-color: rgba(255, 216, 100, 0.16);
+  font-weight: 600;
+  border-radius: 2px;
+  box-shadow: inset 0 -2px 0 rgba(255, 216, 100, 0.55);
+}
+
+/* Newly inserted (length grew) — green tint to distinguish from replace. */
+.hexByteInserted {
+  color: #6cd97a;
+  background-color: rgba(108, 217, 122, 0.18);
+  font-weight: 600;
+  border-radius: 2px;
+  box-shadow: inset 0 -2px 0 rgba(108, 217, 122, 0.55);
 }
 
 .hexByteGap {

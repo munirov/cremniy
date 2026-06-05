@@ -174,6 +174,52 @@ export function resetBinaryBuffer(state: BinaryBufferState): BinaryBufferState {
   return buildState(originalBytes, originalBytes, state.snapshotSelection());
 }
 
+/**
+ * Splice-style replacement that preserves `originalBytes`. Removes
+ * `oldLength` bytes at `offset` and inserts `newBytes` in their place — so
+ * `oldLength === 0` means insert and `newBytes.length === 0` means remove.
+ */
+export function spliceBinaryBuffer(
+  state: BinaryBufferState,
+  offset: number,
+  oldLength: number,
+  newBytes: Uint8Array,
+): BinaryBufferState {
+  const current = state.snapshotCurrentBytes();
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > current.length) {
+    throw new RangeError('offset must be within the buffer');
+  }
+  if (!Number.isSafeInteger(oldLength) || oldLength < 0 || offset + oldLength > current.length) {
+    throw new RangeError('splice range exceeds buffer length');
+  }
+  for (const value of newBytes) {
+    assertValidByte(value);
+  }
+  const next = new Uint8Array(current.length - oldLength + newBytes.length);
+  next.set(current.subarray(0, offset), 0);
+  next.set(newBytes, offset);
+  next.set(current.subarray(offset + oldLength), offset + newBytes.length);
+
+  const selection = state.snapshotSelection();
+  const normalized =
+    selection != null && selection.endExclusive <= next.length ? selection : null;
+  return buildState(state.snapshotOriginalBytes(), next, normalized);
+}
+
+/** Replace the current bytes wholesale, keeping the original snapshot intact. */
+export function setBinaryBufferCurrentBytes(
+  state: BinaryBufferState,
+  next: Uint8Array,
+): BinaryBufferState {
+  for (const value of next) {
+    assertValidByte(value);
+  }
+  const selection = state.snapshotSelection();
+  const safeSelection =
+    selection != null && selection.endExclusive <= next.length ? selection : null;
+  return buildState(state.snapshotOriginalBytes(), next, safeSelection);
+}
+
 export function setBinaryBufferSelection(
   state: BinaryBufferState,
   selection: BinaryBufferSelection | null,

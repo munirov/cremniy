@@ -103,3 +103,175 @@ export function parseHexByteSequence(input: string): ParseHexBytesResult {
   }
   return { ok: true, bytes: out };
 }
+
+// --- 4-режима поиска (Qt parity: HexFindDialog) ------------------------------
+
+export type IntWidth = 8 | 16 | 32 | 64;
+export type FloatWidth = 32 | 64;
+export type Endian = 'little' | 'big';
+export type SearchDirection = 'forward' | 'backward';
+
+/**
+ * UTF-8 text → bytes. Case-insensitive переключается на стороне поиска через
+ * нормализацию обеих сторон (но мы возвращаем raw UTF-8 без casing).
+ */
+export function parseTextSearch(text: string): ParseHexBytesResult {
+  if (text.length === 0) {
+    return { ok: false, message: 'Enter text to find.' };
+  }
+  const bytes = new TextEncoder().encode(text);
+  return { ok: true, bytes };
+}
+
+/**
+ * Сравнение байт с учётом case-insensitive (только для ASCII).
+ */
+function asciiLowerByte(b: number): number {
+  return b >= 65 && b <= 90 ? b + 32 : b;
+}
+
+/**
+ * Знаковая/беззнаковая дешифровка целого, упаковка в N байт по endian.
+ * Все вычисления через BigInt, чтобы 64-битные значения не теряли точность.
+ */
+export function parseIntSearch(
+  input: string,
+  width: IntWidth,
+  endian: Endian,
+  signed: boolean,
+): ParseHexBytesResult {
+  const trimmed = input.trim();
+  if (trimmed === '') {
+    return { ok: false, message: 'Enter an integer to find.' };
+  }
+  let bi: bigint;
+  try {
+    if (/^-?0x[0-9a-fA-F]+$/i.test(trimmed)) {
+      const neg = trimmed.startsWith('-');
+      bi = neg ? -BigInt(trimmed.slice(1)) : BigInt(trimmed);
+    } else if (/^-?\d+$/.test(trimmed)) {
+      bi = BigInt(trimmed);
+    } else {
+      return { ok: false, message: 'Integer must be decimal or 0x-hex.' };
+    }
+  } catch {
+    return { ok: false, message: 'Could not parse the integer.' };
+  }
+
+  const byteCount = width / 8;
+  const max = signed ? (1n << BigInt(width - 1)) - 1n : (1n << BigInt(width)) - 1n;
+  const min = signed ? -(1n << BigInt(width - 1)) : 0n;
+  if (bi < min || bi > max) {
+    return {
+      ok: false,
+      message: `Value out of range for ${signed ? 'signed' : 'unsigned'} ${width}-bit.`,
+    };
+  }
+  if (bi < 0n) {
+    bi += 1n << BigInt(width);
+  }
+
+  const bytes = new Uint8Array(byteCount);
+  for (let i = 0; i < byteCount; i += 1) {
+    const slot = endian === 'little' ? i : byteCount - 1 - i;
+    bytes[slot] = Number(bi & 0xffn);
+    bi >>= 8n;
+  }
+  return { ok: true, bytes };
+}
+
+/**
+ * Float / Double литерал → IEEE-754 байты.
+ */
+export function parseFloatSearch(
+  input: string,
+  width: FloatWidth,
+  endian: Endian,
+): ParseHexBytesResult {
+  const trimmed = input.trim();
+  if (trimmed === '') {
+    return { ok: false, message: 'Enter a float value to find.' };
+  }
+  const num = Number(trimmed);
+  if (!Number.isFinite(num)) {
+    return { ok: false, message: 'Could not parse float.' };
+  }
+  const buf = new ArrayBuffer(width / 8);
+  const view = new DataView(buf);
+  const littleEndian = endian === 'little';
+  if (width === 32) {
+    view.setFloat32(0, num, littleEndian);
+  } else {
+    view.setFloat64(0, num, littleEndian);
+  }
+  return { ok: true, bytes: new Uint8Array(buf) };
+}
+
+/**
+ * Поиск следующего/предыдущего вхождения от `cursorOffset`.
+ * Возвращает -1 если не найдено. caseInsensitive работает только в режиме Text.
+ */
+export function findOccurrence(
+  haystack: Uint8Array,
+  needle: Uint8Array,
+  cursorOffset: number,
+  direction: SearchDirection,
+  caseInsensitive = false,
+): number {
+  if (needle.length === 0 || needle.length > haystack.length) {
+    return -1;
+  }
+  const lastStart = haystack.length - needle.length;
+
+  if (direction === 'forward') {
+    const startFrom = Math.max(0, Math.min(cursorOffset, lastStart));
+    for (let i = startFrom; i <= lastStart; i += 1) {
+      if (matchesAt(haystack, needle, i, caseInsensitive)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  const startFrom = Math.min(lastStart, Math.max(0, cursorOffset - 1));
+  for (let i = startFrom; i >= 0; i -= 1) {
+    if (matchesAt(haystack, needle, i, caseInsensitive)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function matchesAt(
+  haystack: Uint8Array,
+  needle: Uint8Array,
+  offset: number,
+  caseInsensitive: boolean,
+): boolean {
+  for (let j = 0; j < needle.length; j += 1) {
+    const h = haystack[offset + j];
+    const n = needle[j];
+    if (caseInsensitive ? asciiLowerByte(h) !== asciiLowerByte(n) : h !== n) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Заменяет диапазон [offset, offset+oldBytes.length) на newBytes.
+ * Возвращает новый буфер. Длины могут отличаться (insert/remove/replace).
+ */
+export function replaceRange(
+  buffer: Uint8Array,
+  offset: number,
+  oldLength: number,
+  newBytes: Uint8Array,
+): Uint8Array {
+  const tail = buffer.subarray(offset + oldLength);
+  const out = new Uint8Array(offset + newBytes.length + tail.length);
+  out.set(buffer.subarray(0, offset), 0);
+  out.set(newBytes, offset);
+  out.set(tail, offset + newBytes.length);
+  return out;
+}

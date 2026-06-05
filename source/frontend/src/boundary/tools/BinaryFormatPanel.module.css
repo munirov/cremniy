@@ -44,7 +44,7 @@
 
 .tabActive {
   background: var(--color-bg-elevated, rgba(127, 127, 127, 0.18));
-  border-color: var(--color-accent, #8ab4ff);
+  border-color: var(--color-accent);
 }
 
 .page {
