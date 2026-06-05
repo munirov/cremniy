@@ -1,0 +1,86 @@
+.bar {
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  width: 100%;
+  flex-shrink: 0;
+  background: var(--color-bg-panel);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  user-select: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.7rem 0 0.6rem;
+  flex-shrink: 0;
+}
+
+.logo {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  filter: grayscale(100%);
+  pointer-events: none;
+}
+
+.brandName {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  font-family: var(--font-family-mono);
+}
+
+.menuSlot {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.dragArea {
+  flex: 1;
+  /* Whole strip can drag the window via [data-tauri-drag-region]; this filler
+     just makes the unallocated space draggable too. */
+}
+
+.centerSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  /* Carve out a non-drag zone for buttons. */
+  -webkit-app-region: no-drag;
+}
+
+.ctrlBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  opacity: 0.75;
+  cursor: pointer;
+  transition: background-color 0.12s ease, opacity 0.12s ease;
+}
+
+.ctrlBtn:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  opacity: 1;
+}
+
+.ctrlBtnClose:hover {
+  background-color: #e81123;
+  color: #fff;
+  opacity: 1;
+}

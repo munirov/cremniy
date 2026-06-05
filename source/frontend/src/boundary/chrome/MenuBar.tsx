@@ -7,6 +7,7 @@ import { mainMenuEntries, type MainMenuId } from '@domain/menu/mainMenu';
 import { REFERENCES_MENU_ENTRIES, type ReferencesMenuActionId } from '@domain/menu/referencesMenu';
 import { TOOLS_MENU_ENTRIES, type ToolsMenuActionId } from '@domain/menu/toolsMenu';
 import { VIEW_MENU_ENTRIES, type ViewMenuActionId } from '@domain/menu/viewMenu';
+import { useT } from '@boundary/i18n/LocaleContext';
 
 import styles from './MenuBar.module.css';
 
@@ -40,6 +41,7 @@ export function MenuBar({
   activeDocumentDirty = false,
   closeEditorAvailable = false,
 }: MenuBarProps) {
+  const t = useT();
   const entries = useMemo(() => mainMenuEntries(), []);
   const [openMenuId, setOpenMenuId] = useState<MainMenuId | null>(null);
   const wrapRefs = useRef<Partial<Record<MainMenuId, HTMLDivElement | null>>>({});
@@ -76,9 +78,11 @@ export function MenuBar({
       ev.preventDefault();
       onShortcut(m);
     };
-    window.addEventListener('keydown', onKey);
+    // Capture phase — otherwise Monaco grabs Ctrl+S/F/W/O first and our global
+    // bindings never fire while the editor has focus.
+    window.addEventListener('keydown', onKey, true);
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
     };
   }, [onShortcut]);
 
@@ -135,7 +139,8 @@ export function MenuBar({
   return (
     <nav className={styles.menuBar} aria-label="Main menu">
       <ul className={styles.menuList}>
-        {entries.map(({ id, label }) => {
+        {entries.map(({ id, label, i18nKey }) => {
+          const displayLabel = t(i18nKey) || label;
           if (id === '1') {
             return (
               <li key={id} className={styles.menuItemWrap}>
@@ -147,7 +152,7 @@ export function MenuBar({
                     aria-expanded={openMenuId === '1'}
                     onClick={() => toggleMenu('1')}
                   >
-                    {label}
+                    {displayLabel}
                   </button>
                   {openMenuId === '1' && onFileMenuAction != null ? (
                     <ul className={styles.dropdown} role="menu">
@@ -188,7 +193,7 @@ export function MenuBar({
                     aria-expanded={openMenuId === '2'}
                     onClick={() => toggleMenu('2')}
                   >
-                    {label}
+                    {displayLabel}
                   </button>
                   {openMenuId === '2' ? (
                     <ul className={styles.dropdown} role="menu">
@@ -222,7 +227,7 @@ export function MenuBar({
                     aria-expanded={openMenuId === '3'}
                     onClick={() => toggleMenu('3')}
                   >
-                    {label}
+                    {displayLabel}
                   </button>
                   {openMenuId === '3' ? (
                     <ul className={styles.dropdown} role="menu">
@@ -255,9 +260,11 @@ export function MenuBar({
           if (id === '4') {
             return (
               <li key={id} className={styles.menuItemWrap}>
-                <button type="button" className={styles.menuItem} disabled title="Build actions are not available yet">
-                  {label}
-                </button>
+                <div className={styles.menuWithDropdown}>
+                  <button type="button" className={styles.menuItem} disabled title="Build actions are not available yet">
+                    {displayLabel}
+                  </button>
+                </div>
               </li>
             );
           }
@@ -272,7 +279,7 @@ export function MenuBar({
                     aria-expanded={openMenuId === '5'}
                     onClick={() => toggleMenu('5')}
                   >
-                    {label}
+                    {displayLabel}
                   </button>
                   {openMenuId === '5' ? (
                     <ul className={styles.dropdown} role="menu">
@@ -300,7 +307,7 @@ export function MenuBar({
                     aria-expanded={openMenuId === '6'}
                     onClick={() => toggleMenu('6')}
                   >
-                    {label}
+                    {displayLabel}
                   </button>
                   {openMenuId === '6' ? (
                     <ul className={styles.dropdown} role="menu">

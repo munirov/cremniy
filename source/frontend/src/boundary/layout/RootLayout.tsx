@@ -15,18 +15,15 @@ function defaultHeader() {
   return <p className={styles.placeholder}>Menu bar placeholder</p>;
 }
 
-function defaultFooterPanel() {
-  return <p className={styles.placeholder}>Terminal panel unavailable</p>;
-}
-
 export function RootLayout({
   header = defaultHeader(),
   sidebar,
   children,
-  footerPanel = defaultFooterPanel(),
+  footerPanel,
   footerVisible = true,
 }: RootLayoutProps) {
   const hasSidebar = sidebar != null;
+  const hasFooter = footerPanel != null;
 
   return (
     <div className={styles.rootShell}>
@@ -39,18 +36,20 @@ export function RootLayout({
           </section>
         </div>
       </main>
-      <footer
-        className={`${styles.shellFooterPanel} ${footerVisible ? '' : styles.shellFooterPanelHidden}`}
-        data-testid="ide-terminal-footer"
-        aria-label="Terminal"
-      >
-        {footerVisible ? (
-          <>
-            <div className={styles.shellFooterPanelGrip} aria-hidden="true" />
-            <div className={styles.shellFooterInner}>{footerPanel}</div>
-          </>
-        ) : null}
-      </footer>
+      {hasFooter ? (
+        <footer
+          className={`${styles.shellFooterPanel} ${footerVisible ? '' : styles.shellFooterPanelHidden}`}
+          data-testid="ide-terminal-footer"
+          aria-label="Terminal"
+        >
+          {footerVisible ? (
+            <>
+              <div className={styles.shellFooterPanelGrip} aria-hidden="true" />
+              <div className={styles.shellFooterInner}>{footerPanel}</div>
+            </>
+          ) : null}
+        </footer>
+      ) : null}
     </div>
   );
 }

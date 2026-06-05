@@ -14,15 +14,16 @@ import { DEFAULT_APP_PREFERENCES, type AppPreferences } from '@domain/preference
 import type { SettingsService } from '@domain/preferences/settingsService';
 
 import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor/IdeMonacoEditor';
-import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
 import { MenuBar } from '@boundary/chrome/MenuBar';
+import { useMenuSlot } from '@boundary/chrome/MenuSlotContext';
+import { useChangeLocale } from '@boundary/i18n/LocaleContext';
 import { ReferenceTablesModal } from '@boundary/references/ReferenceTablesModal';
 import { SettingsDialog } from '@boundary/settings/SettingsDialog';
-import { TerminalFooterPanel } from '@boundary/terminal/TerminalFooterPanel';
-import { ReverseCalculatorDialog } from '@boundary/tools/ReverseCalculatorDialog';
-import { IdeStatusStrip } from '@boundary/layout/IdeStatusStrip';
-import { IdeWorkspace } from '@boundary/layout/IdeWorkspace';
+import { IdeDockview } from '@boundary/layout/IdeDockview';
 import { RootLayout } from '@boundary/layout/RootLayout';
+import { DataConverterDialog } from '@boundary/tools/DataConverterDialog';
+import { ReverseCalculatorDialog } from '@boundary/tools/ReverseCalculatorDialog';
+import { ShellCodeGeneratorDialog } from '@boundary/tools/ShellCodeGeneratorDialog';
 import { IdeSessionProvider, useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { ToolDockProvider, useToolDock } from '@boundary/workspace/ToolDockContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
@@ -39,10 +40,20 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
   const toolDock = useToolDock();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
+  const [dataConverterOpen, setDataConverterOpen] = useState(false);
+  const [shellCodeOpen, setShellCodeOpen] = useState(false);
   const [refsOpen, setRefsOpen] = useState<ReferencesMenuActionId | null>(null);
   const [prefs, setPrefs] = useState<AppPreferences | null>(null);
   const [cursorPosition, setCursorPosition] = useState<IdeEditorCursorPosition | null>(null);
   const [editorCommand, setEditorCommand] = useState<IdeEditorCommand | null>(null);
+  const [hiddenPanes, setHiddenPanes] = useState<Record<'fileTree' | 'editor' | 'toolDock', boolean>>({
+    fileTree: false,
+    editor: false,
+    toolDock: false,
+  });
+
+  // togglePane defined further down — it needs persistTerminal in scope.
+  const togglePaneRef = useRef<(id: 'fileTree' | 'editor' | 'toolDock' | 'terminal') => void>(() => undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,10 +74,29 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
     };
   }, [settingsService]);
 
+  const changeLocale = useChangeLocale();
+  useEffect(() => {
+    if (prefs?.locale != null) changeLocale(prefs.locale);
+  }, [prefs?.locale, changeLocale]);
+
   const terminalVisible = prefs?.terminalPanelVisible ?? false;
 
   const wordWrapEnabled =
     prefs?.editorWordWrap ?? DEFAULT_APP_PREFERENCES.editorWordWrap;
+  const editorFontSize = prefs?.editorFontSize ?? DEFAULT_APP_PREFERENCES.editorFontSize;
+
+  const persistEditorFontSize = useCallback(
+    (size: number) => {
+      const base = prefsRef.current ?? DEFAULT_APP_PREFERENCES;
+      if (base.editorFontSize === size) {
+        return;
+      }
+      const next: AppPreferences = { ...base, editorFontSize: size };
+      void settingsService.savePreferences(next).catch(() => undefined);
+      setPrefs(next);
+    },
+    [settingsService],
+  );
 
   const persistTerminal = useCallback(async (visible: boolean) => {
     const base = prefs ?? (await settingsService.loadPreferences().catch(() => DEFAULT_APP_PREFERENCES));
@@ -85,6 +115,56 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
     [prefs, settingsService],
   );
 
+  const persistInsertSpaces = useCallback(
+    async (enabled: boolean) => {
+      const base = prefs ?? (await settingsService.loadPreferences().catch(() => DEFAULT_APP_PREFERENCES));
+      const next: AppPreferences = { ...base, editorInsertSpaces: enabled };
+      await settingsService.savePreferences(next);
+      setPrefs(next);
+    },
+    [prefs, settingsService],
+  );
+
+  const persistTabWidth = useCallback(
+    async (width: number) => {
+      const base = prefs ?? (await settingsService.loadPreferences().catch(() => DEFAULT_APP_PREFERENCES));
+      const next: AppPreferences = { ...base, editorTabWidth: width };
+      await settingsService.savePreferences(next);
+      setPrefs(next);
+    },
+    [prefs, settingsService],
+  );
+
+  // Fire-and-forget layout persistence — IdeDockview already debounces it.
+  const prefsRef = useRef(prefs);
+  prefsRef.current = prefs;
+  const persistDockLayout = useCallback(
+    (layout: unknown) => {
+      const base = prefsRef.current ?? DEFAULT_APP_PREFERENCES;
+      const next: AppPreferences = { ...base, dockLayout: layout };
+      void settingsService.savePreferences(next).catch(() => undefined);
+      setPrefs(next);
+    },
+    [settingsService],
+  );
+
+  // Bind the dock context-menu's togglePane to the live persistTerminal closure.
+  togglePaneRef.current = (id) => {
+    if (id === 'terminal') {
+      void persistTerminal(!terminalVisible);
+      return;
+    }
+    setHiddenPanes((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+  const onTogglePane = useCallback(
+    (id: 'fileTree' | 'editor' | 'toolDock' | 'terminal') => togglePaneRef.current(id),
+    [],
+  );
+
+  const editorInsertSpaces =
+    prefs?.editorInsertSpaces ?? DEFAULT_APP_PREFERENCES.editorInsertSpaces;
+  const editorTabWidth = prefs?.editorTabWidth ?? DEFAULT_APP_PREFERENCES.editorTabWidth;
+
   const handleViewMenu = useCallback(
     (id: ViewMenuActionId) => {
       if (id === 'toggleTerminal') {
@@ -93,9 +173,37 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       }
       if (id === 'toggleWordWrap') {
         void persistWordWrap(!wordWrapEnabled);
+        return;
+      }
+      if (id === 'toggleFileTree') {
+        setHiddenPanes((p) => ({ ...p, fileTree: !p.fileTree }));
+        return;
+      }
+      if (id === 'toggleInsertSpaces') {
+        void persistInsertSpaces(!editorInsertSpaces);
+        return;
+      }
+      if (id === 'setTabWidth2') {
+        void persistTabWidth(2);
+        return;
+      }
+      if (id === 'setTabWidth4') {
+        void persistTabWidth(4);
+        return;
+      }
+      if (id === 'setTabWidth8') {
+        void persistTabWidth(8);
       }
     },
-    [persistTerminal, persistWordWrap, terminalVisible, wordWrapEnabled],
+    [
+      editorInsertSpaces,
+      persistInsertSpaces,
+      persistTabWidth,
+      persistTerminal,
+      persistWordWrap,
+      terminalVisible,
+      wordWrapEnabled,
+    ],
   );
 
   const handleEditMenu = useCallback((id: EditMenuActionId) => {
@@ -108,6 +216,14 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
     (id: ToolsMenuActionId) => {
       if (id === 'reverseCalculator') {
         setCalcOpen(true);
+        return;
+      }
+      if (id === 'dataConverter') {
+        setDataConverterOpen(true);
+        return;
+      }
+      if (id === 'shellCodeGenerator') {
+        setShellCodeOpen(true);
         return;
       }
       if (id === 'openBinaryTool') {
@@ -154,32 +270,18 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         handleEditMenu(action.id);
         return;
       }
-      if (action.kind === 'view' && action.id === 'toggleTerminal') {
-        void persistTerminal(!terminalVisible);
+      if (action.kind === 'view') {
+        handleViewMenu(action.id);
         return;
       }
-      if (action.kind === 'view' && action.id === 'toggleWordWrap') {
-        void persistWordWrap(!wordWrapEnabled);
-      }
     },
-    [handleEditMenu, ide, persistTerminal, persistWordWrap, terminalVisible, wordWrapEnabled],
-  );
-
-  const onCloseWorkspace = useMemo(
-    () => () => {
-      void ide.runFileMenuAction('closeWorkspace');
-    },
-    [ide],
+    [handleEditMenu, handleViewMenu, ide],
   );
 
   const onIdeCursorPositionChange = useCallback((position: IdeEditorCursorPosition | null) => {
     setCursorPosition(position);
   }, []);
 
-  const footerPanel = useMemo(
-    () => <TerminalFooterPanel workspaceRoot={workspaceRoot?.path ?? null} />,
-    [workspaceRoot?.path],
-  );
 
   const closeEditorAvailable =
     ide.openFilePaths.length > 0 || ide.documentText.trim() !== '';
@@ -304,41 +406,68 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
     };
   }, []);
 
+  // Publish the IDE's MenuBar into the global TitleBar (which lives one level
+  // above the routes in App.tsx — see MenuSlotContext for the rationale).
+  // Clearing on unmount means navigating back to Welcome hides the menu items
+  // but the titlebar / window controls stay visible.
+  const { setMenu } = useMenuSlot();
+  useEffect(() => {
+    setMenu(
+      <MenuBar
+        onFileMenuAction={onFileMenuAction}
+        onEditMenuAction={handleEditMenu}
+        onViewMenuAction={handleViewMenu}
+        onToolsMenuAction={handleToolsMenu}
+        onReferencesMenuAction={handleRefsMenu}
+        onShortcut={onShortcut}
+        terminalPanelVisible={terminalVisible}
+        wordWrapEnabled={wordWrapEnabled}
+        hasActiveDocument={ide.activeFilePath != null || ide.documentText !== ''}
+        activeDocumentDirty={ide.activeDocumentDirty}
+        closeEditorAvailable={closeEditorAvailable}
+      />,
+    );
+    return () => setMenu(null);
+  }, [
+    closeEditorAvailable,
+    handleEditMenu,
+    handleRefsMenu,
+    handleToolsMenu,
+    handleViewMenu,
+    ide.activeDocumentDirty,
+    ide.activeFilePath,
+    ide.documentText,
+    onFileMenuAction,
+    onShortcut,
+    setMenu,
+    terminalVisible,
+    wordWrapEnabled,
+  ]);
+
   return (
     <>
-      <RootLayout
-        header={
-          <MenuBar
-            onFileMenuAction={onFileMenuAction}
-            onEditMenuAction={handleEditMenu}
-            onViewMenuAction={handleViewMenu}
-            onToolsMenuAction={handleToolsMenu}
-            onReferencesMenuAction={handleRefsMenu}
-            onShortcut={onShortcut}
-            terminalPanelVisible={terminalVisible}
-            wordWrapEnabled={wordWrapEnabled}
-            hasActiveDocument={ide.activeFilePath != null || ide.documentText !== ''}
-            activeDocumentDirty={ide.activeDocumentDirty}
-            closeEditorAvailable={closeEditorAvailable}
-          />
-        }
-        footerVisible={terminalVisible}
-        footerPanel={footerPanel}
-      >
-        <IdeWorkspace workspaceRoot={workspaceRoot} onCloseWorkspace={onCloseWorkspace}>
-          <div className={styles.ideEditorPane}>
-            <IdeMonacoEditor
-              onCursorPositionChange={onIdeCursorPositionChange}
-              wordWrapEnabled={wordWrapEnabled}
-              command={editorCommand}
-            />
-            <IdeStatusStrip
-              activeFilePath={ide.activeFilePath}
-              cursorLine={cursorPosition?.line ?? null}
-              cursorColumn={cursorPosition?.column ?? null}
-            />
-          </div>
-        </IdeWorkspace>
+      <RootLayout>
+        <IdeDockview
+          workspaceRoot={workspaceRoot}
+          editorCommand={editorCommand}
+          wordWrapEnabled={wordWrapEnabled}
+          editorInsertSpaces={editorInsertSpaces}
+          editorTabWidth={editorTabWidth}
+          editorFontSize={editorFontSize}
+          onEditorFontSizeChange={persistEditorFontSize}
+          onCursorPositionChange={onIdeCursorPositionChange}
+          cursorPosition={cursorPosition}
+          initialLayout={prefs?.dockLayout ?? null}
+          onLayoutChange={persistDockLayout}
+          terminalVisible={terminalVisible}
+          onTogglePane={onTogglePane}
+          paneVisibility={{
+            fileTree: !hiddenPanes.fileTree,
+            editor: !hiddenPanes.editor,
+            toolDock: !hiddenPanes.toolDock,
+            terminal: terminalVisible,
+          }}
+        />
       </RootLayout>
 
       <SettingsDialog
@@ -353,6 +482,30 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         <div className={styles.modalBackdrop} role="presentation" onMouseDown={(e) => e.target === e.currentTarget && setCalcOpen(false)}>
           <div className={styles.modalPanel} onMouseDown={(e) => e.stopPropagation()}>
             <ReverseCalculatorDialog onClose={() => setCalcOpen(false)} />
+          </div>
+        </div>
+      ) : null}
+
+      {dataConverterOpen ? (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={(e) => e.target === e.currentTarget && setDataConverterOpen(false)}
+        >
+          <div className={styles.modalPanel} onMouseDown={(e) => e.stopPropagation()}>
+            <DataConverterDialog onClose={() => setDataConverterOpen(false)} />
+          </div>
+        </div>
+      ) : null}
+
+      {shellCodeOpen ? (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={(e) => e.target === e.currentTarget && setShellCodeOpen(false)}
+        >
+          <div className={styles.modalPanel} onMouseDown={(e) => e.stopPropagation()}>
+            <ShellCodeGeneratorDialog onClose={() => setShellCodeOpen(false)} />
           </div>
         </div>
       ) : null}
