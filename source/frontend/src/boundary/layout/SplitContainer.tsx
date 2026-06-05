@@ -169,23 +169,24 @@ export function SplitContainer({
         const weight = internalSizes[i] ?? 1;
         const isCollapsed = collapsed?.[i] ?? false;
         const prevCollapsed = collapsed?.[i - 1] ?? false;
-        // No handle into/out of a collapsed pane — it can't be resized.
-        const showHandle = i > 0 && !isCollapsed && !prevCollapsed;
+        // The divider is always a 1px line; it's only draggable when neither
+        // adjacent pane is collapsed (a collapsed pane can't be resized).
+        const draggable = i > 0 && !isCollapsed && !prevCollapsed;
         return (
           <Fragment key={`split-${i}`}>
-            {showHandle ? (
+            {i > 0 ? (
               <div
                 key={`h-${i}`}
-                className={handleClass}
+                className={`${handleClass}${draggable ? '' : ` ${styles.handleStatic}`}`}
                 style={
                   isHorizontal
                     ? { width: handleSize }
                     : { height: handleSize }
                 }
-                onPointerDown={(e) => beginDrag(i - 1, e)}
-                onPointerMove={onPointerMove}
-                onPointerUp={endDrag}
-                onPointerCancel={endDrag}
+                onPointerDown={draggable ? (e) => beginDrag(i - 1, e) : undefined}
+                onPointerMove={draggable ? onPointerMove : undefined}
+                onPointerUp={draggable ? endDrag : undefined}
+                onPointerCancel={draggable ? endDrag : undefined}
                 role="separator"
                 aria-orientation={isHorizontal ? 'vertical' : 'horizontal'}
               />

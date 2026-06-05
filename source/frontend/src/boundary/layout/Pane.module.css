@@ -6,8 +6,8 @@
   min-height: 0;
   min-width: 0;
   background-color: var(--color-bg-base);
-  border: 1px solid var(--color-border-muted);
-  border-radius: 2px;
+  /* No per-pane border/radius — the single 1px split divider is the only line
+     between blocks, so adjacent panes don't stack border + handle + border. */
   overflow: hidden;
 }
 

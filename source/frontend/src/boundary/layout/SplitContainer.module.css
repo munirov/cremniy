@@ -25,11 +25,18 @@
 .handleH,
 .handleV {
   flex-shrink: 0;
-  /* Barely-there hairline by default; lights up only on hover/drag. */
-  background-color: rgba(255, 255, 255, 0.035);
+  /* The single 1px divider between blocks — same muted line as the (now
+     removed) pane borders; lights up on hover/drag. */
+  background-color: var(--color-border-muted);
   opacity: 1;
   transition: background-color 0.12s ease;
   z-index: 5;
+}
+
+/* Divider next to a collapsed pane: visible line, but not draggable. */
+.handleStatic {
+  pointer-events: none;
+  cursor: default;
 }
 
 .handleH {
