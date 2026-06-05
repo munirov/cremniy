@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react';
 
 import { listenPopoutClosed, popoutPane, closePopoutPane } from '@infrastructure/tauri/bridge';
+import { Menu } from '@boundary/common/Menu';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 
 import { registerPaneRenderer } from './paneRegistry';
@@ -134,30 +135,6 @@ export function Pane({
     return registerPaneRenderer(id, render);
   }, [bare, id, children, popoutRender]);
 
-  // Close the context menu on outside click or Escape.
-  useEffect(() => {
-    if (ctxMenu == null) {
-      return;
-    }
-    const onDown = (ev: PointerEvent) => {
-      const target = ev.target as HTMLElement | null;
-      if (target == null || !target.closest('[data-pane-ctxmenu]')) {
-        setCtxMenu(null);
-      }
-    };
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') {
-        setCtxMenu(null);
-      }
-    };
-    window.addEventListener('pointerdown', onDown);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('pointerdown', onDown);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [ctxMenu]);
-
   const handlePopOut = useCallback(() => {
     onPopOut?.(id);
     registry?.setPoppedOut(id, true);
@@ -213,31 +190,12 @@ export function Pane({
         )}
       </div>
       {ctxMenu != null ? (
-        <ul
-          data-pane-ctxmenu
-          className={styles.paneCtxMenu}
-          style={{ left: ctxMenu.x, top: ctxMenu.y }}
-          role="menu"
-        >
-          {groups.map((group, gi) => (
-            <li role="none" key={gi} className={gi > 0 ? styles.paneCtxGroup : undefined}>
-              <ul role="none" className={styles.paneCtxGroupList}>
-                {group.map((item) => (
-                  <li role="none" key={item.label}>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={`${styles.paneCtxMenuItem} ${item.danger ? styles.paneCtxMenuItemDanger : ''}`}
-                      onClick={item.onClick}
-                    >
-                      {item.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
+        <Menu
+          groups={groups}
+          position={{ kind: 'point', x: ctxMenu.x, y: ctxMenu.y }}
+          onClose={() => setCtxMenu(null)}
+          label={`${title} actions`}
+        />
       ) : null}
     </section>
   );
