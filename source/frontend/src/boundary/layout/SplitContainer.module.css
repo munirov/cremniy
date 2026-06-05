@@ -1,0 +1,72 @@
+.split {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.splitH {
+  flex-direction: row;
+}
+
+.splitV {
+  flex-direction: column;
+}
+
+.cell {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.handleH,
+.handleV {
+  flex-shrink: 0;
+  background-color: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+  transition: background-color 0.12s ease;
+  z-index: 5;
+}
+
+.handleH {
+  cursor: col-resize;
+  position: relative;
+}
+
+.handleV {
+  cursor: row-resize;
+  position: relative;
+}
+
+.handleH::after,
+.handleV::after {
+  /* Wider hit area than the visible line so the user does not have to aim. */
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.handleH::after {
+  /* 5px hit zone around the 1px line — easy to grab without seeing a fat bar. */
+  left: -4px;
+  right: -4px;
+  top: 0;
+  bottom: 0;
+}
+
+.handleV::after {
+  left: 0;
+  right: 0;
+  top: -4px;
+  bottom: -4px;
+}
+
+.handleH:hover,
+.handleV:hover,
+.handleH:active,
+.handleV:active {
+  background-color: var(--color-accent);
+}

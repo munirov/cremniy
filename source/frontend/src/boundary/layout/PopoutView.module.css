@@ -1,0 +1,36 @@
+.popoutShell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  overflow: hidden;
+}
+
+.popoutPending {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.popoutPendingTitle {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+}
+
+.popoutPendingHint {
+  margin: 0;
+  max-width: 36rem;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--font-size-base) * 0.9);
+  opacity: 0.7;
+}

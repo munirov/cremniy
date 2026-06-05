@@ -1,0 +1,50 @@
+.rail {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 2.5rem;
+  padding: 0.35rem 0.2rem;
+  gap: 0.2rem;
+  background-color: var(--color-bg-panel);
+  border-left: 1px solid var(--color-border-pane);
+  overflow-y: auto;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-family: var(--font-family-mono);
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  color: inherit;
+  background-color: transparent;
+  position: relative;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+  transition: opacity 0.12s ease;
+}
+
+.btn:hover .icon,
+.btnActive .icon {
+  opacity: 1;
+}
+
+.btn:hover {
+  background-color: var(--color-hover-surface);
+}
+
+.btnActive {
+  background-color: var(--color-hover-surface);
+  border-color: var(--color-border-accent);
+  box-shadow: inset 2px 0 0 0 var(--color-accent);
+}

@@ -7,27 +7,22 @@ export type IdeStatusStripProps = {
 };
 
 export function IdeStatusStrip({ activeFilePath, cursorLine, cursorColumn }: IdeStatusStripProps) {
-  const fileLabel =
-    activeFilePath != null && activeFilePath !== ''
-      ? activeFilePath
-      : '— (use File → Open file)';
+  // No active file → no status strip at all. Empty status fields ("— (use
+  // File → Open file)", "Ln —, Col —") were just visual noise; the empty
+  // editor state already tells the user there's nothing open.
+  if (activeFilePath == null || activeFilePath === '') {
+    return null;
+  }
 
   const cursorLabel =
-    cursorLine != null && cursorColumn != null
-      ? `Ln ${cursorLine}, Col ${cursorColumn}`
-      : 'Ln —, Col —';
+    cursorLine != null && cursorColumn != null ? `Ln ${cursorLine}, Col ${cursorColumn}` : '';
 
   return (
     <div className={styles.statusStrip} aria-label="Editor status" data-testid="ide-status-strip">
-      <span
-        className={styles.fileCell}
-        title={activeFilePath ?? undefined}
-        aria-live="polite"
-      >
-        {fileLabel}
+      <span className={styles.fileCell} title={activeFilePath} aria-live="polite">
+        {activeFilePath}
       </span>
-      <span className={styles.metaCell}>Encoding: —</span>
-      <span className={styles.cursorCell}>{cursorLabel}</span>
+      {cursorLabel !== '' ? <span className={styles.cursorCell}>{cursorLabel}</span> : null}
     </div>
   );
 }

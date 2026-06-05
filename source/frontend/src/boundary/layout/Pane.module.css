@@ -1,0 +1,155 @@
+.paneShell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-muted);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.paneHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  height: 22px;
+  padding: 0 0.5rem;
+  background-color: var(--color-bg-panel);
+  border-bottom: 1px solid var(--color-border-muted);
+  user-select: none;
+}
+
+.paneTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-family-ui, system-ui, 'Segoe UI', sans-serif);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+  opacity: 0.55;
+  direction: rtl;
+  text-align: left;
+}
+
+.paneActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.paneIconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0.65;
+}
+
+.paneIconButton:hover:not(:disabled) {
+  background-color: var(--color-hover-surface);
+  opacity: 1;
+}
+
+.paneIconButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.paneBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.bareBody {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.paneDetachedPlaceholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.paneDetachedTitle {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+}
+
+.paneDetachedButton {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 2px;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.paneDetachedButton:hover {
+  background: var(--color-hover-surface);
+}
+
+.paneCtxMenu {
+  position: fixed;
+  z-index: 60;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-pane);
+  border-radius: 3px;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3);
+}
+
+.paneCtxMenuItem {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0.65rem;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: var(--color-text-primary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.paneCtxMenuItem:hover {
+  background: var(--color-hover-surface);
+}
