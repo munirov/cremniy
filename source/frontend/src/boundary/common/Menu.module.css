@@ -1,0 +1,79 @@
+.menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 12rem;
+  max-width: 22rem;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background-color: var(--color-bg-panel);
+  border: 1px solid var(--color-border-pane);
+  border-radius: 4px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.45);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+.groupList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Divider above every group after the first — this is the visual grouping the
+   actions get split into. */
+.group {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.35rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  font-family: var(--font-family-mono);
+  cursor: pointer;
+}
+
+.item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.item:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.item:disabled:hover {
+  background: transparent;
+}
+
+.itemLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemCheck {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.itemDanger {
+  color: #ef4444;
+}
+
+.itemDanger:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
