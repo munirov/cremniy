@@ -18,8 +18,10 @@ export type TerminalFooterPanelProps = {
 type TerminalTab = {
   id: number;
   /** Live shell name reported by the instance (e.g. "powershell"); null while
-      starting or after exit. Drives the tab label. */
+      starting or after exit. Drives the tab label when no custom name is set. */
   shell: string | null;
+  /** User-given name (double-click the tab to rename); null = auto label. */
+  title: string | null;
 };
 
 /** Friendly tab label from a shell path: "…\powershell.exe" → "powershell". */
@@ -69,6 +71,12 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
   // Last known full project meta — we read-modify-write it so persisting the
   // terminal layout never clobbers other session fields.
   const metaRef = useRef<CremniyMeta | null>(null);
+  // Inline rename state: which tab's label is being edited + its draft text.
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [draft, setDraft] = useState('');
+  // When a rename ends via Enter/Escape we tear the input down ourselves; this
+  // flag tells the resulting blur not to commit a second (or unwanted) time.
+  const skipBlurRef = useRef(false);
 
   // Restore tab layout from .cremniy when the workspace opens / changes.
   useEffect(() => {
@@ -79,7 +87,7 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
     if (root === '') {
       // No workspace — one tab that shows its own "open a folder" prompt.
       metaRef.current = null;
-      setTabs([{ id: 1, shell: null }]);
+      setTabs([{ id: 1, shell: null, title: null }]);
       setActiveId(1);
       nextIdRef.current = 2;
       setLoaded(true);
@@ -97,9 +105,11 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
       metaRef.current = meta;
       const persisted = meta.session.terminals;
       const count = Math.max(1, persisted?.count ?? 1);
+      const names = persisted?.names ?? [];
       const restored: TerminalTab[] = Array.from({ length: count }, (_, i) => ({
         id: i + 1,
         shell: null,
+        title: names[i] ?? null,
       }));
       const activeIndex = Math.min(Math.max(0, persisted?.activeIndex ?? 0), count - 1);
       nextIdRef.current = count + 1;
@@ -113,21 +123,28 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
     };
   }, [workspaceRoot]);
 
-  // Persist tab count + active index back to .cremniy (debounced) whenever they
-  // change. Shell-label updates also fire this, but the guard skips no-op writes.
+  // Persist tab count + active index + custom names back to .cremniy (debounced)
+  // whenever they change. Shell-label updates also fire this, but the guard
+  // skips no-op writes.
   useEffect(() => {
     const root = workspaceRoot?.trim() ?? '';
     const meta = metaRef.current;
     if (!loaded || root === '' || meta == null) return;
 
     const activeIndex = Math.max(0, tabs.findIndex((t) => t.id === activeId));
+    const names = tabs.map((t) => t.title);
+    // Keep .cremniy minimal — only write `names` once the user has named a tab.
+    const hasNames = names.some((n) => n != null && n !== '');
+    const candidate = hasNames
+      ? { count: tabs.length, activeIndex, names }
+      : { count: tabs.length, activeIndex };
     const prev = meta.session.terminals;
-    if (prev != null && prev.count === tabs.length && prev.activeIndex === activeIndex) {
+    if (prev != null && JSON.stringify(prev) === JSON.stringify(candidate)) {
       return;
     }
     const next: CremniyMeta = {
       ...meta,
-      session: { ...meta.session, terminals: { count: tabs.length, activeIndex } },
+      session: { ...meta.session, terminals: candidate },
     };
     metaRef.current = next;
 
@@ -140,8 +157,27 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
   const addTerminal = useCallback(() => {
     const id = nextIdRef.current;
     nextIdRef.current += 1;
-    setTabs((prev) => [...prev, { id, shell: null }]);
+    setTabs((prev) => [...prev, { id, shell: null, title: null }]);
     setActiveId(id);
+  }, []);
+
+  const startRename = useCallback((id: number, current: string) => {
+    skipBlurRef.current = false;
+    setEditingId(id);
+    setDraft(current);
+  }, []);
+
+  const commitRename = useCallback((id: number, value: string) => {
+    const name = value.trim();
+    setTabs((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, title: name === '' ? null : name } : t)),
+    );
+    setEditingId(null);
+  }, []);
+
+  const cancelRename = useCallback(() => {
+    skipBlurRef.current = true;
+    setEditingId(null);
   }, []);
 
   const closeTerminal = useCallback((id: number) => {
@@ -175,7 +211,8 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
         <div className={styles.tabList} role="tablist" aria-label="Open terminals">
           {tabs.map((tab, i) => {
             const isActive = tab.id === activeId;
-            const label = shellLabel(tab.shell) ?? `Terminal ${i + 1}`;
+            const label = tab.title ?? shellLabel(tab.shell) ?? `Terminal ${i + 1}`;
+            const isEditing = editingId === tab.id;
             return (
               <div
                 key={tab.id}
@@ -185,31 +222,71 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
                 className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
                 onClick={() => setActiveId(tab.id)}
                 onKeyDown={(e) => {
+                  if (isEditing) return;
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     setActiveId(tab.id);
                   }
                 }}
-                title={label}
+                title={isEditing ? undefined : `${label} — double-click to rename`}
               >
                 <span className={styles.tabIcon}>
                   <TerminalIcon />
                 </span>
-                <span className={styles.tabLabel}>{label}</span>
-                <button
-                  type="button"
-                  className={styles.tabClose}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeTerminal(tab.id);
-                  }}
-                  title="Close terminal"
-                  aria-label={`Close ${label}`}
-                >
-                  <svg aria-hidden width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M6 6l12 12M18 6l-12 12" />
-                  </svg>
-                </button>
+                {isEditing ? (
+                  <input
+                    className={styles.tabRename}
+                    value={draft}
+                    autoFocus
+                    spellCheck={false}
+                    style={{ width: `${Math.min(Math.max(draft.length + 1, 4), 18)}ch` }}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                      if (e.key === 'Enter') {
+                        skipBlurRef.current = true;
+                        commitRename(tab.id, draft);
+                      } else if (e.key === 'Escape') {
+                        cancelRename();
+                      }
+                    }}
+                    onBlur={() => {
+                      if (skipBlurRef.current) {
+                        skipBlurRef.current = false;
+                        return;
+                      }
+                      commitRename(tab.id, draft);
+                    }}
+                  />
+                ) : (
+                  <span
+                    className={styles.tabLabel}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      startRename(tab.id, label);
+                    }}
+                  >
+                    {label}
+                  </span>
+                )}
+                {isEditing ? null : (
+                  <button
+                    type="button"
+                    className={styles.tabClose}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTerminal(tab.id);
+                    }}
+                    title="Close terminal"
+                    aria-label={`Close ${label}`}
+                  >
+                    <svg aria-hidden width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M6 6l12 12M18 6l-12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
             );
           })}

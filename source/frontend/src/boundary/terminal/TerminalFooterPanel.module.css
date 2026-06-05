@@ -81,6 +81,23 @@
   font-size: 12px;
 }
 
+/* Inline rename field — blends into the tab, just a faint inset to signal edit. */
+.tabRename {
+  min-width: 4ch;
+  max-width: 18ch;
+  margin: 0;
+  padding: 0 0.15rem;
+  border: none;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  outline: none;
+}
+
 .tabClose {
   display: inline-flex;
   align-items: center;
