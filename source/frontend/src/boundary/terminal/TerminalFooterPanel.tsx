@@ -128,6 +128,19 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
     //   Ctrl+Break — direct SIGINT, never copies (matches Windows convention).
     // Returning `false` keeps the keystroke out of xterm's default handler so
     // it doesn't also push 0x03 down to the shell.
+    // Send SIGINT to the shell. On Windows a raw 0x03 byte in the ConPTY
+    // stdin does NOT reliably raise CTRL_C_EVENT — the OS needs
+    // GenerateConsoleCtrlEvent, which the Rust `interrupt_terminal_session`
+    // command performs. Use it whenever the session supports it; fall back to
+    // the raw byte only for pipe-based bridges.
+    const sendInterrupt = (current: TerminalSession) => {
+      if (current.supportsInterrupt) {
+        void interruptTerminalSession(current.sessionId).catch(() => undefined);
+      } else {
+        void writeTerminalInput(current.sessionId, '\x03');
+      }
+    };
+
     term.attachCustomKeyEventHandler((ev) => {
       if (ev.type !== 'keydown') {
         return true;
@@ -146,9 +159,9 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
           term.clearSelection();
           return false;
         }
-        // No selection → fall through to SIGINT.
+        // No selection → interrupt the running process.
         if (current != null) {
-          void writeTerminalInput(current.sessionId, '\x03');
+          sendInterrupt(current);
         }
         return false;
       }
@@ -171,7 +184,7 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
       }
       if (ev.key === 'Pause' || ev.key === 'Break') {
         if (current != null) {
-          void writeTerminalInput(current.sessionId, '\x03');
+          sendInterrupt(current);
         }
         return false;
       }
