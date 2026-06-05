@@ -1,4 +1,5 @@
 export type FileMenuActionId =
+  | 'newProject'
   | 'openFolder'
   | 'openFile'
   | 'save'
@@ -13,6 +14,7 @@ export type FileMenuEntry = {
 };
 
 export const FILE_MENU_ENTRIES: readonly FileMenuEntry[] = [
+  { id: 'newProject', label: 'New project…' },
   { id: 'openFolder', label: 'Open folder…' },
   { id: 'openFile', label: 'Open file…' },
   { id: 'save', label: 'Save' },

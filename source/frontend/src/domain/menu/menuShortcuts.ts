@@ -22,8 +22,48 @@ function mod(ev: KeyboardEvent): boolean {
   return ev.ctrlKey || ev.metaKey;
 }
 
+// Cyrillic → Latin for keys we hot-bind. Lets Ctrl+ё toggle terminal, Ctrl+б
+// open preferences, Ctrl+щ open file, etc. — Qt parity with Russian keyboard
+// layouts. ev.code carries the physical key when we need it.
+const CYRILLIC_TO_LATIN: Record<string, string> = {
+  ё: '`',
+  й: 'q',
+  ц: 'w',
+  у: 'e',
+  к: 'r',
+  е: 't',
+  н: 'y',
+  г: 'u',
+  ш: 'i',
+  щ: 'o',
+  з: 'p',
+  ф: 'a',
+  ы: 's',
+  в: 'd',
+  а: 'f',
+  п: 'g',
+  р: 'h',
+  о: 'j',
+  л: 'k',
+  д: 'l',
+  я: 'z',
+  ч: 'x',
+  с: 'c',
+  м: 'v',
+  и: 'b',
+  т: 'n',
+  ь: 'm',
+  б: ',',
+  ю: '.',
+};
+
+function normalizeKey(ev: KeyboardEvent): string {
+  const raw = ev.key.toLowerCase();
+  return CYRILLIC_TO_LATIN[raw] ?? raw;
+}
+
 function matchShortcutAction(ev: KeyboardEvent): GlobalShortcutAction | null {
-  const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key.toLowerCase();
+  const k = normalizeKey(ev);
   if (k === 'o' && !ev.shiftKey) {
     return { kind: 'file', id: 'openFile' };
   }
@@ -39,7 +79,7 @@ function matchShortcutAction(ev: KeyboardEvent): GlobalShortcutAction | null {
   if (k === 'f' && !ev.shiftKey) {
     return { kind: 'edit', id: 'findInEditor' };
   }
-  if (ev.key === ',' || k === ',') {
+  if (k === ',') {
     return { kind: 'file', id: 'preferences' };
   }
   if (k === 'w' && ev.shiftKey) {
@@ -48,8 +88,11 @@ function matchShortcutAction(ev: KeyboardEvent): GlobalShortcutAction | null {
   if (k === 'w' && !ev.shiftKey) {
     return { kind: 'file', id: 'closeEditorTab' };
   }
-  if (ev.key === '`' || ev.code === 'Backquote') {
+  if (k === '`' || ev.code === 'Backquote') {
     return { kind: 'view', id: 'toggleTerminal' };
+  }
+  if (k === 'b' && !ev.shiftKey) {
+    return { kind: 'view', id: 'toggleFileTree' };
   }
   return null;
 }
