@@ -39,9 +39,10 @@ export type CremniySessionState = {
   /** Workspace-relative cwd the terminal was last sitting in. */
   terminalCwd?: string | null;
   /** Open terminal tabs to recreate on next open. A live shell can't be
-      serialised, so we only remember how many were open and which was active;
-      reopening spawns that many fresh sessions in the workspace root. */
-  terminals?: { count: number; activeIndex: number };
+      serialised, so we only remember how many were open, which was active, and
+      any custom tab names (by position; null = use the auto shell label).
+      Reopening spawns that many fresh sessions in the workspace root. */
+  terminals?: { count: number; activeIndex: number; names?: (string | null)[] };
 };
 
 export type CremniyMeta = {
@@ -145,7 +146,7 @@ function normaliseSession(
     };
   }
   const terminalsRaw = o.terminals;
-  let terminals: { count: number; activeIndex: number } | undefined;
+  let terminals: { count: number; activeIndex: number; names?: (string | null)[] } | undefined;
   if (terminalsRaw != null && typeof terminalsRaw === 'object' && !Array.isArray(terminalsRaw)) {
     const t = terminalsRaw as Record<string, unknown>;
     if (typeof t.count === 'number' && Number.isFinite(t.count)) {
@@ -154,7 +155,10 @@ function normaliseSession(
         typeof t.activeIndex === 'number' && Number.isFinite(t.activeIndex)
           ? Math.max(0, Math.floor(t.activeIndex))
           : 0;
-      terminals = { count, activeIndex };
+      const names = Array.isArray(t.names)
+        ? t.names.map((n) => (typeof n === 'string' ? n : null))
+        : undefined;
+      terminals = names != null ? { count, activeIndex, names } : { count, activeIndex };
     }
   }
   return {
