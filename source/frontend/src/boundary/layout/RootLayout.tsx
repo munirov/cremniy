@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import styles from './RootLayout.module.css';
 
 export type RootLayoutProps = {
+  /** Optional in-shell header. The window menu now lives in the TitleBar, so
+      this is normally omitted — kept for any future in-shell toolbar. */
   header?: ReactNode;
   sidebar?: ReactNode;
   children?: ReactNode;
@@ -11,12 +13,8 @@ export type RootLayoutProps = {
   footerVisible?: boolean;
 };
 
-function defaultHeader() {
-  return <p className={styles.placeholder}>Menu bar placeholder</p>;
-}
-
 export function RootLayout({
-  header = defaultHeader(),
+  header,
   sidebar,
   children,
   footerPanel,
@@ -27,7 +25,7 @@ export function RootLayout({
 
   return (
     <div className={styles.rootShell}>
-      <header className={styles.shellHeader}>{header}</header>
+      {header != null ? <header className={styles.shellHeader}>{header}</header> : null}
       <main className={styles.shellMainOuter}>
         <div className={styles.shellMainRow}>
           {hasSidebar ? <aside className={styles.shellSidebar}>{sidebar}</aside> : null}
