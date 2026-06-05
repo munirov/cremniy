@@ -1,4 +1,13 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type UIEvent,
+} from 'react';
 
 import {
   buildDisassemblyDiagnosticLog,
@@ -24,7 +33,8 @@ import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 
 import styles from './DisassemblerToolPanel.module.css';
 
-const MAX_VISIBLE_ROWS = 2_000;
+const ROW_PX = 22; // Listing row height; section-header rows use this too.
+const VIEWPORT_BUFFER_ROWS = 6;
 
 type LoadState =
   | { status: 'idle'; message?: string }
@@ -41,6 +51,39 @@ function formatUserMessage(error: unknown): string {
     return error.message;
   }
   return String(error);
+}
+
+const REG_RE =
+  /^(rax|rbx|rcx|rdx|rsi|rdi|rbp|rsp|rip|eip|ip|r\d+[bwd]?|eax|ebx|ecx|edx|esi|edi|ebp|esp|ax|bx|cx|dx|si|di|bp|sp|al|bl|cl|dl|ah|bh|ch|dh|sil|dil|spl|bpl|cs|ds|es|fs|gs|ss|xmm\d+|ymm\d+|zmm\d+|mm\d+)$/i;
+
+function highlightInstruction(text: string) {
+  // Keep whitespace as its own token so the rendered output preserves spacing.
+  const re = /(\s+|<[^>]+>|0x[0-9a-fA-F]+|[+-]?\d+|[\w$%.]+|\S)/g;
+  const out: Array<{ text: string; color?: string; weight?: number }> = [];
+  let m: RegExpExecArray | null;
+  let mnemonicTaken = false;
+  while ((m = re.exec(text)) != null) {
+    const tok = m[0];
+    if (/^\s+$/.test(tok)) {
+      out.push({ text: tok });
+      continue;
+    }
+    let color: string | undefined;
+    let weight: number | undefined;
+    if (tok.startsWith('<') && tok.endsWith('>')) {
+      color = '#c586c0';
+    } else if (REG_RE.test(tok)) {
+      color = '#9cdcfe';
+    } else if (/^0x[0-9a-fA-F]+$/i.test(tok) || /^-?\d+$/.test(tok)) {
+      color = '#dcdcaa';
+    } else if (!mnemonicTaken && /^[a-zA-Z][\w.]*$/.test(tok)) {
+      color = '#dcdcaa';
+      weight = 600;
+      mnemonicTaken = true;
+    }
+    out.push({ text: tok, color, weight });
+  }
+  return out;
 }
 
 export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanelProps) {
@@ -63,6 +106,10 @@ export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanel
   const [patchError, setPatchError] = useState('');
   const [patchBusy, setPatchBusy] = useState(false);
   const [stringIndex, setStringIndex] = useState<Map<number, string>>(new Map());
+  const [rowCtxMenu, setRowCtxMenu] = useState<
+    | { x: number; y: number; address: string; bytes: string }
+    | null
+  >(null);
   const runRequestIdRef = useRef(0);
 
   const runDisassembly = useCallback(() => {
@@ -124,8 +171,58 @@ export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanel
         : filterDisassemblyRows(document, { sectionName: selectedSection, query: searchQuery }),
     [document, searchQuery, selectedSection],
   );
-  const visibleRows = filteredRows.slice(0, MAX_VISIBLE_ROWS);
-  const hiddenRowCount = Math.max(0, filteredRows.length - visibleRows.length);
+
+  // Windowed listing: build a flat stream of {section-header | row} items so
+  // the virtual scroll only renders the visible slice. Avoids the old 2000-
+  // row hard cap that silently dropped large functions off the end.
+  type FlatItem =
+    | { kind: 'header'; sectionName: string; key: string }
+    | { kind: 'row'; listingRow: (typeof filteredRows)[number]; key: string };
+  const flatItems = useMemo<FlatItem[]>(() => {
+    const items: FlatItem[] = [];
+    let lastSection: string | null = null;
+    for (let i = 0; i < filteredRows.length; i += 1) {
+      const r = filteredRows[i]!;
+      if (r.sectionName !== lastSection) {
+        items.push({
+          kind: 'header',
+          sectionName: r.sectionName,
+          key: `h-${r.sectionName}-${i}`,
+        });
+        lastSection = r.sectionName;
+      }
+      items.push({ kind: 'row', listingRow: r, key: r.id });
+    }
+    return items;
+  }, [filteredRows]);
+
+  const listingScrollRef = useRef<HTMLDivElement>(null);
+  const [listingScrollTop, setListingScrollTop] = useState(0);
+  const [listingViewportHeight, setListingViewportHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = listingScrollRef.current;
+    if (el == null) return;
+    const ro = new ResizeObserver(() => setListingViewportHeight(el.clientHeight));
+    ro.observe(el);
+    setListingViewportHeight(el.clientHeight);
+    return () => ro.disconnect();
+  }, [flatItems.length > 0]);
+
+  const totalListingHeight = flatItems.length * ROW_PX;
+  const firstVisibleIndex = Math.max(
+    0,
+    Math.floor(listingScrollTop / ROW_PX) - VIEWPORT_BUFFER_ROWS,
+  );
+  const visibleItemCount =
+    Math.ceil((listingViewportHeight || ROW_PX) / ROW_PX) + VIEWPORT_BUFFER_ROWS * 2;
+  const lastVisibleIndex = Math.min(flatItems.length, firstVisibleIndex + visibleItemCount);
+  const renderedItems = flatItems.slice(firstVisibleIndex, lastVisibleIndex);
+  const renderTopPad = firstVisibleIndex * ROW_PX;
+
+  const handleListingScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
+    setListingScrollTop(e.currentTarget.scrollTop);
+  }, []);
   const commandLine =
     document != null
       ? `${document.metadata.executable} ${document.metadata.args.join(' ')}`
@@ -176,11 +273,19 @@ export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanel
     if (pendingJumpRowId == null) {
       return;
     }
-
-    const rowElement = window.document.getElementById(pendingJumpRowId);
-    rowElement?.scrollIntoView({ block: 'center' });
+    // Virtualised listing: compute the row's flat-item index, scroll its row
+    // into view roughly centred. We can't rely on getElementById any more —
+    // the row may not be in the DOM yet if it's outside the current window.
+    const targetIndex = flatItems.findIndex(
+      (it) => it.kind === 'row' && it.key === pendingJumpRowId,
+    );
+    if (targetIndex >= 0 && listingScrollRef.current != null) {
+      const el = listingScrollRef.current;
+      const desired = Math.max(0, targetIndex * ROW_PX - el.clientHeight / 2);
+      el.scrollTo({ top: desired });
+    }
     setPendingJumpRowId(null);
-  }, [pendingJumpRowId, visibleRows]);
+  }, [pendingJumpRowId, flatItems]);
 
   function cancelRun() {
     runRequestIdRef.current += 1;
@@ -297,12 +402,38 @@ export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanel
           <button type="button" className={styles.button} onClick={clearListing}>
             Clear result
           </button>
+          {loadState?.status === 'loading' ? (
+            <div
+              role="progressbar"
+              aria-label="Disassembling"
+              style={{
+                position: 'relative',
+                flex: 1,
+                height: 3,
+                background: 'rgba(255,255,255,0.05)',
+                marginLeft: '0.5rem',
+                overflow: 'hidden',
+                borderRadius: 2,
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background:
+                    'linear-gradient(90deg, transparent, #569cd6 30%, #569cd6 70%, transparent)',
+                  animation: 'disasmProgress 1.2s linear infinite',
+                  width: '50%',
+                }}
+              />
+            </div>
+          ) : null}
         </div>
       </header>
 
       {loadState?.status === 'loading' ? (
         <p className={styles.loading} role="status" aria-live="polite">
-          Disassembling with objdump…
+          Disassembling…
         </p>
       ) : null}
 
@@ -491,6 +622,66 @@ export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanel
         </aside>
       ) : null}
 
+      {rowCtxMenu != null ? (
+        <ul
+          role="menu"
+          style={{
+            position: 'fixed',
+            top: rowCtxMenu.y,
+            left: rowCtxMenu.x,
+            margin: 0,
+            padding: '0.25rem 0',
+            listStyle: 'none',
+            background: 'var(--color-bg-panel)',
+            border: '1px solid var(--color-border-pane)',
+            borderRadius: 4,
+            boxShadow: '0 0.5rem 1rem rgba(0,0,0,0.45)',
+            zIndex: 100,
+            minWidth: '10rem',
+            fontSize: 13,
+          }}
+          onMouseLeave={() => setRowCtxMenu(null)}
+        >
+          {[
+            {
+              label: `Copy address (${rowCtxMenu.address})`,
+              onClick: () => {
+                void navigator.clipboard.writeText(rowCtxMenu.address);
+                setRowCtxMenu(null);
+              },
+            },
+            {
+              label: 'Copy bytes',
+              onClick: () => {
+                void navigator.clipboard.writeText(rowCtxMenu.bytes);
+                setRowCtxMenu(null);
+              },
+            },
+          ].map((it) => (
+            <li role="none" key={it.label}>
+              <button
+                type="button"
+                role="menuitem"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '0.3rem 0.65rem',
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'inherit',
+                  textAlign: 'left',
+                  font: 'inherit',
+                  cursor: 'pointer',
+                }}
+                onClick={it.onClick}
+              >
+                {it.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
       <div className={styles.listing} aria-label="Disassembler listing">
         <div className={styles.listingHeader}>
           <span>Offset</span>
@@ -503,88 +694,118 @@ export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanel
         ) : filteredRows.length === 0 ? (
           <div className={styles.listingEmpty}>No instructions match the current filters.</div>
         ) : (
-          <div className={styles.listingRows} role="table" aria-label="Disassembly rows">
-            {visibleRows.map((listingRow, index) => {
-              const previousRow = visibleRows[index - 1];
-              const showSectionHeader = previousRow?.sectionName !== listingRow.sectionName;
-              const offset =
-                listingRow.row.fileOffset == null
-                  ? listingRow.row.address
-                  : listingRow.row.fileOffset.toString(16).padStart(8, '0');
-              const instruction =
-                listingRow.row.kind === 'label'
-                  ? listingRow.row.mnemonic
-                  : `${listingRow.row.mnemonic}${
-                      listingRow.row.operands === '' ? '' : ` ${listingRow.row.operands}`
-                    }`;
+          <div
+            ref={listingScrollRef}
+            className={styles.listingRows}
+            role="table"
+            aria-label="Disassembly rows"
+            onScroll={handleListingScroll}
+            style={{ overflowY: 'auto', position: 'relative' }}
+          >
+            <div style={{ height: totalListingHeight, position: 'relative' }}>
+              <div style={{ position: 'absolute', top: renderTopPad, left: 0, right: 0 }}>
+                {renderedItems.map((item) => {
+                  if (item.kind === 'header') {
+                    return (
+                      <div
+                        key={item.key}
+                        className={styles.sectionHeader}
+                        style={{ height: ROW_PX, lineHeight: `${ROW_PX}px` }}
+                      >
+                        Disassembly of section {item.sectionName}
+                      </div>
+                    );
+                  }
+                  const listingRow = item.listingRow;
+                  const offset =
+                    listingRow.row.fileOffset == null
+                      ? listingRow.row.address
+                      : listingRow.row.fileOffset.toString(16).padStart(8, '0');
+                  const instruction =
+                    listingRow.row.kind === 'label'
+                      ? listingRow.row.mnemonic
+                      : `${listingRow.row.mnemonic}${
+                          listingRow.row.operands === '' ? '' : ` ${listingRow.row.operands}`
+                        }`;
 
-              // Prefer objdump's own comment; otherwise auto-comment a resolved
-              // string reference (Qt parity: ; "Hello").
-              let commentText = listingRow.row.comment;
-              if (
-                commentText === '' &&
-                listingRow.row.kind === 'instruction' &&
-                document != null &&
-                stringIndex.size > 0
-              ) {
-                const resolved = resolveStringComment(
-                  listingRow.row.operands,
-                  document.sections,
-                  stringIndex,
-                );
-                if (resolved != null) {
-                  commentText = `; ${resolved}`;
-                }
-              }
-
-              return (
-                <Fragment key={listingRow.id}>
-                  {showSectionHeader ? (
-                    <div className={styles.sectionHeader}>
-                      Disassembly of section {listingRow.sectionName}
-                    </div>
-                  ) : null}
-                  <div
-                    id={listingRow.id}
-                    className={`${styles.listingRow} ${
-                      listingRow.row.kind === 'label' ? styles.listingRowLabel : ''
-                    } ${selectedRow?.rowId === listingRow.id ? styles.listingRowSelected : ''}`}
-                    role="row"
-                    onClick={
-                      listingRow.row.kind === 'instruction'
-                        ? () =>
-                            selectInstructionRow(
-                              listingRow.id,
-                              listingRow.row.mnemonic,
-                              instruction,
-                              listingRow.row.fileOffset,
-                              listingRow.row.bytes,
-                            )
-                        : undefined
+                  let commentText = listingRow.row.comment;
+                  if (
+                    commentText === '' &&
+                    listingRow.row.kind === 'instruction' &&
+                    document != null &&
+                    stringIndex.size > 0
+                  ) {
+                    const resolved = resolveStringComment(
+                      listingRow.row.operands,
+                      document.sections,
+                      stringIndex,
+                    );
+                    if (resolved != null) {
+                      commentText = `; ${resolved}`;
                     }
-                  >
-                    <span className={styles.offset} role="cell">
-                      {offset}
-                    </span>
-                    <span className={styles.bytes} role="cell">
-                      {listingRow.row.bytes}
-                    </span>
-                    <span className={styles.instruction} role="cell">
-                      {instruction}
-                    </span>
-                    <span className={styles.comment} role="cell">
-                      {commentText}
-                    </span>
-                  </div>
-                </Fragment>
-              );
-            })}
-            {hiddenRowCount > 0 ? (
-              <div className={styles.listingLimit} role="status">
-                Showing {MAX_VISIBLE_ROWS} of {filteredRows.length} matching row(s). Narrow the
-                search or section filter to see more.
+                  }
+
+                  return (
+                    <div
+                      key={item.key}
+                      id={listingRow.id}
+                      className={`${styles.listingRow} ${
+                        listingRow.row.kind === 'label' ? styles.listingRowLabel : ''
+                      } ${selectedRow?.rowId === listingRow.id ? styles.listingRowSelected : ''}`}
+                      role="row"
+                      style={{ height: ROW_PX, lineHeight: `${ROW_PX}px` }}
+                      onContextMenu={
+                        listingRow.row.kind === 'instruction'
+                          ? (e) => {
+                              e.preventDefault();
+                              setRowCtxMenu({
+                                x: e.clientX,
+                                y: e.clientY,
+                                address: listingRow.row.address,
+                                bytes: listingRow.row.bytes,
+                              });
+                            }
+                          : undefined
+                      }
+                      onClick={
+                        listingRow.row.kind === 'instruction'
+                          ? () =>
+                              selectInstructionRow(
+                                listingRow.id,
+                                listingRow.row.mnemonic,
+                                instruction,
+                                listingRow.row.fileOffset,
+                                listingRow.row.bytes,
+                              )
+                          : undefined
+                      }
+                    >
+                      <span className={styles.offset} role="cell">
+                        {offset}
+                      </span>
+                      <span className={styles.bytes} role="cell">
+                        {listingRow.row.bytes}
+                      </span>
+                      <span className={styles.instruction} role="cell">
+                        {listingRow.row.kind === 'instruction'
+                          ? highlightInstruction(instruction).map((part, i) => (
+                              <span
+                                key={i}
+                                style={{ color: part.color, fontWeight: part.weight }}
+                              >
+                                {part.text}
+                              </span>
+                            ))
+                          : instruction}
+                      </span>
+                      <span className={styles.comment} role="cell">
+                        {commentText}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-            ) : null}
+            </div>
           </div>
         )}
       </div>
