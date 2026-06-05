@@ -3,7 +3,7 @@
   min-height: 0;
   overflow: auto;
   padding: 0.25rem 0;
-  font-family: var(--font-family-ui, system-ui, 'Segoe UI', 'San Francisco', sans-serif);
+  font-family: var(--font-family-mono);
   font-size: 13px;
   color: var(--color-text-primary);
   letter-spacing: 0.01em;
@@ -122,7 +122,7 @@
   border: 1px solid var(--color-border-pane);
   border-radius: 4px;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.45);
-  font-family: var(--font-family-ui, system-ui, 'Segoe UI', sans-serif);
+  font-family: var(--font-family-mono);
   font-size: 13px;
 }
 
