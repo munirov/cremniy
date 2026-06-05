@@ -203,9 +203,11 @@ export function IdeDockview({
       )}
     >
       <div className={styles.editorStack}>
-        <div className={styles.tabStrip} role="region" aria-label="Document tabs">
-          <IdeEditorTabStrip />
-        </div>
+        {ide.openFilePaths.length > 0 ? (
+          <div className={styles.tabStrip} role="region" aria-label="Document tabs">
+            <IdeEditorTabStrip />
+          </div>
+        ) : null}
         <div className={styles.editorBody}>
           <IdeMonacoEditor
             onCursorPositionChange={onCursorPositionChange}
