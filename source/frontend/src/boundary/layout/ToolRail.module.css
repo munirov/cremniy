@@ -2,11 +2,13 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  width: 2.5rem;
-  padding: 0.35rem 0.2rem;
-  gap: 0.2rem;
-  background-color: var(--color-bg-panel);
-  border-left: 1px solid var(--color-border-pane);
+  width: 2.25rem;
+  padding: 0.35rem 0.25rem;
+  gap: 0.15rem;
+  /* Weightless overlay strip — no panel background, no hard border. Same
+     feel as the terminal's floating History button: transparent until you
+     reach for it. */
+  background-color: transparent;
   overflow-y: auto;
 }
 
@@ -14,10 +16,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 2rem;
+  height: 1.85rem;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: 4px;
   font-family: var(--font-family-mono);
   line-height: 1;
   text-align: center;
@@ -28,9 +30,9 @@
 }
 
 .icon {
-  width: 18px;
-  height: 18px;
-  opacity: 0.7;
+  width: 17px;
+  height: 17px;
+  opacity: 0.5;
   transition: opacity 0.12s ease;
 }
 
@@ -40,11 +42,9 @@
 }
 
 .btn:hover {
-  background-color: var(--color-hover-surface);
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 .btnActive {
-  background-color: var(--color-hover-surface);
-  border-color: var(--color-border-accent);
-  box-shadow: inset 2px 0 0 0 var(--color-accent);
+  background-color: rgba(255, 255, 255, 0.08);
 }
