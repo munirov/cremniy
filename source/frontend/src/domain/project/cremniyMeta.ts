@@ -38,6 +38,10 @@ export type CremniySessionState = {
   terminalVisible?: boolean;
   /** Workspace-relative cwd the terminal was last sitting in. */
   terminalCwd?: string | null;
+  /** Open terminal tabs to recreate on next open. A live shell can't be
+      serialised, so we only remember how many were open and which was active;
+      reopening spawns that many fresh sessions in the workspace root. */
+  terminals?: { count: number; activeIndex: number };
 };
 
 export type CremniyMeta = {
@@ -78,6 +82,7 @@ export function emptyCremniyMeta(
       paneSizes: {},
       terminalVisible: true,
       terminalCwd: null,
+      terminals: { count: 1, activeIndex: 0 },
     },
   };
 }
@@ -139,6 +144,19 @@ function normaliseSession(
         : undefined,
     };
   }
+  const terminalsRaw = o.terminals;
+  let terminals: { count: number; activeIndex: number } | undefined;
+  if (terminalsRaw != null && typeof terminalsRaw === 'object' && !Array.isArray(terminalsRaw)) {
+    const t = terminalsRaw as Record<string, unknown>;
+    if (typeof t.count === 'number' && Number.isFinite(t.count)) {
+      const count = Math.max(0, Math.floor(t.count));
+      const activeIndex =
+        typeof t.activeIndex === 'number' && Number.isFinite(t.activeIndex)
+          ? Math.max(0, Math.floor(t.activeIndex))
+          : 0;
+      terminals = { count, activeIndex };
+    }
+  }
   return {
     openFiles: arr(o.openFiles) ?? fb.openFiles,
     activeFile:
@@ -157,6 +175,7 @@ function normaliseSession(
       typeof o.terminalCwd === 'string' || o.terminalCwd === null
         ? (o.terminalCwd as string | null)
         : fb.terminalCwd,
+    terminals: terminals ?? fb.terminals,
   };
 }
 
