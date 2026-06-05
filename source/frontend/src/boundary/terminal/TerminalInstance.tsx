@@ -246,18 +246,21 @@ export function TerminalInstance({ workspaceRoot, active, onShellChange }: Termi
     };
   }, []);
 
-  // Re-fit when this instance becomes visible (a hidden xterm can't measure).
+  // Re-fit AND focus when this instance becomes visible. Switching/opening a
+  // tab moves focus to the tab button, so without this the active xterm never
+  // receives keystrokes — Ctrl+C / Ctrl+V (handled by xterm's key handler)
+  // would silently do nothing until you clicked into the terminal.
   useEffect(() => {
     if (!active) return;
     const fit = fitRef.current;
-    if (fit == null) return;
     // Defer to next frame so the display:block has taken effect.
     const t = window.setTimeout(() => {
       try {
-        fit.fit();
+        fit?.fit();
       } catch {
         // ignore
       }
+      termRef.current?.focus();
     }, 0);
     return () => window.clearTimeout(t);
   }, [active]);
