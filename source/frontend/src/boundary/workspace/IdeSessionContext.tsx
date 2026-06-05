@@ -18,6 +18,7 @@ import type { FileMenuActionId } from '@domain/menu/fileMenu';
 import { normalizeFsPath, parentDirectoryPath, fileNameFromPath } from '@domain/workspace/paths';
 import { loadPreferences, savePreferences } from '@infrastructure/preferences/preferencesBridge';
 import {
+  createProjectFolder,
   pickFile,
   pickFolder,
   pickSaveFile,
@@ -27,12 +28,18 @@ import {
 } from '@infrastructure/tauri/bridge';
 
 import { registerAgentCommands, registerAgentState } from '@shared/agent/agentBridge';
+import { useNotify } from '@boundary/notifications/NotificationContext';
 
 import { useWorkspaceRoot } from './WorkspaceContext';
 
 export type IdeSessionContextValue = {
   activeFilePath: string | null;
   openFilePaths: string[];
+  /** Pinned tabs render first and are protected from drag-reorder into the unpinned zone. */
+  pinnedFilePaths: ReadonlySet<string>;
+  togglePinFilePath: (filePath: string) => void;
+  /** Reorder a tab inside its zone (pinned↔pinned or unpinned↔unpinned). */
+  reorderOpenFiles: (fromIndex: number, toIndex: number) => void;
   documentText: string;
   dirtyFilePaths: string[];
   activeDocumentDirty: boolean;
@@ -40,9 +47,19 @@ export type IdeSessionContextValue = {
   openFileFromWorkspace: (filePath: string) => Promise<void>;
   activateOpenFile: (filePath: string) => void;
   closeOpenFile: (filePath: string) => void;
+  closeOtherOpenFiles: (keepFilePath: string) => void;
+  closeAllOpenFiles: () => void;
   runFileMenuAction: (id: FileMenuActionId) => Promise<void>;
   fileTreeRevision: number;
   bumpFileTreeRevision: () => void;
+  /**
+   * Increments every time on-disk file content changes (after Save / write).
+   * Tabs that load file bytes (Symbols, MemoryMap, Functions, Strings, Disasm)
+   * watch this in their useEffect deps so they re-read instead of showing
+   * stale data. Qt parity: refreshDataAllTabsSignal.
+   */
+  fileContentRevision: number;
+  bumpFileContentRevision: () => void;
 };
 
 const IdeSessionContext = createContext<IdeSessionContextValue | null>(null);
@@ -57,16 +74,22 @@ function formatUserMessage(error: unknown): string {
 export function IdeSessionProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const workspaceRoot = useWorkspaceRoot();
+  const notify = useNotify();
   const [openTabs, setOpenTabs] = useState<string[]>([]);
+  const [pinnedFilePaths, setPinnedFilePaths] = useState<Set<string>>(() => new Set());
   const [buffers, setBuffers] = useState<Record<string, string>>({});
   const [savedBuffers, setSavedBuffers] = useState<Record<string, string>>({});
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
   const [documentText, setDocumentTextState] = useState('');
   const [fileTreeRevision, setFileTreeRevision] = useState(0);
+  const [fileContentRevision, setFileContentRevision] = useState(0);
 
   const openTabsRef = useRef<string[]>([]);
   const buffersRef = useRef<Record<string, string>>({});
   const savedBuffersRef = useRef<Record<string, string>>({});
+  // UTF-8 BOM preservation: each open path remembers whether its on-disk
+  // bytes started with EF BB BF, so save() can re-emit the BOM.
+  const bomFlagsRef = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     openTabsRef.current = openTabs;
@@ -82,6 +105,38 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
 
   const bumpFileTreeRevision = useCallback(() => {
     setFileTreeRevision((n) => n + 1);
+  }, []);
+  const bumpFileContentRevision = useCallback(() => {
+    setFileContentRevision((n) => n + 1);
+  }, []);
+
+  const togglePinFilePath = useCallback((filePath: string) => {
+    setPinnedFilePaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(filePath)) next.delete(filePath);
+      else next.add(filePath);
+      return next;
+    });
+  }, []);
+
+  // Swap two tabs. Caller must ensure both indices live in the same zone
+  // (both pinned or both unpinned) — the strip enforces that.
+  const reorderOpenFiles = useCallback((fromIndex: number, toIndex: number) => {
+    setOpenTabs((tabs) => {
+      if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= tabs.length ||
+        toIndex >= tabs.length ||
+        fromIndex === toIndex
+      ) {
+        return tabs;
+      }
+      const next = tabs.slice();
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved!);
+      return next;
+    });
   }, []);
 
   const navigateToWorkspace = useCallback(
@@ -139,6 +194,12 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       setOpenTabs(nextTabs);
       setBuffers(nextBuffers);
       setSavedBuffers(nextSavedBuffers);
+      setPinnedFilePaths((prev) => {
+        if (!prev.has(path)) return prev;
+        const next = new Set(prev);
+        next.delete(path);
+        return next;
+      });
 
       if (activeFilePath !== path) {
         return;
@@ -158,6 +219,28 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     },
     [activeFilePath],
   );
+
+  const closeOtherOpenFiles = useCallback(
+    (keepFilePath: string) => {
+      const keep = keepFilePath.trim();
+      const tabs = openTabsRef.current.slice();
+      for (const t of tabs) {
+        if (t !== keep && !pinnedFilePaths.has(t)) {
+          closeOpenFile(t);
+        }
+      }
+    },
+    [closeOpenFile, pinnedFilePaths],
+  );
+
+  const closeAllOpenFiles = useCallback(() => {
+    const tabs = openTabsRef.current.slice();
+    for (const t of tabs) {
+      if (!pinnedFilePaths.has(t)) {
+        closeOpenFile(t);
+      }
+    }
+  }, [closeOpenFile, pinnedFilePaths]);
 
   const setDocumentText = useCallback(
     (value: string) => {
@@ -182,6 +265,30 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     await persistRecentAndNavigate(path);
   }, [persistRecentAndNavigate]);
 
+  const newProjectFlow = useCallback(async () => {
+    // Two-step prompt — pick parent folder, then ask for the new project name.
+    // Backend (`createProjectFolder`) validates the name and creates the dir.
+    const parent = await pickFolder();
+    if (parent == null || parent === '') {
+      return;
+    }
+    const name = window.prompt('New project folder name');
+    if (name == null || name.trim() === '') {
+      return;
+    }
+    try {
+      const created = await createProjectFolder(parent, name.trim());
+      setOpenTabs([]);
+      setBuffers({});
+      setSavedBuffers({});
+      setActiveFilePath(null);
+      setDocumentTextState('');
+      await persistRecentAndNavigate(created);
+    } catch (e) {
+      notify.error('Could not create project', formatUserMessage(e));
+    }
+  }, [notify, persistRecentAndNavigate]);
+
   const openFileFlow = useCallback(async () => {
     const path = await pickFile();
     if (path == null || path === '') {
@@ -189,7 +296,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     }
     const parent = parentDirectoryPath(path);
     if (parent === '') {
-      window.alert('Could not determine folder for the selected file.');
+      notify.error('Could not determine folder for the selected file.');
       return;
     }
     const text = await readUserFile(path);
@@ -219,7 +326,15 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     const oldPath = activeFilePath;
-    await writeUserFile(chosen, documentText);
+    const hasBom =
+      (oldPath != null && bomFlagsRef.current[oldPath]) ||
+      bomFlagsRef.current[chosen] ||
+      false;
+    const payload = hasBom ? `﻿${documentText}` : documentText;
+    await writeUserFile(chosen, payload);
+    if (hasBom) {
+      bomFlagsRef.current = { ...bomFlagsRef.current, [chosen]: true };
+    }
     if (oldPath != null && oldPath !== '') {
       setOpenTabs((tabs) => {
         const mergeWithExistingChosenTab =
@@ -256,7 +371,9 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       await saveDocumentAsFlow();
       return;
     }
-    await writeUserFile(activeFilePath, documentText);
+    const hasBom = bomFlagsRef.current[activeFilePath] ?? false;
+    const payload = hasBom ? `﻿${documentText}` : documentText;
+    await writeUserFile(activeFilePath, payload);
     setSavedBuffers((prev) => ({ ...prev, [activeFilePath]: documentText }));
   }, [activeFilePath, documentText, saveDocumentAsFlow]);
 
@@ -268,7 +385,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       }
       const rootPath = workspaceRoot?.path?.trim() ?? '';
       if (rootPath === '') {
-        window.alert('No workspace is open. Open a folder from the File menu first.');
+        notify.warn('No workspace is open. Open a folder from the File menu first.');
         return;
       }
       if (openTabsRef.current.includes(trimmed)) {
@@ -276,17 +393,21 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
-        const text = await readWorkspaceUserFile(rootPath, trimmed);
+        const raw = await readWorkspaceUserFile(rootPath, trimmed);
+        // Detect UTF-8 BOM (0xFEFF in JS string) so we can re-emit it on save.
+        const hasBom = raw.charCodeAt(0) === 0xfeff;
+        const text = hasBom ? raw.slice(1) : raw;
+        bomFlagsRef.current = { ...bomFlagsRef.current, [trimmed]: hasBom };
         setOpenTabs((t) => [...t, trimmed]);
         setBuffers((b) => ({ ...b, [trimmed]: text }));
         setSavedBuffers((b) => ({ ...b, [trimmed]: text }));
         setActiveFilePath(trimmed);
         setDocumentTextState(text);
       } catch (e) {
-        window.alert(formatUserMessage(e));
+        notify.error('Could not open file', formatUserMessage(e));
       }
     },
-    [workspaceRoot?.path, activateOpenFile],
+    [notify, workspaceRoot?.path, activateOpenFile],
   );
 
   const closeWorkspaceFlow = useCallback(() => {
@@ -329,6 +450,9 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     async (id: FileMenuActionId) => {
       try {
         switch (id) {
+          case 'newProject':
+            await newProjectFlow();
+            return;
           case 'openFolder':
             await openWorkspaceFolderFlow();
             return;
@@ -355,12 +479,14 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (e) {
-        window.alert(formatUserMessage(e));
+        notify.error('File menu action failed', formatUserMessage(e));
       }
     },
     [
       closeEditorTabFlow,
       closeWorkspaceFlow,
+      newProjectFlow,
+      notify,
       openFileFlow,
       openWorkspaceFolderFlow,
       saveDocumentAsFlow,
@@ -382,6 +508,9 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       activeFilePath,
       openFilePaths: openTabs,
+      pinnedFilePaths,
+      togglePinFilePath,
+      reorderOpenFiles,
       documentText,
       dirtyFilePaths,
       activeDocumentDirty,
@@ -389,13 +518,20 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       openFileFromWorkspace,
       activateOpenFile,
       closeOpenFile,
+      closeOtherOpenFiles,
+      closeAllOpenFiles,
       runFileMenuAction,
       fileTreeRevision,
       bumpFileTreeRevision,
+      fileContentRevision,
+      bumpFileContentRevision,
     }),
     [
       activeDocumentDirty,
       activeFilePath,
+      pinnedFilePaths,
+      togglePinFilePath,
+      reorderOpenFiles,
       dirtyFilePaths,
       openTabs,
       documentText,
@@ -403,9 +539,13 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       openFileFromWorkspace,
       activateOpenFile,
       closeOpenFile,
+      closeOtherOpenFiles,
+      closeAllOpenFiles,
       runFileMenuAction,
       fileTreeRevision,
       bumpFileTreeRevision,
+      fileContentRevision,
+      bumpFileContentRevision,
     ],
   );
 

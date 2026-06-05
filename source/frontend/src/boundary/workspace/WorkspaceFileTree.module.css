@@ -2,8 +2,11 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-base);
+  padding: 0.25rem 0;
+  font-family: var(--font-family-ui, system-ui, 'Segoe UI', 'San Francisco', sans-serif);
+  font-size: 13px;
+  color: var(--color-text-primary);
+  letter-spacing: 0.01em;
 }
 
 .treeList,
@@ -19,128 +22,114 @@
 
 .stateBox {
   margin: 0;
-  padding: 0.25rem 0;
-  opacity: 0.85;
+  padding: 0.5rem 0.75rem;
+  opacity: 0.7;
 }
 
 .stateLine {
-  margin: 0 0 0.35rem;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-base);
+  margin: 0 0 0.3rem;
+  font-family: inherit;
+  font-size: 13px;
 }
 
 .stateHint,
 .stateDetail {
   margin: 0;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-base);
-  opacity: 0.75;
+  font-family: inherit;
+  font-size: 12px;
+  opacity: 0.7;
 }
 
 .dirBlock {
   width: 100%;
 }
 
-.dirRow {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  width: 100%;
-  margin: 0;
-  padding: 0.2rem 0.25rem;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  border: none;
-  border-radius: 2px;
-  background: transparent;
-}
-
-.dirRow:hover {
-  background-color: var(--color-hover-surface);
-}
-
-.chevron {
-  flex-shrink: 0;
-  width: 0.9rem;
-  font-size: 0.65rem;
-  opacity: 0.75;
-}
-
-.dirName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dirBusy {
-  opacity: 0.7;
-}
-
+.dirRow,
 .leafButton {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
   width: 100%;
   margin: 0;
-  padding: 0.2rem 0.25rem;
+  padding: 2px 0.5rem;
   text-align: left;
   font: inherit;
   color: inherit;
   cursor: pointer;
   border: none;
-  border-radius: 2px;
   background: transparent;
+  border-radius: 0;
+  line-height: 1.5;
+  white-space: nowrap;
+  position: relative;
 }
 
-/* Qt parity: QTreeView::item:hover:!selected -> #333333. */
+/* Zebra-stripe odd-indexed rows for Qt-style alternate-row. */
+.treeRoot ul li:nth-child(even) > .leafButton,
+.treeRoot ul li:nth-child(even) > .dirBlock > .dirRow {
+  background-color: var(--color-list-alternate);
+}
+
+.dirRow:hover,
 .leafButton:not(.leafButtonActive):hover {
-  background-color: var(--color-hover-surface);
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
-/* Qt parity: QTreeView::item:selected -> #262626 with white text. */
 .leafButtonActive,
 .leafButtonActive:hover {
-  background-color: var(--color-bg-base);
+  background-color: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
 }
 
-.leafIcon {
-  flex-shrink: 0;
-  width: 0.9rem;
+.leafButtonActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #569cd6;
 }
 
+.dirName,
 .leafName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.dirBusy {
+  opacity: 0.6;
 }
 
 .childError {
-  margin: 0.15rem 0 0.35rem;
-  font-size: calc(var(--font-size-base) * 0.92);
+  margin: 0.15rem 0 0.35rem 1.5rem;
+  font-size: 12px;
   color: inherit;
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 .ctxMenu {
   position: fixed;
   z-index: 50;
-  min-width: 9rem;
+  min-width: 12rem;
   margin: 0;
   padding: 0.25rem 0;
   list-style: none;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border-pane);
-  border-radius: 3px;
-  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.45);
+  font-family: var(--font-family-ui, system-ui, 'Segoe UI', sans-serif);
+  font-size: 13px;
 }
 
 .ctxMenuItem {
   display: block;
   width: 100%;
-  padding: 0.3rem 0.65rem;
+  padding: 0.35rem 0.75rem;
   border: none;
   text-align: left;
   font: inherit;
@@ -150,5 +139,12 @@
 }
 
 .ctxMenuItem:hover {
-  background: var(--color-bg-base);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ctxMenuSeparator {
+  height: 1px;
+  margin: 0.25rem 0;
+  background: var(--color-border-muted);
+  opacity: 0.5;
 }
