@@ -11,6 +11,7 @@ import {
   stopTerminalSession,
   writeTerminalInput,
 } from '@infrastructure/tauri/bridge';
+import { Menu } from '@boundary/common/Menu';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 
@@ -101,6 +102,7 @@ export function TerminalInstance({
   const activeSessionIdRef = useRef<string | null>(null);
   const [history, setHistory] = useState<string[]>(() => loadHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
   const inputBufferRef = useRef('');
   // Keep the shell-report callback in a ref so it never re-triggers the
   // session effect (an inline parent closure would otherwise restart the PTY
@@ -326,6 +328,20 @@ export function TerminalInstance({
         sessionRef.current = nextSession;
         setStatus('running');
         onShellRef.current?.(nextSession.shell);
+        // The PTY is opened at a fixed 24x80; sync it to the real terminal size
+        // now so the shell's first paint (cmd's banner + prompt) is laid out for
+        // the right geometry instead of being pushed down a line.
+        const term = termRef.current;
+        if (term != null) {
+          try {
+            fitRef.current?.fit();
+          } catch {
+            // ignore transient zero-size
+          }
+          void resizeTerminalSession(nextSession.sessionId, term.rows, term.cols).catch(
+            () => undefined,
+          );
+        }
       } catch (e) {
         if (cancelled) return;
         setError(formatError(e));
@@ -358,8 +374,35 @@ export function TerminalInstance({
     setHistoryOpen(false);
   }, []);
 
+  // Reliable copy/paste path independent of keyboard focus (the keyboard
+  // bindings still work; this is the right-click affordance).
+  const copySelection = useCallback(() => {
+    const term = termRef.current;
+    const sel = term?.getSelection() ?? '';
+    if (sel.length > 0) {
+      void navigator.clipboard.writeText(sel).catch(() => undefined);
+      term?.clearSelection();
+    }
+  }, []);
+
+  const pasteClipboard = useCallback(() => {
+    const current = sessionRef.current;
+    if (current == null) return;
+    void navigator.clipboard
+      .readText()
+      .then((text) => writeTerminalInput(current.sessionId, text))
+      .catch(() => undefined);
+  }, []);
+
   return (
-    <div className={styles.instance} style={{ position: 'relative' }}>
+    <div
+      className={styles.instance}
+      style={{ position: 'relative' }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setCtxMenu({ x: e.clientX, y: e.clientY });
+      }}
+    >
       {statusText !== '' ? (
         <div className={styles.floatingStatus} role="status" aria-live="polite" title={statusText}>
           {statusText}
@@ -367,6 +410,24 @@ export function TerminalInstance({
       ) : null}
 
       <div ref={containerRef} className={styles.xtermHost} aria-label="Terminal output" />
+
+      {ctxMenu != null ? (
+        <Menu
+          position={{ kind: 'point', x: ctxMenu.x, y: ctxMenu.y }}
+          onClose={() => setCtxMenu(null)}
+          label="Terminal actions"
+          groups={[
+            [
+              {
+                label: 'Copy',
+                onClick: copySelection,
+                disabled: !(termRef.current?.hasSelection() ?? false),
+              },
+              { label: 'Paste', onClick: pasteClipboard },
+            ],
+          ]}
+        />
+      ) : null}
 
       {history.length > 0 ? (
         <button
