@@ -400,6 +400,7 @@ export function TerminalFooterPanel({
             <TerminalInstance
               workspaceRoot={workspaceRoot}
               active={tab.id === activeId}
+              collapsed={collapsed}
               onShellChange={(shell) => handleShell(tab.id, shell)}
             />
           </div>

@@ -22,6 +22,8 @@ export type TerminalInstanceProps = {
   workspaceRoot: string | null;
   /** Whether this instance is the visible one — drives a fit() on show. */
   active: boolean;
+  /** Whether the panel is minimised to its tab strip (all instances hidden). */
+  collapsed?: boolean;
   /** Reports the live shell name (e.g. "powershell") so the owning tab can
       label itself; null when idle / exited. */
   onShellChange?: (shell: string | null) => void;
@@ -84,7 +86,12 @@ function saveHistory(items: string[]) {
  * visible. Inactive instances stay mounted so their session and scrollback
  * survive tab switches.
  */
-export function TerminalInstance({ workspaceRoot, active, onShellChange }: TerminalInstanceProps) {
+export function TerminalInstance({
+  workspaceRoot,
+  active,
+  collapsed = false,
+  onShellChange,
+}: TerminalInstanceProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
@@ -251,7 +258,7 @@ export function TerminalInstance({ workspaceRoot, active, onShellChange }: Termi
   // receives keystrokes — Ctrl+C / Ctrl+V (handled by xterm's key handler)
   // would silently do nothing until you clicked into the terminal.
   useEffect(() => {
-    if (!active) return;
+    if (!active || collapsed) return;
     const fit = fitRef.current;
     // Defer to next frame so the display:block has taken effect.
     const t = window.setTimeout(() => {
@@ -263,7 +270,7 @@ export function TerminalInstance({ workspaceRoot, active, onShellChange }: Termi
       termRef.current?.focus();
     }, 0);
     return () => window.clearTimeout(t);
-  }, [active]);
+  }, [active, collapsed]);
 
   const writeSystem = useCallback((message: string) => {
     termRef.current?.writeln(`[2;90m${message}[0m`);
