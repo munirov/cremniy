@@ -315,8 +315,11 @@ export async function listenTerminalOutput(
 
 // Pop-out panes (detach a docked block into its own native window).
 
-export async function popoutPane(paneId: string): Promise<string> {
-  return invoke<string>("popout_pane", { paneId });
+export async function popoutPane(paneId: string, root?: string | null): Promise<string> {
+  return invoke<string>("popout_pane", {
+    paneId,
+    root: root == null || root === "" ? null : root,
+  });
 }
 
 export async function closePopoutPane(paneId: string): Promise<void> {

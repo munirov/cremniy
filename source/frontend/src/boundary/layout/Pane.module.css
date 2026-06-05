@@ -138,6 +138,19 @@
   box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3);
 }
 
+.paneCtxGroupList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A group after the first gets a thin divider line above it. */
+.paneCtxGroup {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .paneCtxMenuItem {
   display: block;
   width: 100%;
@@ -152,4 +165,12 @@
 
 .paneCtxMenuItem:hover {
   background: var(--color-hover-surface);
+}
+
+.paneCtxMenuItemDanger {
+  color: var(--color-error);
+}
+
+.paneCtxMenuItemDanger:hover {
+  background: var(--color-error-surface);
 }

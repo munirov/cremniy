@@ -25,8 +25,26 @@ fn window_title(pane_id: &str) -> String {
     format!("Cremniy — {pretty}")
 }
 
+/// Percent-encode a path so it survives as a URL query value. Encodes every
+/// byte except the RFC 3986 unreserved set — covers backslashes, colons,
+/// spaces and Cyrillic (e.g. "Рабочий стол") which all appear in Windows
+/// paths.
+fn percent_encode(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() * 2);
+    for &b in s.as_bytes() {
+        let unreserved = b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'~');
+        if unreserved {
+            out.push(b as char);
+        } else {
+            out.push('%');
+            out.push_str(&format!("{b:02X}"));
+        }
+    }
+    out
+}
+
 #[tauri::command]
-pub fn popout_pane(app: AppHandle, pane_id: String) -> Result<String, String> {
+pub fn popout_pane(app: AppHandle, pane_id: String, root: Option<String>) -> Result<String, String> {
     if pane_id.trim().is_empty() {
         return Err(String::from("pane_id must not be empty"));
     }
@@ -38,12 +56,21 @@ pub fn popout_pane(app: AppHandle, pane_id: String) -> Result<String, String> {
         return Ok(label);
     }
 
-    let url_path = format!("popout/{pane_id}");
+    // Carry the workspace root into the popout URL so its WorkspaceProvider
+    // resolves the same project the main window has open — otherwise the
+    // detached pane renders against a null workspace (blank).
+    let url_path = match root.as_deref().map(str::trim).filter(|r| !r.is_empty()) {
+        Some(r) => format!("popout/{pane_id}?root={}", percent_encode(r)),
+        None => format!("popout/{pane_id}"),
+    };
     let window = WebviewWindowBuilder::new(&app, label.clone(), WebviewUrl::App(url_path.into()))
         .title(window_title(&pane_id))
         .inner_size(900.0, 700.0)
         .min_inner_size(360.0, 240.0)
         .resizable(true)
+        // Match the main window: our own TitleBar is the only chrome, so no
+        // native decorations (otherwise the popout shows two title bars).
+        .decorations(false)
         .build()
         .map_err(|e| e.to_string())?;
 
