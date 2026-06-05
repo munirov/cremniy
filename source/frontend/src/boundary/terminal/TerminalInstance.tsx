@@ -154,22 +154,16 @@ export function TerminalInstance({
       if (!mod) {
         return true;
       }
-      const key = ev.key.toLowerCase();
+      // Match on the PHYSICAL key (ev.code), not ev.key: on a Cyrillic (or any
+      // non-Latin) layout Ctrl+C reports ev.key='с', so a `key === 'c'` check
+      // silently misses and the keystroke falls through to the shell as an
+      // interrupt (the prompt "jumps"). ev.code is 'KeyC' regardless of layout.
       const current = sessionRef.current;
 
-      if (key === 'c' && !ev.shiftKey) {
-        const sel = term.getSelection();
-        if (sel.length > 0) {
-          void navigator.clipboard.writeText(sel).catch(() => undefined);
-          term.clearSelection();
-          return false;
-        }
-        if (current != null) {
-          sendInterrupt(current);
-        }
-        return false;
-      }
-      if (key === 'c' && ev.shiftKey) {
+      // Ctrl+C / Ctrl+Shift+C — copy the selection. We deliberately do NOT send
+      // an interrupt when there's no selection: Ctrl+C should just copy, never
+      // make the terminal jump. Interrupt lives on Ctrl+Break and the menu.
+      if (ev.code === 'KeyC') {
         const sel = term.getSelection();
         if (sel.length > 0) {
           void navigator.clipboard.writeText(sel).catch(() => undefined);
@@ -177,7 +171,7 @@ export function TerminalInstance({
         }
         return false;
       }
-      if (key === 'v') {
+      if (ev.code === 'KeyV') {
         if (current != null) {
           void navigator.clipboard
             .readText()
@@ -394,6 +388,17 @@ export function TerminalInstance({
       .catch(() => undefined);
   }, []);
 
+  // Interrupt (SIGINT) — its own action now that Ctrl+C is copy-only.
+  const interruptProcess = useCallback(() => {
+    const current = sessionRef.current;
+    if (current == null) return;
+    if (current.supportsInterrupt) {
+      void interruptTerminalSession(current.sessionId).catch(() => undefined);
+    } else {
+      void writeTerminalInput(current.sessionId, '\x03');
+    }
+  }, []);
+
   return (
     <div
       className={styles.instance}
@@ -425,6 +430,7 @@ export function TerminalInstance({
               },
               { label: 'Paste', onClick: pasteClipboard },
             ],
+            [{ label: 'Interrupt (Ctrl+Break)', onClick: interruptProcess }],
           ]}
         />
       ) : null}
