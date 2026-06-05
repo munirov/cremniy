@@ -126,7 +126,11 @@ export function TerminalInstance({
       cursorBlink: true,
       cursorStyle: 'bar',
       scrollback: 5000,
-      convertEol: true,
+      // ConPTY repaints the whole viewport on its own; convertEol + the wrong
+      // pty mode make xterm add extra line feeds (a blank row above the prompt
+      // after cls). Tell xterm it's talking to ConPTY and stop converting EOLs.
+      convertEol: false,
+      windowsPty: { backend: 'conpty' },
       allowTransparency: false,
     });
     const fit = new FitAddon();
