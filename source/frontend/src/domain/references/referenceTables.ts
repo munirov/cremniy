@@ -1,30 +1,176 @@
-/** Bundled offline reference rows (subset; extend as needed). */
+/** Bundled offline reference rows — full ASCII 0..127 + PS/2 Set 1 scancodes. */
 
 export type AsciiRow = { dec: number; hex: string; char: string; description: string };
 
-export const ASCII_REFERENCE_ROWS: readonly AsciiRow[] = [
-  { dec: 0, hex: '00', char: 'NUL', description: 'Null' },
-  { dec: 9, hex: '09', char: 'TAB', description: 'Horizontal tab' },
-  { dec: 10, hex: '0A', char: 'LF', description: 'Line feed' },
-  { dec: 13, hex: '0D', char: 'CR', description: 'Carriage return' },
-  { dec: 27, hex: '1B', char: 'ESC', description: 'Escape' },
-  { dec: 32, hex: '20', char: 'SP', description: 'Space' },
-  { dec: 48, hex: '30', char: '0', description: 'Digit zero' },
-  { dec: 65, hex: '41', char: 'A', description: 'Uppercase A' },
-  { dec: 97, hex: '61', char: 'a', description: 'Lowercase a' },
-  { dec: 127, hex: '7F', char: 'DEL', description: 'Delete' },
-] as const;
+// Control-character names for 0x00..0x1F + 0x7F. Anything else is printable.
+const CONTROL_NAMES: Readonly<Record<number, string>> = {
+  0: 'NUL — Null',
+  1: 'SOH — Start of heading',
+  2: 'STX — Start of text',
+  3: 'ETX — End of text',
+  4: 'EOT — End of transmission',
+  5: 'ENQ — Enquiry',
+  6: 'ACK — Acknowledge',
+  7: 'BEL — Bell',
+  8: 'BS — Backspace',
+  9: 'TAB — Horizontal tab',
+  10: 'LF — Line feed',
+  11: 'VT — Vertical tab',
+  12: 'FF — Form feed',
+  13: 'CR — Carriage return',
+  14: 'SO — Shift out',
+  15: 'SI — Shift in',
+  16: 'DLE — Data link escape',
+  17: 'DC1 — Device control 1',
+  18: 'DC2 — Device control 2',
+  19: 'DC3 — Device control 3',
+  20: 'DC4 — Device control 4',
+  21: 'NAK — Negative ack',
+  22: 'SYN — Synchronous idle',
+  23: 'ETB — End of trans block',
+  24: 'CAN — Cancel',
+  25: 'EM — End of medium',
+  26: 'SUB — Substitute',
+  27: 'ESC — Escape',
+  28: 'FS — File separator',
+  29: 'GS — Group separator',
+  30: 'RS — Record separator',
+  31: 'US — Unit separator',
+  32: 'SP — Space',
+  127: 'DEL — Delete',
+};
+
+function asciiRow(dec: number): AsciiRow {
+  const hex = dec.toString(16).padStart(2, '0').toUpperCase();
+  const ctrl = CONTROL_NAMES[dec];
+  if (ctrl != null) {
+    return {
+      dec,
+      hex,
+      char: ctrl.split(' ')[0]!, // e.g. 'NUL' as the displayed glyph
+      description: ctrl,
+    };
+  }
+  const ch = String.fromCharCode(dec);
+  let description = `Printable: ${ch}`;
+  if (dec >= 48 && dec <= 57) description = `Digit ${ch}`;
+  else if (dec >= 65 && dec <= 90) description = `Uppercase ${ch}`;
+  else if (dec >= 97 && dec <= 122) description = `Lowercase ${ch}`;
+  return { dec, hex, char: ch, description };
+}
+
+export const ASCII_REFERENCE_ROWS: readonly AsciiRow[] = Array.from({ length: 128 }, (_, i) =>
+  asciiRow(i),
+);
 
 export type ScancodeRow = { key: string; make: string; break: string; notes: string };
 
+// PS/2 Scan Code Set 1 — the layout you'll find in any PC-BIOS reference.
+// Extended (E0-prefixed) and pause keys are listed last.
 export const SCANCODE_REFERENCE_ROWS: readonly ScancodeRow[] = [
   { key: 'Esc', make: '01', break: '81', notes: 'Escape' },
-  { key: '1..0', make: '02-0B', break: '82-8B', notes: 'Number row' },
-  { key: 'Enter', make: '1C', break: '9C', notes: 'Main Enter' },
+  { key: '1 !', make: '02', break: '82', notes: 'Digit row' },
+  { key: '2 @', make: '03', break: '83', notes: 'Digit row' },
+  { key: '3 #', make: '04', break: '84', notes: 'Digit row' },
+  { key: '4 $', make: '05', break: '85', notes: 'Digit row' },
+  { key: '5 %', make: '06', break: '86', notes: 'Digit row' },
+  { key: '6 ^', make: '07', break: '87', notes: 'Digit row' },
+  { key: '7 &', make: '08', break: '88', notes: 'Digit row' },
+  { key: '8 *', make: '09', break: '89', notes: 'Digit row' },
+  { key: '9 (', make: '0A', break: '8A', notes: 'Digit row' },
+  { key: '0 )', make: '0B', break: '8B', notes: 'Digit row' },
+  { key: '- _', make: '0C', break: '8C', notes: 'Symbol' },
+  { key: '= +', make: '0D', break: '8D', notes: 'Symbol' },
+  { key: 'Backspace', make: '0E', break: '8E', notes: '' },
+  { key: 'Tab', make: '0F', break: '8F', notes: '' },
+  { key: 'Q', make: '10', break: '90', notes: 'QWERTY row' },
+  { key: 'W', make: '11', break: '91', notes: 'QWERTY row' },
+  { key: 'E', make: '12', break: '92', notes: 'QWERTY row' },
+  { key: 'R', make: '13', break: '93', notes: 'QWERTY row' },
+  { key: 'T', make: '14', break: '94', notes: 'QWERTY row' },
+  { key: 'Y', make: '15', break: '95', notes: 'QWERTY row' },
+  { key: 'U', make: '16', break: '96', notes: 'QWERTY row' },
+  { key: 'I', make: '17', break: '97', notes: 'QWERTY row' },
+  { key: 'O', make: '18', break: '98', notes: 'QWERTY row' },
+  { key: 'P', make: '19', break: '99', notes: 'QWERTY row' },
+  { key: '[ {', make: '1A', break: '9A', notes: '' },
+  { key: '] }', make: '1B', break: '9B', notes: '' },
+  { key: 'Enter', make: '1C', break: '9C', notes: 'Main enter' },
   { key: 'Ctrl L', make: '1D', break: '9D', notes: 'Left control' },
+  { key: 'A', make: '1E', break: '9E', notes: 'Home row' },
+  { key: 'S', make: '1F', break: '9F', notes: 'Home row' },
+  { key: 'D', make: '20', break: 'A0', notes: 'Home row' },
+  { key: 'F', make: '21', break: 'A1', notes: 'Home row' },
+  { key: 'G', make: '22', break: 'A2', notes: 'Home row' },
+  { key: 'H', make: '23', break: 'A3', notes: 'Home row' },
+  { key: 'J', make: '24', break: 'A4', notes: 'Home row' },
+  { key: 'K', make: '25', break: 'A5', notes: 'Home row' },
+  { key: 'L', make: '26', break: 'A6', notes: 'Home row' },
+  { key: '; :', make: '27', break: 'A7', notes: '' },
+  { key: "' \"", make: '28', break: 'A8', notes: '' },
+  { key: '` ~', make: '29', break: 'A9', notes: '' },
   { key: 'Shift L', make: '2A', break: 'AA', notes: 'Left shift' },
-  { key: 'Space', make: '39', break: 'B9', notes: 'Space bar' },
-  { key: 'F1', make: '3B', break: 'BB', notes: 'Function keys' },
-  { key: 'Arrow Up', make: '48 E0', break: 'C8 E0', notes: 'Extended prefix' },
-  { key: 'Arrow Down', make: '50 E0', break: 'D0 E0', notes: 'Extended prefix' },
-] as const;
+  { key: '\\ |', make: '2B', break: 'AB', notes: '' },
+  { key: 'Z', make: '2C', break: 'AC', notes: 'Bottom row' },
+  { key: 'X', make: '2D', break: 'AD', notes: 'Bottom row' },
+  { key: 'C', make: '2E', break: 'AE', notes: 'Bottom row' },
+  { key: 'V', make: '2F', break: 'AF', notes: 'Bottom row' },
+  { key: 'B', make: '30', break: 'B0', notes: 'Bottom row' },
+  { key: 'N', make: '31', break: 'B1', notes: 'Bottom row' },
+  { key: 'M', make: '32', break: 'B2', notes: 'Bottom row' },
+  { key: ', <', make: '33', break: 'B3', notes: '' },
+  { key: '. >', make: '34', break: 'B4', notes: '' },
+  { key: '/ ?', make: '35', break: 'B5', notes: '' },
+  { key: 'Shift R', make: '36', break: 'B6', notes: 'Right shift' },
+  { key: 'Keypad *', make: '37', break: 'B7', notes: '' },
+  { key: 'Alt L', make: '38', break: 'B8', notes: 'Left alt' },
+  { key: 'Space', make: '39', break: 'B9', notes: '' },
+  { key: 'CapsLock', make: '3A', break: 'BA', notes: '' },
+  { key: 'F1', make: '3B', break: 'BB', notes: '' },
+  { key: 'F2', make: '3C', break: 'BC', notes: '' },
+  { key: 'F3', make: '3D', break: 'BD', notes: '' },
+  { key: 'F4', make: '3E', break: 'BE', notes: '' },
+  { key: 'F5', make: '3F', break: 'BF', notes: '' },
+  { key: 'F6', make: '40', break: 'C0', notes: '' },
+  { key: 'F7', make: '41', break: 'C1', notes: '' },
+  { key: 'F8', make: '42', break: 'C2', notes: '' },
+  { key: 'F9', make: '43', break: 'C3', notes: '' },
+  { key: 'F10', make: '44', break: 'C4', notes: '' },
+  { key: 'NumLock', make: '45', break: 'C5', notes: '' },
+  { key: 'ScrollLock', make: '46', break: 'C6', notes: '' },
+  { key: 'Keypad 7 / Home', make: '47', break: 'C7', notes: '' },
+  { key: 'Keypad 8 / Up', make: '48', break: 'C8', notes: '' },
+  { key: 'Keypad 9 / PgUp', make: '49', break: 'C9', notes: '' },
+  { key: 'Keypad -', make: '4A', break: 'CA', notes: '' },
+  { key: 'Keypad 4 / Left', make: '4B', break: 'CB', notes: '' },
+  { key: 'Keypad 5', make: '4C', break: 'CC', notes: '' },
+  { key: 'Keypad 6 / Right', make: '4D', break: 'CD', notes: '' },
+  { key: 'Keypad +', make: '4E', break: 'CE', notes: '' },
+  { key: 'Keypad 1 / End', make: '4F', break: 'CF', notes: '' },
+  { key: 'Keypad 2 / Down', make: '50', break: 'D0', notes: '' },
+  { key: 'Keypad 3 / PgDn', make: '51', break: 'D1', notes: '' },
+  { key: 'Keypad 0 / Ins', make: '52', break: 'D2', notes: '' },
+  { key: 'Keypad . / Del', make: '53', break: 'D3', notes: '' },
+  { key: 'F11', make: '57', break: 'D7', notes: '' },
+  { key: 'F12', make: '58', break: 'D8', notes: '' },
+  // Extended (E0-prefixed) keys
+  { key: 'Enter (Keypad)', make: 'E0 1C', break: 'E0 9C', notes: 'Numeric keypad Enter' },
+  { key: 'Ctrl R', make: 'E0 1D', break: 'E0 9D', notes: 'Right control' },
+  { key: 'Keypad /', make: 'E0 35', break: 'E0 B5', notes: '' },
+  { key: 'PrintScreen', make: 'E0 2A E0 37', break: 'E0 B7 E0 AA', notes: 'Multi-byte sequence' },
+  { key: 'Alt R', make: 'E0 38', break: 'E0 B8', notes: 'Right alt' },
+  { key: 'Home', make: 'E0 47', break: 'E0 C7', notes: 'Above arrows' },
+  { key: 'Up', make: 'E0 48', break: 'E0 C8', notes: '' },
+  { key: 'PageUp', make: 'E0 49', break: 'E0 C9', notes: '' },
+  { key: 'Left', make: 'E0 4B', break: 'E0 CB', notes: '' },
+  { key: 'Right', make: 'E0 4D', break: 'E0 CD', notes: '' },
+  { key: 'End', make: 'E0 4F', break: 'E0 CF', notes: '' },
+  { key: 'Down', make: 'E0 50', break: 'E0 D0', notes: '' },
+  { key: 'PageDown', make: 'E0 51', break: 'E0 D1', notes: '' },
+  { key: 'Insert', make: 'E0 52', break: 'E0 D2', notes: '' },
+  { key: 'Delete', make: 'E0 53', break: 'E0 D3', notes: '' },
+  { key: 'Super L (Win)', make: 'E0 5B', break: 'E0 DB', notes: '' },
+  { key: 'Super R (Win)', make: 'E0 5C', break: 'E0 DC', notes: '' },
+  { key: 'Menu', make: 'E0 5D', break: 'E0 DD', notes: 'Context menu key' },
+  { key: 'Pause', make: 'E1 1D 45 E1 9D C5', break: '(none)', notes: 'Multi-byte; no break code' },
+];
