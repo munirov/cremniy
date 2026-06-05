@@ -15,8 +15,15 @@ export type TerminalFooterPanelProps = {
   workspaceRoot: string | null;
   /** Incrementing counter — each bump (Terminal → New Terminal) spawns a tab. */
   newTerminalSignal?: number;
-  /** Collapse the whole panel; wired to the hide / close buttons. */
-  onHide?: () => void;
+  /** When true the panel shows only its tab strip (minimised). Sessions stay
+      alive; clicking a tab or the expand chevron restores it. */
+  collapsed?: boolean;
+  /** Hide button — minimise to the tab strip. */
+  onCollapse?: () => void;
+  /** Restore from the minimised strip (a tab click / the expand chevron). */
+  onExpand?: () => void;
+  /** Close button — fully remove the panel (resets the saved layout first). */
+  onClose?: () => void;
 };
 
 type TerminalTab = {
@@ -68,7 +75,10 @@ function TerminalIcon() {
 export function TerminalFooterPanel({
   workspaceRoot,
   newTerminalSignal = 0,
-  onHide,
+  collapsed = false,
+  onCollapse,
+  onExpand,
+  onClose,
 }: TerminalFooterPanelProps) {
   const [tabs, setTabs] = useState<TerminalTab[]>([]);
   const [activeId, setActiveId] = useState<number>(0);
@@ -199,12 +209,13 @@ export function TerminalFooterPanel({
     }
     if (newTerminalSignal === appliedSignalRef.current) return;
     appliedSignalRef.current = newTerminalSignal;
+    onExpand?.();
     addTerminal();
-  }, [newTerminalSignal, loaded, addTerminal]);
+  }, [newTerminalSignal, loaded, addTerminal, onExpand]);
 
-  // "Close" = reset the saved layout to one fresh terminal, then collapse — so
-  // reopening starts clean. "Hide" (onHide) just collapses and restores later.
-  const closeAndHide = useCallback(() => {
+  // "Close" = reset the saved layout to one fresh terminal, then fully remove
+  // the panel — so reopening starts clean. "Hide" only minimises (onCollapse).
+  const closePanel = useCallback(() => {
     const root = workspaceRoot?.trim() ?? '';
     const meta = metaRef.current;
     if (root !== '' && meta != null) {
@@ -215,8 +226,8 @@ export function TerminalFooterPanel({
       metaRef.current = next;
       void writeCremniyMeta(root, stringifyCremniyMeta(next)).catch(() => undefined);
     }
-    onHide?.();
-  }, [workspaceRoot, onHide]);
+    onClose?.();
+  }, [workspaceRoot, onClose]);
 
   const closeTerminal = useCallback((id: number) => {
     setTabs((prev) => {
@@ -258,11 +269,15 @@ export function TerminalFooterPanel({
                 aria-selected={isActive}
                 tabIndex={0}
                 className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                onClick={() => setActiveId(tab.id)}
+                onClick={() => {
+                  if (collapsed) onExpand?.();
+                  setActiveId(tab.id);
+                }}
                 onKeyDown={(e) => {
                   if (isEditing) return;
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
+                    if (collapsed) onExpand?.();
                     setActiveId(tab.id);
                   }
                 }}
@@ -332,7 +347,10 @@ export function TerminalFooterPanel({
         <button
           type="button"
           className={styles.addBtn}
-          onClick={addTerminal}
+          onClick={() => {
+            onExpand?.();
+            addTerminal();
+          }}
           title="New terminal"
           aria-label="New terminal"
         >
@@ -341,23 +359,23 @@ export function TerminalFooterPanel({
           </svg>
         </button>
 
-        {onHide != null ? (
+        {onCollapse != null ? (
           <div className={styles.panelActions}>
             <button
               type="button"
               className={styles.addBtn}
-              onClick={onHide}
-              title="Hide terminal (keeps tabs)"
-              aria-label="Hide terminal"
+              onClick={() => (collapsed ? onExpand?.() : onCollapse())}
+              title={collapsed ? 'Expand terminal' : 'Hide terminal (minimise to tab strip)'}
+              aria-label={collapsed ? 'Expand terminal' : 'Hide terminal'}
             >
               <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9l6 6 6-6" />
+                <path d={collapsed ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
               </svg>
             </button>
             <button
               type="button"
               className={`${styles.addBtn} ${styles.panelActionDanger}`}
-              onClick={closeAndHide}
+              onClick={closePanel}
               title="Close terminal (starts fresh next time)"
               aria-label="Close terminal"
             >
@@ -369,7 +387,10 @@ export function TerminalFooterPanel({
         ) : null}
       </div>
 
-      <div className={styles.instances}>
+      <div
+        className={styles.instances}
+        style={collapsed ? { display: 'none' } : undefined}
+      >
         {tabs.map((tab) => (
           <div
             key={tab.id}

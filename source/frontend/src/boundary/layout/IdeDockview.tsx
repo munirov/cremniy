@@ -37,6 +37,9 @@ const DEFAULT_LAYOUT: IdeLayoutSizes = {
   center: [4, 1],
 };
 
+/** Height of the terminal when minimised — just its tab bar (see TerminalFooterPanel.module.css). */
+const TERMINAL_STRIP_PX = 30;
+
 export type IdeDockviewProps = {
   workspaceRoot: WorkspaceRoot | null;
   editorCommand: IdeEditorCommand | null;
@@ -97,6 +100,9 @@ export function IdeDockview({
   paneVisibility: paneVisibilityProp,
 }: IdeDockviewProps & { paneVisibility?: Partial<Record<BuiltinPaneId, boolean>> }) {
   const [dockMenu, setDockMenu] = useState<{ x: number; y: number } | null>(null);
+  // Terminal minimised to its tab strip (sessions stay alive). Local layout
+  // state — not persisted.
+  const [terminalCollapsed, setTerminalCollapsed] = useState(false);
 
   useEffect(() => {
     if (dockMenu == null) {
@@ -242,7 +248,13 @@ export function IdeDockview({
       <TerminalFooterPanel
         workspaceRoot={workspaceRoot?.path ?? null}
         newTerminalSignal={newTerminalSignal}
-        onHide={onHideTerminal}
+        collapsed={terminalCollapsed}
+        onCollapse={() => setTerminalCollapsed(true)}
+        onExpand={() => setTerminalCollapsed(false)}
+        onClose={() => {
+          setTerminalCollapsed(false);
+          onHideTerminal?.();
+        }}
       />
     </Pane>
   ) : null;
@@ -266,11 +278,15 @@ export function IdeDockview({
           direction="vertical"
           defaultSizes={initial.center}
           onSizesChange={handleCenterSizes}
+          collapsed={[false, terminalCollapsed]}
         >
           <div key="editor" style={{ width: '100%', height: '100%' }}>
             {editorNode}
           </div>
-          <div key="terminal" style={{ width: '100%', height: '100%' }}>
+          <div
+            key="terminal"
+            style={{ width: '100%', height: terminalCollapsed ? TERMINAL_STRIP_PX : '100%' }}
+          >
             {terminalNode}
           </div>
         </SplitContainer>
