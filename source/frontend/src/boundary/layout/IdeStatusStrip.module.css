@@ -17,7 +17,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  opacity: 0.9;
+}
+
+/* Breadcrumb: dim parent folders, separators dimmer still, leaf (file) bright. */
+.crumb {
+  opacity: 0.6;
+}
+
+.crumbLeaf {
+  opacity: 0.95;
+}
+
+.sep {
+  margin: 0 0.4rem;
+  opacity: 0.4;
 }
 
 .metaCell {

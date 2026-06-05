@@ -233,6 +233,7 @@ export function IdeDockview({
         </div>
         <IdeStatusStrip
           activeFilePath={ide.activeFilePath}
+          workspaceRoot={workspaceRoot?.path ?? null}
           cursorLine={cursorPosition?.line ?? null}
           cursorColumn={cursorPosition?.column ?? null}
         />

@@ -43,6 +43,30 @@ export function parentDirectoryPath(filePath: string): string {
   return parent;
 }
 
+/**
+ * Breadcrumb segments for a file relative to the workspace root, e.g.
+ * `C:\…\test-c\src\main.c` under root `C:\…\test-c` → `['test-c', 'src', 'main.c']`
+ * (root folder name first, Cursor-style). A file outside the root collapses to
+ * just its name so no absolute path leaks into the UI.
+ */
+export function workspaceBreadcrumb(filePath: string, rootPath: string | null): string[] {
+  const stripUnc = (p: string) => p.replace(/^\\\\\?\\/, '').replace(/^\/\/\?\//, '');
+  const file = stripUnc(filePath.trim());
+  const fileSegs = file.split(/[/\\]+/).filter((s) => s !== '');
+  const root = rootPath != null ? stripUnc(rootPath.trim()) : '';
+  if (root !== '') {
+    const rootSegs = root.split(/[/\\]+/).filter((s) => s !== '');
+    const underRoot =
+      fileSegs.length >= rootSegs.length &&
+      rootSegs.every((seg, i) => (fileSegs[i] ?? '').toLowerCase() === seg.toLowerCase());
+    if (underRoot) {
+      const rootName = rootSegs[rootSegs.length - 1] ?? '';
+      return [rootName, ...fileSegs.slice(rootSegs.length)].filter((s) => s !== '');
+    }
+  }
+  return fileSegs.length > 0 ? [fileSegs[fileSegs.length - 1]!] : [];
+}
+
 /** Join directory + file name using the dominant separator style of `dirPath`. */
 export function joinFilePath(dirPath: string, fileName: string): string {
   const d = dirPath.trim().replace(/[/\\]+$/, '');
