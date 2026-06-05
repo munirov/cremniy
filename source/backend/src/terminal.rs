@@ -107,6 +107,19 @@ pub fn start_terminal_session(
     let mut cmd = CommandBuilder::new(&shell);
     cmd.cwd(&cwd_for_shell);
 
+    // cmd.exe: strip a leading `$_` (CRLF) from PROMPT so the prompt isn't
+    // rendered with an empty line above it. A system PROMPT of `$_$P$G` puts a
+    // blank row before EVERY prompt — including right after `cls` — which reads
+    // as "the prompt sits one line too low". The shell banner is unaffected.
+    if shell.to_lowercase().contains("cmd") {
+        let prompt = std::env::var("PROMPT").unwrap_or_else(|_| String::from("$P$G"));
+        let mut cleaned = prompt.as_str();
+        while let Some(rest) = cleaned.strip_prefix("$_") {
+            cleaned = rest;
+        }
+        cmd.env("PROMPT", if cleaned.is_empty() { "$P$G" } else { cleaned });
+    }
+
     let child = pair
         .slave
         .spawn_command(cmd)
