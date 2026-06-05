@@ -34,8 +34,9 @@
 
 .menuSlot {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   flex-shrink: 0;
+  height: 100%;
 }
 
 .dragArea {

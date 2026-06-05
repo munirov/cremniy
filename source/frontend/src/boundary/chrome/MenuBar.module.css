@@ -1,9 +1,8 @@
 .menuBar {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   width: 100%;
-  min-height: 1.75rem;
-  max-height: 2rem;
+  height: 100%;
 }
 
 .menuList {
