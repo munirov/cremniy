@@ -161,3 +161,28 @@
 .xtermHost :global(.xterm-viewport) {
   background-color: transparent !important;
 }
+
+/* Slim, soft scrollbar for the terminal viewport (override the fatter global
+   one). 7px thumb, fades brighter on hover. */
+.xtermHost :global(.xterm-viewport)::-webkit-scrollbar {
+  width: 7px;
+}
+
+.xtermHost :global(.xterm-viewport)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.xtermHost :global(.xterm-viewport)::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.xtermHost :global(.xterm-viewport):hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.26);
+}
+
+.xtermHost :global(.xterm-viewport)::-webkit-scrollbar-thumb:active {
+  background-color: rgba(255, 255, 255, 0.4);
+}
