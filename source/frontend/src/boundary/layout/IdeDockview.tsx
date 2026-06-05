@@ -53,6 +53,10 @@ export type IdeDockviewProps = {
   onLayoutChange?: (layout: IdeLayoutSizes) => void;
   /** Show / hide the terminal pane via the View menu. */
   terminalVisible?: boolean;
+  /** Incrementing counter from Terminal → New Terminal; spawns a tab in the panel. */
+  newTerminalSignal?: number;
+  /** Collapse the terminal panel (its own hide / close buttons call this). */
+  onHideTerminal?: () => void;
   /** Called when the user toggles a pane's visibility from the dock context menu. */
   onTogglePane?: (id: BuiltinPaneId) => void;
 };
@@ -87,6 +91,8 @@ export function IdeDockview({
   initialLayout = null,
   onLayoutChange,
   terminalVisible = true,
+  newTerminalSignal = 0,
+  onHideTerminal,
   onTogglePane,
   paneVisibility: paneVisibilityProp,
 }: IdeDockviewProps & { paneVisibility?: Partial<Record<BuiltinPaneId, boolean>> }) {
@@ -233,7 +239,11 @@ export function IdeDockview({
 
   const terminalNode = paneVisibility.terminal ? (
     <Pane id="terminal" title="Terminal">
-      <TerminalFooterPanel workspaceRoot={workspaceRoot?.path ?? null} />
+      <TerminalFooterPanel
+        workspaceRoot={workspaceRoot?.path ?? null}
+        newTerminalSignal={newTerminalSignal}
+        onHide={onHideTerminal}
+      />
     </Pane>
   ) : null;
 

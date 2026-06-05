@@ -8,6 +8,7 @@ import type { EditMenuActionId } from '@domain/menu/editMenu';
 import type { FileMenuActionId } from '@domain/menu/fileMenu';
 import type { GlobalShortcutAction } from '@domain/menu/menuShortcuts';
 import type { ReferencesMenuActionId } from '@domain/menu/referencesMenu';
+import type { TerminalMenuActionId } from '@domain/menu/terminalMenu';
 import type { ToolsMenuActionId } from '@domain/menu/toolsMenu';
 import type { ViewMenuActionId } from '@domain/menu/viewMenu';
 import { DEFAULT_APP_PREFERENCES, type AppPreferences } from '@domain/preferences/appPreferences';
@@ -43,6 +44,8 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
   const [dataConverterOpen, setDataConverterOpen] = useState(false);
   const [shellCodeOpen, setShellCodeOpen] = useState(false);
   const [refsOpen, setRefsOpen] = useState<ReferencesMenuActionId | null>(null);
+  // Bumped by Terminal → New Terminal to ask the panel to spawn a tab.
+  const [newTerminalSignal, setNewTerminalSignal] = useState(0);
   const [prefs, setPrefs] = useState<AppPreferences | null>(null);
   const [cursorPosition, setCursorPosition] = useState<IdeEditorCursorPosition | null>(null);
   const [editorCommand, setEditorCommand] = useState<IdeEditorCommand | null>(null);
@@ -245,6 +248,21 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
     setRefsOpen(id);
   }, []);
 
+  const handleTerminalMenu = useCallback(
+    (id: TerminalMenuActionId) => {
+      if (id === 'newTerminal') {
+        void persistTerminal(true);
+        setNewTerminalSignal((s) => s + 1);
+      }
+    },
+    [persistTerminal],
+  );
+
+  // Collapse the terminal panel (used by its own hide / close buttons).
+  const hideTerminal = useCallback(() => {
+    void persistTerminal(false);
+  }, [persistTerminal]);
+
   const onFileMenuAction = useMemo(
     () => (id: FileMenuActionId) => {
       if (id === 'preferences') {
@@ -419,6 +437,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         onViewMenuAction={handleViewMenu}
         onToolsMenuAction={handleToolsMenu}
         onReferencesMenuAction={handleRefsMenu}
+        onTerminalMenuAction={handleTerminalMenu}
         onShortcut={onShortcut}
         terminalPanelVisible={terminalVisible}
         wordWrapEnabled={wordWrapEnabled}
@@ -432,6 +451,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
     closeEditorAvailable,
     handleEditMenu,
     handleRefsMenu,
+    handleTerminalMenu,
     handleToolsMenu,
     handleViewMenu,
     ide.activeDocumentDirty,
@@ -460,6 +480,8 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
           initialLayout={prefs?.dockLayout ?? null}
           onLayoutChange={persistDockLayout}
           terminalVisible={terminalVisible}
+          newTerminalSignal={newTerminalSignal}
+          onHideTerminal={hideTerminal}
           onTogglePane={onTogglePane}
           paneVisibility={{
             fileTree: !hiddenPanes.fileTree,
