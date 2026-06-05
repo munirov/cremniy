@@ -21,10 +21,12 @@ export type MenuItem = {
 /** A run of items rendered together; groups are separated by a thin divider. */
 export type MenuGroup = MenuItem[];
 
-/** Where the popup anchors: a screen point (context menu) or under a trigger. */
+/** Where the popup anchors: a screen point (context menu) or under a trigger
+    element (button dropdown). The trigger is excluded from outside-click so it
+    can toggle the menu closed. */
 export type MenuPosition =
   | { kind: 'point'; x: number; y: number }
-  | { kind: 'anchor'; rect: DOMRect };
+  | { kind: 'anchor'; el: HTMLElement };
 
 export type MenuProps = {
   /** Action groups; empty groups are dropped so callers can build them freely. */
@@ -44,13 +46,24 @@ export type MenuProps = {
  */
 export function Menu({ groups, onClose, position, label }: MenuProps) {
   const ref = useRef<HTMLUListElement | null>(null);
+  // Read position via a ref so the dismissal effect doesn't re-bind every render
+  // (callers pass a fresh point object each time).
+  const positionRef = useRef(position);
+  positionRef.current = position;
 
   useEffect(() => {
     const onPointerDown = (ev: PointerEvent) => {
+      const target = ev.target as Node;
       const el = ref.current;
-      if (el != null && !el.contains(ev.target as Node)) {
-        onClose();
+      if (el != null && el.contains(target)) {
+        return;
       }
+      const pos = positionRef.current;
+      // A click on the trigger button isn't "outside" — let it toggle us closed.
+      if (pos.kind === 'anchor' && pos.el.contains(target)) {
+        return;
+      }
+      onClose();
     };
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') {
@@ -69,7 +82,10 @@ export function Menu({ groups, onClose, position, label }: MenuProps) {
   const style =
     position.kind === 'point'
       ? { left: position.x, top: position.y }
-      : { left: position.rect.left, top: position.rect.bottom };
+      : (() => {
+          const rect = position.el.getBoundingClientRect();
+          return { left: rect.left, top: rect.bottom };
+        })();
 
   const visibleGroups = groups.filter((group) => group.length > 0);
 
