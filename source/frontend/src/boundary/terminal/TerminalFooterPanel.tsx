@@ -13,6 +13,10 @@ import styles from './TerminalFooterPanel.module.css';
 
 export type TerminalFooterPanelProps = {
   workspaceRoot: string | null;
+  /** Incrementing counter — each bump (Terminal → New Terminal) spawns a tab. */
+  newTerminalSignal?: number;
+  /** Collapse the whole panel; wired to the hide / close buttons. */
+  onHide?: () => void;
 };
 
 type TerminalTab = {
@@ -61,7 +65,11 @@ function TerminalIcon() {
  * owns its own xterm + PTY session; inactive tabs stay mounted (hidden) so
  * their session and scrollback survive switching. "+" spawns another.
  */
-export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps) {
+export function TerminalFooterPanel({
+  workspaceRoot,
+  newTerminalSignal = 0,
+  onHide,
+}: TerminalFooterPanelProps) {
   const [tabs, setTabs] = useState<TerminalTab[]>([]);
   const [activeId, setActiveId] = useState<number>(0);
   // Gates rendering until .cremniy has been read, so we don't start a throwaway
@@ -179,6 +187,36 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
     skipBlurRef.current = true;
     setEditingId(null);
   }, []);
+
+  // Spawn a tab when Terminal → New Terminal bumps the signal. A bump that
+  // arrives while the panel is hidden/loading is absorbed (revealing just shows
+  // the restored tabs); only bumps while the panel is open add a fresh tab.
+  const appliedSignalRef = useRef(newTerminalSignal);
+  useEffect(() => {
+    if (!loaded) {
+      appliedSignalRef.current = newTerminalSignal;
+      return;
+    }
+    if (newTerminalSignal === appliedSignalRef.current) return;
+    appliedSignalRef.current = newTerminalSignal;
+    addTerminal();
+  }, [newTerminalSignal, loaded, addTerminal]);
+
+  // "Close" = reset the saved layout to one fresh terminal, then collapse — so
+  // reopening starts clean. "Hide" (onHide) just collapses and restores later.
+  const closeAndHide = useCallback(() => {
+    const root = workspaceRoot?.trim() ?? '';
+    const meta = metaRef.current;
+    if (root !== '' && meta != null) {
+      const next: CremniyMeta = {
+        ...meta,
+        session: { ...meta.session, terminals: { count: 1, activeIndex: 0 } },
+      };
+      metaRef.current = next;
+      void writeCremniyMeta(root, stringifyCremniyMeta(next)).catch(() => undefined);
+    }
+    onHide?.();
+  }, [workspaceRoot, onHide]);
 
   const closeTerminal = useCallback((id: number) => {
     setTabs((prev) => {
@@ -302,6 +340,33 @@ export function TerminalFooterPanel({ workspaceRoot }: TerminalFooterPanelProps)
             <path d="M12 5v14M5 12h14" />
           </svg>
         </button>
+
+        {onHide != null ? (
+          <div className={styles.panelActions}>
+            <button
+              type="button"
+              className={styles.addBtn}
+              onClick={onHide}
+              title="Hide terminal (keeps tabs)"
+              aria-label="Hide terminal"
+            >
+              <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={`${styles.addBtn} ${styles.panelActionDanger}`}
+              onClick={closeAndHide}
+              title="Close terminal (starts fresh next time)"
+              aria-label="Close terminal"
+            >
+              <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+              </svg>
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className={styles.instances}>

@@ -149,6 +149,23 @@
   background-color: rgba(255, 255, 255, 0.06);
 }
 
+/* Hide / close cluster, set slightly apart from the "new terminal" + button. */
+.panelActions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: 0.15rem;
+  padding-left: 0.2rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.panelActionDanger:hover {
+  opacity: 1;
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.14);
+}
+
 /* Instance stack — every terminal is mounted; only the active wrap is shown
    (display toggled inline) so hidden sessions/scrollback stay alive. */
 .instances {
