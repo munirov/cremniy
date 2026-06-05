@@ -75,4 +75,4 @@ boundary перерисовывается
 - [BMFP](./BMFP.md) — слои фронта.
 - [BMBP](./BMBP.md) — слои бэка (ментальная карта для нативной оболочки).
 - [AGENT_CONTROL](./AGENT_CONTROL.md) — правило «способность = команда», API и карта кода.
-- ADR: [`ai_docs/develop/architecture/`](../../ai_docs/develop/architecture/).
+- Заметки и аудиты: [`ai_docs/develop/`](../../ai_docs/develop/).

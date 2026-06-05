@@ -13,4 +13,4 @@
 - Добавляешь способность (кнопка/хоткей/инструмент) → [AGENT_CONTROL](./AGENT_CONTROL.md).
 - Трогаешь Tauri-крейт или меняешь корни репо → [BMAP](./BMAP.md).
 
-ADR и аудиты — в [`ai_docs/develop/architecture/`](../../ai_docs/develop/architecture/).
+Внутренние заметки и аудиты — в [`ai_docs/develop/`](../../ai_docs/develop/) (паритет Qt→React, опции бэкенда дизассемблера).

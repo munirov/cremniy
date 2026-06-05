@@ -28,7 +28,7 @@
 
 ## Desktop app (Tauri + React)
 
-The in-repo desktop product is **Tauri 2 + React + TypeScript** under [`source/frontend/`](source/frontend/). See [ADR-001](ai_docs/develop/architecture/ADR-001-tauri-desktop-primary.md) and [ADR-002](ai_docs/develop/architecture/ADR-002-qt-sources-removed.md).
+The in-repo desktop product is **Tauri 2 + React + TypeScript** under [`source/frontend/`](source/frontend/). Architecture: [BMAP](documentation/architecture/BMAP.md).
 
 **Development:**
 
@@ -128,7 +128,7 @@ Distributed under the terms described in [LICENSE](LICENSE).
 
 ## Десктопное приложение (Tauri + React)
 
-В репозитории официальная десктопная сборка — **Tauri 2 + React + TypeScript** в каталоге [`source/frontend/`](source/frontend/). См. [ADR-001](ai_docs/develop/architecture/ADR-001-tauri-desktop-primary.md) и [ADR-002](ai_docs/develop/architecture/ADR-002-qt-sources-removed.md).
+В репозитории официальная десктопная сборка — **Tauri 2 + React + TypeScript** в каталоге [`source/frontend/`](source/frontend/). Архитектура — [BMAP](documentation/architecture/BMAP.md).
 
 **Разработка:**
 
