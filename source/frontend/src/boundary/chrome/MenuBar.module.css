@@ -33,11 +33,15 @@
   font-size: var(--font-size-base);
   line-height: 1.25;
   cursor: default;
+  /* Muted by default; full strength on hover / when open. */
+  opacity: 0.55;
 }
 
 .menuItem:hover,
-.menuItem:focus-visible {
+.menuItem:focus-visible,
+.menuItem[aria-expanded='true'] {
   background-color: var(--color-menubar-item-hover);
+  opacity: 1;
   outline: none;
 }
 
