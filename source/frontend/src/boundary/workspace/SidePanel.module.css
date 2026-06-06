@@ -46,8 +46,10 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-.spacer {
-  flex: 1;
+/* The chevron sits just after the view icons, set off by a hair — not pushed
+   to the far edge. */
+.moreBtn {
+  margin-left: 0.2rem;
 }
 
 .viewBody {
