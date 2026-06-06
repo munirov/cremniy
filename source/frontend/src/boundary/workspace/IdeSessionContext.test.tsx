@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
@@ -14,6 +14,8 @@ import {
   readWorkspaceUserFile,
   writeUserFile,
 } from '@infrastructure/tauri/bridge';
+
+import { NotificationProvider } from '@boundary/notifications/NotificationContext';
 
 import { IdeSessionProvider, useIdeSession } from './IdeSessionContext';
 import { WorkspaceProvider } from './WorkspaceContext';
@@ -42,9 +44,11 @@ function createWrapper(initialEntry: string) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
       <MemoryRouter initialEntries={[initialEntry]}>
-        <WorkspaceProvider>
-          <IdeSessionProvider>{children}</IdeSessionProvider>
-        </WorkspaceProvider>
+        <NotificationProvider>
+          <WorkspaceProvider>
+            <IdeSessionProvider>{children}</IdeSessionProvider>
+          </WorkspaceProvider>
+        </NotificationProvider>
       </MemoryRouter>
     );
   };
@@ -134,7 +138,6 @@ describe('IdeSessionContext runFileMenuAction', () => {
   });
 
   it('openFile alerts when parent directory cannot be resolved', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     vi.mocked(pickFile).mockResolvedValueOnce('bare-name.txt');
 
     const { result } = renderHook(() => useSessionAndLocation(), {
@@ -145,10 +148,11 @@ describe('IdeSessionContext runFileMenuAction', () => {
       await result.current.session.runFileMenuAction('openFile');
     });
 
-    expect(alertSpy).toHaveBeenCalledWith('Could not determine folder for the selected file.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not determine folder for the selected file.',
+    );
     expect(readUserFile).not.toHaveBeenCalled();
     expect(savePreferences).not.toHaveBeenCalled();
-    alertSpy.mockRestore();
   });
 
   it('save writes to active path when file is open', async () => {
@@ -310,7 +314,6 @@ describe('IdeSessionContext runFileMenuAction', () => {
   });
 
   it('alerts with message when bridge throws', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     vi.mocked(pickFolder).mockRejectedValueOnce(new Error('tauri failed'));
 
     const { result } = renderHook(() => useSessionAndLocation(), {
@@ -321,10 +324,7 @@ describe('IdeSessionContext runFileMenuAction', () => {
       await result.current.session.runFileMenuAction('openFolder');
     });
 
-    await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith('tauri failed');
-    });
-    alertSpy.mockRestore();
+    expect(await screen.findByRole('alert')).toHaveTextContent('tauri failed');
   });
 
   it('openFileFromWorkspace loads file into editor state using workspace root', async () => {
@@ -345,7 +345,6 @@ describe('IdeSessionContext runFileMenuAction', () => {
   });
 
   it('openFileFromWorkspace alerts when read fails', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     vi.mocked(readWorkspaceUserFile).mockRejectedValueOnce(new Error('not utf-8'));
 
     const { result } = renderHook(() => useIdeSession(), {
@@ -356,13 +355,10 @@ describe('IdeSessionContext runFileMenuAction', () => {
       await result.current.openFileFromWorkspace('/proj/bin.dat');
     });
 
-    expect(alertSpy).toHaveBeenCalledWith('not utf-8');
-    alertSpy.mockRestore();
+    expect(await screen.findByRole('alert')).toHaveTextContent('not utf-8');
   });
 
   it('openFileFromWorkspace alerts when no workspace root in URL', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
     const { result } = renderHook(() => useIdeSession(), {
       wrapper: createWrapper('/ide'),
     });
@@ -371,11 +367,10 @@ describe('IdeSessionContext runFileMenuAction', () => {
       await result.current.openFileFromWorkspace('/proj/readme.md');
     });
 
-    expect(alertSpy).toHaveBeenCalledWith(
+    expect(await screen.findByRole('alert')).toHaveTextContent(
       'No workspace is open. Open a folder from the File menu first.',
     );
     expect(readWorkspaceUserFile).not.toHaveBeenCalled();
-    alertSpy.mockRestore();
   });
 
   it('activateOpenFile switches editor buffer per tab', async () => {
