@@ -35,7 +35,7 @@ function renderPreview(m: SearchMatch) {
  * include/exclude globs, live (debounced) results that open the file on click.
  */
 export function SearchPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | null }) {
-  const { openFileAtLine, bumpFileContentRevision } = useIdeSession();
+  const { openFileAtLine, reloadCleanOpenBuffers } = useIdeSession();
   const [query, setQuery] = useState('');
   const [replacement, setReplacement] = useState('');
   const [matchCase, setMatchCase] = useState(false);
@@ -91,12 +91,12 @@ export function SearchPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | 
           setError(e instanceof Error ? e.message : String(e));
         }
       }
-      bumpFileContentRevision();
+      await reloadCleanOpenBuffers();
       await runSearch();
     } finally {
       setReplacing(false);
     }
-  }, [workspaceRoot, result, query, replacement, matchCase, wholeWord, useRegex, runSearch, bumpFileContentRevision]);
+  }, [workspaceRoot, result, query, replacement, matchCase, wholeWord, useRegex, runSearch, reloadCleanOpenBuffers]);
 
   const fileCount = result?.files.length ?? 0;
 

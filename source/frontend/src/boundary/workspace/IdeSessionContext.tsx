@@ -49,6 +49,9 @@ export type IdeSessionContextValue = {
   openFileAtLine: (filePath: string, line: number) => Promise<void>;
   /** Set by openFileAtLine; the editor reveals it once the file is active. */
   revealTarget: { path: string; line: number; nonce: number } | null;
+  /** Re-read clean (non-dirty) open files from disk — call after on-disk edits
+   *  like Search → Replace so editor buffers don't go stale. */
+  reloadCleanOpenBuffers: () => Promise<void>;
   activateOpenFile: (filePath: string) => void;
   closeOpenFile: (filePath: string) => void;
   closeOtherOpenFiles: (keepFilePath: string) => void;
@@ -428,6 +431,33 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     [openFileFromWorkspace],
   );
 
+  const reloadCleanOpenBuffers = useCallback(async () => {
+    const root = workspaceRoot?.path?.trim() ?? '';
+    if (root === '') {
+      return;
+    }
+    // Only files with no unsaved edits — never overwrite the user's buffer.
+    const clean = openTabsRef.current.filter(
+      (p) => (buffersRef.current[p] ?? '') === (savedBuffersRef.current[p] ?? ''),
+    );
+    for (const p of clean) {
+      try {
+        const raw = await readWorkspaceUserFile(root, p);
+        const hasBom = raw.charCodeAt(0) === 0xfeff;
+        const text = hasBom ? raw.slice(1) : raw;
+        bomFlagsRef.current = { ...bomFlagsRef.current, [p]: hasBom };
+        setBuffers((b) => ({ ...b, [p]: text }));
+        setSavedBuffers((b) => ({ ...b, [p]: text }));
+        if (activeFilePath === p) {
+          setDocumentTextState(text);
+        }
+      } catch {
+        // File may have been deleted/renamed — skip it.
+      }
+    }
+    bumpFileContentRevision();
+  }, [workspaceRoot?.path, activeFilePath, bumpFileContentRevision]);
+
   const closeWorkspaceFlow = useCallback(() => {
     setOpenTabs([]);
     setBuffers({});
@@ -545,6 +575,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       bumpFileTreeRevision,
       fileContentRevision,
       bumpFileContentRevision,
+      reloadCleanOpenBuffers,
     }),
     [
       activeDocumentDirty,
@@ -568,6 +599,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       bumpFileTreeRevision,
       fileContentRevision,
       bumpFileContentRevision,
+      reloadCleanOpenBuffers,
     ],
   );
 
