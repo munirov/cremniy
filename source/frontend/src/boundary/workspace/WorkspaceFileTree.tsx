@@ -20,6 +20,7 @@ import { useNotify } from '@boundary/notifications/NotificationContext';
 import { useIdeSession } from './IdeSessionContext';
 import { ChevronIcon, FileIcon, FolderIcon } from './fileIcons';
 import { loadTreeOrder, saveTreeOrder, sortByOrder, type TreeOrder } from './treeView';
+import { DEFAULT_NESTING_PATTERNS, computeNesting, type NestingResult } from './nesting';
 
 import styles from './WorkspaceFileTree.module.css';
 
@@ -39,6 +40,22 @@ type CtxState = {
 
 function formatErr(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
+}
+
+/** One directory level → its visible roots + auto-nested children. Custom order
+ *  is applied first; nesting is skipped while a filter is active so search stays
+ *  flat and complete. The caller passes entries already filtered by exclusions. */
+function resolveLevel(
+  entries: WorkspaceDirectoryEntry[],
+  dirPath: string,
+  treeOrder: TreeOrder,
+  filterLower: string,
+): NestingResult {
+  const sorted = sortByOrder(entries, dirPath, treeOrder);
+  if (filterLower !== '') {
+    return { roots: sorted, childrenOf: new Map() };
+  }
+  return computeNesting(sorted, DEFAULT_NESTING_PATTERNS);
 }
 
 export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreeProps) {
@@ -436,14 +453,11 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   const visibleEntries =
     entries == null
       ? []
-      : sortByOrder(
-          entries.filter(
-            (e) =>
-              !excludedPatterns.some((p) => e.name.toLowerCase().includes(p.toLowerCase())),
-          ),
-          workspaceRoot.path,
-          treeOrder,
+      : entries.filter(
+          (e) =>
+            !excludedPatterns.some((p) => e.name.toLowerCase().includes(p.toLowerCase())),
         );
+  const rootLevel = resolveLevel(visibleEntries, workspaceRoot.path, treeOrder, filterLower);
 
   // Root-level drop target — lets the user move a nested file BACK to the
   // workspace root by dragging it onto empty space at the top of the tree.
@@ -505,7 +519,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
               />
             </li>
           ) : null}
-          {visibleEntries.map((entry) => (
+          {rootLevel.roots.map((entry) => (
             <li key={entry.path} className={styles.treeItem} role="none">
               <FileTreeNode
                 workspaceRootPath={workspaceRoot.path}
@@ -515,6 +529,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
                 filterLower={filterLower}
                 excludedPatterns={excludedPatterns}
                 treeOrder={treeOrder}
+                nestedChildren={rootLevel.childrenOf.get(entry.path)}
                 pendingCreate={pendingCreate}
                 collapseSignal={collapseSignal}
                 onCommitCreate={commitPendingCreate}
@@ -693,6 +708,8 @@ type FileTreeNodeProps = {
   filterLower: string;
   excludedPatterns: readonly string[];
   treeOrder: TreeOrder;
+  /** Files auto-nested under THIS entry (only set for a file that owns nests). */
+  nestedChildren?: WorkspaceDirectoryEntry[];
   pendingCreate: { kind: 'file' | 'folder'; parentPath: string } | null;
   /** Bumped by "Collapse folders" — every node folds shut when it changes. */
   collapseSignal: number;
@@ -713,6 +730,7 @@ function FileTreeNode({
   filterLower,
   excludedPatterns,
   treeOrder,
+  nestedChildren,
   pendingCreate,
   collapseSignal,
   onCommitCreate,
@@ -835,24 +853,100 @@ function FileTreeNode({
       return null;
     }
     const isActive = activeFilePath === entry.path;
+    const nested = nestedChildren ?? [];
+    if (nested.length === 0) {
+      return (
+        <button
+          type="button"
+          role="treeitem"
+          aria-selected={isActive}
+          className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
+          style={{ paddingLeft: `${paddingRem + 1.05}rem` }}
+          draggable
+          onDragStart={onDragStart}
+          onClick={() => void onOpenFile(entry.path)}
+          onContextMenu={(e) => onContextMenu(e, entry.path, false)}
+          title={entry.name}
+        >
+          <FileIcon name={entry.name} />
+          <span className={styles.leafName}>{entry.name}</span>
+        </button>
+      );
+    }
+    // A file that owns auto-nested children: the row opens the file, the twistie
+    // expands its nested siblings. One level deep — nested files are plain leaves.
     return (
-      <button
-        type="button"
-        role="treeitem"
-        aria-selected={isActive}
-        className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
-        style={{ paddingLeft: `${paddingRem + 1.05}rem` }}
-        draggable
-        onDragStart={onDragStart}
-        onClick={() => void onOpenFile(entry.path)}
-        onContextMenu={(e) => onContextMenu(e, entry.path, false)}
-        title={entry.name}
-      >
-        <FileIcon name={entry.name} />
-        <span className={styles.leafName}>{entry.name}</span>
-      </button>
+      <div className={styles.dirBlock}>
+        <div
+          role="treeitem"
+          aria-expanded={expanded}
+          aria-selected={isActive}
+          className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
+          style={{ paddingLeft: `${paddingRem}rem` }}
+          tabIndex={0}
+          draggable
+          onDragStart={onDragStart}
+          onClick={() => void onOpenFile(entry.path)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void onOpenFile(entry.path);
+          }}
+          onContextMenu={(e) => onContextMenu(e, entry.path, false)}
+          title={entry.name}
+        >
+          <button
+            type="button"
+            className={styles.nestTwistie}
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
+          >
+            <ChevronIcon open={expanded} />
+          </button>
+          <FileIcon name={entry.name} />
+          <span className={styles.leafName}>{entry.name}</span>
+        </div>
+        {expanded ? (
+          <ul
+            className={styles.nestedList}
+            role="group"
+            style={{ ['--indent']: `${paddingRem}rem` } as CSSProperties}
+          >
+            {nested.map((child) => (
+              <li key={child.path} className={styles.treeItem} role="none">
+                <FileTreeNode
+                  workspaceRootPath={workspaceRootPath}
+                  depth={depth + 1}
+                  entry={child}
+                  activeFilePath={activeFilePath}
+                  filterLower={filterLower}
+                  excludedPatterns={excludedPatterns}
+                  treeOrder={treeOrder}
+                  pendingCreate={pendingCreate}
+                  collapseSignal={collapseSignal}
+                  onCommitCreate={onCommitCreate}
+                  onCancelCreate={onCancelCreate}
+                  onOpenFile={onOpenFile}
+                  onContextMenu={onContextMenu}
+                  onMoveInto={onMoveInto}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     );
   }
+
+  const childLevel = resolveLevel(
+    (children ?? []).filter(
+      (c) => !excludedPatterns.some((p) => c.name.toLowerCase().includes(p.toLowerCase())),
+    ),
+    entry.path,
+    treeOrder,
+    filterLower,
+  );
 
   return (
     <div className={styles.dirBlock}>
@@ -904,16 +998,7 @@ function FileTreeNode({
               />
             </li>
           ) : null}
-          {sortByOrder(
-            children.filter(
-              (c) =>
-                !excludedPatterns.some((p) =>
-                  c.name.toLowerCase().includes(p.toLowerCase()),
-                ),
-            ),
-            entry.path,
-            treeOrder,
-          ).map((child) => (
+          {childLevel.roots.map((child) => (
               <li key={child.path} className={styles.treeItem} role="none">
                 <FileTreeNode
                   workspaceRootPath={workspaceRootPath}
@@ -923,6 +1008,7 @@ function FileTreeNode({
                   filterLower={filterLower}
                   excludedPatterns={excludedPatterns}
                   treeOrder={treeOrder}
+                  nestedChildren={childLevel.childrenOf.get(child.path)}
                   pendingCreate={pendingCreate}
                   collapseSignal={collapseSignal}
                   onCommitCreate={onCommitCreate}

@@ -197,6 +197,26 @@
   opacity: 0.6;
 }
 
+/* A file that owns auto-nested children renders like a leaf plus a small expand
+   twistie. The chevron stays quiet (like the folder chevron); the file glyph and
+   name keep the leaf treatment. */
+.nestTwistie {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.nestTwistie:hover {
+  opacity: 0.85;
+}
+
 .childError {
   margin: 0.15rem 0 0.35rem 1.5rem;
   font-size: 12px;
