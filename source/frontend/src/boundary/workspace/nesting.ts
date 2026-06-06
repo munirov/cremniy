@@ -89,17 +89,46 @@ function splitChildSpec(spec: string): string[] {
 }
 
 /**
- * Resolve automatic nesting for one directory's (already filtered + sorted)
- * entries. Directories are never nested. A file matches at most one parent
- * (first parent in input order wins) and nesting is one level deep — a file
- * that is itself nested cannot also be a parent.
+ * Manual nesting overrides for one directory, keyed by the child's file name:
+ *   - a parent name  → force this file to nest under that sibling;
+ *   - `null`         → force this file to stay at the top level (detach it from
+ *                      whatever an auto pattern would otherwise do).
+ * Manual decisions always win over the automatic patterns.
+ */
+export type ManualNestingForDir = Record<string, string | null>;
+
+/**
+ * Resolve nesting for one directory's (already filtered + sorted) entries.
+ * Directories are never nested. Manual overrides apply first, then automatic
+ * patterns fill in the rest. A file matches at most one parent and nesting is
+ * one level deep — a file that is itself nested cannot also be a parent.
  */
 export function computeNesting(
   entries: WorkspaceDirectoryEntry[],
   patterns: NestingPatterns,
+  manual: ManualNestingForDir = {},
 ): NestingResult {
   const files = entries.filter((e) => !e.isDirectory);
+  const byName = new Map(files.map((f) => [f.name, f] as const));
   const parentOf = new Map<string, string>(); // childPath → parentPath
+  const detached = new Set<string>(); // childPath forced to top level
+
+  // 1. Manual overrides win. A target that no longer exists falls through to
+  //    "leave at top level" (we still skip auto for an explicitly-placed file).
+  for (const f of files) {
+    if (!(f.name in manual)) continue;
+    const target = manual[f.name];
+    if (target == null) {
+      detached.add(f.path);
+      continue;
+    }
+    const parent = byName.get(target);
+    if (parent != null && parent.path !== f.path) {
+      parentOf.set(f.path, parent.path);
+    }
+  }
+
+  // 2. Automatic patterns fill in every file the user hasn't decided manually.
   const patternEntries = Object.entries(patterns);
 
   for (const parent of files) {
@@ -119,7 +148,8 @@ export function computeNesting(
     if (childMatchers.length === 0) continue;
     for (const child of files) {
       if (child.path === parent.path || child.name === parent.name) continue;
-      if (parentOf.has(child.path)) continue; // first parent wins
+      if (parentOf.has(child.path) || detached.has(child.path)) continue;
+      if (child.name in manual) continue; // user decided this one explicitly
       if (childMatchers.some((re) => re.test(child.name))) {
         parentOf.set(child.path, parent.path);
       }

@@ -1,4 +1,5 @@
 import type { WorkspaceDirectoryEntry } from '@domain/workspace/directoryEntry';
+import type { ManualNestingForDir } from './nesting';
 
 /**
  * Purely-visual file-tree customization, persisted per workspace. v1 lives in
@@ -67,4 +68,56 @@ export function sortByOrder(
     const rb = rank.has(b.name) ? (rank.get(b.name) as number) : Number.POSITIVE_INFINITY;
     return ra === rb ? 0 : ra - rb;
   });
+}
+
+/**
+ * Manual file-nesting overrides, persisted per workspace: dirPath → (childName →
+ * parentName | null). Layered on top of the automatic nesting patterns — see
+ * [[nesting]]. Same localStorage-v1 home as the custom order above.
+ */
+export type ManualNesting = Record<string, ManualNestingForDir>;
+
+function nestingKey(workspacePath: string): string {
+  return `cremniy.treeNesting:${workspacePath}`;
+}
+
+export function loadManualNesting(workspacePath: string): ManualNesting {
+  if (workspacePath === '') {
+    return {};
+  }
+  try {
+    const raw = localStorage.getItem(nestingKey(workspacePath));
+    if (raw != null) {
+      const parsed: unknown = JSON.parse(raw);
+      if (parsed != null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const out: ManualNesting = {};
+        for (const [dir, m] of Object.entries(parsed as Record<string, unknown>)) {
+          if (m != null && typeof m === 'object' && !Array.isArray(m)) {
+            const dirMap: ManualNestingForDir = {};
+            for (const [child, parent] of Object.entries(m as Record<string, unknown>)) {
+              if (parent === null || typeof parent === 'string') {
+                dirMap[child] = parent;
+              }
+            }
+            out[dir] = dirMap;
+          }
+        }
+        return out;
+      }
+    }
+  } catch {
+    // ignore — fall back to empty (automatic nesting only)
+  }
+  return {};
+}
+
+export function saveManualNesting(workspacePath: string, nesting: ManualNesting): void {
+  if (workspacePath === '') {
+    return;
+  }
+  try {
+    localStorage.setItem(nestingKey(workspacePath), JSON.stringify(nesting));
+  } catch {
+    // ignore — persistence is best-effort
+  }
 }

@@ -65,3 +65,40 @@ describe('computeNesting', () => {
     expect(names(r.roots)).toEqual(['a.ts', 'axjs']);
   });
 });
+
+describe('computeNesting manual overrides', () => {
+  it('manually nests a file under an unrelated sibling', () => {
+    const entries = [file('notes.md'), file('todo.md')];
+    const r = computeNesting(entries, DEFAULT_NESTING_PATTERNS, { 'todo.md': 'notes.md' });
+    expect(names(r.roots)).toEqual(['notes.md']);
+    expect(childNames(r, 'notes.md')).toEqual(['todo.md']);
+  });
+
+  it('null detaches a file the auto patterns would otherwise nest', () => {
+    const entries = [file('app.ts'), file('app.js')];
+    const r = computeNesting(entries, DEFAULT_NESTING_PATTERNS, { 'app.js': null });
+    expect(names(r.roots).sort()).toEqual(['app.js', 'app.ts']);
+    expect(childNames(r, 'app.ts')).toEqual([]);
+  });
+
+  it('manual placement overrides the automatic parent', () => {
+    const entries = [file('app.ts'), file('app.js'), file('vendor.ts')];
+    const r = computeNesting(entries, DEFAULT_NESTING_PATTERNS, { 'app.js': 'vendor.ts' });
+    expect(childNames(r, 'vendor.ts')).toEqual(['app.js']);
+    expect(childNames(r, 'app.ts')).toEqual([]);
+  });
+
+  it('keeps a file at top level when its manual parent no longer exists', () => {
+    const entries = [file('orphan.md')];
+    const r = computeNesting(entries, DEFAULT_NESTING_PATTERNS, { 'orphan.md': 'deleted.md' });
+    expect(names(r.roots)).toEqual(['orphan.md']);
+    expect(r.childrenOf.size).toBe(0);
+  });
+
+  it('never nests a directory even if manually targeted', () => {
+    const entries = [dir('src'), file('a.txt')];
+    const r = computeNesting(entries, DEFAULT_NESTING_PATTERNS, { 'src': 'a.txt' });
+    expect(r.roots).toContainEqual(dir('src'));
+    expect(childNames(r, 'a.txt')).toEqual([]);
+  });
+});
