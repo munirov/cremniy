@@ -2,7 +2,7 @@ use std::path::Path;
 
 use ignore::overrides::OverrideBuilder;
 use ignore::WalkBuilder;
-use regex::RegexBuilder;
+use regex::{Regex, RegexBuilder};
 use serde::Serialize;
 
 use crate::{canonical_workspace_root, pretty_path};
@@ -62,18 +62,7 @@ pub fn search_workspace(
     let root = canonical_workspace_root(&workspace_root)?;
     let cap = if max_results == 0 { DEFAULT_CAP } else { max_results };
 
-    let mut pattern = if use_regex {
-        query.clone()
-    } else {
-        regex::escape(&query)
-    };
-    if whole_word {
-        pattern = format!(r"\b(?:{pattern})\b");
-    }
-    let re = RegexBuilder::new(&pattern)
-        .case_insensitive(!match_case)
-        .build()
-        .map_err(|e| format!("invalid pattern: {e}"))?;
+    let re = build_regex(&query, match_case, whole_word, use_regex)?;
 
     let mut ov = OverrideBuilder::new(&root);
     for g in parse_globs(&includes) {
@@ -168,6 +157,65 @@ fn file_name(path: &Path) -> String {
     path.file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_default()
+}
+
+fn build_regex(
+    query: &str,
+    match_case: bool,
+    whole_word: bool,
+    use_regex: bool,
+) -> Result<Regex, String> {
+    let mut pattern = if use_regex {
+        query.to_string()
+    } else {
+        regex::escape(query)
+    };
+    if whole_word {
+        pattern = format!(r"\b(?:{pattern})\b");
+    }
+    RegexBuilder::new(&pattern)
+        .case_insensitive(!match_case)
+        .build()
+        .map_err(|e| format!("invalid pattern: {e}"))
+}
+
+/// Replace every match of the query in one workspace file; returns the count.
+/// Non-regex mode replaces literally (no `$` expansion); regex mode honours
+/// `$1` / `${name}` backrefs.
+#[tauri::command]
+#[allow(clippy::too_many_arguments)]
+pub fn replace_in_file(
+    workspace_root: String,
+    path: String,
+    query: String,
+    replacement: String,
+    match_case: bool,
+    whole_word: bool,
+    use_regex: bool,
+) -> Result<usize, String> {
+    if query.is_empty() {
+        return Ok(0);
+    }
+    let root = canonical_workspace_root(&workspace_root)?;
+    let file = std::path::PathBuf::from(path.trim())
+        .canonicalize()
+        .map_err(|e| format!("path: {e}"))?;
+    if !file.starts_with(&root) {
+        return Err(String::from("file is outside workspace"));
+    }
+    let re = build_regex(&query, match_case, whole_word, use_regex)?;
+    let content = std::fs::read_to_string(&file).map_err(|e| e.to_string())?;
+    let count = re.find_iter(&content).count();
+    if count == 0 {
+        return Ok(0);
+    }
+    let replaced = if use_regex {
+        re.replace_all(&content, replacement.as_str())
+    } else {
+        re.replace_all(&content, regex::NoExpand(replacement.as_str()))
+    };
+    std::fs::write(&file, replaced.as_ref()).map_err(|e| e.to_string())?;
+    Ok(count)
 }
 
 fn parse_globs(s: &str) -> Vec<String> {

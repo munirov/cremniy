@@ -59,6 +59,36 @@
   background: rgba(255, 255, 255, 0.14);
 }
 
+.replaceRow {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0 0.5rem 0.35rem;
+}
+
+.replaceAllBtn {
+  flex-shrink: 0;
+  height: 1.55rem;
+  padding: 0 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  font-family: var(--font-family-sans, inherit);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.replaceAllBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.replaceAllBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .filters {
   display: flex;
   flex-direction: column;

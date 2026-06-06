@@ -220,6 +220,25 @@ export async function searchWorkspace(
   });
 }
 
+/** Replace every match in one file; returns the number of replacements. */
+export async function replaceInFile(
+  workspaceRoot: string,
+  path: string,
+  query: string,
+  replacement: string,
+  params: { matchCase: boolean; wholeWord: boolean; useRegex: boolean },
+): Promise<number> {
+  return invoke<number>("replace_in_file", {
+    workspaceRoot,
+    path,
+    query,
+    replacement,
+    matchCase: params.matchCase,
+    wholeWord: params.wholeWord,
+    useRegex: params.useRegex,
+  });
+}
+
 export async function writeUserFile(path: string, contents: string): Promise<void> {
   return invoke<void>("write_user_file", { path, contents });
 }

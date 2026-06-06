@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import {
+  replaceInFile,
   searchWorkspace,
   type SearchMatch,
   type SearchResponse,
@@ -34,16 +35,19 @@ function renderPreview(m: SearchMatch) {
  * include/exclude globs, live (debounced) results that open the file on click.
  */
 export function SearchPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | null }) {
-  const { openFileAtLine } = useIdeSession();
+  const { openFileAtLine, bumpFileContentRevision } = useIdeSession();
   const [query, setQuery] = useState('');
+  const [replacement, setReplacement] = useState('');
   const [matchCase, setMatchCase] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
   const [useRegex, setUseRegex] = useState(false);
+  const [showReplace, setShowReplace] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [includes, setIncludes] = useState('');
   const [excludes, setExcludes] = useState('');
   const [result, setResult] = useState<SearchResponse | null>(null);
   const [busy, setBusy] = useState(false);
+  const [replacing, setReplacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const runSearch = useCallback(async () => {
@@ -72,11 +76,42 @@ export function SearchPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | 
     return () => clearTimeout(timer);
   }, [runSearch]);
 
+  const replaceAll = useCallback(async () => {
+    const root = workspaceRoot?.path;
+    if (root == null || root === '' || result == null || result.files.length === 0) {
+      return;
+    }
+    setReplacing(true);
+    setError(null);
+    try {
+      for (const file of result.files) {
+        try {
+          await replaceInFile(root, file.path, query, replacement, { matchCase, wholeWord, useRegex });
+        } catch (e) {
+          setError(e instanceof Error ? e.message : String(e));
+        }
+      }
+      bumpFileContentRevision();
+      await runSearch();
+    } finally {
+      setReplacing(false);
+    }
+  }, [workspaceRoot, result, query, replacement, matchCase, wholeWord, useRegex, runSearch, bumpFileContentRevision]);
+
   const fileCount = result?.files.length ?? 0;
 
   return (
     <div className={styles.panel}>
       <div className={styles.queryRow}>
+        <button
+          type="button"
+          className={`${styles.toggle} ${showReplace ? styles.toggleOn : ''}`}
+          title="Toggle Replace"
+          aria-pressed={showReplace}
+          onClick={() => setShowReplace((v) => !v)}
+        >
+          ⇄
+        </button>
         <input
           className={styles.queryInput}
           type="text"
@@ -123,6 +158,28 @@ export function SearchPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | 
           …
         </button>
       </div>
+
+      {showReplace ? (
+        <div className={styles.replaceRow}>
+          <input
+            className={styles.queryInput}
+            type="text"
+            placeholder="Replace"
+            aria-label="Replace"
+            value={replacement}
+            onChange={(e) => setReplacement(e.target.value)}
+          />
+          <button
+            type="button"
+            className={styles.replaceAllBtn}
+            title="Replace all in results"
+            disabled={replacing || (result?.files.length ?? 0) === 0}
+            onClick={() => void replaceAll()}
+          >
+            {replacing ? '…' : 'Replace All'}
+          </button>
+        </div>
+      ) : null}
 
       {showFilters ? (
         <div className={styles.filters}>

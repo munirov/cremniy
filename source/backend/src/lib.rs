@@ -46,6 +46,7 @@ pub fn run() {
             panes::list_popout_panes,
             binary_analysis::analyze_binary,
             search::search_workspace,
+            search::replace_in_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
