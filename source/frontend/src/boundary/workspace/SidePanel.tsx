@@ -81,7 +81,7 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
         ))}
         <button
           type="button"
-          className={`${styles.activityBtn} ${styles.moreBtn}`}
+          className={styles.activityBtn}
           title="Views"
           aria-haspopup="menu"
           onClick={(e) => {
