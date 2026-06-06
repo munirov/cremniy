@@ -1,0 +1,83 @@
+.menu {
+  position: fixed;
+  z-index: 60;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border-menu, rgba(255, 255, 255, 0.1));
+  border-radius: 6px;
+  background: var(--color-bg-elevated, #1d1f27);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.45);
+}
+
+.row {
+  display: flex;
+  align-items: stretch;
+  border-radius: 4px;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.rowActive,
+.rowActive:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rowMain {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-family: var(--font-family-sans, inherit);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.rowIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.rowLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pinBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  /* Hidden until the row is hovered; a pinned view always shows its pin. */
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.row:hover .pinBtn {
+  opacity: 0.55;
+}
+
+.pinBtn:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pinBtnOn {
+  opacity: 1;
+}
