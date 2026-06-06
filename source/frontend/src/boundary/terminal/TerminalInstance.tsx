@@ -183,6 +183,13 @@ export function TerminalInstance({
       // interrupt (the prompt "jumps"). ev.code is 'KeyC' regardless of layout.
       const current = sessionRef.current;
 
+      // Ctrl+A — select all terminal text (cmd doesn't bind it). Pairs with
+      // Ctrl+C to copy everything.
+      if (ev.code === 'KeyA') {
+        term.selectAll();
+        return false;
+      }
+
       // Ctrl+C / Ctrl+Shift+C — copy the selection. We deliberately do NOT send
       // an interrupt when there's no selection: Ctrl+C should just copy, never
       // make the terminal jump. Interrupt lives on Ctrl+Break and the menu.
