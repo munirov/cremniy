@@ -43,7 +43,9 @@
 .tabSelectBtn {
   flex: 1;
   min-width: 0;
-  padding: 0.25rem 0.35rem;
+  /* A touch more breathing room on the left so the name isn't jammed against
+     the edge. */
+  padding: 0.25rem 0.4rem 0.25rem 0.7rem;
   overflow: hidden;
   border: none;
   font-family: var(--font-family-mono);
