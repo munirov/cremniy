@@ -14,8 +14,8 @@
   justify-content: center;
   flex-shrink: 0;
   gap: 0.2rem;
-  /* Top padding drops the cluster a little below the window chrome. */
-  padding: 0.5rem 0.4rem 0.25rem;
+  /* Tight top gap like Cursor — icons sit close under the window chrome. */
+  padding: 0.2rem 0.4rem 0.2rem;
 }
 
 .activityBtn {
