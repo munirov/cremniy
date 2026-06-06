@@ -56,6 +56,8 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
   // MUST be declared above any early-return below — see the Rules of Hooks
   // bug we just fixed in FileTreeNode. This drives the root-zone drop-target.
   const [rootDragOver, setRootDragOver] = useState(false);
+  // Bumped by the header's "Collapse folders" button; every FileTreeNode folds.
+  const [collapseSignal, setCollapseSignal] = useState(0);
   const ctxMenuRef = useRef<HTMLUListElement | null>(null);
   const filterLower = filter.trim().toLowerCase();
 
@@ -184,6 +186,15 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
   );
 
   const cancelPendingCreate = useCallback(() => setPendingCreate(null), []);
+
+  // Header actions (create at the workspace root, refresh, collapse everything).
+  const newFileAtRoot = useCallback(() => {
+    if (workspaceRoot != null) setPendingCreate({ kind: 'file', parentPath: workspaceRoot.path });
+  }, [workspaceRoot]);
+  const newFolderAtRoot = useCallback(() => {
+    if (workspaceRoot != null) setPendingCreate({ kind: 'folder', parentPath: workspaceRoot.path });
+  }, [workspaceRoot]);
+  const collapseAll = useCallback(() => setCollapseSignal((n) => n + 1), []);
 
   const runNewFolder = useCallback(() => {
     if (ctx == null || workspaceRoot == null) return;
@@ -336,6 +347,13 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
   if (entries != null && entries.length === 0) {
     return (
       <>
+        <TreeHeader
+          name={fileNameFromPath(workspaceRoot.path) || workspaceRoot.path}
+          onNewFile={newFileAtRoot}
+          onNewFolder={newFolderAtRoot}
+          onRefresh={bumpFileTreeRevision}
+          onCollapseAll={collapseAll}
+        />
         <div
           className={styles.treeRoot}
           role="tree"
@@ -401,6 +419,13 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
 
   return (
     <>
+      <TreeHeader
+        name={fileNameFromPath(workspaceRoot.path) || workspaceRoot.path}
+        onNewFile={newFileAtRoot}
+        onNewFolder={newFolderAtRoot}
+        onRefresh={bumpFileTreeRevision}
+        onCollapseAll={collapseAll}
+      />
       <div style={{ padding: '0.25rem 0.5rem' }}>
         <input
           type="search"
@@ -453,6 +478,7 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
                 filterLower={filterLower}
                 excludedPatterns={excludedPatterns}
                 pendingCreate={pendingCreate}
+                collapseSignal={collapseSignal}
                 onCommitCreate={commitPendingCreate}
                 onCancelCreate={cancelPendingCreate}
                 onOpenFile={openFileFromWorkspace}
@@ -478,6 +504,55 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
         />
       ) : null}
     </>
+  );
+}
+
+type TreeHeaderProps = {
+  name: string;
+  onNewFile: () => void;
+  onNewFolder: () => void;
+  onRefresh: () => void;
+  onCollapseAll: () => void;
+};
+
+/**
+ * Explorer section header: the project name, with new-file / new-folder /
+ * refresh / collapse-all actions that fade in on hover (VS Code-style).
+ */
+function TreeHeader({ name, onNewFile, onNewFolder, onRefresh, onCollapseAll }: TreeHeaderProps) {
+  return (
+    <div className={styles.header}>
+      <span className={styles.headerName} title={name}>
+        {name}
+      </span>
+      <div className={styles.headerActions}>
+        <button type="button" className={styles.headerBtn} title="New file" aria-label="New file" onClick={onNewFile}>
+          <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z" />
+            <path d="M13 3v6h6" />
+            <path d="M12 12.5v4M10 14.5h4" />
+          </svg>
+        </button>
+        <button type="button" className={styles.headerBtn} title="New folder" aria-label="New folder" onClick={onNewFolder}>
+          <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <path d="M12 11v5M9.5 13.5h5" />
+          </svg>
+        </button>
+        <button type="button" className={styles.headerBtn} title="Refresh explorer" aria-label="Refresh explorer" onClick={onRefresh}>
+          <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a9 9 0 1 1-3-6.7" />
+            <path d="M21 4v5h-5" />
+          </svg>
+        </button>
+        <button type="button" className={styles.headerBtn} title="Collapse folders" aria-label="Collapse folders" onClick={onCollapseAll}>
+          <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 13l5-5 5 5" />
+            <path d="M7 18l5-5 5 5" />
+          </svg>
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -562,6 +637,8 @@ type FileTreeNodeProps = {
   filterLower: string;
   excludedPatterns: readonly string[];
   pendingCreate: { kind: 'file' | 'folder'; parentPath: string } | null;
+  /** Bumped by "Collapse folders" — every node folds shut when it changes. */
+  collapseSignal: number;
   onCommitCreate: (name: string) => Promise<void>;
   onCancelCreate: () => void;
   onOpenFile: (path: string) => Promise<void>;
@@ -579,6 +656,7 @@ function FileTreeNode({
   filterLower,
   excludedPatterns,
   pendingCreate,
+  collapseSignal,
   onCommitCreate,
   onCancelCreate,
   onOpenFile,
@@ -683,6 +761,17 @@ function FileTreeNode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterLower]);
 
+  // "Collapse folders" — fold shut when the signal changes. Skip the first run
+  // (already collapsed) so it doesn't undo the filter auto-expand on mount.
+  const collapseMountRef = useRef(true);
+  useEffect(() => {
+    if (collapseMountRef.current) {
+      collapseMountRef.current = false;
+      return;
+    }
+    setExpanded(false);
+  }, [collapseSignal]);
+
   if (!entry.isDirectory) {
     if (!nameMatchesFilter) {
       return null;
@@ -773,6 +862,7 @@ function FileTreeNode({
                   filterLower={filterLower}
                   excludedPatterns={excludedPatterns}
                   pendingCreate={pendingCreate}
+                  collapseSignal={collapseSignal}
                   onCommitCreate={onCommitCreate}
                   onCancelCreate={onCancelCreate}
                   onOpenFile={onOpenFile}
