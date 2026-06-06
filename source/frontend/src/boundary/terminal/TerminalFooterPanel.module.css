@@ -21,7 +21,6 @@
      there's no stray gap before it. */
   padding: 0 0.25rem 0 0;
   background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .tabList {
@@ -155,9 +154,7 @@
   align-items: center;
   flex-shrink: 0;
   align-self: center;
-  margin-left: 0.15rem;
-  padding-left: 0.2rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  margin-left: 0.25rem;
 }
 
 .panelActionDanger:hover {
