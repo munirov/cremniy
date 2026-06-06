@@ -12,7 +12,7 @@ import { ToolRail } from '@boundary/layout/ToolRail';
 import { TerminalFooterPanel } from '@boundary/terminal/TerminalFooterPanel';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useToolDock } from '@boundary/workspace/ToolDockContext';
-import { WorkspaceFileTree } from '@boundary/workspace/WorkspaceFileTree';
+import { SidePanel } from '@boundary/workspace/SidePanel';
 import type { WorkspaceRoot } from '@domain/workspace/types';
 
 import styles from './IdeDockview.module.css';
@@ -216,7 +216,7 @@ export function IdeDockview({
     workspaceRoot?.path?.replace(/^\\\\\?\\/, '').replace(/^\/\/\?\//, '') ?? '';
   const fileTreeNode = paneVisibility.fileTree ? (
     <Pane id="fileTree" title={prettyRoot !== '' ? `Files — ${prettyRoot}` : 'Files'}>
-      <WorkspaceFileTree workspaceRoot={workspaceRoot} />
+      <SidePanel workspaceRoot={workspaceRoot} />
     </Pane>
   ) : null;
 

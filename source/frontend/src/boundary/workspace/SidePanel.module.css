@@ -1,0 +1,58 @@
+.sidePanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Activity bar — one button per registered view, chevron pushed to the right. */
+.activityBar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.1rem;
+  height: 2.2rem;
+  padding: 0 0.35rem;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.activityBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.7rem;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-primary);
+  /* Inactive views read muted; the active one is full strength on a fill —
+     selection-by-background, matching the rest of the app. */
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.activityBtn:hover {
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.activityBtnActive,
+.activityBtnActive:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.viewBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}

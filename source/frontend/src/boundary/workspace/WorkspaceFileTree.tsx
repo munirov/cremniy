@@ -24,6 +24,9 @@ import styles from './WorkspaceFileTree.module.css';
 
 type WorkspaceFileTreeProps = {
   workspaceRoot: WorkspaceRoot | null;
+  /** When set, the tree filters to entries whose name contains this (the Search
+   *  view drives it). Empty / undefined → show everything (Explorer). */
+  filter?: string;
 };
 
 type CtxState = {
@@ -37,7 +40,7 @@ function formatErr(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
+export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreeProps) {
   const { activeFilePath, openFileFromWorkspace, fileTreeRevision, bumpFileTreeRevision } = useIdeSession();
   const notify = useNotify();
   const [entries, setEntries] = useState<WorkspaceDirectoryEntry[] | null>(null);
@@ -58,8 +61,8 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
   // Bumped by the header's "Collapse folders" button; every FileTreeNode folds.
   const [collapseSignal, setCollapseSignal] = useState(0);
   const ctxMenuRef = useRef<HTMLUListElement | null>(null);
-  // Filter UI was removed; keep the tree's filter plumbing inert.
-  const filterLower = '';
+  // Driven by the Search view; empty when shown as the Explorer.
+  const filterLower = (filter ?? '').trim().toLowerCase();
 
   // Load excluded-patterns from Settings once per workspace switch. The
   // textarea is one-pattern-per-line; empty lines are dropped.
