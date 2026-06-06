@@ -107,6 +107,17 @@ pub fn start_terminal_session(
     let mut cmd = CommandBuilder::new(&shell);
     cmd.cwd(&cwd_for_shell);
 
+    // cmd.exe: append `$S` (a space) to PROMPT so typed input isn't glued to the
+    // ">" of the prompt — i.e. `…test-c> cmd` instead of `…test-c>cmd`. Keeps any
+    // custom prompt the user already has; only adds the trailing space.
+    if shell.to_lowercase().contains("cmd") {
+        let mut prompt = std::env::var("PROMPT").unwrap_or_else(|_| String::from("$P$G"));
+        if !prompt.to_lowercase().ends_with("$s") && !prompt.ends_with(' ') {
+            prompt.push_str("$S");
+        }
+        cmd.env("PROMPT", prompt);
+    }
+
     let child = pair
         .slave
         .spawn_command(cmd)
