@@ -3,28 +3,29 @@
   align-items: center;
   flex-shrink: 0;
   min-height: 1.5rem;
-  padding: 0.1rem 0.6rem;
+  /* Indented a touch from the gutter; same bg as the editor so it reads as part
+     of it, not a separate strip. */
+  padding: 0.1rem 0.6rem 0.1rem 1rem;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  /* No bar look — transparent, no divider — so it reads as part of the editor,
-     sitting just above the code rather than a separate strip. */
-  background: transparent;
+  background: var(--color-bg-editor);
   font-family: var(--font-family-mono);
   font-size: 12px;
   color: var(--color-text-primary);
 }
 
-/* Parent folders dim, separators dimmer, the file (leaf) bright. */
+/* Muted throughout — parents dimmest, the file (leaf) a bit brighter but still
+   not white. */
 .crumb {
-  opacity: 0.55;
+  opacity: 0.4;
 }
 
 .leaf {
-  opacity: 0.95;
+  opacity: 0.6;
 }
 
 .sep {
   margin: 0 0.4rem;
-  opacity: 0.4;
+  opacity: 0.3;
 }

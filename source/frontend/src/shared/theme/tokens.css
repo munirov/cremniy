@@ -3,6 +3,9 @@
   --color-bg-base: #262626;
   --color-bg-panel: #1f1f1f;
   --color-bg-panel-alt: #2b2b2b;
+  /* Matches the Monaco vs-dark editor background so breadcrumb / status chrome
+     can blend into the code instead of reading as a separate band. */
+  --color-bg-editor: #1e1e1e;
   --color-list-alternate: #0a0f18;
 
   /* Text */
