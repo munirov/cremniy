@@ -13,6 +13,7 @@ import { fileNameFromPath } from '@domain/workspace/paths';
 
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 
+import { CENTER_PANELS } from './centerPanels';
 import styles from './IdeEditorTabStrip.module.css';
 
 const DRAG_MIME = 'application/x-cremniy-tab';
@@ -29,6 +30,10 @@ export function IdeEditorTabStrip() {
     closeOpenFile,
     closeOtherOpenFiles,
     closeAllOpenFiles,
+    openPanels,
+    activePanel,
+    activatePanel,
+    closePanel,
   } = useIdeSession();
   const dirtyFiles = new Set(dirtyFilePaths);
   const navigatedFromKeyboardRef = useRef(false);
@@ -151,7 +156,7 @@ export function IdeEditorTabStrip() {
     [openFilePaths, pinnedFilePaths, reorderOpenFiles],
   );
 
-  if (sortedPaths.length === 0) {
+  if (sortedPaths.length === 0 && openPanels.length === 0) {
     return (
       <div aria-label="Open document tabs" className={styles.strip} role="toolbar">
         <span className={styles.emptyHint}>No open files</span>
@@ -170,7 +175,7 @@ export function IdeEditorTabStrip() {
       >
         {sortedPaths.map((path) => {
           const label = fileNameFromPath(path) || path;
-          const isActive = activeFilePath === path;
+          const isActive = activeFilePath === path && activePanel == null;
           const isDirty = dirtyFiles.has(path);
           const isPinned = pinnedFilePaths.has(path);
           return (
@@ -223,6 +228,42 @@ export function IdeEditorTabStrip() {
                 onClick={(e) => {
                   e.stopPropagation();
                   closeOpenFile(path);
+                }}
+              >
+                ×
+              </button>
+            </div>
+          );
+        })}
+        {openPanels.map((id) => {
+          const def = CENTER_PANELS[id];
+          if (def == null) return null;
+          const panelActive = activePanel === id;
+          return (
+            <div
+              key={`panel:${id}`}
+              className={`${styles.tab} ${panelActive ? styles.tabActive : ''}`}
+              role="presentation"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={panelActive}
+                tabIndex={panelActive ? 0 : -1}
+                className={styles.tabSelectBtn}
+                title={def.label}
+                onClick={() => activatePanel(id)}
+              >
+                <span className={styles.tabLabel}>{def.label}</span>
+              </button>
+              <button
+                type="button"
+                aria-label={`Close ${def.label}`}
+                className={styles.tabCloseBtn}
+                tabIndex={-1}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closePanel(id);
                 }}
               >
                 ×

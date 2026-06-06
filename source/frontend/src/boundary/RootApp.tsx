@@ -20,6 +20,7 @@ import { useMenuSlot } from '@boundary/chrome/MenuSlotContext';
 import { useChangeLocale } from '@boundary/i18n/LocaleContext';
 import { ReferenceTablesModal } from '@boundary/references/ReferenceTablesModal';
 import { SettingsDialog } from '@boundary/settings/SettingsDialog';
+import { SettingsApplyProvider } from '@boundary/layout/centerPanels';
 import { IdeDockview } from '@boundary/layout/IdeDockview';
 import { RootLayout } from '@boundary/layout/RootLayout';
 import { DataConverterDialog } from '@boundary/tools/DataConverterDialog';
@@ -429,11 +430,13 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
   // Clearing on unmount means navigating back to Welcome hides the menu items
   // but the titlebar / window controls stay visible.
   const { setMenu, setSettingsAction } = useMenuSlot();
-  // Expose "open preferences" to the titlebar gear (which lives one level up).
+  // The titlebar gear opens settings as a center tab (the generic tab space),
+  // not a modal.
+  const openCenterPanel = ide.openPanel;
   useEffect(() => {
-    setSettingsAction(() => setSettingsOpen(true));
+    setSettingsAction(() => openCenterPanel('settings'));
     return () => setSettingsAction(null);
-  }, [setSettingsAction]);
+  }, [setSettingsAction, openCenterPanel]);
   useEffect(() => {
     setMenu(
       <MenuBar
@@ -471,6 +474,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
 
   return (
     <>
+      <SettingsApplyProvider apply={setPrefs}>
       <RootLayout>
         <IdeDockview
           workspaceRoot={workspaceRoot}
@@ -496,6 +500,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
           }}
         />
       </RootLayout>
+      </SettingsApplyProvider>
 
       <SettingsDialog
         open={settingsOpen}

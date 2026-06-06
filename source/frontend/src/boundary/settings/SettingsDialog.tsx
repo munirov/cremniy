@@ -22,7 +22,10 @@ import { testExternalTool } from '@infrastructure/tauri/bridge';
 import styles from './SettingsDialog.module.css';
 
 export type SettingsDialogProps = {
-  open: boolean;
+  /** Modal mode (ignored when `embedded`). */
+  open?: boolean;
+  /** Render inline without a backdrop, to host inside a center tab. */
+  embedded?: boolean;
   onClose: () => void;
   onSaved?: (prefs: AppPreferences) => void;
   workspaceRoot?: string | null;
@@ -78,7 +81,7 @@ function SettingRow({
   );
 }
 
-export function SettingsDialog({ open, onClose, onSaved, workspaceRoot, service }: SettingsDialogProps) {
+export function SettingsDialog({ open, embedded, onClose, onSaved, workspaceRoot, service }: SettingsDialogProps) {
   const [category, setCategory] = useState<Category>('general');
   const [theme, setTheme] = useState<ThemePreference>('dark');
   const [locale, setLocale] = useState<LocalePreference>('en');
@@ -106,7 +109,7 @@ export function SettingsDialog({ open, onClose, onSaved, workspaceRoot, service 
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!open) {
+    if (!open && !embedded) {
       return;
     }
     let cancelled = false;
@@ -148,7 +151,7 @@ export function SettingsDialog({ open, onClose, onSaved, workspaceRoot, service 
     return () => {
       cancelled = true;
     };
-  }, [open, service]);
+  }, [open, embedded, service]);
 
   const handleSave = useCallback(async () => {
     setError(null);
@@ -275,18 +278,17 @@ export function SettingsDialog({ open, onClose, onSaved, workspaceRoot, service 
     [],
   );
 
-  if (!open) {
+  if (!open && !embedded) {
     return null;
   }
 
   const activeCategory = CATEGORIES.find((c) => c.id === category)?.label ?? '';
 
-  return (
-    <div className={styles.backdrop} role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+  const body = (
       <div
-        className={styles.dialog}
+        className={`${styles.dialog} ${embedded ? styles.dialogEmbedded : ''}`}
         role="dialog"
-        aria-modal="true"
+        aria-modal={embedded ? undefined : true}
         aria-labelledby="settings-dialog-title"
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
@@ -688,6 +690,14 @@ export function SettingsDialog({ open, onClose, onSaved, workspaceRoot, service 
           </div>
         </div>
       </div>
+  );
+
+  if (embedded) {
+    return body;
+  }
+  return (
+    <div className={styles.backdrop} role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      {body}
     </div>
   );
 }

@@ -22,6 +22,17 @@
   overflow: hidden;
 }
 
+/* Embedded in a center tab: fill the slot, drop the modal chrome. */
+.dialogEmbedded {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 /* ── left nav rail ─────────────────────────────────────────────── */
 .sidebar {
   display: flex;

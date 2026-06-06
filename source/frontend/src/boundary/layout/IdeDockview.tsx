@@ -4,6 +4,7 @@ import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
 import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
+import { CENTER_PANELS } from '@boundary/layout/centerPanels';
 import { IdeStatusStrip } from '@boundary/layout/IdeStatusStrip';
 import { IdeToolDock } from '@boundary/layout/IdeToolDock';
 import { Pane } from '@boundary/layout/Pane';
@@ -235,7 +236,7 @@ export function IdeDockview({
       )}
     >
       <div className={styles.editorStack}>
-        {ide.openFilePaths.length > 0 ? (
+        {ide.openFilePaths.length > 0 || ide.openPanels.length > 0 ? (
           <div className={styles.tabStrip} role="region" aria-label="Document tabs">
             <IdeEditorTabStrip />
             {/* While split, the toggle lives on the right pane (far edge) so it's
@@ -256,26 +257,32 @@ export function IdeDockview({
             ) : null}
           </div>
         ) : null}
-        <IdeBreadcrumb
-          filePath={ide.activeFilePath}
-          workspaceRoot={workspaceRoot?.path ?? null}
-        />
-        <div className={styles.editorBody}>
-          <IdeMonacoEditor
-            onCursorPositionChange={onCursorPositionChange}
-            wordWrapEnabled={wordWrapEnabled}
-            insertSpaces={editorInsertSpaces}
-            tabWidth={editorTabWidth}
-            fontSize={editorFontSize}
-            onFontSizeChange={onEditorFontSizeChange}
-            command={editorCommand}
-          />
-        </div>
-        <IdeStatusStrip
-          activeFilePath={ide.activeFilePath}
-          cursorLine={cursorPosition?.line ?? null}
-          cursorColumn={cursorPosition?.column ?? null}
-        />
+        {ide.activePanel != null ? (
+          <div className={styles.editorBody}>{CENTER_PANELS[ide.activePanel]?.render() ?? null}</div>
+        ) : (
+          <>
+            <IdeBreadcrumb
+              filePath={ide.activeFilePath}
+              workspaceRoot={workspaceRoot?.path ?? null}
+            />
+            <div className={styles.editorBody}>
+              <IdeMonacoEditor
+                onCursorPositionChange={onCursorPositionChange}
+                wordWrapEnabled={wordWrapEnabled}
+                insertSpaces={editorInsertSpaces}
+                tabWidth={editorTabWidth}
+                fontSize={editorFontSize}
+                onFontSizeChange={onEditorFontSizeChange}
+                command={editorCommand}
+              />
+            </div>
+            <IdeStatusStrip
+              activeFilePath={ide.activeFilePath}
+              cursorLine={cursorPosition?.line ?? null}
+              cursorColumn={cursorPosition?.column ?? null}
+            />
+          </>
+        )}
       </div>
     </Pane>
   ) : null;

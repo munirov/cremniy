@@ -52,6 +52,12 @@ export type IdeSessionContextValue = {
   /** Re-read clean (non-dirty) open files from disk — call after on-disk edits
    *  like Search → Replace so editor buffers don't go stale. */
   reloadCleanOpenBuffers: () => Promise<void>;
+  /** Non-file center tabs (settings, etc.) opened in the editor "tab space". */
+  openPanels: string[];
+  activePanel: string | null;
+  openPanel: (id: string) => void;
+  activatePanel: (id: string) => void;
+  closePanel: (id: string) => void;
   activateOpenFile: (filePath: string) => void;
   closeOpenFile: (filePath: string) => void;
   closeOtherOpenFiles: (keepFilePath: string) => void;
@@ -90,6 +96,10 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   const [documentText, setDocumentTextState] = useState('');
   const [fileTreeRevision, setFileTreeRevision] = useState(0);
   const [fileContentRevision, setFileContentRevision] = useState(0);
+  // Non-file center tabs (e.g. settings) opened in the editor "tab space".
+  // activePanel non-null means the center shows that panel instead of the file.
+  const [openPanels, setOpenPanels] = useState<string[]>([]);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
 
   const openTabsRef = useRef<string[]>([]);
   const buffersRef = useRef<Record<string, string>>({});
@@ -171,6 +181,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     if (!openTabsRef.current.includes(path)) {
       return;
     }
+    setActivePanel(null);
     setActiveFilePath(path);
     setDocumentTextState(buffersRef.current[path] ?? '');
   }, []);
@@ -413,6 +424,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         setOpenTabs((t) => [...t, trimmed]);
         setBuffers((b) => ({ ...b, [trimmed]: text }));
         setSavedBuffers((b) => ({ ...b, [trimmed]: text }));
+        setActivePanel(null);
         setActiveFilePath(trimmed);
         setDocumentTextState(text);
       } catch (e) {
@@ -457,6 +469,20 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     }
     bumpFileContentRevision();
   }, [workspaceRoot?.path, activeFilePath, bumpFileContentRevision]);
+
+  const openPanel = useCallback((id: string) => {
+    setOpenPanels((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setActivePanel(id);
+  }, []);
+
+  const activatePanel = useCallback((id: string) => {
+    setActivePanel(id);
+  }, []);
+
+  const closePanel = useCallback((id: string) => {
+    setOpenPanels((prev) => prev.filter((p) => p !== id));
+    setActivePanel((prev) => (prev === id ? null : prev));
+  }, []);
 
   const closeWorkspaceFlow = useCallback(() => {
     setOpenTabs([]);
@@ -576,6 +602,11 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       fileContentRevision,
       bumpFileContentRevision,
       reloadCleanOpenBuffers,
+      openPanels,
+      activePanel,
+      openPanel,
+      activatePanel,
+      closePanel,
     }),
     [
       activeDocumentDirty,
@@ -600,6 +631,11 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       fileContentRevision,
       bumpFileContentRevision,
       reloadCleanOpenBuffers,
+      openPanels,
+      activePanel,
+      openPanel,
+      activatePanel,
+      closePanel,
     ],
   );
 
