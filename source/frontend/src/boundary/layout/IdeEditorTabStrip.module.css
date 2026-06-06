@@ -22,6 +22,8 @@
   flex-shrink: 0;
   align-items: stretch;
   max-width: 12rem;
+  /* A little room after the × so it isn't jammed against the tab's edge. */
+  padding-right: 0.35rem;
   /* Flat, like the terminal tabs — selection shows as a background fill, not an
      outline or an accent underline. */
   border: none;
