@@ -189,8 +189,14 @@ export function IdeDockview({
   const toggleEditorSplit = useCallback(() => {
     const next = !editorSplit;
     setEditorSplit(next);
-    if (next && activeToolTab == null) {
-      setActiveToolTab('codeEditor');
+    if (next) {
+      if (activeToolTab == null) {
+        setActiveToolTab('codeEditor');
+      }
+    } else {
+      // Un-split → back to a single editor. Clear the tool that was sharing the
+      // slot, otherwise it stays full-screen and the editor looks "broken".
+      setActiveToolTab(null);
     }
   }, [editorSplit, activeToolTab, setActiveToolTab]);
 
@@ -231,19 +237,22 @@ export function IdeDockview({
         {ide.openFilePaths.length > 0 ? (
           <div className={styles.tabStrip} role="region" aria-label="Document tabs">
             <IdeEditorTabStrip />
-            <button
-              type="button"
-              className={`${styles.splitBtn} ${editorSplit ? styles.splitBtnActive : ''}`}
-              onClick={toggleEditorSplit}
-              title={editorSplit ? 'Unsplit editor' : 'Split editor (open a tool / second editor beside)'}
-              aria-label={editorSplit ? 'Unsplit editor' : 'Split editor'}
-              aria-pressed={editorSplit}
-            >
-              <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="16" rx="1.5" />
-                <path d="M12 4v16" />
-              </svg>
-            </button>
+            {/* While split, the toggle lives on the right pane (far edge) so it's
+                not stuck to the left window — see IdeToolDock's onToggleSplit. */}
+            {!editorSplit ? (
+              <button
+                type="button"
+                className={styles.splitBtn}
+                onClick={toggleEditorSplit}
+                title="Split editor (open a tool / second editor beside)"
+                aria-label="Split editor"
+              >
+                <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="16" rx="1.5" />
+                  <path d="M12 4v16" />
+                </svg>
+              </button>
+            ) : null}
           </div>
         ) : null}
         <IdeBreadcrumb
@@ -282,7 +291,9 @@ export function IdeDockview({
             {editorPaneNode}
           </div>
           <div key="tool-pane" style={{ width: '100%', height: '100%' }}>
-            {toolNode}
+            {/* The split toggle rides on this (right) pane so it sits at the far
+                edge, common to the split, not buried in the left window. */}
+            <IdeToolDock onToggleSplit={toggleEditorSplit} />
           </div>
         </SplitContainer>
       );
