@@ -19,6 +19,7 @@ import { useNotify } from '@boundary/notifications/NotificationContext';
 
 import { useIdeSession } from './IdeSessionContext';
 import { ChevronIcon, FileIcon, FolderIcon } from './fileIcons';
+import { loadTreeOrder, saveTreeOrder, sortByOrder, type TreeOrder } from './treeView';
 
 import styles from './WorkspaceFileTree.module.css';
 
@@ -48,6 +49,12 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   const [loading, setLoading] = useState(false);
   const [ctx, setCtx] = useState<CtxState | null>(null);
   const [excludedPatterns, setExcludedPatterns] = useState<readonly string[]>([]);
+  // Per-directory custom display order — purely visual, persisted per workspace
+  // (localStorage v1). Default is the backend's folders-first alphabetical.
+  const [treeOrder, setTreeOrder] = useState<TreeOrder>({});
+  useEffect(() => {
+    setTreeOrder(loadTreeOrder(workspaceRoot?.path ?? ''));
+  }, [workspaceRoot?.path]);
   // Inline-create row state. When non-null, the tree renders an input under
   // the named parent (or at the root) so the user can type the new name
   // without a native window.prompt dialog.
@@ -299,6 +306,44 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     }
   }, [ctx]);
 
+  // Custom sort: swap the right-clicked entry with its visible neighbour in the
+  // same directory and persist the new order. Re-reads the parent dir so it
+  // works the same at the root and inside any (lazily-loaded) folder.
+  const runMoveEntry = useCallback(
+    async (direction: 'up' | 'down') => {
+      if (ctx == null || workspaceRoot == null || ctx.path === workspaceRoot.path) {
+        return;
+      }
+      const dirPath = parentDirectoryPath(ctx.path);
+      const name = fileNameFromPath(ctx.path);
+      try {
+        const siblings = await listDirectoryEntries(workspaceRoot.path, dirPath);
+        const visible = siblings.filter(
+          (e) => !excludedPatterns.some((p) => e.name.toLowerCase().includes(p.toLowerCase())),
+        );
+        const ordered = sortByOrder(visible, dirPath, treeOrder).map((e) => e.name);
+        const idx = ordered.indexOf(name);
+        const swapWith = direction === 'up' ? idx - 1 : idx + 1;
+        if (idx < 0 || swapWith < 0 || swapWith >= ordered.length) {
+          setCtx(null);
+          return;
+        }
+        const a = ordered[idx]!;
+        ordered[idx] = ordered[swapWith]!;
+        ordered[swapWith] = a;
+        setTreeOrder((prev) => {
+          const next = { ...prev, [dirPath]: ordered };
+          saveTreeOrder(workspaceRoot.path, next);
+          return next;
+        });
+        setCtx(null);
+      } catch (e) {
+        notify.error('Operation failed', formatErr(e));
+      }
+    },
+    [ctx, workspaceRoot, excludedPatterns, treeOrder, notify],
+  );
+
   const handleMoveInto = useCallback(
     async (sourcePath: string, targetDirectory: string) => {
       if (workspaceRoot == null) {
@@ -378,6 +423,8 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
             onCopyPath={() => void runCopyPath()}
             onCopyRelativePath={() => void runCopyRelativePath()}
             onRevealInExplorer={() => void runRevealInExplorer()}
+            onMoveUp={() => void runMoveEntry('up')}
+            onMoveDown={() => void runMoveEntry('down')}
             onRename={() => void runRename()}
             onDelete={() => void runDelete()}
           />
@@ -389,9 +436,13 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   const visibleEntries =
     entries == null
       ? []
-      : entries.filter(
-          (e) =>
-            !excludedPatterns.some((p) => e.name.toLowerCase().includes(p.toLowerCase())),
+      : sortByOrder(
+          entries.filter(
+            (e) =>
+              !excludedPatterns.some((p) => e.name.toLowerCase().includes(p.toLowerCase())),
+          ),
+          workspaceRoot.path,
+          treeOrder,
         );
 
   // Root-level drop target — lets the user move a nested file BACK to the
@@ -463,6 +514,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
                 activeFilePath={activeFilePath}
                 filterLower={filterLower}
                 excludedPatterns={excludedPatterns}
+                treeOrder={treeOrder}
                 pendingCreate={pendingCreate}
                 collapseSignal={collapseSignal}
                 onCommitCreate={commitPendingCreate}
@@ -486,6 +538,8 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
           onCopyPath={() => void runCopyPath()}
           onCopyRelativePath={() => void runCopyRelativePath()}
           onRevealInExplorer={() => void runRevealInExplorer()}
+          onMoveUp={() => void runMoveEntry('up')}
+          onMoveDown={() => void runMoveEntry('down')}
           onRename={() => void runRename()}
           onDelete={() => void runDelete()}
         />
@@ -552,6 +606,8 @@ type CtxMenuProps = {
   onCopyPath: () => void;
   onCopyRelativePath: () => void;
   onRevealInExplorer: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
   onRename: () => void;
   onDelete: () => void;
 };
@@ -565,6 +621,8 @@ function CtxMenu({
   onCopyPath,
   onCopyRelativePath,
   onRevealInExplorer,
+  onMoveUp,
+  onMoveDown,
   onRename,
   onDelete,
 }: CtxMenuProps) {
@@ -603,6 +661,17 @@ function CtxMenu({
       </li>
       <li role="none" aria-hidden="true" className={styles.ctxMenuSeparator} />
       <li role="none">
+        <button type="button" role="menuitem" className={styles.ctxMenuItem} onClick={onMoveUp}>
+          Move up
+        </button>
+      </li>
+      <li role="none">
+        <button type="button" role="menuitem" className={styles.ctxMenuItem} onClick={onMoveDown}>
+          Move down
+        </button>
+      </li>
+      <li role="none" aria-hidden="true" className={styles.ctxMenuSeparator} />
+      <li role="none">
         <button type="button" role="menuitem" className={styles.ctxMenuItem} onClick={onRename}>
           Rename…
         </button>
@@ -623,6 +692,7 @@ type FileTreeNodeProps = {
   activeFilePath: string | null;
   filterLower: string;
   excludedPatterns: readonly string[];
+  treeOrder: TreeOrder;
   pendingCreate: { kind: 'file' | 'folder'; parentPath: string } | null;
   /** Bumped by "Collapse folders" — every node folds shut when it changes. */
   collapseSignal: number;
@@ -642,6 +712,7 @@ function FileTreeNode({
   activeFilePath,
   filterLower,
   excludedPatterns,
+  treeOrder,
   pendingCreate,
   collapseSignal,
   onCommitCreate,
@@ -833,14 +904,16 @@ function FileTreeNode({
               />
             </li>
           ) : null}
-          {children
-            .filter(
+          {sortByOrder(
+            children.filter(
               (c) =>
                 !excludedPatterns.some((p) =>
                   c.name.toLowerCase().includes(p.toLowerCase()),
                 ),
-            )
-            .map((child) => (
+            ),
+            entry.path,
+            treeOrder,
+          ).map((child) => (
               <li key={child.path} className={styles.treeItem} role="none">
                 <FileTreeNode
                   workspaceRootPath={workspaceRootPath}
@@ -849,6 +922,7 @@ function FileTreeNode({
                   activeFilePath={activeFilePath}
                   filterLower={filterLower}
                   excludedPatterns={excludedPatterns}
+                  treeOrder={treeOrder}
                   pendingCreate={pendingCreate}
                   collapseSignal={collapseSignal}
                   onCommitCreate={onCommitCreate}
