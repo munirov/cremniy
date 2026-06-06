@@ -45,6 +45,7 @@ pub fn run() {
             panes::close_popout_pane,
             panes::list_popout_panes,
             binary_analysis::analyze_binary,
+            search::search_workspace,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -55,6 +56,7 @@ mod disassembly;
 mod panes;
 mod process;
 mod radare2;
+mod search;
 mod shellcode;
 mod terminal;
 

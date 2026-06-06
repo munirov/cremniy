@@ -26,3 +26,6 @@ iced-x86 = { version = "1", default-features = false, features = ["std", "decode
 goblin = "0.9"
 # Real PTY (ConPTY on Windows 10+, POSIX PTY elsewhere).
 portable-pty = "0.8"
+# Workspace content search: ripgrep's walker (.gitignore + globs) + regex.
+ignore = "0.4"
+regex = "1"

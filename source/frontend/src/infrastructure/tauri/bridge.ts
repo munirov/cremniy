@@ -174,6 +174,52 @@ export async function listDirectoryEntries(
   });
 }
 
+export type SearchMatch = {
+  line: number;
+  column: number;
+  preview: string;
+  matchStart: number;
+  matchEnd: number;
+};
+
+export type SearchFileResult = {
+  path: string;
+  name: string;
+  matches: SearchMatch[];
+};
+
+export type SearchResponse = {
+  files: SearchFileResult[];
+  totalMatches: number;
+  truncated: boolean;
+};
+
+export type SearchParams = {
+  matchCase: boolean;
+  wholeWord: boolean;
+  useRegex: boolean;
+  includes: string;
+  excludes: string;
+  maxResults?: number;
+};
+
+export async function searchWorkspace(
+  workspaceRoot: string,
+  query: string,
+  params: SearchParams,
+): Promise<SearchResponse> {
+  return invoke<SearchResponse>("search_workspace", {
+    workspaceRoot,
+    query,
+    matchCase: params.matchCase,
+    wholeWord: params.wholeWord,
+    useRegex: params.useRegex,
+    includes: params.includes,
+    excludes: params.excludes,
+    maxResults: params.maxResults ?? 0,
+  });
+}
+
 export async function writeUserFile(path: string, contents: string): Promise<void> {
   return invoke<void>("write_user_file", { path, contents });
 }
