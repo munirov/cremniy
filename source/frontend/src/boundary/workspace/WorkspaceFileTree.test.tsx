@@ -25,6 +25,19 @@ vi.mock('@infrastructure/tauri/bridge', () => ({
   listDirectoryEntries: vi.fn(),
 }));
 
+vi.mock('@boundary/notifications/NotificationContext', () => ({
+  useNotify: () => ({
+    info: vi.fn(),
+    success: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
+}));
+
+vi.mock('@infrastructure/preferences/preferencesBridge', () => ({
+  loadPreferences: () => Promise.resolve({ excludedFilePatterns: '' }),
+}));
+
 describe('WorkspaceFileTree', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,6 +47,9 @@ describe('WorkspaceFileTree', () => {
     ideSessionMocks.openFileFromWorkspace.mockImplementation(() => Promise.resolve());
     ideSessionMocks.bumpFileTreeRevision.mockReset();
     vi.mocked(listDirectoryEntries).mockReset();
+    // Default so the root-load effect never rejects in tests that don't set
+    // their own resolution (each test overrides with mockReturnValueOnce).
+    vi.mocked(listDirectoryEntries).mockResolvedValue([]);
   });
 
   it('shows empty state when no workspace root', () => {
