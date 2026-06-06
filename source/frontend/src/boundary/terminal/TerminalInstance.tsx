@@ -173,6 +173,29 @@ export function TerminalInstance({
       if (ev.type !== 'keydown') {
         return true;
       }
+      const current = sessionRef.current;
+
+      // Backspace / Delete while the typed input is the selection (i.e. you just
+      // did Ctrl+A over what you're typing) → wipe the whole input line by
+      // sending that many deletes. `inputBufferRef` only holds the input while
+      // you typed straight (it's cleared on arrows), so the cursor is at the end
+      // and the deletes line up. Select-all (no input) never triggers this.
+      if (
+        (ev.key === 'Backspace' || ev.key === 'Delete') &&
+        !ev.ctrlKey &&
+        !ev.metaKey &&
+        !ev.altKey &&
+        inputBufferRef.current.length > 0 &&
+        term.getSelection() === inputBufferRef.current
+      ) {
+        if (current != null) {
+          void writeTerminalInput(current.sessionId, '\x7f'.repeat(inputBufferRef.current.length));
+        }
+        inputBufferRef.current = '';
+        term.clearSelection();
+        return false;
+      }
+
       const mod = ev.ctrlKey || ev.metaKey;
       if (!mod) {
         return true;
@@ -181,12 +204,18 @@ export function TerminalInstance({
       // non-Latin) layout Ctrl+C reports ev.key='с', so a `key === 'c'` check
       // silently misses and the keystroke falls through to the shell as an
       // interrupt (the prompt "jumps"). ev.code is 'KeyC' regardless of layout.
-      const current = sessionRef.current;
 
-      // Ctrl+A — select all terminal text (cmd doesn't bind it). Pairs with
-      // Ctrl+C to copy everything.
+      // Ctrl+A — select just what you're typing (the current input). If there's
+      // nothing typed, fall back to selecting the whole terminal.
       if (ev.code === 'KeyA') {
-        term.selectAll();
+        const input = inputBufferRef.current;
+        const buf = term.buffer.active;
+        const startCol = buf.cursorX - input.length;
+        if (input.length > 0 && startCol >= 0) {
+          term.select(startCol, buf.baseY + buf.cursorY, input.length);
+        } else {
+          term.selectAll();
+        }
         return false;
       }
 
