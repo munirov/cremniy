@@ -16,6 +16,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 
 import styles from './TerminalFooterPanel.module.css';
+import { correctCyrillicCommand } from './cyrillicLayout';
 
 type TerminalStatus = 'idle' | 'starting' | 'running' | 'error';
 
@@ -252,6 +253,26 @@ export function TerminalInstance({
       const current = sessionRef.current;
       if (current == null) {
         return;
+      }
+      // Wrong-layout rescue: Enter on a line whose command was typed in Cyrillic
+      // (cls → сды) is rewritten to the intended Latin command before it reaches
+      // the shell — erase the mistyped chars, send the corrected command + CR.
+      if (data === '\r') {
+        const typed = inputBufferRef.current;
+        const fixed = correctCyrillicCommand(typed);
+        if (fixed != null && fixed !== typed) {
+          inputBufferRef.current = '';
+          const cmd = fixed.trim();
+          if (cmd !== '') {
+            setHistory((prev) => {
+              const next = [cmd, ...prev.filter((x) => x !== cmd)].slice(0, MAX_HISTORY);
+              saveHistory(next);
+              return next;
+            });
+          }
+          void writeTerminalInput(current.sessionId, `${'\x7f'.repeat(typed.length)}${fixed}\r`);
+          return;
+        }
       }
       // Persistent-history capture: accumulate printable input, push on CR/LF.
       for (const ch of data) {
