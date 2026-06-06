@@ -132,12 +132,9 @@
   line-height: 1.5;
   white-space: nowrap;
   position: relative;
-}
-
-/* Zebra-stripe odd-indexed rows for Qt-style alternate-row. */
-.treeRoot ul li:nth-child(even) > .leafButton,
-.treeRoot ul li:nth-child(even) > .dirBlock > .dirRow {
-  background-color: var(--color-list-alternate);
+  /* The whole row (chevron + icon + name) reads muted; the selected file
+     goes full strength via .leafButtonActive below. */
+  opacity: 0.62;
 }
 
 .dirRow:hover,
@@ -147,9 +144,10 @@
 
 .leafButtonActive,
 .leafButtonActive:hover {
-  /* Selection is the background fill — no accent bar. */
+  /* Selection is the background fill — no accent bar — at full strength. */
   background-color: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
+  opacity: 1;
 }
 
 .dirName,
@@ -159,12 +157,6 @@
   white-space: nowrap;
   flex: 1;
   min-width: 0;
-  /* Names read muted; the selected file's name is full strength. */
-  opacity: 0.6;
-}
-
-.leafButtonActive .leafName {
-  opacity: 1;
 }
 
 .dirBusy {
