@@ -18,9 +18,11 @@ export type TitleBarProps = {
   menu?: ReactNode;
   /** Optional centered area (e.g. quick search or breadcrumb). */
   center?: ReactNode;
+  /** When set, a settings gear appears just left of the window controls. */
+  onOpenSettings?: () => void;
 };
 
-export function TitleBar({ menu, center }: TitleBarProps) {
+export function TitleBar({ menu, center, onOpenSettings }: TitleBarProps) {
   const [isMaximized, setMaximized] = useState(false);
   const [tauriWindow, setTauriWindow] = useState<TauriWindowApi | null>(null);
 
@@ -77,6 +79,20 @@ export function TitleBar({ menu, center }: TitleBarProps) {
       <div className={styles.dragArea} data-tauri-drag-region />
       {center != null ? <div className={styles.centerSlot}>{center}</div> : null}
       <div className={styles.controls} aria-label="Window controls">
+        {onOpenSettings != null ? (
+          <button
+            type="button"
+            className={styles.ctrlBtn}
+            onClick={onOpenSettings}
+            title="Settings"
+            aria-label="Settings"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+        ) : null}
         <button
           type="button"
           className={styles.ctrlBtn}

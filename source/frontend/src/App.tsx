@@ -19,10 +19,10 @@ import { settingsService } from '@infrastructure/settings/settingsService';
  * window with no min / max / close anywhere else.
  */
 function ChromeShell() {
-  const { menu } = useMenuSlot();
+  const { menu, settingsAction } = useMenuSlot();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh' }}>
-      <TitleBar menu={menu} />
+      <TitleBar menu={menu} onOpenSettings={settingsAction ?? undefined} />
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <Routes>
           <Route path="/" element={<WelcomeView />} />

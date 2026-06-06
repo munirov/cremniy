@@ -428,7 +428,12 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
   // above the routes in App.tsx — see MenuSlotContext for the rationale).
   // Clearing on unmount means navigating back to Welcome hides the menu items
   // but the titlebar / window controls stay visible.
-  const { setMenu } = useMenuSlot();
+  const { setMenu, setSettingsAction } = useMenuSlot();
+  // Expose "open preferences" to the titlebar gear (which lives one level up).
+  useEffect(() => {
+    setSettingsAction(() => setSettingsOpen(true));
+    return () => setSettingsAction(null);
+  }, [setSettingsAction]);
   useEffect(() => {
     setMenu(
       <MenuBar
