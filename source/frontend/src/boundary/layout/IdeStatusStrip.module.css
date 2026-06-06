@@ -1,15 +1,13 @@
-/* A small floating badge over the editor's bottom-right corner — not a
-   full-width footer bar, so it neither takes a code row nor draws a divider. */
+/* Just the Ln/Col text floating over the editor's bottom-right corner — no bar,
+   no box, no divider. */
 .statusStrip {
   position: absolute;
-  right: 0.55rem;
-  bottom: 0.4rem;
+  right: 0.6rem;
+  bottom: 0.35rem;
   z-index: 10;
   display: flex;
   align-items: center;
-  padding: 0.05rem 0.45rem;
-  border-radius: 4px;
-  background-color: rgba(38, 38, 38, 0.7);
+  background: transparent;
   font-family: var(--font-family-mono);
   font-size: 11px;
   /* Click-through so it never blocks the editor underneath. */
@@ -18,5 +16,5 @@
 
 .cursorCell {
   flex-shrink: 0;
-  opacity: 0.7;
+  opacity: 0.5;
 }
