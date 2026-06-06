@@ -2,12 +2,14 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  min-height: 1.6rem;
-  padding: 0 0.6rem;
+  min-height: 1.5rem;
+  padding: 0.1rem 0.6rem;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  border-bottom: 1px solid var(--color-border-muted);
+  /* No bar look — transparent, no divider — so it reads as part of the editor,
+     sitting just above the code rather than a separate strip. */
+  background: transparent;
   font-family: var(--font-family-mono);
   font-size: 12px;
   color: var(--color-text-primary);
