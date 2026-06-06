@@ -11,7 +11,9 @@ export function monacoLanguageForPath(path: string | null): string {
   }
   const name = fileNameFromPath(path);
   const dot = name.lastIndexOf('.');
-  if (dot <= 0 || dot === name.length - 1) {
+  // `dot === 0` is a dotfile (.cremniy, .env, .gitignore) — use the part after
+  // the leading dot as the "extension" so known ones still get highlighted.
+  if (dot < 0 || dot === name.length - 1) {
     return 'plaintext';
   }
   const ext = name.slice(dot + 1).toLowerCase();
@@ -70,6 +72,7 @@ const EXTENSION_TO_LANGUAGE: Readonly<Record<string, string>> = {
   sln: 'plaintext',
   // Data / config
   json: 'json',
+  cremniy: 'json', // our .cremniy project file is JSON
   yaml: 'yaml',
   yml: 'yaml',
   toml: 'ini',
