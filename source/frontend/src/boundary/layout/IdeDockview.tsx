@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 
 import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor/IdeMonacoEditor';
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
+import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
 import { IdeStatusStrip } from '@boundary/layout/IdeStatusStrip';
 import { IdeToolDock } from '@boundary/layout/IdeToolDock';
@@ -245,6 +246,10 @@ export function IdeDockview({
             </button>
           </div>
         ) : null}
+        <IdeBreadcrumb
+          filePath={ide.activeFilePath}
+          workspaceRoot={workspaceRoot?.path ?? null}
+        />
         <div className={styles.editorBody}>
           <IdeMonacoEditor
             onCursorPositionChange={onCursorPositionChange}
@@ -258,7 +263,6 @@ export function IdeDockview({
         </div>
         <IdeStatusStrip
           activeFilePath={ide.activeFilePath}
-          workspaceRoot={workspaceRoot?.path ?? null}
           cursorLine={cursorPosition?.line ?? null}
           cursorColumn={cursorPosition?.column ?? null}
         />

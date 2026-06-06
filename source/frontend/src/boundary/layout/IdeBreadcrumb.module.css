@@ -1,0 +1,28 @@
+.bar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 1.6rem;
+  padding: 0 0.6rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--color-border-muted);
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+}
+
+/* Parent folders dim, separators dimmer, the file (leaf) bright. */
+.crumb {
+  opacity: 0.55;
+}
+
+.leaf {
+  opacity: 0.95;
+}
+
+.sep {
+  margin: 0 0.4rem;
+  opacity: 0.4;
+}

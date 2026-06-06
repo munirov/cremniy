@@ -2,40 +2,13 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 1rem;
+  justify-content: flex-end;
   min-height: 1.5rem;
-  padding: 0.25rem 0.5rem;
-  border-top: 1px solid var(--color-border-pane);
+  padding: 0.25rem 0.6rem;
+  border-top: 1px solid var(--color-border-muted);
   background-color: var(--color-bg-panel);
   font-family: var(--font-family-mono);
   font-size: var(--font-size-base);
-}
-
-.fileCell {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Breadcrumb: dim parent folders, separators dimmer still, leaf (file) bright. */
-.crumb {
-  opacity: 0.6;
-}
-
-.crumbLeaf {
-  opacity: 0.95;
-}
-
-.sep {
-  margin: 0 0.4rem;
-  opacity: 0.4;
-}
-
-.metaCell {
-  flex-shrink: 0;
-  opacity: 0.85;
 }
 
 .cursorCell {
