@@ -5,18 +5,53 @@
   min-height: 0;
 }
 
-/* query input + Aa / ab / .* / details toggles */
-.queryRow {
+/* search + replace fields with toggles INSIDE the inputs, plus a left
+   expand chevron — compact so it fits the narrow side panel. */
+.searchArea {
   display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  margin: 0.5rem 0.5rem 0.35rem;
+  align-items: flex-start;
+  gap: 0.1rem;
+  margin: 0.5rem 0.5rem 0.4rem;
 }
 
-.queryInput {
+.expandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 0.95rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.expandBtn:hover {
+  opacity: 0.9;
+}
+
+.fields {
+  display: flex;
   flex: 1;
   min-width: 0;
-  padding: 0.35rem 0.5rem;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.field {
+  position: relative;
+  display: flex;
+}
+
+.fieldInput {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.35rem 4.7rem 0.35rem 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.03);
@@ -26,67 +61,58 @@
   outline: none;
 }
 
-.queryInput:focus {
+.fieldInput:focus {
   border-color: rgba(255, 255, 255, 0.22);
 }
 
-.toggle {
+/* Replace input only carries one button, so it needs less right padding. */
+.fieldInputReplace {
+  padding-right: 1.9rem;
+}
+
+.fieldBtns {
+  position: absolute;
+  right: 0.2rem;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+.miniBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.55rem;
-  height: 1.55rem;
-  padding: 0 0.25rem;
+  width: 1.15rem;
+  height: 1.3rem;
+  padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   background: transparent;
   color: inherit;
-  opacity: 0.6;
+  opacity: 0.55;
   font-family: var(--font-family-mono);
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   transition: opacity 0.12s ease, background-color 0.12s ease;
 }
 
-.toggle:hover {
-  opacity: 0.9;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.toggleOn,
-.toggleOn:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.replaceRow {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  margin: 0 0.5rem 0.35rem;
-}
-
-.replaceAllBtn {
-  flex-shrink: 0;
-  height: 1.55rem;
-  padding: 0 0.55rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.03);
-  color: inherit;
-  font-family: var(--font-family-sans, inherit);
-  font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.12s ease;
-}
-
-.replaceAllBtn:hover:not(:disabled) {
+.miniBtn:hover {
+  opacity: 0.95;
   background: rgba(255, 255, 255, 0.08);
 }
 
-.replaceAllBtn:disabled {
-  opacity: 0.4;
+.miniBtnOn,
+.miniBtnOn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.miniBtn:disabled {
+  opacity: 0.3;
   cursor: not-allowed;
+  background: transparent;
 }
 
 .filters {
