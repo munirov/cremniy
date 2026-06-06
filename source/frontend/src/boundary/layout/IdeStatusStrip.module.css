@@ -1,18 +1,22 @@
+/* A small floating badge over the editor's bottom-right corner — not a
+   full-width footer bar, so it neither takes a code row nor draws a divider. */
 .statusStrip {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.4rem;
+  z-index: 10;
   display: flex;
-  flex-shrink: 0;
   align-items: center;
-  justify-content: flex-end;
-  min-height: 1.5rem;
-  padding: 0.25rem 0.7rem;
-  /* No divider, same bg as the editor — the cursor read-out sits in the editor
-     rather than in a separate footer bar. */
-  background-color: var(--color-bg-editor);
+  padding: 0.05rem 0.45rem;
+  border-radius: 4px;
+  background-color: rgba(38, 38, 38, 0.7);
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-base);
+  font-size: 11px;
+  /* Click-through so it never blocks the editor underneath. */
+  pointer-events: none;
 }
 
 .cursorCell {
   flex-shrink: 0;
-  opacity: 0.55;
+  opacity: 0.7;
 }

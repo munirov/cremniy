@@ -16,6 +16,9 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  /* Anchor for the floating Ln/Col badge so it overlays the editor's bottom-right
+     corner instead of taking a full row. */
+  position: relative;
 }
 
 .tabStrip {
