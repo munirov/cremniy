@@ -1,4 +1,6 @@
 import './index.css';
+// VS Code / Cursor icon set (Codicons) — used app-wide via `codicon codicon-*`.
+import '@vscode/codicons/dist/codicon.css';
 
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import * as monaco from 'monaco-editor';

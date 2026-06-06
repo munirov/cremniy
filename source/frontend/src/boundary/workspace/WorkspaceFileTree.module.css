@@ -67,6 +67,8 @@
   border-radius: 3px;
   background: transparent;
   color: var(--color-text-primary);
+  /* Codicon glyph size. */
+  font-size: 16px;
   opacity: 0.7;
   cursor: pointer;
   transition: opacity 0.12s ease, background-color 0.12s ease;

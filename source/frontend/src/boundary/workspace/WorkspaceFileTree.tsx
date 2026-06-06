@@ -511,29 +511,16 @@ function TreeHeader({ name, onNewFile, onNewFolder, onRefresh, onCollapseAll }: 
       </span>
       <div className={styles.headerActions}>
         <button type="button" className={styles.headerBtn} title="New file" aria-label="New file" onClick={onNewFile}>
-          <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z" />
-            <path d="M13 3v6h6" />
-            <path d="M12 12.5v4M10 14.5h4" />
-          </svg>
+          <span className="codicon codicon-new-file" aria-hidden />
         </button>
         <button type="button" className={styles.headerBtn} title="New folder" aria-label="New folder" onClick={onNewFolder}>
-          <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <path d="M12 11v5M9.5 13.5h5" />
-          </svg>
+          <span className="codicon codicon-new-folder" aria-hidden />
         </button>
         <button type="button" className={styles.headerBtn} title="Refresh explorer" aria-label="Refresh explorer" onClick={onRefresh}>
-          <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a9 9 0 1 1-3-6.7" />
-            <path d="M21 4v5h-5" />
-          </svg>
+          <span className="codicon codicon-refresh" aria-hidden />
         </button>
         <button type="button" className={styles.headerBtn} title="Collapse folders" aria-label="Collapse folders" onClick={onCollapseAll}>
-          <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 13l5-5 5 5" />
-            <path d="M7 18l5-5 5 5" />
-          </svg>
+          <span className="codicon codicon-collapse-all" aria-hidden />
         </button>
       </div>
     </div>
