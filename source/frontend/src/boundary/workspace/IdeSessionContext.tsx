@@ -45,6 +45,10 @@ export type IdeSessionContextValue = {
   activeDocumentDirty: boolean;
   setDocumentText: (value: string) => void;
   openFileFromWorkspace: (filePath: string) => Promise<void>;
+  /** Open a file (if needed) and reveal a 1-based line — used by Search. */
+  openFileAtLine: (filePath: string, line: number) => Promise<void>;
+  /** Set by openFileAtLine; the editor reveals it once the file is active. */
+  revealTarget: { path: string; line: number; nonce: number } | null;
   activateOpenFile: (filePath: string) => void;
   closeOpenFile: (filePath: string) => void;
   closeOtherOpenFiles: (keepFilePath: string) => void;
@@ -377,6 +381,11 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     setSavedBuffers((prev) => ({ ...prev, [activeFilePath]: documentText }));
   }, [activeFilePath, documentText, saveDocumentAsFlow]);
 
+  const [revealTarget, setRevealTarget] = useState<
+    { path: string; line: number; nonce: number } | null
+  >(null);
+  const revealNonceRef = useRef(0);
+
   const openFileFromWorkspace = useCallback(
     async (filePath: string) => {
       const trimmed = filePath.trim();
@@ -408,6 +417,15 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       }
     },
     [notify, workspaceRoot?.path, activateOpenFile],
+  );
+
+  const openFileAtLine = useCallback(
+    async (filePath: string, line: number) => {
+      await openFileFromWorkspace(filePath);
+      revealNonceRef.current += 1;
+      setRevealTarget({ path: filePath.trim(), line, nonce: revealNonceRef.current });
+    },
+    [openFileFromWorkspace],
   );
 
   const closeWorkspaceFlow = useCallback(() => {
@@ -516,6 +534,8 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       activeDocumentDirty,
       setDocumentText,
       openFileFromWorkspace,
+      openFileAtLine,
+      revealTarget,
       activateOpenFile,
       closeOpenFile,
       closeOtherOpenFiles,
@@ -537,6 +557,8 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       documentText,
       setDocumentText,
       openFileFromWorkspace,
+      openFileAtLine,
+      revealTarget,
       activateOpenFile,
       closeOpenFile,
       closeOtherOpenFiles,

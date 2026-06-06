@@ -34,7 +34,7 @@ function renderPreview(m: SearchMatch) {
  * include/exclude globs, live (debounced) results that open the file on click.
  */
 export function SearchPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | null }) {
-  const { openFileFromWorkspace } = useIdeSession();
+  const { openFileAtLine } = useIdeSession();
   const [query, setQuery] = useState('');
   const [matchCase, setMatchCase] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
@@ -177,7 +177,7 @@ export function SearchPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | 
                     type="button"
                     className={styles.matchRow}
                     title={`${file.path}:${m.line}`}
-                    onClick={() => void openFileFromWorkspace(file.path)}
+                    onClick={() => void openFileAtLine(file.path, m.line)}
                   >
                     <span className={styles.matchLine}>{m.line}</span>
                     <span className={styles.matchPreview}>{renderPreview(m)}</span>

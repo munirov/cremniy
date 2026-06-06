@@ -132,7 +132,7 @@ export function IdeMonacoEditor({
   fontSize = 14,
   onFontSizeChange,
 }: IdeMonacoEditorProps) {
-  const { documentText, setDocumentText, activeFilePath } = useIdeSession();
+  const { documentText, setDocumentText, activeFilePath, revealTarget } = useIdeSession();
   const { selectToolTab } = useToolDock();
   const language = monacoLanguageForPath(activeFilePath);
   const [forceTextMode, setForceTextMode] = useState(false);
@@ -182,6 +182,23 @@ export function IdeMonacoEditor({
     editorInstance.focus();
     void editorInstance.getAction('actions.find')?.run();
   }, [command]);
+
+  // Reveal a line requested by Search (openFileAtLine). Nonce-guarded so it
+  // fires once per click — not again while the user edits the file.
+  const lastRevealNonceRef = useRef(0);
+  useEffect(() => {
+    if (revealTarget == null || revealTarget.nonce === lastRevealNonceRef.current) {
+      return;
+    }
+    const ed = editorRef.current;
+    if (ed == null || activeFilePath !== revealTarget.path) {
+      return;
+    }
+    lastRevealNonceRef.current = revealTarget.nonce;
+    ed.revealLineInCenter(revealTarget.line);
+    ed.setPosition({ lineNumber: revealTarget.line, column: 1 });
+    ed.focus();
+  }, [revealTarget, activeFilePath, documentText]);
 
   // No file open AND scratch buffer is empty → show a clean welcome card
   // instead of an empty Monaco. Cursor / VS Code idle pattern: muted product
