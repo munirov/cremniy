@@ -14,9 +14,10 @@ export type ViewMenuRow = {
 };
 
 /**
- * The chevron dropdown — every registered view with a pin toggle. Pinning shows
- * the view's icon in the activity bar; the pin reads filled when pinned and
- * appears on row hover otherwise (VS Code's "additional views" menu).
+ * The chevron panel — every registered view with a pin toggle. NOT a floating
+ * popup: it drops down inside the side panel, full block width, overlaying the
+ * view content (VS Code's "additional views"). Pinning shows a view's icon in
+ * the activity bar; the pin reads filled when pinned, appears on hover otherwise.
  */
 export function ViewsMenu({
   rows,
@@ -26,6 +27,7 @@ export function ViewsMenu({
   onClose,
 }: {
   rows: ViewMenuRow[];
+  /** The chevron button — excluded from outside-click so it can toggle closed. */
   anchor: HTMLElement;
   onSelect: (id: string) => void;
   onTogglePin: (id: string) => void;
@@ -51,16 +53,8 @@ export function ViewsMenu({
     };
   }, [anchor, onClose]);
 
-  const rect = anchor.getBoundingClientRect();
-  const width = 232;
-  const style = {
-    top: rect.bottom + 4,
-    left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
-    width,
-  };
-
   return (
-    <div ref={ref} className={styles.menu} style={style} role="menu" aria-label="Views">
+    <div ref={ref} className={styles.overlay} role="menu" aria-label="Views">
       {rows.map((row) => (
         <div key={row.id} className={`${styles.row} ${row.active ? styles.rowActive : ''}`}>
           <button

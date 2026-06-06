@@ -53,6 +53,16 @@
   margin-left: 0.2rem;
 }
 
+/* Holds the active view and the chevron overlay; relative so the overlay can
+   fill it (top-anchored, full block width). */
+.body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
 .viewBody {
   display: flex;
   flex: 1;

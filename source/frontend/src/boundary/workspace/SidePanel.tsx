@@ -91,6 +91,15 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
         >
           <ChevronDownIcon />
         </button>
+      </div>
+      <div className={styles.body}>
+        <div className={styles.viewBody}>
+          {active === 'explorer' ? (
+            <WorkspaceFileTree workspaceRoot={workspaceRoot} />
+          ) : (
+            <SearchPanel workspaceRoot={workspaceRoot} />
+          )}
+        </div>
         {menuAnchor != null ? (
           <ViewsMenu
             anchor={menuAnchor}
@@ -109,13 +118,6 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
             onClose={() => setMenuAnchor(null)}
           />
         ) : null}
-      </div>
-      <div className={styles.viewBody}>
-        {active === 'explorer' ? (
-          <WorkspaceFileTree workspaceRoot={workspaceRoot} />
-        ) : (
-          <SearchPanel workspaceRoot={workspaceRoot} />
-        )}
       </div>
     </div>
   );
