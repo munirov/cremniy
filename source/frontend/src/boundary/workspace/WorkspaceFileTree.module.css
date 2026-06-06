@@ -86,6 +86,23 @@
   list-style: none;
 }
 
+/* Indent guide: a faint vertical line down each expanded folder's children,
+   aligned just right of the parent chevron. --indent carries the parent row's
+   left padding (set inline in WorkspaceFileTree). */
+.nestedList {
+  position: relative;
+}
+
+.nestedList::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--indent, 0.4rem) + 0.6rem);
+  width: 1px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
 .treeItem {
   margin: 0;
 }
@@ -160,8 +177,16 @@
   white-space: nowrap;
   flex: 1;
   min-width: 0;
-  /* Names read muted; the selected file's name is full strength. */
-  opacity: 0.65;
+}
+
+/* Folders read stronger than files so the container hierarchy is legible at a
+   glance; the selected file's name is full strength. */
+.dirName {
+  opacity: 0.85;
+}
+
+.leafName {
+  opacity: 0.6;
 }
 
 .leafButtonActive .leafName {

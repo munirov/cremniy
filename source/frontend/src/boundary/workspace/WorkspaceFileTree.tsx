@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { LegacyRef, MouseEvent } from 'react';
+import type { CSSProperties, LegacyRef, MouseEvent } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import type { WorkspaceDirectoryEntry } from '@domain/workspace/directoryEntry';
@@ -815,6 +815,7 @@ function FileTreeNode({
         <ul
           className={styles.nestedList}
           role="group"
+          style={{ ['--indent']: `${paddingRem}rem` } as CSSProperties}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
