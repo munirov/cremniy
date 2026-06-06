@@ -136,14 +136,6 @@ export function WelcomeView() {
     [navigate, prefs, recentPaths],
   );
 
-  const handleOpenRecent = useCallback(async () => {
-    const index = selectedIndexRef.current;
-    if (index === null) {
-      return;
-    }
-    await openPathAtIndex(index);
-  }, [openPathAtIndex]);
-
   const handlePickFolder = useCallback(async () => {
     const path = await pickFolder();
     if (path == null || path === '') {
