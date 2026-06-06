@@ -25,7 +25,9 @@
   flex-shrink: 0;
   min-height: 2rem;
   display: flex;
-  align-items: center;
+  /* Stretch tabs to the full strip height so the active tab's fill spans the
+     whole block (not a short centered box). */
+  align-items: stretch;
   /* No left padding — first file tab sits flush against the edge, like the
      terminal tabs. */
   padding: 0 0.5rem 0 0;
@@ -37,6 +39,7 @@
 /* Split-editor toggle, pinned to the right of the document tabs. */
 .splitBtn {
   display: inline-flex;
+  align-self: center;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
