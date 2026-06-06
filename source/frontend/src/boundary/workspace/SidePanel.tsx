@@ -42,7 +42,6 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
             {view.icon}
           </button>
         ))}
-        <span className={styles.spacer} />
         <button
           type="button"
           className={styles.activityBtn}

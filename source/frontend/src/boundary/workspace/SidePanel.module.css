@@ -6,23 +6,23 @@
   min-width: 0;
 }
 
-/* Activity bar — one button per registered view, chevron pushed to the right. */
+/* Activity bar — one button per registered view, spread evenly across the
+   panel width. No bottom rule; the icons sit directly over the content. */
 .activityBar {
   display: flex;
   align-items: center;
+  justify-content: space-around;
   flex-shrink: 0;
-  gap: 0.1rem;
-  height: 2.2rem;
-  padding: 0 0.35rem;
-  border-bottom: 1px solid var(--color-border-muted);
+  height: 2rem;
+  padding: 0 0.25rem;
 }
 
 .activityBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.9rem;
-  height: 1.7rem;
+  width: 1.55rem;
+  height: 1.5rem;
   padding: 0;
   border: none;
   border-radius: 4px;
@@ -44,10 +44,6 @@
 .activityBtnActive:hover {
   opacity: 1;
   background: rgba(255, 255, 255, 0.08);
-}
-
-.spacer {
-  flex: 1;
 }
 
 .viewBody {
