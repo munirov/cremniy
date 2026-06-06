@@ -41,6 +41,7 @@ vi.mock('@infrastructure/preferences/preferencesBridge', () => ({
 describe('WorkspaceFileTree', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear(); // tree order + manual nesting persist here
     ideSessionMocks.activeFilePath = null;
     ideSessionMocks.fileTreeRevision = 0;
     ideSessionMocks.openFileFromWorkspace.mockReset();
@@ -243,5 +244,50 @@ describe('WorkspaceFileTree', () => {
     });
     expect(screen.getByRole('menuitem', { name: 'New file…' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'New folder…' })).toBeInTheDocument();
+  });
+
+  describe('manual nesting', () => {
+    const DRAG_PATH = 'application/x-cremniy-tree-path';
+    const DRAG_FILE = 'application/x-cremniy-tree-file';
+
+    it('nests a file onto a sibling, then un-nests it from the context menu', async () => {
+      vi.mocked(listDirectoryEntries).mockResolvedValue([
+        { name: 'a.md', path: '/w/a.md', isDirectory: false },
+        { name: 'b.md', path: '/w/b.md', isDirectory: false },
+      ]);
+      render(<WorkspaceFileTree workspaceRoot={{ path: '/w' }} />);
+
+      const aItem = await screen.findByRole('treeitem', { name: 'a.md' });
+      expect(screen.getByRole('treeitem', { name: 'b.md' })).toBeInTheDocument();
+
+      // Drop b.md onto a.md → b nests under a (visual only, persisted).
+      fireEvent.drop(aItem, {
+        dataTransfer: {
+          getData: (t: string) => (t === DRAG_PATH ? '/w/b.md' : ''),
+          types: [DRAG_PATH, DRAG_FILE],
+        },
+      });
+
+      // b.md is hidden under the (collapsed) a.md, which is now expandable.
+      await waitFor(() => {
+        expect(screen.queryByRole('treeitem', { name: 'b.md' })).not.toBeInTheDocument();
+      });
+      expect(screen.getByRole('treeitem', { name: 'a.md' })).toHaveAttribute('aria-expanded');
+
+      // Expand a.md (ArrowRight) → b.md appears as its nested child.
+      const tree = screen.getByRole('tree', { name: 'Workspace files' });
+      screen.getByRole('treeitem', { name: 'a.md' }).focus();
+      fireEvent.keyDown(tree, { key: 'ArrowRight' });
+      const bItem = await screen.findByRole('treeitem', { name: 'b.md' });
+
+      // Un-nest b.md from its context menu → both back at the top level.
+      fireEvent.contextMenu(bItem);
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Un-nest' }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('treeitem', { name: 'b.md' })).toBeInTheDocument();
+      });
+      expect(screen.getByRole('treeitem', { name: 'a.md' })).not.toHaveAttribute('aria-expanded');
+    });
   });
 });

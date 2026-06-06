@@ -19,7 +19,15 @@ import { useNotify } from '@boundary/notifications/NotificationContext';
 
 import { useIdeSession } from './IdeSessionContext';
 import { ChevronIcon, FileIcon, FolderIcon } from './fileIcons';
-import { loadTreeOrder, saveTreeOrder, sortByOrder, type TreeOrder } from './treeView';
+import {
+  loadManualNesting,
+  loadTreeOrder,
+  saveManualNesting,
+  saveTreeOrder,
+  sortByOrder,
+  type ManualNesting,
+  type TreeOrder,
+} from './treeView';
 import { DEFAULT_NESTING_PATTERNS, computeNesting, type NestingResult } from './nesting';
 
 import styles from './WorkspaceFileTree.module.css';
@@ -36,6 +44,8 @@ type CtxState = {
   clientY: number;
   path: string;
   isDirectory: boolean;
+  /** True when the right-clicked row is a nested child → offer "Un-nest". */
+  isNested: boolean;
 };
 
 function formatErr(e: unknown): string {
@@ -70,12 +80,13 @@ function resolveLevel(
   dirPath: string,
   treeOrder: TreeOrder,
   filterLower: string,
+  manual: ManualNesting,
 ): NestingResult {
   const sorted = sortByOrder(entries, dirPath, treeOrder);
   if (filterLower !== '') {
     return { roots: sorted, childrenOf: new Map() };
   }
-  return computeNesting(sorted, DEFAULT_NESTING_PATTERNS);
+  return computeNesting(sorted, DEFAULT_NESTING_PATTERNS, manual[dirPath] ?? {});
 }
 
 export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreeProps) {
@@ -89,8 +100,12 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   // Per-directory custom display order — purely visual, persisted per workspace
   // (localStorage v1). Default is the backend's folders-first alphabetical.
   const [treeOrder, setTreeOrder] = useState<TreeOrder>({});
+  // Manual file-nesting overrides (drag file→file to nest, right-click to
+  // un-nest). Layered over the automatic patterns; persisted per workspace.
+  const [manualNesting, setManualNesting] = useState<ManualNesting>({});
   useEffect(() => {
     setTreeOrder(loadTreeOrder(workspaceRoot?.path ?? ''));
+    setManualNesting(loadManualNesting(workspaceRoot?.path ?? ''));
   }, [workspaceRoot?.path]);
   // Inline-create row state. When non-null, the tree renders an input under
   // the named parent (or at the root) so the user can type the new name
@@ -188,11 +203,14 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     };
   }, [ctx]);
 
-  const openCtx = useCallback((ev: MouseEvent, path: string, isDirectory: boolean) => {
-    ev.preventDefault();
-    ev.stopPropagation();
-    setCtx({ clientX: ev.clientX, clientY: ev.clientY, path, isDirectory });
-  }, []);
+  const openCtx = useCallback(
+    (ev: MouseEvent, path: string, isDirectory: boolean, isNested = false) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      setCtx({ clientX: ev.clientX, clientY: ev.clientY, path, isDirectory, isNested });
+    },
+    [],
+  );
 
   const runNewFile = useCallback(() => {
     if (ctx == null || workspaceRoot == null) return;
@@ -509,6 +527,51 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     [bumpFileTreeRevision, notify, workspaceRoot],
   );
 
+  // Manual nest: drag a sibling file onto another file → record the override.
+  // Visual only — nothing moves on disk. Siblings only; cross-dir drops are
+  // handled by the folder move path instead.
+  const handleNestUnder = useCallback(
+    (sourcePath: string, targetPath: string) => {
+      if (workspaceRoot == null || sourcePath === targetPath) {
+        return;
+      }
+      const dir = parentDirectoryPath(targetPath);
+      if (parentDirectoryPath(sourcePath) !== dir) {
+        return;
+      }
+      const sourceName = fileNameFromPath(sourcePath);
+      const targetName = fileNameFromPath(targetPath);
+      if (sourceName === '' || targetName === '' || sourceName === targetName) {
+        return;
+      }
+      setManualNesting((prev) => {
+        const next: ManualNesting = {
+          ...prev,
+          [dir]: { ...prev[dir], [sourceName]: targetName },
+        };
+        saveManualNesting(workspaceRoot.path, next);
+        return next;
+      });
+    },
+    [workspaceRoot],
+  );
+
+  // Un-nest the right-clicked file: force it back to the top level (null also
+  // overrides any automatic pattern that would re-nest it).
+  const runUnnest = useCallback(() => {
+    if (ctx == null || workspaceRoot == null) {
+      return;
+    }
+    const dir = parentDirectoryPath(ctx.path);
+    const name = fileNameFromPath(ctx.path);
+    setManualNesting((prev) => {
+      const next: ManualNesting = { ...prev, [dir]: { ...prev[dir], [name]: null } };
+      saveManualNesting(workspaceRoot.path, next);
+      return next;
+    });
+    setCtx(null);
+  }, [ctx, workspaceRoot]);
+
   if (workspaceRoot == null || workspaceRoot.path === '') {
     return (
       <div className={styles.stateBox} role="status">
@@ -568,6 +631,8 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
             onRevealInExplorer={() => void runRevealInExplorer()}
             onMoveUp={() => void runMoveEntry('up')}
             onMoveDown={() => void runMoveEntry('down')}
+            showUnnest={ctx.isNested}
+            onUnnest={() => runUnnest()}
             onRename={() => void runRename()}
             onDelete={() => void runDelete()}
           />
@@ -583,7 +648,13 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
           (e) =>
             !excludedPatterns.some((p) => e.name.toLowerCase().includes(p.toLowerCase())),
         );
-  const rootLevel = resolveLevel(visibleEntries, workspaceRoot.path, treeOrder, filterLower);
+  const rootLevel = resolveLevel(
+    visibleEntries,
+    workspaceRoot.path,
+    treeOrder,
+    filterLower,
+    manualNesting,
+  );
 
   // Root-level drop target — lets the user move a nested file BACK to the
   // workspace root by dragging it onto empty space at the top of the tree.
@@ -658,6 +729,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
                 filterLower={filterLower}
                 excludedPatterns={excludedPatterns}
                 treeOrder={treeOrder}
+                manualNesting={manualNesting}
                 nestedChildren={rootLevel.childrenOf.get(entry.path)}
                 pendingCreate={pendingCreate}
                 isFirstRow={index === 0}
@@ -666,6 +738,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
                 onOpenFile={openFileFromWorkspace}
                 onContextMenu={openCtx}
                 onMoveInto={handleMoveInto}
+                onNestUnder={handleNestUnder}
               />
             </li>
           ))}
@@ -684,6 +757,8 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
           onRevealInExplorer={() => void runRevealInExplorer()}
           onMoveUp={() => void runMoveEntry('up')}
           onMoveDown={() => void runMoveEntry('down')}
+          showUnnest={ctx.isNested}
+          onUnnest={() => runUnnest()}
           onRename={() => void runRename()}
           onDelete={() => void runDelete()}
         />
@@ -752,6 +827,8 @@ type CtxMenuProps = {
   onRevealInExplorer: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  showUnnest: boolean;
+  onUnnest: () => void;
   onRename: () => void;
   onDelete: () => void;
 };
@@ -767,6 +844,8 @@ function CtxMenu({
   onRevealInExplorer,
   onMoveUp,
   onMoveDown,
+  showUnnest,
+  onUnnest,
   onRename,
   onDelete,
 }: CtxMenuProps) {
@@ -814,6 +893,13 @@ function CtxMenu({
           Move down
         </button>
       </li>
+      {showUnnest ? (
+        <li role="none">
+          <button type="button" role="menuitem" className={styles.ctxMenuItem} onClick={onUnnest}>
+            Un-nest
+          </button>
+        </li>
+      ) : null}
       <li role="none" aria-hidden="true" className={styles.ctxMenuSeparator} />
       <li role="none">
         <button type="button" role="menuitem" className={styles.ctxMenuItem} onClick={onRename}>
@@ -837,19 +923,27 @@ type FileTreeNodeProps = {
   filterLower: string;
   excludedPatterns: readonly string[];
   treeOrder: TreeOrder;
+  manualNesting: ManualNesting;
   /** Files auto-nested under THIS entry (only set for a file that owns nests). */
   nestedChildren?: WorkspaceDirectoryEntry[];
+  /** True when this row is rendered as a nested child (enables "Un-nest"). */
+  isNested?: boolean;
   pendingCreate: { kind: 'file' | 'folder'; parentPath: string } | null;
   /** Only the very first root row sets this, to seed the roving tab stop. */
   isFirstRow?: boolean;
   onCommitCreate: (name: string) => Promise<void>;
   onCancelCreate: () => void;
   onOpenFile: (path: string) => Promise<void>;
-  onContextMenu: (ev: MouseEvent, path: string, isDirectory: boolean) => void;
+  onContextMenu: (ev: MouseEvent, path: string, isDirectory: boolean, isNested?: boolean) => void;
   onMoveInto: (sourcePath: string, targetDirectory: string) => Promise<void>;
+  /** Drag a sibling file onto another file → nest it under that file. */
+  onNestUnder: (sourcePath: string, targetPath: string) => void;
 };
 
 const DRAG_MIME = 'application/x-cremniy-tree-path';
+// Present on the drag payload only when the dragged item is a FILE — lets a file
+// row light up as a nest target (dragover can read `types` but not the data).
+const DRAG_FILE_MIME = 'application/x-cremniy-tree-file';
 
 function FileTreeNode({
   workspaceRootPath,
@@ -859,7 +953,9 @@ function FileTreeNode({
   filterLower,
   excludedPatterns,
   treeOrder,
+  manualNesting,
   nestedChildren,
+  isNested,
   pendingCreate,
   isFirstRow,
   onCommitCreate,
@@ -867,6 +963,7 @@ function FileTreeNode({
   onOpenFile,
   onContextMenu,
   onMoveInto,
+  onNestUnder,
 }: FileTreeNodeProps) {
   // NOTE: exclusion is filtered by the PARENT (entries.filter / children.filter)
   // — never with an early-return here, because the early return would sit
@@ -887,10 +984,13 @@ function FileTreeNode({
     (e: React.DragEvent<HTMLElement>) => {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData(DRAG_MIME, entry.path);
+      if (!entry.isDirectory) {
+        e.dataTransfer.setData(DRAG_FILE_MIME, '1');
+      }
       // text/plain fallback so OS shows a label.
       e.dataTransfer.setData('text/plain', entry.name);
     },
-    [entry.name, entry.path],
+    [entry.isDirectory, entry.name, entry.path],
   );
 
   const onDragOver = useCallback(
@@ -932,6 +1032,36 @@ function FileTreeNode({
       void onMoveInto(source, entry.path);
     },
     [entry.isDirectory, entry.path, onMoveInto],
+  );
+
+  // A file row accepts a sibling FILE drop → nest it under this file (visual).
+  const onNestDragOver = useCallback(
+    (e: React.DragEvent<HTMLElement>) => {
+      if (entry.isDirectory || !e.dataTransfer.types.includes(DRAG_FILE_MIME)) {
+        return;
+      }
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setDragOver(true);
+    },
+    [entry.isDirectory],
+  );
+
+  const onNestDrop = useCallback(
+    (e: React.DragEvent<HTMLElement>) => {
+      setDragOver(false);
+      if (entry.isDirectory || !e.dataTransfer.types.includes(DRAG_FILE_MIME)) {
+        return;
+      }
+      const source = e.dataTransfer.getData(DRAG_MIME);
+      if (source === '' || source === entry.path) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      onNestUnder(source, entry.path);
+    },
+    [entry.isDirectory, entry.path, onNestUnder],
   );
 
   const paddingRem = 0.4 + depth * 0.85;
@@ -988,16 +1118,23 @@ function FileTreeNode({
           role="treeitem"
           aria-selected={isActive}
           className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
-          style={{ paddingLeft: `${paddingRem + 1.05}rem` }}
+          style={{
+            paddingLeft: `${paddingRem + 1.05}rem`,
+            outline: dragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
+            backgroundColor: dragOver ? 'rgba(255,255,255,0.06)' : undefined,
+          }}
           tabIndex={isTabStop ? 0 : -1}
           data-path={entry.path}
           data-depth={depth}
           data-expandable="false"
           draggable
           onDragStart={onDragStart}
+          onDragOver={onNestDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onNestDrop}
           onFocus={() => nav.setFocusedPath(entry.path)}
           onClick={() => void onOpenFile(entry.path)}
-          onContextMenu={(e) => onContextMenu(e, entry.path, false)}
+          onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
           title={entry.name}
         >
           <FileIcon name={entry.name} />
@@ -1014,7 +1151,11 @@ function FileTreeNode({
           aria-expanded={expanded}
           aria-selected={isActive}
           className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
-          style={{ paddingLeft: `${paddingRem}rem` }}
+          style={{
+            paddingLeft: `${paddingRem}rem`,
+            outline: dragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
+            backgroundColor: dragOver ? 'rgba(255,255,255,0.06)' : undefined,
+          }}
           tabIndex={isTabStop ? 0 : -1}
           data-path={entry.path}
           data-depth={depth}
@@ -1022,12 +1163,15 @@ function FileTreeNode({
           data-expanded={expanded}
           draggable
           onDragStart={onDragStart}
+          onDragOver={onNestDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onNestDrop}
           onFocus={() => nav.setFocusedPath(entry.path)}
           onClick={() => void onOpenFile(entry.path)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') void onOpenFile(entry.path);
           }}
-          onContextMenu={(e) => onContextMenu(e, entry.path, false)}
+          onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
           title={entry.name}
         >
           <span
@@ -1059,12 +1203,15 @@ function FileTreeNode({
                   filterLower={filterLower}
                   excludedPatterns={excludedPatterns}
                   treeOrder={treeOrder}
+                  manualNesting={manualNesting}
+                  isNested
                   pendingCreate={pendingCreate}
                   onCommitCreate={onCommitCreate}
                   onCancelCreate={onCancelCreate}
                   onOpenFile={onOpenFile}
                   onContextMenu={onContextMenu}
                   onMoveInto={onMoveInto}
+                  onNestUnder={onNestUnder}
                 />
               </li>
             ))}
@@ -1081,6 +1228,7 @@ function FileTreeNode({
     entry.path,
     treeOrder,
     filterLower,
+    manualNesting,
   );
 
   return (
@@ -1149,6 +1297,7 @@ function FileTreeNode({
                   filterLower={filterLower}
                   excludedPatterns={excludedPatterns}
                   treeOrder={treeOrder}
+                  manualNesting={manualNesting}
                   nestedChildren={childLevel.childrenOf.get(child.path)}
                   pendingCreate={pendingCreate}
                   onCommitCreate={onCommitCreate}
@@ -1156,6 +1305,7 @@ function FileTreeNode({
                   onOpenFile={onOpenFile}
                   onContextMenu={onContextMenu}
                   onMoveInto={onMoveInto}
+                  onNestUnder={onNestUnder}
                 />
               </li>
             ))}
