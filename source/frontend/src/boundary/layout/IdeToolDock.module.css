@@ -62,3 +62,41 @@
   opacity: 0.65;
   text-align: center;
 }
+
+/* When a tool shares the editor slot (split) it gets the same top chrome as the
+   editor pane — a tab-row with its name + a breadcrumb — so both panes align. */
+.toolStack {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.toolHeader {
+  flex-shrink: 0;
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  border-bottom: 1px solid var(--color-border-muted);
+  background-color: var(--color-bg-panel);
+}
+
+.toolTab {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.08);
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+}
+
+.toolBody {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
