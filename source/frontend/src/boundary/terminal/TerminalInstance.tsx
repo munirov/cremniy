@@ -34,6 +34,25 @@ function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+/**
+ * cmd.exe under ConPTY repaints after `cls` as
+ * `ESC[3J ESC[H ESC[K \r\n <prompt> … ESC[2;NH`, i.e. it homes, erases the top
+ * row, then a stray newline pushes the prompt onto the SECOND row — leaving a
+ * blank first line. Detect exactly that clear-scrollback repaint (ESC[3J only
+ * comes from cls here), drop the stray newline, and shift the repaint's
+ * absolute cursor moves up one row so the cursor still lands on the prompt.
+ * If the pattern isn't present the data is returned untouched.
+ */
+function fixConptyClsBlankLine(data: string): string {
+  if (!data.includes('\x1b[3J')) return data;
+  const dropped = data.replace(/(\x1b\[3J\x1b\[H(?:\x1b\[K)?)\r\n/, '$1');
+  if (dropped === data) return data;
+  return dropped.replace(/\x1b\[(\d+);(\d+)H/g, (_m, row: string, col: string) => {
+    const shifted = Math.max(1, parseInt(row, 10) - 1);
+    return `\x1b[${shifted};${col}H`;
+  });
+}
+
 // Cremniy terminal theme — JetBrains/VSCode-like dark.
 const TERMINAL_THEME = {
   background: '#1e1e1e',
@@ -309,7 +328,7 @@ export function TerminalInstance({
             onShellRef.current?.(null);
             return;
           }
-          term.write(event.data);
+          term.write(fixConptyClsBlankLine(event.data));
         });
         if (cancelled) {
           unlisten();
