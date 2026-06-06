@@ -122,6 +122,68 @@ describe('WorkspaceFileTree', () => {
     expect(listDirectoryEntries).toHaveBeenLastCalledWith('/w', '/w/src');
   });
 
+  describe('keyboard navigation', () => {
+    it('gives the first row the single roving tab stop', async () => {
+      vi.mocked(listDirectoryEntries).mockResolvedValueOnce([
+        { name: 'a.txt', path: '/w/a.txt', isDirectory: false },
+        { name: 'b.txt', path: '/w/b.txt', isDirectory: false },
+      ]);
+      render(<WorkspaceFileTree workspaceRoot={{ path: '/w' }} />);
+
+      const a = await screen.findByRole('treeitem', { name: 'a.txt' });
+      expect(a).toHaveAttribute('tabindex', '0');
+      expect(screen.getByRole('treeitem', { name: 'b.txt' })).toHaveAttribute('tabindex', '-1');
+    });
+
+    it('moves focus to the next/previous row with ArrowDown/ArrowUp', async () => {
+      vi.mocked(listDirectoryEntries).mockResolvedValueOnce([
+        { name: 'a.txt', path: '/w/a.txt', isDirectory: false },
+        { name: 'b.txt', path: '/w/b.txt', isDirectory: false },
+      ]);
+      render(<WorkspaceFileTree workspaceRoot={{ path: '/w' }} />);
+
+      const a = await screen.findByRole('treeitem', { name: 'a.txt' });
+      a.focus();
+      const tree = screen.getByRole('tree', { name: 'Workspace files' });
+      fireEvent.keyDown(tree, { key: 'ArrowDown' });
+      expect(screen.getByRole('treeitem', { name: 'b.txt' })).toHaveFocus();
+      fireEvent.keyDown(tree, { key: 'ArrowUp' });
+      expect(a).toHaveFocus();
+    });
+
+    it('expands a folder with ArrowRight and collapses with ArrowLeft', async () => {
+      vi.mocked(listDirectoryEntries)
+        .mockResolvedValueOnce([{ name: 'src', path: '/w/src', isDirectory: true }])
+        .mockResolvedValueOnce([{ name: 'main.ts', path: '/w/src/main.ts', isDirectory: false }]);
+      render(<WorkspaceFileTree workspaceRoot={{ path: '/w' }} />);
+
+      const srcItem = await screen.findByRole('treeitem', { name: 'src' });
+      const tree = screen.getByRole('tree', { name: 'Workspace files' });
+      srcItem.focus();
+      fireEvent.keyDown(tree, { key: 'ArrowRight' });
+      expect(await screen.findByRole('treeitem', { name: 'main.ts' })).toBeInTheDocument();
+
+      srcItem.focus();
+      fireEvent.keyDown(tree, { key: 'ArrowLeft' });
+      await waitFor(() => {
+        expect(screen.queryByRole('treeitem', { name: 'main.ts' })).not.toBeInTheDocument();
+      });
+    });
+
+    it('opens the focused file with Enter', async () => {
+      vi.mocked(listDirectoryEntries).mockResolvedValueOnce([
+        { name: 'notes.txt', path: '/w/notes.txt', isDirectory: false },
+      ]);
+      render(<WorkspaceFileTree workspaceRoot={{ path: '/w' }} />);
+
+      const item = await screen.findByRole('treeitem', { name: 'notes.txt' });
+      item.focus();
+      // The leaf is a <button>, so Enter activates it natively (click).
+      fireEvent.click(item);
+      expect(ideSessionMocks.openFileFromWorkspace).toHaveBeenCalledWith('/w/notes.txt');
+    });
+  });
+
   it('calls openFileFromWorkspace when a file tree item is clicked', async () => {
     vi.mocked(listDirectoryEntries).mockResolvedValueOnce([
       { name: 'notes.txt', path: '/w/notes.txt', isDirectory: false },
