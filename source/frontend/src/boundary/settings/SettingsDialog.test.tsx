@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_APP_PREFERENCES,
   type AppPreferences,
+  type DisassemblyPreferences,
 } from '@domain/preferences/appPreferences';
 import type { SettingsService } from '@domain/preferences/settingsService';
 
@@ -24,7 +25,11 @@ const service: SettingsService = {
   importPreferences: mockImportPreferences,
 };
 
-function preferences(overrides: Partial<AppPreferences> = {}): AppPreferences {
+function preferences(
+  overrides: Partial<Omit<AppPreferences, 'disassembly'>> & {
+    disassembly?: Partial<DisassemblyPreferences>;
+  } = {},
+): AppPreferences {
   return {
     ...DEFAULT_APP_PREFERENCES,
     ...overrides,
@@ -68,6 +73,7 @@ describe('SettingsDialog', () => {
 
     render(<SettingsDialog open onClose={vi.fn()} onSaved={onSaved} service={service} />);
 
+    await user.click(screen.getByRole('button', { name: 'Disassembly' }));
     expect(await screen.findByLabelText('objdump path')).toHaveValue('/usr/bin/objdump');
     await user.clear(screen.getByLabelText('objdump path'));
     await user.type(screen.getByLabelText('objdump path'), '/opt/bin/objdump');
@@ -87,6 +93,9 @@ describe('SettingsDialog', () => {
             archHint: 'arm',
             instructionLimit: 3000,
             syntax: 'att',
+            radare2Path: '',
+            radare2AnalysisLevel: 'none',
+            radare2PreCommands: '',
           },
         }),
       );
@@ -102,6 +111,7 @@ describe('SettingsDialog', () => {
     const user = userEvent.setup();
     render(<SettingsDialog open onClose={vi.fn()} service={service} />);
 
+    await user.click(screen.getByRole('button', { name: 'Disassembly' }));
     await screen.findByLabelText('Instruction/render limit');
     await user.clear(screen.getByLabelText('objdump path'));
     await user.type(screen.getByLabelText('objdump path'), '  /opt/bin/objdump  ');
@@ -141,8 +151,9 @@ describe('SettingsDialog', () => {
 
     render(<SettingsDialog open onClose={vi.fn()} workspaceRoot="/workspace" service={service} />);
 
+    await user.click(screen.getByRole('button', { name: 'Disassembly' }));
     expect(await screen.findByLabelText('objdump path')).toHaveValue('/usr/bin/objdump');
-    await user.click(screen.getByRole('button', { name: 'Test objdump' }));
+    await user.click(screen.getByRole('button', { name: 'Self-check' }));
 
     await waitFor(() => {
       expect(mockTestObjdumpTool).toHaveBeenCalledWith('/workspace', '/usr/bin/objdump');
@@ -162,7 +173,8 @@ describe('SettingsDialog', () => {
 
     render(<SettingsDialog open onClose={vi.fn()} workspaceRoot="/workspace" service={service} />);
 
-    const testButton = await screen.findByRole('button', { name: 'Test objdump' });
+    await user.click(screen.getByRole('button', { name: 'Disassembly' }));
+    const testButton = await screen.findByRole('button', { name: 'Self-check' });
     await waitFor(() => {
       expect(testButton).not.toBeDisabled();
     });
@@ -184,8 +196,9 @@ describe('SettingsDialog', () => {
     const user = userEvent.setup();
     render(<SettingsDialog open onClose={vi.fn()} service={service} />);
 
-    await screen.findByLabelText('Instruction/render limit');
-    await user.click(screen.getByRole('button', { name: 'Export…' }));
+    const exportButton = await screen.findByRole('button', { name: 'Export…' });
+    await waitFor(() => expect(exportButton).not.toBeDisabled());
+    await user.click(exportButton);
 
     await waitFor(() => {
       expect(mockExportPreferences).toHaveBeenCalled();
@@ -210,7 +223,8 @@ describe('SettingsDialog', () => {
     const onSaved = vi.fn();
     render(<SettingsDialog open onClose={vi.fn()} onSaved={onSaved} service={service} />);
 
-    await screen.findByLabelText('Instruction/render limit');
+    await user.click(screen.getByRole('button', { name: 'Disassembly' }));
+    await screen.findByLabelText('objdump path');
     await user.click(screen.getByRole('button', { name: 'Import…' }));
 
     await waitFor(() => {
@@ -229,6 +243,7 @@ describe('SettingsDialog', () => {
 
     render(<SettingsDialog open onClose={vi.fn()} service={service} />);
 
+    await user.click(screen.getByRole('button', { name: 'Editor' }));
     const wrap = await screen.findByRole('checkbox', { name: /word wrap in editor/i });
     await user.click(wrap);
     await user.click(screen.getByRole('button', { name: 'Save' }));
