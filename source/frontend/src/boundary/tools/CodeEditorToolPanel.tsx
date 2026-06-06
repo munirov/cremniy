@@ -14,7 +14,19 @@ export function CodeEditorToolPanel() {
       <Editor
         height="100%"
         language={language}
-        theme="vs-dark"
+        theme="cremniy-dark"
+        beforeMount={(monaco) => {
+          // Active line as a fill, not vs-dark's outline (matches the main editor).
+          monaco.editor.defineTheme('cremniy-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+              'editor.lineHighlightBackground': '#ffffff12',
+              'editor.lineHighlightBorder': '#00000000',
+            },
+          });
+        }}
         value={documentText}
         options={{
           ...IDE_MONACO_BASE_OPTIONS,

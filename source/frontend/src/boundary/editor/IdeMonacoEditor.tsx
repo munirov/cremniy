@@ -313,7 +313,19 @@ export function IdeMonacoEditor({
         height="100%"
         language={language}
         path={activeFilePath ?? undefined}
-        theme="vs-dark"
+        theme="cremniy-dark"
+        beforeMount={(monaco) => {
+          // vs-dark marks the active line with an outline; we want a fill.
+          monaco.editor.defineTheme('cremniy-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+              'editor.lineHighlightBackground': '#ffffff12',
+              'editor.lineHighlightBorder': '#00000000',
+            },
+          });
+        }}
         value={documentText}
         onChange={(value) => setDocumentText(value ?? '')}
         onMount={(editorInstance) => {
