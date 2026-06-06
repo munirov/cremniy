@@ -19,8 +19,8 @@ type ViewId = 'explorer' | 'search';
  * chevron menu with a pin toggle.
  */
 const VIEWS: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
-  { id: 'explorer', label: 'Explorer', icon: <ExplorerIcon size={15} /> },
-  { id: 'search', label: 'Search', icon: <SearchIcon size={15} /> },
+  { id: 'explorer', label: 'Explorer', icon: <ExplorerIcon size={17} /> },
+  { id: 'search', label: 'Search', icon: <SearchIcon size={17} /> },
 ];
 
 const PIN_STORAGE_KEY = 'cremniy.pinnedViews';

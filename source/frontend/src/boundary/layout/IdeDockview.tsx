@@ -34,8 +34,8 @@ export type IdeLayoutSizes = {
 };
 
 const DEFAULT_LAYOUT: IdeLayoutSizes = {
-  // File tree ~15% of the width (1.5 / (1.5 + 8.5) with the tool dock hidden).
-  outer: [1.5, 8.5, 4],
+  // File tree ~20% of the width (1.5 / (1.5 + 6) with the tool dock hidden).
+  outer: [1.5, 6, 3],
   center: [4, 1],
 };
 
