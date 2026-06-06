@@ -44,7 +44,6 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [ctx, setCtx] = useState<CtxState | null>(null);
-  const [filter, setFilter] = useState('');
   const [excludedPatterns, setExcludedPatterns] = useState<readonly string[]>([]);
   // Inline-create row state. When non-null, the tree renders an input under
   // the named parent (or at the root) so the user can type the new name
@@ -59,7 +58,8 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
   // Bumped by the header's "Collapse folders" button; every FileTreeNode folds.
   const [collapseSignal, setCollapseSignal] = useState(0);
   const ctxMenuRef = useRef<HTMLUListElement | null>(null);
-  const filterLower = filter.trim().toLowerCase();
+  // Filter UI was removed; keep the tree's filter plumbing inert.
+  const filterLower = '';
 
   // Load excluded-patterns from Settings once per workspace switch. The
   // textarea is one-pattern-per-line; empty lines are dropped.
@@ -419,33 +419,16 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
 
   return (
     <>
-      <TreeHeader
-        name={fileNameFromPath(workspaceRoot.path) || workspaceRoot.path}
-        onNewFile={newFileAtRoot}
-        onNewFolder={newFolderAtRoot}
-        onRefresh={bumpFileTreeRevision}
-        onCollapseAll={collapseAll}
-      />
-      <div style={{ padding: '0.25rem 0.5rem' }}>
-        <input
-          type="search"
-          placeholder="Filter files…"
-          value={filter}
-          onChange={(e) => setFilter(e.currentTarget.value)}
-          style={{
-            width: '100%',
-            padding: '0.25rem 0.4rem',
-            fontSize: 12,
-            background: 'rgba(255,255,255,0.04)',
-            color: 'inherit',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 3,
-            outline: 'none',
-          }}
+      <div className={styles.section}>
+        <TreeHeader
+          name={fileNameFromPath(workspaceRoot.path) || workspaceRoot.path}
+          onNewFile={newFileAtRoot}
+          onNewFolder={newFolderAtRoot}
+          onRefresh={bumpFileTreeRevision}
+          onCollapseAll={collapseAll}
         />
-      </div>
-      <div
-        className={styles.treeRoot}
+        <div
+          className={styles.treeRoot}
         role="tree"
         aria-label="Workspace files"
         onContextMenu={(e) => openCtx(e, workspaceRoot.path, true)}
@@ -488,6 +471,7 @@ export function WorkspaceFileTree({ workspaceRoot }: WorkspaceFileTreeProps) {
             </li>
           ))}
         </ul>
+        </div>
       </div>
       {ctx != null ? (
         <CtxMenu

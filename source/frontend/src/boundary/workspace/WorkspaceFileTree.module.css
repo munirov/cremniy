@@ -9,6 +9,15 @@
   letter-spacing: 0.01em;
 }
 
+/* The whole left panel — hovering anywhere in it reveals the header actions. */
+.section {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
 /* Explorer section header — project name + actions (actions fade in on hover). */
 .header {
   display: flex;
@@ -41,6 +50,7 @@
   transition: opacity 0.12s ease;
 }
 
+.section:hover .headerActions,
 .header:hover .headerActions,
 .headerActions:focus-within {
   opacity: 1;
