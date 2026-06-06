@@ -6,11 +6,12 @@
   min-width: 0;
 }
 
-/* Activity bar — view buttons grouped tight on the left, chevron pushed to the
-   right (VS Code / Cursor default). No bottom rule; icons sit over the content. */
+/* Activity bar — view buttons + chevron as one tight group, centered across
+   the panel width. No bottom rule; icons sit over the content. */
 .activityBar {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   gap: 0.15rem;
   height: 2rem;
