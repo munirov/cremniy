@@ -4,6 +4,10 @@ import type { CSSProperties } from 'react';
  * Tiny inline file/folder icons in the spirit of VSCode/Cursor's seti theme.
  * No icon-font dependency — each glyph is a single SVG so the bundle stays
  * small and the colours can pick up our theme tokens.
+ *
+ * Folder, dot-files and unknown files render in `currentColor`, so they inherit
+ * the row's muted/active state (see the tree's row opacity). Only files with a
+ * recognised extension carry a quiet language tint.
  */
 
 type IconProps = {
@@ -29,34 +33,21 @@ export function ChevronIcon({ open, size = 12 }: { open: boolean; size?: number 
   );
 }
 
-export function FolderIcon({ open, size = 14 }: { open: boolean; size?: number }) {
+export function FolderIcon({ size = 14 }: { open?: boolean; size?: number }) {
+  // One neutral folder silhouette — the chevron already conveys open/closed.
+  // currentColor lets it dim with the row and brighten on the active file.
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden style={{ flexShrink: 0 }}>
-      {open ? (
-        <path
-          d="M1.5 4 L1.5 13 L14.5 13 L14.5 6.5 L7.5 6.5 L6 5 L4 5 L4 4 Z"
-          fill="#c5a572"
-          fillOpacity="0.85"
-          stroke="none"
-        />
-      ) : (
-        <path
-          d="M1.5 4 L1.5 13 L14.5 13 L14.5 5.5 L7 5.5 L5.5 4 Z"
-          fill="#c5a572"
-          fillOpacity="0.85"
-          stroke="none"
-        />
-      )}
+      <path d="M2 5.4 H6.4 L7.6 6.6 H14 V12.6 H2 Z" fill="currentColor" fillOpacity="0.85" />
     </svg>
   );
 }
 
 /**
- * File extension → muted accent colour. We render a generic document glyph and
- * tint it based on the file kind, which matches Cursor's quiet, low-contrast
- * style better than per-language full-colour icons.
+ * Recognised file extension → quiet language tint. Returns null for anything we
+ * don't have a colour for, which the caller renders as a neutral glyph.
  */
-function colorForName(name: string): string {
+function knownAccent(name: string): string | null {
   const lower = name.toLowerCase();
   if (lower.endsWith('.ts') || lower.endsWith('.tsx')) return '#3178c6';
   if (lower.endsWith('.js') || lower.endsWith('.jsx') || lower.endsWith('.mjs') || lower.endsWith('.cjs')) return '#f0db4f';
@@ -74,14 +65,16 @@ function colorForName(name: string): string {
   if (lower.endsWith('.svg') || lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.webp') || lower.endsWith('.ico')) return '#a074c4';
   if (lower.endsWith('.sh') || lower.endsWith('.bash') || lower.endsWith('.zsh') || lower.endsWith('.ps1')) return '#4eaa25';
   if (lower.endsWith('.lock')) return '#bbbbbb';
-  if (lower === '.gitignore' || lower === '.gitattributes' || lower === '.gitmodules') return '#e85d3a';
-  if (lower === '.dockerignore' || lower === 'dockerfile' || lower.startsWith('docker-compose')) return '#0db7ed';
   if (lower.endsWith('.exe') || lower.endsWith('.dll') || lower.endsWith('.so') || lower.endsWith('.dylib') || lower.endsWith('.bin') || lower.endsWith('.elf')) return '#7a7a7a';
-  return '#9da5b4';
+  return null;
 }
 
-export function FileIcon({ name, size = 14, style }: IconProps & { name: string }) {
-  const color = colorForName(name);
+/**
+ * Folded-corner document. `lines` draws faint text rules inside — we use 0 for
+ * dot-files / typed files and a couple for unknown files so they read as "some
+ * text we don't recognise".
+ */
+function PageGlyph({ color, lines, size, style }: { color: string; lines: number; size: number; style?: CSSProperties }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden style={{ flexShrink: 0, ...style }}>
       <path
@@ -100,6 +93,23 @@ export function FileIcon({ name, size = 14, style }: IconProps & { name: string 
         strokeWidth="1.2"
         strokeLinejoin="round"
       />
+      {lines >= 1 && <line x1="5.2" y1="8.2" x2="10.8" y2="8.2" stroke={color} strokeOpacity="0.6" strokeWidth="1.1" strokeLinecap="round" />}
+      {lines >= 2 && <line x1="5.2" y1="10.6" x2="10.8" y2="10.6" stroke={color} strokeOpacity="0.6" strokeWidth="1.1" strokeLinecap="round" />}
+      {lines >= 3 && <line x1="5.2" y1="13" x2="8.8" y2="13" stroke={color} strokeOpacity="0.6" strokeWidth="1.1" strokeLinecap="round" />}
     </svg>
   );
+}
+
+export function FileIcon({ name, size = 14, style }: IconProps & { name: string }) {
+  // Dot-files (.cremniy, .gitignore, .env) — quiet neutral page, no rules.
+  if (name.startsWith('.')) {
+    return <PageGlyph color="currentColor" lines={0} size={size} style={style} />;
+  }
+  const accent = knownAccent(name);
+  // Unknown / no extension — neutral page with text rules.
+  if (accent === null) {
+    return <PageGlyph color="currentColor" lines={2} size={size} style={style} />;
+  }
+  // Recognised type — same page in a quiet language tint.
+  return <PageGlyph color={accent} lines={0} size={size} style={style} />;
 }
