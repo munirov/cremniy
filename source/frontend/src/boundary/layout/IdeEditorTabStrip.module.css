@@ -71,10 +71,11 @@
 
 .tabCloseBtn {
   flex-shrink: 0;
-  width: 1.65rem;
+  /* No divider + narrower, so the × sits close to the name (≈ the left
+     padding) instead of across a wide gutter. */
+  width: 1.3rem;
   padding: 0;
   border: none;
-  border-left: 1px solid var(--color-border-pane);
   font-family: var(--font-family-mono);
   font-size: 1rem;
   line-height: 1;
