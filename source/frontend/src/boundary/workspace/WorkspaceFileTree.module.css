@@ -147,18 +147,9 @@
 
 .leafButtonActive,
 .leafButtonActive:hover {
+  /* Selection is the background fill — no accent bar. */
   background-color: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
-}
-
-.leafButtonActive::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #569cd6;
 }
 
 .dirName,
@@ -168,6 +159,12 @@
   white-space: nowrap;
   flex: 1;
   min-width: 0;
+  /* Names read muted; the selected file's name is full strength. */
+  opacity: 0.6;
+}
+
+.leafButtonActive .leafName {
+  opacity: 1;
 }
 
 .dirBusy {
