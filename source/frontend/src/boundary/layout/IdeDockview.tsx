@@ -34,7 +34,8 @@ export type IdeLayoutSizes = {
 };
 
 const DEFAULT_LAYOUT: IdeLayoutSizes = {
-  outer: [2, 6, 3],
+  // File tree ~20% of the width (was 25%).
+  outer: [1.5, 6, 3],
   center: [4, 1],
 };
 
