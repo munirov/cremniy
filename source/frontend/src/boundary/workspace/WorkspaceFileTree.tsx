@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, LegacyRef, MouseEvent } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
@@ -42,6 +42,26 @@ function formatErr(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+/** Central nav state for the recursive tree: which paths are expanded, which row
+ *  owns the roving tab stop, and the controls to change them. Provided once at
+ *  the root so nodes don't prop-drill it and keyboard handling can drive any
+ *  row. (Also the seam a future flat/virtualized renderer plugs into.) */
+type TreeNav = {
+  expandedPaths: Set<string>;
+  focusedPath: string | null;
+  toggleExpand: (path: string) => void;
+  expandPath: (path: string) => void;
+  setFocusedPath: (path: string) => void;
+};
+const TreeNavContext = createContext<TreeNav | null>(null);
+function useTreeNav(): TreeNav {
+  const v = useContext(TreeNavContext);
+  if (v == null) {
+    throw new Error('useTreeNav must be used within the workspace file tree');
+  }
+  return v;
+}
+
 /** One directory level → its visible roots + auto-nested children. Custom order
  *  is applied first; nesting is skipped while a filter is active so search stays
  *  flat and complete. The caller passes entries already filtered by exclusions. */
@@ -82,8 +102,13 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   // MUST be declared above any early-return below — see the Rules of Hooks
   // bug we just fixed in FileTreeNode. This drives the root-zone drop-target.
   const [rootDragOver, setRootDragOver] = useState(false);
-  // Bumped by the header's "Collapse folders" button; every FileTreeNode folds.
-  const [collapseSignal, setCollapseSignal] = useState(0);
+  // Expansion is owned centrally (a Set of expanded paths), not per-node, so
+  // keyboard navigation can expand/collapse any row, "Collapse folders" is one
+  // set-clear, and we have the flat model a future virtualization needs.
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set());
+  // Roving-tabindex focus: path of the row that currently owns the tab stop.
+  const [focusedPath, setFocusedPath] = useState<string | null>(null);
+  const treeRootRef = useRef<HTMLDivElement | null>(null);
   const ctxMenuRef = useRef<HTMLUListElement | null>(null);
   // Driven by the Search view; empty when shown as the Explorer.
   const filterLower = (filter ?? '').trim().toLowerCase();
@@ -221,7 +246,108 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   const newFolderAtRoot = useCallback(() => {
     if (workspaceRoot != null) setPendingCreate({ kind: 'folder', parentPath: workspaceRoot.path });
   }, [workspaceRoot]);
-  const collapseAll = useCallback(() => setCollapseSignal((n) => n + 1), []);
+  const toggleExpand = useCallback((path: string) => {
+    setExpandedPaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  }, []);
+  const expandPath = useCallback((path: string) => {
+    setExpandedPaths((prev) => (prev.has(path) ? prev : new Set(prev).add(path)));
+  }, []);
+  const collapsePath = useCallback((path: string) => {
+    setExpandedPaths((prev) => {
+      if (!prev.has(path)) return prev;
+      const next = new Set(prev);
+      next.delete(path);
+      return next;
+    });
+  }, []);
+  const collapseAll = useCallback(() => {
+    setExpandedPaths(new Set());
+    setFocusedPath(null);
+  }, []);
+
+  // Keyboard navigation for the whole tree (WAI-ARIA tree pattern). Rows are the
+  // [role=treeitem] elements; focus moves through them in DOM (== visual) order
+  // and expand/collapse drives the central Set. Enter/Space stay native on the
+  // row buttons — we own only movement + expand/collapse.
+  const onTreeKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const root = treeRootRef.current;
+      if (root == null) return;
+      const items = Array.from(root.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+      if (items.length === 0) return;
+      const active = document.activeElement as HTMLElement | null;
+      const idx = active != null ? items.indexOf(active) : -1;
+      const focusAt = (i: number) => {
+        const el = items[Math.max(0, Math.min(items.length - 1, i))];
+        if (el == null) return;
+        const p = el.getAttribute('data-path');
+        if (p != null) setFocusedPath(p);
+        el.focus();
+      };
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          focusAt(idx + 1);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          focusAt(idx - 1);
+          break;
+        case 'Home':
+          e.preventDefault();
+          focusAt(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          focusAt(items.length - 1);
+          break;
+        case 'ArrowRight': {
+          if (idx < 0) break;
+          e.preventDefault();
+          const el = items[idx]!;
+          const path = el.getAttribute('data-path');
+          const expandable = el.getAttribute('data-expandable') === 'true';
+          const isExpanded = el.getAttribute('data-expanded') === 'true';
+          if (expandable && path != null && !isExpanded) expandPath(path);
+          else if (expandable && isExpanded) focusAt(idx + 1);
+          break;
+        }
+        case 'ArrowLeft': {
+          if (idx < 0) break;
+          e.preventDefault();
+          const el = items[idx]!;
+          const path = el.getAttribute('data-path');
+          const expandable = el.getAttribute('data-expandable') === 'true';
+          const isExpanded = el.getAttribute('data-expanded') === 'true';
+          if (expandable && isExpanded && path != null) {
+            collapsePath(path);
+          } else {
+            const depth = Number(el.getAttribute('data-depth') ?? '0');
+            for (let i = idx - 1; i >= 0; i--) {
+              if (Number(items[i]!.getAttribute('data-depth') ?? '0') < depth) {
+                focusAt(i);
+                break;
+              }
+            }
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    [expandPath, collapsePath],
+  );
+
+  const treeNav = useMemo<TreeNav>(
+    () => ({ expandedPaths, focusedPath, toggleExpand, expandPath, setFocusedPath }),
+    [expandedPaths, focusedPath, toggleExpand, expandPath],
+  );
 
   const runNewFolder = useCallback(() => {
     if (ctx == null || workspaceRoot == null) return;
@@ -486,7 +612,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   };
 
   return (
-    <>
+    <TreeNavContext.Provider value={treeNav}>
       <div className={styles.section}>
         <TreeHeader
           name={fileNameFromPath(workspaceRoot.path) || workspaceRoot.path}
@@ -496,18 +622,21 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
           onCollapseAll={collapseAll}
         />
         <div
+          ref={treeRootRef}
           className={styles.treeRoot}
-        role="tree"
-        aria-label="Workspace files"
-        onContextMenu={(e) => openCtx(e, workspaceRoot.path, true)}
-        onDragOver={onRootDragOver}
-        onDragLeave={onRootDragLeave}
-        onDrop={onRootDrop}
-        style={{
-          outline: rootDragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
-          background: rootDragOver ? 'rgba(255,255,255,0.05)' : undefined,
-        }}
-      >
+          role="tree"
+          aria-label="Workspace files"
+          tabIndex={-1}
+          onKeyDown={onTreeKeyDown}
+          onContextMenu={(e) => openCtx(e, workspaceRoot.path, true)}
+          onDragOver={onRootDragOver}
+          onDragLeave={onRootDragLeave}
+          onDrop={onRootDrop}
+          style={{
+            outline: rootDragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
+            background: rootDragOver ? 'rgba(255,255,255,0.05)' : undefined,
+          }}
+        >
         <ul className={styles.treeList} role="group">
           {pendingCreate != null && pendingCreate.parentPath === workspaceRoot.path ? (
             <li className={styles.treeItem} role="none">
@@ -519,7 +648,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
               />
             </li>
           ) : null}
-          {rootLevel.roots.map((entry) => (
+          {rootLevel.roots.map((entry, index) => (
             <li key={entry.path} className={styles.treeItem} role="none">
               <FileTreeNode
                 workspaceRootPath={workspaceRoot.path}
@@ -531,7 +660,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
                 treeOrder={treeOrder}
                 nestedChildren={rootLevel.childrenOf.get(entry.path)}
                 pendingCreate={pendingCreate}
-                collapseSignal={collapseSignal}
+                isFirstRow={index === 0}
                 onCommitCreate={commitPendingCreate}
                 onCancelCreate={cancelPendingCreate}
                 onOpenFile={openFileFromWorkspace}
@@ -559,7 +688,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
           onDelete={() => void runDelete()}
         />
       ) : null}
-    </>
+    </TreeNavContext.Provider>
   );
 }
 
@@ -711,8 +840,8 @@ type FileTreeNodeProps = {
   /** Files auto-nested under THIS entry (only set for a file that owns nests). */
   nestedChildren?: WorkspaceDirectoryEntry[];
   pendingCreate: { kind: 'file' | 'folder'; parentPath: string } | null;
-  /** Bumped by "Collapse folders" — every node folds shut when it changes. */
-  collapseSignal: number;
+  /** Only the very first root row sets this, to seed the roving tab stop. */
+  isFirstRow?: boolean;
   onCommitCreate: (name: string) => Promise<void>;
   onCancelCreate: () => void;
   onOpenFile: (path: string) => Promise<void>;
@@ -732,7 +861,7 @@ function FileTreeNode({
   treeOrder,
   nestedChildren,
   pendingCreate,
-  collapseSignal,
+  isFirstRow,
   onCommitCreate,
   onCancelCreate,
   onOpenFile,
@@ -743,7 +872,10 @@ function FileTreeNode({
   // — never with an early-return here, because the early return would sit
   // before the hooks below and break the Rules of Hooks (the original bug
   // that broke drag-drop entirely when any excluded pattern matched).
-  const [expanded, setExpanded] = useState(false);
+  const nav = useTreeNav();
+  const expanded = nav.expandedPaths.has(entry.path);
+  const isTabStop =
+    nav.focusedPath === entry.path || (nav.focusedPath == null && isFirstRow === true);
   const nameMatchesFilter =
     filterLower === '' || entry.name.toLowerCase().includes(filterLower);
   const [children, setChildren] = useState<WorkspaceDirectoryEntry[] | null>(null);
@@ -821,32 +953,27 @@ function FileTreeNode({
     if (!entry.isDirectory) {
       return;
     }
-    if (!expanded) {
+    nav.toggleExpand(entry.path);
+  }, [entry.isDirectory, entry.path, nav.toggleExpand]);
+
+  // Lazy-load children the first time this directory is expanded (by click,
+  // keyboard, or the filter auto-expand below). Children persist while mounted,
+  // so collapsing then re-expanding is instant.
+  useEffect(() => {
+    if (entry.isDirectory && expanded && children == null && !loadingChildren) {
       void loadChildren();
     }
-    setExpanded((v) => !v);
-  }, [entry.isDirectory, expanded, loadChildren]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded, entry.isDirectory]);
 
-  // Auto-expand a directory while a filter is active so the user immediately
-  // sees matches inside it. Only fires once per filter activation — the user
-  // can still collapse it manually after.
+  // Auto-expand a directory while a filter is active so matches inside are
+  // immediately visible. Expansion is central now, so we just request it.
   useEffect(() => {
-    if (filterLower === '' || !entry.isDirectory || expanded) return;
-    setExpanded(true);
-    if (children == null) void loadChildren();
+    if (filterLower !== '' && entry.isDirectory && !expanded) {
+      nav.expandPath(entry.path);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterLower]);
-
-  // "Collapse folders" — fold shut when the signal changes. Skip the first run
-  // (already collapsed) so it doesn't undo the filter auto-expand on mount.
-  const collapseMountRef = useRef(true);
-  useEffect(() => {
-    if (collapseMountRef.current) {
-      collapseMountRef.current = false;
-      return;
-    }
-    setExpanded(false);
-  }, [collapseSignal]);
 
   if (!entry.isDirectory) {
     if (!nameMatchesFilter) {
@@ -862,8 +989,13 @@ function FileTreeNode({
           aria-selected={isActive}
           className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
           style={{ paddingLeft: `${paddingRem + 1.05}rem` }}
+          tabIndex={isTabStop ? 0 : -1}
+          data-path={entry.path}
+          data-depth={depth}
+          data-expandable="false"
           draggable
           onDragStart={onDragStart}
+          onFocus={() => nav.setFocusedPath(entry.path)}
           onClick={() => void onOpenFile(entry.path)}
           onContextMenu={(e) => onContextMenu(e, entry.path, false)}
           title={entry.name}
@@ -883,9 +1015,14 @@ function FileTreeNode({
           aria-selected={isActive}
           className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
           style={{ paddingLeft: `${paddingRem}rem` }}
-          tabIndex={0}
+          tabIndex={isTabStop ? 0 : -1}
+          data-path={entry.path}
+          data-depth={depth}
+          data-expandable="true"
+          data-expanded={expanded}
           draggable
           onDragStart={onDragStart}
+          onFocus={() => nav.setFocusedPath(entry.path)}
           onClick={() => void onOpenFile(entry.path)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') void onOpenFile(entry.path);
@@ -893,17 +1030,16 @@ function FileTreeNode({
           onContextMenu={(e) => onContextMenu(e, entry.path, false)}
           title={entry.name}
         >
-          <button
-            type="button"
+          <span
             className={styles.nestTwistie}
-            aria-label={expanded ? 'Collapse' : 'Expand'}
+            aria-hidden="true"
             onClick={(e) => {
               e.stopPropagation();
-              setExpanded((v) => !v);
+              nav.toggleExpand(entry.path);
             }}
           >
             <ChevronIcon open={expanded} />
-          </button>
+          </span>
           <FileIcon name={entry.name} />
           <span className={styles.leafName}>{entry.name}</span>
         </div>
@@ -924,7 +1060,6 @@ function FileTreeNode({
                   excludedPatterns={excludedPatterns}
                   treeOrder={treeOrder}
                   pendingCreate={pendingCreate}
-                  collapseSignal={collapseSignal}
                   onCommitCreate={onCommitCreate}
                   onCancelCreate={onCancelCreate}
                   onOpenFile={onOpenFile}
@@ -960,11 +1095,17 @@ function FileTreeNode({
           backgroundColor: dragOver ? 'rgba(255,255,255,0.08)' : undefined,
           outline: dragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
         }}
+        tabIndex={isTabStop ? 0 : -1}
+        data-path={entry.path}
+        data-depth={depth}
+        data-expandable="true"
+        data-expanded={expanded}
         draggable
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
+        onFocus={() => nav.setFocusedPath(entry.path)}
         onClick={() => toggleDir()}
         onContextMenu={(e) => onContextMenu(e, entry.path, true)}
         title={entry.name}
@@ -1010,7 +1151,6 @@ function FileTreeNode({
                   treeOrder={treeOrder}
                   nestedChildren={childLevel.childrenOf.get(child.path)}
                   pendingCreate={pendingCreate}
-                  collapseSignal={collapseSignal}
                   onCommitCreate={onCommitCreate}
                   onCancelCreate={onCancelCreate}
                   onOpenFile={onOpenFile}
