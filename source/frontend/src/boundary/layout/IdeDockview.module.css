@@ -26,7 +26,9 @@
   min-height: 2rem;
   display: flex;
   align-items: center;
-  padding: 0 0.5rem;
+  /* No left padding — first file tab sits flush against the edge, like the
+     terminal tabs. */
+  padding: 0 0.5rem 0 0;
   /* Same hairline as the split dividers, not the heavier pane border. */
   border-bottom: 1px solid var(--color-border-muted);
   background-color: var(--color-bg-panel);
