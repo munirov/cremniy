@@ -163,9 +163,14 @@ fn parse_porcelain(text: &str, root: &Path) -> (Option<String>, Vec<GitFileStatu
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_else(|| rel.clone());
-        let abs_path = crate::pretty_path(root.join(&rel))
-            .to_string_lossy()
-            .into_owned();
+        // Porcelain paths use '/'. Joining them onto a Windows root with
+        // `root.join("a/b")` yields a mixed "C:\root\a/b" the editor can't open,
+        // so build the absolute path segment-by-segment (native separator).
+        let mut abs = root.to_path_buf();
+        for seg in rel.split('/') {
+            abs.push(seg);
+        }
+        let abs_path = crate::pretty_path(abs).to_string_lossy().into_owned();
         files.push(GitFileStatus {
             path: rel,
             abs_path,
@@ -265,5 +270,20 @@ mod tests {
         let sub = files.iter().find(|f| f.name == "sub").expect("sub");
         assert!(sub.is_dir);
         assert_eq!(sub.path, "docs/sub");
+    }
+
+    #[test]
+    fn nested_file_abs_path_uses_native_separators() {
+        use std::path::MAIN_SEPARATOR;
+        let root_str = if cfg!(windows) { "C:\\repo" } else { "/repo" };
+        let (_b, files) = parse_porcelain(" M src/a/b.txt\n", Path::new(root_str));
+        let f = &files[0];
+        assert_eq!(f.path, "src/a/b.txt"); // repo-relative stays '/' (git-friendly, display)
+        assert_eq!(f.name, "b.txt");
+        // The absolute path the editor opens must be all-native — no mixed seps.
+        assert!(f.abs_path.ends_with(&format!("src{0}a{0}b.txt", MAIN_SEPARATOR)), "{}", f.abs_path);
+        if cfg!(windows) {
+            assert!(!f.abs_path.contains('/'), "mixed separators: {}", f.abs_path);
+        }
     }
 }
