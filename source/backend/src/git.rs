@@ -60,9 +60,21 @@ pub fn git_status(workspace_root: String) -> Result<GitStatus, String> {
     };
 
     let text = String::from_utf8_lossy(&output.stdout);
+    let (branch, files) = parse_porcelain(&text, &root);
+    Ok(GitStatus {
+        is_repo: true,
+        branch,
+        files,
+    })
+}
+
+/// Parse `git status --porcelain=v1 --branch` output into a branch name + file
+/// list. Pure (only `pretty_path` string work, no process / FS), so it's
+/// unit-tested against the M / A / D / ?? / rename shapes the live tree can't
+/// always exercise.
+fn parse_porcelain(text: &str, root: &Path) -> (Option<String>, Vec<GitFileStatus>) {
     let mut branch: Option<String> = None;
     let mut files: Vec<GitFileStatus> = Vec::new();
-
     for line in text.lines() {
         if let Some(rest) = line.strip_prefix("## ") {
             branch = Some(parse_branch(rest));
@@ -98,12 +110,7 @@ pub fn git_status(workspace_root: String) -> Result<GitStatus, String> {
             untracked,
         });
     }
-
-    Ok(GitStatus {
-        is_repo: true,
-        branch,
-        files,
-    })
+    (branch, files)
 }
 
 /// Pull the branch name out of a porcelain `## ` header line, e.g.
@@ -123,5 +130,62 @@ fn unquote(s: &str) -> String {
         t[1..t.len() - 1].to_string()
     } else {
         t.to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse(text: &str) -> (Option<String>, Vec<GitFileStatus>) {
+        parse_porcelain(text, Path::new("/repo"))
+    }
+
+    #[test]
+    fn parses_branch_and_mixed_statuses() {
+        // concat! keeps each literal exact — the leading space on unstaged
+        // entries is significant (X = index, Y = work-tree).
+        let text = concat!(
+            "## main...origin/main [ahead 1]\n",
+            "M  src/lib.rs\n",
+            " M src/app.ts\n",
+            "A  new.txt\n",
+            " D gone.txt\n",
+            "?? scratch.tmp\n",
+        );
+        let (branch, files) = parse(text);
+        assert_eq!(branch.as_deref(), Some("main"));
+        assert_eq!(files.len(), 5);
+
+        let by = |p: &str| files.iter().find(|f| f.path == p).expect(p);
+        assert!(by("src/lib.rs").staged && !by("src/lib.rs").untracked);
+        assert_eq!(by("src/lib.rs").index_status, "M");
+        assert!(!by("src/app.ts").staged); // unstaged modification
+        assert_eq!(by("src/app.ts").work_status, "M");
+        assert!(by("new.txt").staged);
+        assert!(!by("gone.txt").staged); // unstaged delete
+        assert!(by("scratch.tmp").untracked && !by("scratch.tmp").staged);
+        assert_eq!(by("scratch.tmp").name, "scratch.tmp");
+    }
+
+    #[test]
+    fn rename_keeps_the_new_path() {
+        let (_b, files) = parse("## main\nR  old/a.ts -> new/b.ts\n");
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].path, "new/b.ts");
+        assert_eq!(files[0].name, "b.ts");
+        assert!(files[0].staged);
+    }
+
+    #[test]
+    fn no_commits_yet_branch() {
+        let (b, _f) = parse("## No commits yet on trunk\n");
+        assert_eq!(b.as_deref(), Some("trunk"));
+    }
+
+    #[test]
+    fn unquotes_paths_with_spaces() {
+        let (_b, files) = parse("## main\n?? \"weird name.txt\"\n");
+        assert_eq!(files[0].path, "weird name.txt");
     }
 }
