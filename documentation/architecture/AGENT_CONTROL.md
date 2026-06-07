@@ -97,8 +97,9 @@ useEffect(() => registerAgentCommands([
 приложение поднимает **MCP-сервер прямо в себе**: HTTP на `127.0.0.1:41547/mcp`
 (стартует в `setup()` бэкенда — `source/backend/src/mcp.rs`).
 
-Подключение MCP-клиента (например Claude Code) — тип `http`. Создай `.mcp.json` в корне
-репо (или добавь в свой клиентский конфиг):
+Адрес фиксированный — `http://127.0.0.1:41547/mcp` — так что дёргать сервер можно прямо по
+HTTP (любой POST с JSON-RPC), отдельный конфиг не нужен. `.mcp.json` нужен **только** если
+хочется видеть инструменты как «родные» MCP-инструменты клиента (тип `http`); это опционально:
 
 ```json
 { "mcpServers": { "cremniy": { "type": "http", "url": "http://127.0.0.1:41547/mcp" } } }
@@ -112,12 +113,12 @@ useEffect(() => registerAgentCommands([
 | `run_command` `{ name, args? }` | как `window.cremniy.run(...)` — дёрнуть любую UI-команду. |
 | `get_state` | как `window.cremniy.state()` — снимок состояния экрана. |
 | `list_windows` | окна приложения (главное + вынесенные панели). |
-| `screenshot` `{ label? }` | PNG каждого окна (или указанного по label) — визуальный контроль. |
+| `screenshot` `{ label? }` | PNG каждого окна (или по label) — **через Win32 PrintWindow по hwnd окна, снимает контент даже когда окно свёрнуто/перекрыто/не на переднем плане** (не скриншот экрана). |
 
 Поток: HTTP → бэкенд эмитит `agent://request` в webview → слушатель
 (`shared/agent/agentRemote.ts`) зовёт `window.cremniy` → ответ командой `agent_reply` →
 HTTP-ответ. Второй реализации команд нет: MCP — тонкий внешний мост к той же поверхности,
-что и кнопки. Скриншоты снимает бэкенд по геометрии окон Tauri.
+что и кнопки. Скриншоты — `PrintWindow(PW_RENDERFULLCONTENT)` по hwnd каждого окна Tauri.
 
 ## Карта кода
 
