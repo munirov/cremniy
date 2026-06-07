@@ -127,6 +127,23 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     setFileContentRevision((n) => n + 1);
   }, []);
 
+  // Keep the Explorer + git in sync with the disk without a manual Refresh:
+  // bump on window focus (caught up after editing elsewhere) and on a gentle
+  // poll while the window is focused (catches a build / terminal writing files).
+  useEffect(() => {
+    const onFocus = () => bumpFileTreeRevision();
+    window.addEventListener('focus', onFocus);
+    const poll = window.setInterval(() => {
+      if (document.hasFocus()) {
+        bumpFileTreeRevision();
+      }
+    }, 4000);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.clearInterval(poll);
+    };
+  }, [bumpFileTreeRevision]);
+
   const togglePinFilePath = useCallback((filePath: string) => {
     setPinnedFilePaths((prev) => {
       const next = new Set(prev);

@@ -49,9 +49,13 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
     }
   }, [workspaceRoot?.path]);
 
+  // Repo discovery walks the whole workspace tree, so it must NOT run on every
+  // refresh tick — only on workspace change (discover's own dep) and the manual
+  // Rescan button. Per-repo status (overview below + each section) stays live
+  // via fileTreeRevision, which is what actually changes as you edit files.
   useEffect(() => {
     void discover();
-  }, [discover, fileTreeRevision]);
+  }, [discover]);
 
   // Lightweight per-repo status for the REPOSITORIES overview (branch + counts).
   // CHANGES loads its own full status per section.

@@ -62,6 +62,9 @@ type TreeNav = {
   toggleExpand: (path: string) => void;
   expandPath: (path: string) => void;
   setFocusedPath: (path: string) => void;
+  // Refresh tick: bumped on focus/poll/explicit refresh. Expanded directory
+  // nodes re-read their children whenever this changes.
+  revision: number;
 };
 const TreeNavContext = createContext<TreeNav | null>(null);
 function useTreeNav(): TreeNav {
@@ -363,8 +366,15 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   );
 
   const treeNav = useMemo<TreeNav>(
-    () => ({ expandedPaths, focusedPath, toggleExpand, expandPath, setFocusedPath }),
-    [expandedPaths, focusedPath, toggleExpand, expandPath],
+    () => ({
+      expandedPaths,
+      focusedPath,
+      toggleExpand,
+      expandPath,
+      setFocusedPath,
+      revision: fileTreeRevision,
+    }),
+    [expandedPaths, focusedPath, toggleExpand, expandPath, fileTreeRevision],
   );
 
   const runNewFolder = useCallback(() => {
@@ -1066,18 +1076,27 @@ function FileTreeNode({
 
   const paddingRem = 0.4 + depth * 0.85;
 
-  const loadChildren = useCallback(async () => {
-    setLoadingChildren(true);
-    setChildError(null);
-    try {
-      const list = await listDirectoryEntries(workspaceRootPath, entry.path);
-      setChildren(list);
-    } catch (e: unknown) {
-      setChildError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoadingChildren(false);
-    }
-  }, [workspaceRootPath, entry.path]);
+  const loadChildren = useCallback(
+    async (silent = false) => {
+      // Silent reloads (auto-refresh) keep the current rows on screen and just
+      // swap in fresh data — no spinner flash. The first load shows the spinner.
+      if (!silent) {
+        setLoadingChildren(true);
+      }
+      setChildError(null);
+      try {
+        const list = await listDirectoryEntries(workspaceRootPath, entry.path);
+        setChildren(list);
+      } catch (e: unknown) {
+        setChildError(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (!silent) {
+          setLoadingChildren(false);
+        }
+      }
+    },
+    [workspaceRootPath, entry.path],
+  );
 
   const toggleDir = useCallback(() => {
     if (!entry.isDirectory) {
@@ -1086,15 +1105,16 @@ function FileTreeNode({
     nav.toggleExpand(entry.path);
   }, [entry.isDirectory, entry.path, nav.toggleExpand]);
 
-  // Lazy-load children the first time this directory is expanded (by click,
-  // keyboard, or the filter auto-expand below). Children persist while mounted,
-  // so collapsing then re-expanding is instant.
+  // Load children when this directory is expanded, and re-read on every refresh
+  // tick (nav.revision — bumped by focus/poll/explicit refresh) so an expanded
+  // folder stays in sync with disk without a manual Refresh. The first load
+  // shows a spinner; later refreshes swap rows in silently.
   useEffect(() => {
-    if (entry.isDirectory && expanded && children == null && !loadingChildren) {
-      void loadChildren();
+    if (entry.isDirectory && expanded) {
+      void loadChildren(children != null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded, entry.isDirectory]);
+  }, [expanded, entry.isDirectory, nav.revision]);
 
   // Auto-expand a directory while a filter is active so matches inside are
   // immediately visible. Expansion is central now, so we just request it.
