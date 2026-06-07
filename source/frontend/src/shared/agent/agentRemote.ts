@@ -40,6 +40,16 @@ export async function installAgentRemote(): Promise<void> {
         result = agentStateSnapshot();
       } else if (kind === 'run') {
         result = await runAgentCommand(name, args ?? {});
+      } else if (kind === 'capture') {
+        // The window renders ITSELF to a PNG (its own DOM → image), not an OS
+        // screen grab — so it works minimized/hidden/occluded with no flash.
+        const { toPng } = await import('html-to-image');
+        const dataUrl = await toPng(document.documentElement, {
+          cacheBust: true,
+          pixelRatio: 1,
+          backgroundColor: '#1e1e1e',
+        });
+        result = { png: dataUrl.replace(/^data:image\/png;base64,/, '') };
       } else {
         throw new Error(`unknown bridge kind: ${kind}`);
       }

@@ -231,117 +231,47 @@ fn screenshot(label: Option<&str>) -> Value {
     }
 }
 
-/// Render a single window's actual content to a PNG via Win32 `PrintWindow` with
-/// `PW_RENDERFULLCONTENT`. Unlike a monitor grab + crop, this asks the window to
-/// paint itself into our DC, so it works even when the window is hidden,
-/// minimized, occluded by other windows, or off-screen. WebView2/Chromium honor
-/// `PW_RENDERFULLCONTENT`, so the web UI is captured too.
-#[cfg(windows)]
-fn capture_window_png(win: &tauri::WebviewWindow) -> Result<Vec<u8>, String> {
-    use std::ffi::c_void;
-    use windows::Win32::Foundation::{HWND, RECT};
-    use windows::Win32::Graphics::Gdi::{
-        CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDC, GetDIBits,
-        ReleaseDC, SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HGDIOBJ,
-    };
-    // PrintWindow + its flags live under Storage::Xps in this windows version,
-    // not WindowsAndMessaging.
-    use windows::Win32::Storage::Xps::{PrintWindow, PRINT_WINDOW_FLAGS};
-    use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
-
-    /// PrintWindow flag: render the full content of the window (DWM/Chromium).
-    const PW_RENDERFULLCONTENT: u32 = 0x0000_0002;
-
-    let hwnd: HWND = win.hwnd().map_err(|e| e.to_string())?;
-
-    unsafe {
-        let mut rect = RECT::default();
-        GetWindowRect(hwnd, &mut rect).map_err(|e| e.to_string())?;
-        let w = rect.right - rect.left;
-        let h = rect.bottom - rect.top;
-        if w <= 0 || h <= 0 {
-            return Err("window has zero size".to_string());
+/// Ask a window's webview to render ITSELF to a PNG (its own DOM → image, via
+/// html-to-image in agentRemote.ts). This is the window photographing itself,
+/// NOT an OS screen grab — so it works even when the window is minimized /
+/// hidden / occluded, with no restore and no flash.
+fn self_capture(label: &str) -> Result<String, String> {
+    let bridge = BRIDGE.get().ok_or("MCP bridge not initialized")?;
+    let win = bridge
+        .app
+        .get_webview_window(label)
+        .ok_or_else(|| format!("window '{label}' not found"))?;
+    let id = bridge.counter.fetch_add(1, Ordering::Relaxed);
+    let (tx, rx) = channel::<(bool, String)>();
+    bridge.pending.lock().unwrap().insert(id, tx);
+    let emitted = win.emit(
+        "agent://request",
+        AgentRequest {
+            id,
+            kind: "capture".to_string(),
+            name: String::new(),
+            args: Value::Null,
+        },
+    );
+    if let Err(e) = emitted {
+        bridge.pending.lock().unwrap().remove(&id);
+        return Err(e.to_string());
+    }
+    let reply = rx.recv_timeout(Duration::from_secs(20));
+    bridge.pending.lock().unwrap().remove(&id);
+    match reply {
+        Ok((true, payload)) => {
+            let v: Value = serde_json::from_str(&payload).map_err(|e| e.to_string())?;
+            v.get("png")
+                .and_then(Value::as_str)
+                .map(|s| s.to_string())
+                .ok_or_else(|| "capture reply had no png".to_string())
         }
-
-        let hdc_screen = GetDC(Some(hwnd));
-        if hdc_screen.is_invalid() {
-            return Err("GetDC failed".to_string());
-        }
-        let hdc_mem = CreateCompatibleDC(Some(hdc_screen));
-        if hdc_mem.is_invalid() {
-            ReleaseDC(Some(hwnd), hdc_screen);
-            return Err("CreateCompatibleDC failed".to_string());
-        }
-        let hbmp = CreateCompatibleBitmap(hdc_screen, w, h);
-        if hbmp.is_invalid() {
-            let _ = DeleteDC(hdc_mem);
-            ReleaseDC(Some(hwnd), hdc_screen);
-            return Err("CreateCompatibleBitmap failed".to_string());
-        }
-        let old = SelectObject(hdc_mem, HGDIOBJ(hbmp.0));
-
-        // Macro-free cleanup helper used on every error path below.
-        let cleanup = |old_obj| {
-            SelectObject(hdc_mem, old_obj);
-            let _ = DeleteObject(HGDIOBJ(hbmp.0));
-            let _ = DeleteDC(hdc_mem);
-            ReleaseDC(Some(hwnd), hdc_screen);
-        };
-
-        if !PrintWindow(hwnd, hdc_mem, PRINT_WINDOW_FLAGS(PW_RENDERFULLCONTENT)).as_bool() {
-            cleanup(old);
-            return Err("PrintWindow failed".to_string());
-        }
-
-        let mut bmi = BITMAPINFO::default();
-        bmi.bmiHeader = BITMAPINFOHEADER {
-            biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
-            biWidth: w,
-            // Negative height → top-down rows (origin at top-left).
-            biHeight: -h,
-            biPlanes: 1,
-            biBitCount: 32,
-            biCompression: BI_RGB.0,
-            ..Default::default()
-        };
-
-        let mut buf = vec![0u8; (w as usize) * (h as usize) * 4];
-        let got = GetDIBits(
-            hdc_mem,
-            hbmp,
-            0,
-            h as u32,
-            Some(buf.as_mut_ptr() as *mut c_void),
-            &mut bmi,
-            DIB_RGB_COLORS,
-        );
-        if got == 0 {
-            cleanup(old);
-            return Err("GetDIBits failed".to_string());
-        }
-
-        cleanup(old);
-
-        // GDI gives BGRA; PNG wants RGBA. Swap B/R and force opaque alpha
-        // (PrintWindow leaves the alpha channel unreliable).
-        for px in buf.chunks_exact_mut(4) {
-            px.swap(0, 2);
-            px[3] = 255;
-        }
-
-        let img = image::RgbaImage::from_raw(w as u32, h as u32, buf)
-            .ok_or("bad image buffer")?;
-        let mut bytes: Vec<u8> = Vec::new();
-        image::DynamicImage::ImageRgba8(img)
-            .write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
-            .map_err(|e| e.to_string())?;
-        Ok(bytes)
+        Ok((false, err)) => Err(err),
+        Err(_) => Err("self-capture timed out".to_string()),
     }
 }
 
-/// Capture each Tauri window's actual content (see `capture_window_png`). `label`,
-/// if given, filters by Tauri window-label substring (e.g. "main", "terminal").
-/// Minimized/hidden windows are captured too — that's the point of PrintWindow.
 fn capture_windows(label: Option<&str>) -> Result<Vec<Value>, String> {
     let bridge = BRIDGE.get().ok_or("MCP bridge not initialized")?;
     let mut items: Vec<Value> = Vec::new();
@@ -352,8 +282,9 @@ fn capture_windows(label: Option<&str>) -> Result<Vec<Value>, String> {
                 continue;
             }
         }
-        let png = match capture_window_png(&win) {
-            Ok(p) => p,
+        // The window renders itself (works minimized/hidden, no flash).
+        let png_b64 = match self_capture(&lbl) {
+            Ok(b64) => b64,
             Err(e) => {
                 last_err = Some(e);
                 continue;
@@ -361,29 +292,12 @@ fn capture_windows(label: Option<&str>) -> Result<Vec<Value>, String> {
         };
         let title = win.title().unwrap_or_else(|_| lbl.clone());
         items.push(json!({ "type": "text", "text": format!("{lbl} — {title}") }));
-        items.push(json!({ "type": "image", "data": base64_encode(&png), "mimeType": "image/png" }));
+        items.push(json!({ "type": "image", "data": png_b64, "mimeType": "image/png" }));
     }
     if items.is_empty() {
         return Err(last_err.unwrap_or_else(|| "no capturable app windows".to_string()));
     }
     Ok(items)
-}
-
-/// Standard base64 (with padding) — small enough to hand-roll, avoids a dep.
-fn base64_encode(data: &[u8]) -> String {
-    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity((data.len() + 2) / 3 * 4);
-    for chunk in data.chunks(3) {
-        let b0 = chunk[0] as u32;
-        let b1 = *chunk.get(1).unwrap_or(&0) as u32;
-        let b2 = *chunk.get(2).unwrap_or(&0) as u32;
-        let n = (b0 << 16) | (b1 << 8) | b2;
-        out.push(T[((n >> 18) & 63) as usize] as char);
-        out.push(T[((n >> 12) & 63) as usize] as char);
-        out.push(if chunk.len() > 1 { T[((n >> 6) & 63) as usize] as char } else { '=' });
-        out.push(if chunk.len() > 2 { T[(n & 63) as usize] as char } else { '=' });
-    }
-    out
 }
 
 fn tool_defs() -> Value {

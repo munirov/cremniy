@@ -31,9 +31,3 @@ ignore = "0.4"
 regex = "1"
 # Tiny HTTP server hosting the in-app MCP endpoint (agent control).
 tiny_http = "0.12"
-# RGBA→PNG encoding for the MCP `screenshot` tool.
-image = { version = "0.25", default-features = false, features = ["png"] }
-# Win32 GDI (PrintWindow) for capturing window content even when hidden/occluded.
-# Pinned to the same major.minor Tauri resolves so `WebviewWindow::hwnd()` returns
-# a matching `HWND` type (tauri 2.10 → windows 0.61).
-windows = { version = "0.61", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging", "Win32_Storage_Xps"] }
