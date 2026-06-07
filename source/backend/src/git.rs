@@ -71,6 +71,66 @@ pub fn git_status(workspace_root: String) -> Result<GitStatus, String> {
     })
 }
 
+/// Run a git subcommand in the workspace; map a non-zero exit to its stderr so
+/// the UI can surface a real message ("nothing to commit", auth errors, …).
+fn run_git(root: &Path, args: &[&str]) -> Result<String, String> {
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(args)
+        .output()
+        .map_err(|e| format!("git not available: {e}"))?;
+    if out.status.success() {
+        Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+    } else {
+        let err = String::from_utf8_lossy(&out.stderr);
+        Err(err.trim().to_string())
+    }
+}
+
+/// `git init` — turn the workspace folder into a repository.
+#[tauri::command]
+pub fn git_init(workspace_root: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["init"]).map(|_| ())
+}
+
+/// Stage the given repo-relative paths (`git add -- <paths>`).
+#[tauri::command]
+pub fn git_stage(workspace_root: String, paths: Vec<String>) -> Result<(), String> {
+    if paths.is_empty() {
+        return Ok(());
+    }
+    let root = canonical_workspace_root(&workspace_root)?;
+    let mut args: Vec<&str> = vec!["add", "--"];
+    args.extend(paths.iter().map(String::as_str));
+    run_git(&root, &args).map(|_| ())
+}
+
+/// Unstage the given repo-relative paths (`git reset -q HEAD -- <paths>`).
+#[tauri::command]
+pub fn git_unstage(workspace_root: String, paths: Vec<String>) -> Result<(), String> {
+    if paths.is_empty() {
+        return Ok(());
+    }
+    let root = canonical_workspace_root(&workspace_root)?;
+    let mut args: Vec<&str> = vec!["reset", "-q", "HEAD", "--"];
+    args.extend(paths.iter().map(String::as_str));
+    run_git(&root, &args).map(|_| ())
+}
+
+/// Commit the staged changes with the user's message. The commit is authored by
+/// the repo's own git identity — no extra trailers are added.
+#[tauri::command]
+pub fn git_commit(workspace_root: String, message: String) -> Result<(), String> {
+    let msg = message.trim();
+    if msg.is_empty() {
+        return Err(String::from("Commit message is empty"));
+    }
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["commit", "-m", msg]).map(|_| ())
+}
+
 /// Parse `git status --porcelain=v1 --branch` output into a branch name + file
 /// list. Pure (only `pretty_path` string work, no process / FS), so it's
 /// unit-tested against the M / A / D / ?? / rename shapes the live tree can't

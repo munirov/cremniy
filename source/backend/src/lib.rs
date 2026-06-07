@@ -48,6 +48,10 @@ pub fn run() {
             search::search_workspace,
             search::replace_in_file,
             git::git_status,
+            git::git_init,
+            git::git_stage,
+            git::git_unstage,
+            git::git_commit,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
