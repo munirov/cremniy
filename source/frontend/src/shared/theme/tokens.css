@@ -40,6 +40,14 @@
   --color-error-surface: #4a2020;
   --color-error-border: #ff5555;
 
+  /* Git decorations — Explorer status badges + tints (VS Code's palette). These
+     are semantic status colours, the one sanctioned use of colour outside CTAs. */
+  --git-untracked: #73c991;
+  --git-added: #81b88b;
+  --git-modified: #e2c08d;
+  --git-deleted: #c74e39;
+  --git-conflict: #e4676b;
+
   /* Menu bar */
   --color-menubar-item-selected: #444444;
   --color-menubar-item-hover: #262626;

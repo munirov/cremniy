@@ -261,3 +261,39 @@
   background: var(--color-border-muted);
   opacity: 0.5;
 }
+
+/* Git status decorations (Explorer). Declared after the name rules so the tint
+   colour + full opacity win over the muted .leafName / .dirName defaults — a
+   changed row reads at full strength against the quieter unchanged ones. */
+.decoUntracked,
+.decoAdded,
+.decoModified,
+.decoDeleted,
+.decoConflict {
+  opacity: 1;
+}
+.decoUntracked {
+  color: var(--git-untracked);
+}
+.decoAdded {
+  color: var(--git-added);
+}
+.decoModified {
+  color: var(--git-modified);
+}
+.decoDeleted {
+  color: var(--git-deleted);
+}
+.decoConflict {
+  color: var(--git-conflict);
+}
+
+/* Trailing status letter (U/A/M/D/!) — sits at the right edge of the row since
+   the name span flex-grows ahead of it. */
+.decoBadge {
+  flex: none;
+  margin-left: 0.25rem;
+  font-weight: 600;
+  font-size: 0.85em;
+  line-height: 1;
+}

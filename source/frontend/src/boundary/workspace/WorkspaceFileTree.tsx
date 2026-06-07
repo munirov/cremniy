@@ -18,6 +18,8 @@ import { loadPreferences } from '@infrastructure/preferences/preferencesBridge';
 import { useNotify } from '@boundary/notifications/NotificationContext';
 
 import { useIdeSession } from './IdeSessionContext';
+import { GitDecorationsProvider, useGitDecoration } from './GitDecorationsContext';
+import type { GitDecoKind, GitDecoResult } from './gitDecorations';
 import { ChevronIcon, FileIcon, FolderIcon } from './fileIcons';
 import {
   loadManualNesting,
@@ -693,7 +695,8 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   };
 
   return (
-    <TreeNavContext.Provider value={treeNav}>
+    <GitDecorationsProvider workspaceRoot={workspaceRoot.path}>
+      <TreeNavContext.Provider value={treeNav}>
       <div className={styles.section}>
         <TreeHeader
           name={fileNameFromPath(workspaceRoot.path) || workspaceRoot.path}
@@ -773,7 +776,8 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
           onDelete={() => void runDelete()}
         />
       ) : null}
-    </TreeNavContext.Provider>
+      </TreeNavContext.Provider>
+    </GitDecorationsProvider>
   );
 }
 
@@ -955,6 +959,59 @@ const DRAG_MIME = 'application/x-cremniy-tree-path';
 // row light up as a nest target (dragover can read `types` but not the data).
 const DRAG_FILE_MIME = 'application/x-cremniy-tree-file';
 
+function decoColorClass(kind: GitDecoKind): string {
+  switch (kind) {
+    case 'untracked':
+      return styles.decoUntracked;
+    case 'added':
+      return styles.decoAdded;
+    case 'deleted':
+      return styles.decoDeleted;
+    case 'conflict':
+      return styles.decoConflict;
+    case 'renamed':
+    case 'modified':
+    default:
+      return styles.decoModified;
+  }
+}
+
+/**
+ * The name text of a tree row, tinted by git status with a trailing status
+ * letter for direct changes (folders get the tint only — `rollup` rows). Falls
+ * back to the plain name when there's no decoration.
+ */
+function RowLabel({
+  deco,
+  name,
+  baseClass,
+}: {
+  deco: GitDecoResult | null;
+  name: string;
+  baseClass: string;
+}) {
+  if (deco == null) {
+    return <span className={baseClass}>{name}</span>;
+  }
+  const colorClass = decoColorClass(deco.deco.kind);
+  const struck = deco.deco.kind === 'deleted' && !deco.rollup;
+  return (
+    <>
+      <span
+        className={`${baseClass} ${colorClass}`}
+        style={struck ? { textDecoration: 'line-through' } : undefined}
+      >
+        {name}
+      </span>
+      {!deco.rollup ? (
+        <span className={`${styles.decoBadge} ${colorClass}`} aria-hidden="true">
+          {deco.deco.letter}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 function FileTreeNode({
   workspaceRootPath,
   depth,
@@ -981,6 +1038,8 @@ function FileTreeNode({
   // that broke drag-drop entirely when any excluded pattern matched).
   const nav = useTreeNav();
   const expanded = nav.expandedPaths.has(entry.path);
+  // Git status decoration for this row (badge + colour), live via the poll.
+  const deco = useGitDecoration(entry.path, entry.isDirectory);
   const isTabStop =
     nav.focusedPath === entry.path || (nav.focusedPath == null && isFirstRow === true);
   const nameMatchesFilter =
@@ -1158,7 +1217,7 @@ function FileTreeNode({
           title={entry.name}
         >
           <FileIcon name={entry.name} />
-          <span className={styles.leafName}>{entry.name}</span>
+          <RowLabel deco={deco} name={entry.name} baseClass={styles.leafName} />
         </button>
       );
     }
@@ -1205,7 +1264,7 @@ function FileTreeNode({
             <ChevronIcon open={expanded} />
           </span>
           <FileIcon name={entry.name} />
-          <span className={styles.leafName}>{entry.name}</span>
+          <RowLabel deco={deco} name={entry.name} baseClass={styles.leafName} />
         </div>
         {expanded ? (
           <ul
@@ -1280,7 +1339,7 @@ function FileTreeNode({
       >
         <ChevronIcon open={expanded} />
         <FolderIcon open={expanded} />
-        <span className={styles.dirName}>{entry.name}</span>
+        <RowLabel deco={deco} name={entry.name} baseClass={styles.dirName} />
         {loadingChildren ? <span className={styles.dirBusy}> …</span> : null}
       </button>
       {childError != null ? (

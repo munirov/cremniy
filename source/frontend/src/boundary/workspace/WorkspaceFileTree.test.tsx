@@ -23,6 +23,12 @@ vi.mock('./IdeSessionContext', () => ({
 
 vi.mock('@infrastructure/tauri/bridge', () => ({
   listDirectoryEntries: vi.fn(),
+  // The tree mounts GitDecorationsProvider, which discovers repos + reads status.
+  // Stub both to "no repos" so decorations stay inert in these tests.
+  gitRepos: vi.fn(() => Promise.resolve([])),
+  gitStatus: vi.fn(() =>
+    Promise.resolve({ isRepo: false, branch: null, ahead: 0, behind: 0, files: [] }),
+  ),
 }));
 
 vi.mock('@boundary/notifications/NotificationContext', () => ({
