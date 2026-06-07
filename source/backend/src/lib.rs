@@ -3,6 +3,12 @@ pub fn run() {
     tauri::Builder::default()
         .manage(terminal::TerminalSessions::default())
         .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            // Start the in-app MCP server so an agent can drive the UI + read
+            // window state. Docs: documentation/architecture/AGENT_CONTROL.md.
+            mcp::start(app.handle().clone());
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             pick_folder,
             pick_file,
@@ -65,6 +71,7 @@ pub fn run() {
             git::git_remote_add,
             git::git_remote_remove,
             git::git_publish,
+            mcp::agent_reply,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -73,6 +80,7 @@ pub fn run() {
 mod binary_analysis;
 mod disassembly;
 mod git;
+mod mcp;
 mod panes;
 mod process;
 mod radare2;

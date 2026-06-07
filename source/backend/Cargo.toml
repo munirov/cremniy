@@ -29,3 +29,5 @@ portable-pty = "0.8"
 # Workspace content search: ripgrep's walker (.gitignore + globs) + regex.
 ignore = "0.4"
 regex = "1"
+# Tiny HTTP server hosting the in-app MCP endpoint (agent control).
+tiny_http = "0.12"
