@@ -310,8 +310,8 @@ export function GitRepoSection({ repoPath, repoName, multi, defaultExpanded = tr
     <div className={styles.commitBox}>
       <textarea
         className={styles.commitMessage}
-        placeholder={`Message — commits ${repoName}`}
-        rows={2}
+        placeholder="Message (Ctrl+Enter to commit)"
+        rows={1}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={(e) => {

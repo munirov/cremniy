@@ -12,8 +12,15 @@
   --color-text-primary: #ffffff;
   --color-text-on-accent: #ffffff;
 
-  /* Accent / selection — Cremniy is pure monochrome, "accent" is just a
-     slightly brighter neutral, never a brand-blue. See DESIGN.md. */
+  /* CTA — the ONE colored accent, reserved for the most important actions
+     (Commit, Initialize…). The UI stays monochrome everywhere else; colour is
+     spent sparingly so these primary actions stand out. */
+  --color-cta: #87a6c4;
+  --color-cta-hover: #97b3cd;
+  --color-cta-text: #14202e;
+
+  /* Accent / selection — neutral; "accent" is a slightly brighter neutral, not
+     a brand colour. Colour is reserved for CTAs (above) + semantics. */
   --color-accent: rgba(255, 255, 255, 0.55);
   --color-selection: rgba(255, 255, 255, 0.18);
   --color-hover-surface: rgba(255, 255, 255, 0.06);

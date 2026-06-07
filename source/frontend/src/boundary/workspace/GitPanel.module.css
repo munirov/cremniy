@@ -314,8 +314,8 @@
 .commitMessage {
   width: 100%;
   resize: vertical;
-  min-height: 2.2rem;
-  padding: 0.35rem 0.45rem;
+  min-height: 1.6rem;
+  padding: 0.3rem 0.45rem;
   font-family: var(--font-family-mono);
   font-size: 12px;
   color: var(--color-text-primary);
@@ -331,21 +331,22 @@
 
 .commitBtn {
   align-self: stretch;
-  padding: 0.45rem 0.6rem;
+  padding: 0.4rem 0.6rem;
   font-family: var(--font-family-mono);
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-text-primary);
-  /* Primary action — the brightest neutral fill in the panel (no blue; canon). */
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  /* Primary CTA — the one place we spend colour. */
+  color: var(--color-cta-text);
+  background: var(--color-cta);
+  border: 1px solid var(--color-cta);
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.12s ease;
 }
 
 .commitBtn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--color-cta-hover);
+  border-color: var(--color-cta-hover);
 }
 
 .commitBtn:disabled {
@@ -373,11 +374,13 @@
 .commitRow {
   position: relative;
   display: flex;
-  gap: 2px;
+  gap: 0; /* one unified button: action | divider | dropdown */
 }
 
 .commitRow .commitBtn {
   flex: 1;
+  border-radius: 4px 0 0 4px;
+  border-right: none;
 }
 
 .commitCaret {
@@ -385,15 +388,16 @@
   width: 1.8rem;
   padding: 0;
   font-size: 11px;
-  color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  color: var(--color-cta-text);
+  background: var(--color-cta);
+  border: 1px solid var(--color-cta);
+  border-left: 1px solid rgba(0, 0, 0, 0.18); /* vertical divider */
+  border-radius: 0 4px 4px 0;
   cursor: pointer;
 }
 
 .commitCaret:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--color-cta-hover);
 }
 
 .commitCaret:disabled {
