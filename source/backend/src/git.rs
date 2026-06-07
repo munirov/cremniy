@@ -1,5 +1,6 @@
+use std::io::Write;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use serde::Serialize;
 
@@ -256,6 +257,190 @@ pub fn git_repos(workspace_root: String) -> Result<Vec<RepoRef>, String> {
     Ok(repos)
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GitRemote {
+    name: String,
+    /// Fetch URL with any embedded credentials stripped — safe to display.
+    url: String,
+}
+
+/// Clone a remote repository into `parent_dir`, returning the absolute path of
+/// the new repo folder (its `origin` remote is configured by clone). Auth is
+/// host-agnostic and "no special-casing": SSH URLs use the system keys; for
+/// https, call `git_save_credentials` first (stored in the OS credential
+/// manager) or rely on git's own credential helper.
+#[tauri::command]
+pub fn git_clone(
+    repo_url: String,
+    parent_dir: String,
+    dir_name: Option<String>,
+) -> Result<String, String> {
+    let url = repo_url.trim();
+    if url.is_empty() {
+        return Err(String::from("Repository URL is empty"));
+    }
+    let parent = canonical_workspace_root(&parent_dir)?;
+    let name = match dir_name {
+        Some(n) if !n.trim().is_empty() => n.trim().to_string(),
+        _ => repo_dir_name(url),
+    };
+    if name.is_empty() {
+        return Err(String::from("Could not determine a folder name from the URL"));
+    }
+    let target = parent.join(&name);
+    if target.exists() {
+        return Err(format!("'{name}' already exists in that folder"));
+    }
+    // Run from the parent so clone creates <name> beneath it.
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(&parent)
+        .args(["clone", url])
+        .arg(&name)
+        .output()
+        .map_err(|e| format!("git not available: {e}"))?;
+    if !out.status.success() {
+        return Err(String::from_utf8_lossy(&out.stderr).trim().to_string());
+    }
+    Ok(crate::pretty_path(target).to_string_lossy().into_owned())
+}
+
+/// Store credentials for an http(s) remote in git's credential store (the OS
+/// credential manager, via the configured helper) using the `git credential
+/// approve` protocol. The token never touches the repo config or the remote URL.
+/// SSH remotes don't apply (they authenticate with keys).
+#[tauri::command]
+pub fn git_save_credentials(url: String, username: String, token: String) -> Result<(), String> {
+    let (protocol, host) = https_protocol_host(&url).ok_or_else(|| {
+        String::from("Credentials only apply to http(s) remotes (SSH authenticates with keys).")
+    })?;
+    let user = username.trim();
+    let pass = token.trim();
+    if pass.is_empty() {
+        return Err(String::from("Token / password is empty"));
+    }
+    let input = format!("protocol={protocol}\nhost={host}\nusername={user}\npassword={pass}\n\n");
+    let mut child = Command::new("git")
+        .args(["credential", "approve"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("git not available: {e}"))?;
+    child
+        .stdin
+        .as_mut()
+        .ok_or_else(|| String::from("failed to open git stdin"))?
+        .write_all(input.as_bytes())
+        .map_err(|e| format!("failed to write credentials: {e}"))?;
+    let out = child.wait_with_output().map_err(|e| e.to_string())?;
+    if out.status.success() {
+        Ok(())
+    } else {
+        Err(String::from_utf8_lossy(&out.stderr).trim().to_string())
+    }
+}
+
+/// List the repo's configured remotes (name + sanitized URL).
+#[tauri::command]
+pub fn git_remotes(workspace_root: String) -> Result<Vec<GitRemote>, String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let out = run_git(&root, &["remote", "-v"])?;
+    let mut seen: Vec<GitRemote> = Vec::new();
+    for line in out.lines() {
+        // Each line: "<name>\t<url> (fetch|push)".
+        let mut parts = line.split_whitespace();
+        let name = match parts.next() {
+            Some(n) => n.to_string(),
+            None => continue,
+        };
+        let url = match parts.next() {
+            Some(u) => sanitize_remote_url(u),
+            None => continue,
+        };
+        if !seen.iter().any(|r| r.name == name) {
+            seen.push(GitRemote { name, url });
+        }
+    }
+    Ok(seen)
+}
+
+/// Add a remote, or update its URL if the name already exists.
+#[tauri::command]
+pub fn git_remote_add(workspace_root: String, name: String, url: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let n = name.trim();
+    let u = url.trim();
+    if n.is_empty() || u.is_empty() {
+        return Err(String::from("Remote name and URL are required"));
+    }
+    if run_git(&root, &["remote", "get-url", n]).is_ok() {
+        run_git(&root, &["remote", "set-url", n, u]).map(|_| ())
+    } else {
+        run_git(&root, &["remote", "add", n, u]).map(|_| ())
+    }
+}
+
+/// Remove a remote by name.
+#[tauri::command]
+pub fn git_remote_remove(workspace_root: String, name: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["remote", "remove", name.trim()]).map(|_| ())
+}
+
+/// Push the given branch and set its upstream (`-u`) to the remote — the first
+/// "publish" push for a branch that has no upstream yet.
+#[tauri::command]
+pub fn git_publish(workspace_root: String, remote: String, branch: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["push", "-u", remote.trim(), branch.trim()]).map(|_| ())
+}
+
+/// Derive a folder name from a clone URL: the last path segment, minus `.git`.
+/// Handles both normal URLs and scp-like `git@host:owner/repo.git`.
+fn repo_dir_name(url: &str) -> String {
+    let trimmed = url.trim().trim_end_matches('/');
+    let after_colon = trimmed.rsplit(':').next().unwrap_or(trimmed);
+    let last = after_colon.rsplit('/').next().unwrap_or(after_colon);
+    last.strip_suffix(".git").unwrap_or(last).to_string()
+}
+
+/// Extract `protocol` + `host` (with port if present) from an http(s) URL for the
+/// git credential protocol. None for SSH / scp-like URLs (they use keys).
+fn https_protocol_host(url: &str) -> Option<(String, String)> {
+    let u = url.trim();
+    let (proto, rest) = if let Some(r) = u.strip_prefix("https://") {
+        ("https", r)
+    } else if let Some(r) = u.strip_prefix("http://") {
+        ("http", r)
+    } else {
+        return None;
+    };
+    // Drop any user[:pass]@ prefix, then take up to the first '/'.
+    let after_at = rest.rsplit_once('@').map(|(_, h)| h).unwrap_or(rest);
+    let host = after_at.split('/').next().unwrap_or("");
+    if host.is_empty() {
+        None
+    } else {
+        Some((proto.to_string(), host.to_string()))
+    }
+}
+
+/// Strip any embedded `user[:pass]@` from an http(s) URL so tokens never surface
+/// in the UI. Non-http URLs (ssh) are returned unchanged.
+fn sanitize_remote_url(url: &str) -> String {
+    for proto in ["https://", "http://"] {
+        if let Some(rest) = url.strip_prefix(proto) {
+            if let Some((_creds, host_path)) = rest.split_once('@') {
+                return format!("{proto}{host_path}");
+            }
+            return url.to_string();
+        }
+    }
+    url.to_string()
+}
+
 /// Parse `git status --porcelain=v1 --branch` output into a branch name + file
 /// list. Pure (only `pretty_path` string work, no process / FS), so it's
 /// unit-tested against the M / A / D / ?? / rename shapes the live tree can't
@@ -445,5 +630,43 @@ mod tests {
         // No upstream bracket → zeros.
         let (_b2, a2, be2, _f2) = parse_porcelain("## main\n", Path::new("/repo"));
         assert_eq!((a2, be2), (0, 0));
+    }
+
+    #[test]
+    fn repo_dir_name_from_various_urls() {
+        assert_eq!(repo_dir_name("https://github.com/user/repo.git"), "repo");
+        assert_eq!(repo_dir_name("https://gitverse.ru/user/My-Repo"), "My-Repo");
+        assert_eq!(repo_dir_name("git@github.com:user/repo.git"), "repo");
+        assert_eq!(repo_dir_name("https://host:8443/team/proj.git/"), "proj");
+    }
+
+    #[test]
+    fn https_protocol_host_parses_http_skips_ssh() {
+        assert_eq!(
+            https_protocol_host("https://github.com/u/r.git"),
+            Some(("https".into(), "github.com".into()))
+        );
+        assert_eq!(
+            https_protocol_host("https://user:tok@gitverse.ru/u/r.git"),
+            Some(("https".into(), "gitverse.ru".into()))
+        );
+        assert_eq!(
+            https_protocol_host("https://host:8443/u/r.git"),
+            Some(("https".into(), "host:8443".into()))
+        );
+        assert_eq!(https_protocol_host("git@github.com:u/r.git"), None);
+    }
+
+    #[test]
+    fn sanitize_remote_url_strips_credentials() {
+        assert_eq!(
+            sanitize_remote_url("https://user:token@github.com/u/r.git"),
+            "https://github.com/u/r.git"
+        );
+        assert_eq!(
+            sanitize_remote_url("https://github.com/u/r.git"),
+            "https://github.com/u/r.git"
+        );
+        assert_eq!(sanitize_remote_url("git@github.com:u/r.git"), "git@github.com:u/r.git");
     }
 }
