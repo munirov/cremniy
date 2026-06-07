@@ -21,9 +21,13 @@
 1. **View-пак** — панель в боковой панели (как Explorer / Search / Git). Живёт в
    реестре `VIEWS` в `SidePanel.tsx`, попадает в активити-бар и меню «Views» с
    пином. Используй для постоянных инструментов вокруг рабочей папки.
-2. **Center-пак** — вкладка в центральном пространстве (как Settings). Живёт в
-   реестре `CENTER_PANELS` в `boundary/layout/centerPanels.tsx`. Используй для
-   того, что открывается «как документ» (редактор, дифф, дашборд).
+2. **Center-пак** — вкладка в **Рабочем поле**. *Рабочее поле* — это центральная
+   зона с вкладками, где открываются файлы-редакторы (в коде — *center tab area*);
+   она generic-хост: вкладкой может быть файл ИЛИ зарегистрированная **центр-панель**
+   (*center panel*). Реестр центр-панелей — `CENTER_PANELS` в
+   `boundary/layout/centerPanels.tsx`. Используй для того, что открывается «как
+   документ» и чему тесно в узкой боковой колонке (Settings, Advanced Git, дифф,
+   дашборд).
 
 Обычный пак — это **UI (фронт)** + при необходимости **backend-команда (Rust)**.
 Состояние, которое нужно пережить перезапуск, кладётся в `localStorage`
@@ -116,19 +120,55 @@ const VIEWS = [ /* … */
 
 ---
 
-## Добавить center-пак (вкладку)
+## Добавить center-пак (вкладку в Рабочем поле)
 
-`boundary/layout/centerPanels.tsx` — добавь запись в `CENTER_PANELS`:
+**Рабочее поле** — центральная зона с вкладками (там, где открываются файлы). Это
+generic-хост: вкладкой может быть файл ИЛИ зарегистрированная **центр-панель**. Так
+сделаны Settings и Advanced Git — большие экраны, которым тесно в боковой колонке.
+Эталон — `AdvancedGitDialog` (Branches / Stash / History / Remotes).
+
+**1. Запись в реестре** — `boundary/layout/centerPanels.tsx`:
 
 ```ts
 export const CENTER_PANELS: Record<string, { label: string; render: () => ReactNode }> = {
-  settings: { label: 'Settings', render: () => <SettingsTab /> },
-  // myTool: { label: 'My Tool', render: () => <MyToolTab /> },
+  settings:    { label: 'Settings', render: () => <SettingsTab /> },
+  advancedGit: { label: 'Git',      render: () => <AdvancedGitTab /> },
+  // myTool:   { label: 'My Tool',  render: () => <MyToolTab /> },
 };
 ```
 
-Открыть вкладку из кода — `useIdeSession().openPanel('myTool')`. Табы и тело
-центра подхватят её сами (см. `IdeEditorTabStrip` / `IdeDockview`).
+`label` — текст вкладки, `render` — её тело, ключ (`id`) — то, чем открывают/закрывают.
+
+**2. Тело вкладки** — маленький компонент-обёртка рядом, как `SettingsTab` / `AdvancedGitTab`:
+
+```tsx
+function AdvancedGitTab() {
+  const workspaceRoot = useWorkspaceRoot();
+  const { closePanel } = useIdeSession();
+  return <AdvancedGitDialog embedded workspaceRoot={workspaceRoot?.path ?? null}
+                            onClose={() => closePanel('advancedGit')} />;
+}
+```
+
+Приём: один компонент — и модалка, и вкладка. Проп `embedded` убирает оверлей/Esc и
+заполняет слот (см. `embedded` в `SettingsDialog` / `AdvancedGitDialog`). Размеры держи
+в плотности chrome (12px-моно) и ограничивай ширину контента (`max-width`) — иначе на
+всю ширину поля экран смотрится разреженным.
+
+**3. Открыть / закрыть** — `useIdeSession().openPanel('advancedGit')` /
+`closePanel('advancedGit')`. Табы и тело центра подхватят панель сами
+(`IdeEditorTabStrip` / `IdeDockview`).
+
+**4. (Опц.) команда-агент** — чтобы вкладка открывалась и кнопкой, и снаружи
+(тест / ИИ / MCP), зарегистрируй в `RootApp.tsx` команду рядом с `dialog.openSettings`:
+
+```tsx
+{ name: 'dialog.openAdvancedGit', description: 'Open the Advanced Git tab.',
+  run: () => ide.openPanel('advancedGit') }
+```
+
+Кнопка в UI зовёт ту же команду (`runAgentCommand('dialog.openAdvancedGit')`) — одна
+логика, две двери (см. [AGENT_CONTROL.md](./AGENT_CONTROL.md)).
 
 ---
 
