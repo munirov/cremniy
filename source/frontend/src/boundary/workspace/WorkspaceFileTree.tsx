@@ -1,5 +1,14 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, LegacyRef, MouseEvent } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import type { LegacyRef, MouseEvent } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import type { WorkspaceDirectoryEntry } from '@domain/workspace/directoryEntry';
@@ -54,18 +63,37 @@ function formatErr(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-/** Central nav state for the recursive tree: which paths are expanded, which row
- *  owns the roving tab stop, and the controls to change them. Provided once at
- *  the root so nodes don't prop-drill it and keyboard handling can drive any
- *  row. (Also the seam a future flat/virtualized renderer plugs into.) */
+/** Indent step per depth level (rem). The leaf glyph column lines up under a
+ *  parent folder's name. Kept as a constant so the flat row renderer, the
+ *  inline-create row and the indent guides all agree. */
+const INDENT_REM = 0.85;
+const BASE_PAD_REM = 0.4;
+/** Extra left pad for a leaf with no twistie, so its icon aligns with the
+ *  folder icon of sibling directories (which spend that column on the chevron). */
+const LEAF_GLYPH_REM = 1.05;
+
+function rowPadRem(depth: number): number {
+  return BASE_PAD_REM + depth * INDENT_REM;
+}
+
+/** Fallback row height (px) used for windowing math until a real row is measured.
+ *  Matches the CSS: 13px * 1.5 line-height + 2px*2 padding ≈ 23.5. */
+const DEFAULT_ROW_H = 24;
+/** Rows rendered above/below the viewport so fast scrolls don't show blank gaps. */
+const OVERSCAN = 8;
+
+/** Central nav state for the tree: which paths are expanded, which row owns the
+ *  roving tab stop, and the controls to change them. Provided once at the root so
+ *  the (flat) row renderer doesn't prop-drill it and keyboard handling can drive
+ *  any row by index. */
 type TreeNav = {
   expandedPaths: Set<string>;
   focusedPath: string | null;
   toggleExpand: (path: string) => void;
   expandPath: (path: string) => void;
   setFocusedPath: (path: string) => void;
-  // Refresh tick: bumped on focus/poll/explicit refresh. Expanded directory
-  // nodes re-read their children whenever this changes.
+  // Refresh tick: bumped on focus/poll/explicit refresh. Drives the central
+  // re-read of every expanded directory's children.
   revision: number;
 };
 const TreeNavContext = createContext<TreeNav | null>(null);
@@ -94,6 +122,39 @@ function resolveLevel(
   return computeNesting(sorted, DEFAULT_NESTING_PATTERNS, manual[dirPath] ?? {});
 }
 
+/** A single visible row in the flattened (windowed) tree. The recursive
+ *  FileTreeNode used to compute these on the fly; the flat model centralizes
+ *  them so we can render only the slice that's on screen. */
+type FlatRow =
+  | {
+      kind: 'entry';
+      /** Stable key + identity. */
+      path: string;
+      entry: WorkspaceDirectoryEntry;
+      depth: number;
+      /** True when rendered as a nested child (enables "Un-nest"). */
+      isNested: boolean;
+      /** Directory, or a file that owns auto-nested children → has a twistie. */
+      expandable: boolean;
+      expanded: boolean;
+      /** Files auto-nested directly under this row (only for a nesting file). */
+      nestedChildren?: WorkspaceDirectoryEntry[];
+    }
+  | {
+      // Inline create input, rendered as the first child of its parent dir.
+      kind: 'create';
+      path: string; // synthetic, for React key
+      depth: number;
+      createKind: 'file' | 'folder';
+    }
+  | {
+      // A directory whose child listing failed.
+      kind: 'error';
+      path: string; // synthetic key
+      depth: number;
+      message: string;
+    };
+
 export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreeProps) {
   const { activeFilePath, openFileFromWorkspace, fileTreeRevision, bumpFileTreeRevision } = useIdeSession();
   const notify = useNotify();
@@ -120,14 +181,24 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     parentPath: string;
   } | null>(null);
   // MUST be declared above any early-return below — see the Rules of Hooks
-  // bug we just fixed in FileTreeNode. This drives the root-zone drop-target.
+  // bug we fixed in FileTreeNode. This drives the root-zone drop-target.
   const [rootDragOver, setRootDragOver] = useState(false);
-  // Expansion is owned centrally (a Set of expanded paths), not per-node, so
-  // keyboard navigation can expand/collapse any row, "Collapse folders" is one
-  // set-clear, and we have the flat model a future virtualization needs.
+  // Expansion is owned centrally (a Set of expanded paths) so keyboard nav can
+  // expand/collapse any row, "Collapse folders" is one set-clear, and the flat
+  // (virtualized) renderer below has the model it needs.
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set());
   // Roving-tabindex focus: path of the row that currently owns the tab stop.
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
+
+  // Centralized lazy child-loading. The recursive nodes used to each own their
+  // children; the flat model needs one shared cache. `childCache` is dirPath →
+  // its entries; `childLoading`/`childErrors` track per-dir spinner + failure.
+  const [childCache, setChildCache] = useState<Map<string, WorkspaceDirectoryEntry[]>>(
+    () => new Map(),
+  );
+  const [childLoading, setChildLoading] = useState<Set<string>>(() => new Set());
+  const [childErrors, setChildErrors] = useState<Map<string, string>>(() => new Map());
+
   const treeRootRef = useRef<HTMLDivElement | null>(null);
   const ctxMenuRef = useRef<HTMLUListElement | null>(null);
   // Driven by the Search view; empty when shown as the Explorer.
@@ -148,6 +219,17 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     return () => {
       cancelled = true;
     };
+  }, [workspaceRoot?.path]);
+
+  // Reset the child cache whenever the workspace itself changes (paths from a
+  // different root are meaningless here). Refresh ticks DON'T clear it — they
+  // re-read in place (silent), handled in the loader effect below.
+  useEffect(() => {
+    setChildCache(new Map());
+    setChildLoading(new Set());
+    setChildErrors(new Map());
+    setExpandedPaths(new Set());
+    setFocusedPath(null);
   }, [workspaceRoot?.path]);
 
   // Tracks which workspace's root we've already loaded. A refresh tick reuses it
@@ -197,6 +279,105 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
       cancelled = true;
     };
   }, [workspaceRoot, fileTreeRevision]);
+
+  const rootPath = workspaceRoot?.path ?? '';
+
+  // Centralized directory child-loader. Loads (or silently re-reads) the
+  // children of one directory and folds the result into the shared caches.
+  // `silent` keeps the current rows on screen during auto-refresh; the first
+  // load flips the per-dir spinner.
+  const loadDir = useCallback(
+    async (dirPath: string, silent: boolean) => {
+      if (rootPath === '') return;
+      if (!silent) {
+        setChildLoading((prev) => {
+          if (prev.has(dirPath)) return prev;
+          const next = new Set(prev);
+          next.add(dirPath);
+          return next;
+        });
+      }
+      setChildErrors((prev) => {
+        if (!prev.has(dirPath)) return prev;
+        const next = new Map(prev);
+        next.delete(dirPath);
+        return next;
+      });
+      try {
+        const list = await listDirectoryEntries(rootPath, dirPath);
+        setChildCache((prev) => {
+          const next = new Map(prev);
+          next.set(dirPath, list);
+          return next;
+        });
+      } catch (e: unknown) {
+        setChildErrors((prev) => {
+          const next = new Map(prev);
+          next.set(dirPath, e instanceof Error ? e.message : String(e));
+          return next;
+        });
+      } finally {
+        if (!silent) {
+          setChildLoading((prev) => {
+            if (!prev.has(dirPath)) return prev;
+            const next = new Set(prev);
+            next.delete(dirPath);
+            return next;
+          });
+        }
+      }
+    },
+    [rootPath],
+  );
+
+  // Load children for every expanded directory that hasn't been loaded yet
+  // (first expand → spinner). This replaces the per-node load effect.
+  useEffect(() => {
+    if (rootPath === '') return;
+    for (const dirPath of expandedPaths) {
+      if (!childCache.has(dirPath) && !childLoading.has(dirPath)) {
+        void loadDir(dirPath, false);
+      }
+    }
+  }, [expandedPaths, childCache, childLoading, loadDir, rootPath]);
+
+  // Re-expanding an already-loaded folder silently refreshes it (matches the old
+  // per-node behaviour: collapse kept the data, re-expand re-read it without a
+  // spinner). Detected by diffing against the previous expanded set so it fires
+  // only on the expand transition — never on a cache change, so no loop.
+  const prevExpandedRef = useRef<Set<string>>(expandedPaths);
+  useEffect(() => {
+    const prev = prevExpandedRef.current;
+    prevExpandedRef.current = expandedPaths;
+    if (rootPath === '') return;
+    for (const dirPath of expandedPaths) {
+      if (!prev.has(dirPath) && childCache.has(dirPath)) {
+        void loadDir(dirPath, true);
+      }
+    }
+    // childCache read fresh; gating on the expand transition (prev set) is what
+    // keeps this from looping when the cache updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedPaths, rootPath, loadDir]);
+
+  // Silent re-read of all already-loaded + expanded directories on each refresh
+  // tick (focus/poll/explicit refresh) so open folders stay in sync with disk
+  // without a manual Refresh and without a spinner flash. Mirrors the root
+  // listing's silent-reload semantics.
+  const lastRevisionRef = useRef(fileTreeRevision);
+  useEffect(() => {
+    if (lastRevisionRef.current === fileTreeRevision) return;
+    lastRevisionRef.current = fileTreeRevision;
+    if (rootPath === '') return;
+    for (const dirPath of expandedPaths) {
+      if (childCache.has(dirPath)) {
+        void loadDir(dirPath, true);
+      }
+    }
+    // expandedPaths / childCache intentionally read fresh; we only want this to
+    // fire on a revision change, not when those sets shift.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileTreeRevision]);
 
   useEffect(() => {
     if (ctx == null) {
@@ -305,80 +486,6 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     setExpandedPaths(new Set());
     setFocusedPath(null);
   }, []);
-
-  // Keyboard navigation for the whole tree (WAI-ARIA tree pattern). Rows are the
-  // [role=treeitem] elements; focus moves through them in DOM (== visual) order
-  // and expand/collapse drives the central Set. Enter/Space stay native on the
-  // row buttons — we own only movement + expand/collapse.
-  const onTreeKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const root = treeRootRef.current;
-      if (root == null) return;
-      const items = Array.from(root.querySelectorAll<HTMLElement>('[role="treeitem"]'));
-      if (items.length === 0) return;
-      const active = document.activeElement as HTMLElement | null;
-      const idx = active != null ? items.indexOf(active) : -1;
-      const focusAt = (i: number) => {
-        const el = items[Math.max(0, Math.min(items.length - 1, i))];
-        if (el == null) return;
-        const p = el.getAttribute('data-path');
-        if (p != null) setFocusedPath(p);
-        el.focus();
-      };
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          focusAt(idx + 1);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          focusAt(idx - 1);
-          break;
-        case 'Home':
-          e.preventDefault();
-          focusAt(0);
-          break;
-        case 'End':
-          e.preventDefault();
-          focusAt(items.length - 1);
-          break;
-        case 'ArrowRight': {
-          if (idx < 0) break;
-          e.preventDefault();
-          const el = items[idx]!;
-          const path = el.getAttribute('data-path');
-          const expandable = el.getAttribute('data-expandable') === 'true';
-          const isExpanded = el.getAttribute('data-expanded') === 'true';
-          if (expandable && path != null && !isExpanded) expandPath(path);
-          else if (expandable && isExpanded) focusAt(idx + 1);
-          break;
-        }
-        case 'ArrowLeft': {
-          if (idx < 0) break;
-          e.preventDefault();
-          const el = items[idx]!;
-          const path = el.getAttribute('data-path');
-          const expandable = el.getAttribute('data-expandable') === 'true';
-          const isExpanded = el.getAttribute('data-expanded') === 'true';
-          if (expandable && isExpanded && path != null) {
-            collapsePath(path);
-          } else {
-            const depth = Number(el.getAttribute('data-depth') ?? '0');
-            for (let i = idx - 1; i >= 0; i--) {
-              if (Number(items[i]!.getAttribute('data-depth') ?? '0') < depth) {
-                focusAt(i);
-                break;
-              }
-            }
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    },
-    [expandPath, collapsePath],
-  );
 
   const treeNav = useMemo<TreeNav>(
     () => ({
@@ -597,6 +704,316 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     setCtx(null);
   }, [ctx, workspaceRoot]);
 
+  // ----- Flat visible-row model -------------------------------------------
+  // A DFS over the tree honoring expansion, exclusions, filter and auto-nesting.
+  // This is the single source the windowed renderer slices, and the model the
+  // keyboard handler walks by index.
+  const excludeRow = useCallback(
+    (e: WorkspaceDirectoryEntry) =>
+      excludedPatterns.some((p) => e.name.toLowerCase().includes(p.toLowerCase())),
+    [excludedPatterns],
+  );
+
+  const flatRows = useMemo<FlatRow[]>(() => {
+    if (workspaceRoot == null || workspaceRoot.path === '' || entries == null) {
+      return [];
+    }
+    const rows: FlatRow[] = [];
+
+    // Inline-create at the workspace root sits before the root entries.
+    if (pendingCreate != null && pendingCreate.parentPath === workspaceRoot.path) {
+      rows.push({ kind: 'create', path: `__create__:${workspaceRoot.path}`, depth: 0, createKind: pendingCreate.kind });
+    }
+
+    const visibleRoot = entries.filter((e) => !excludeRow(e));
+    const rootLevel = resolveLevel(visibleRoot, workspaceRoot.path, treeOrder, filterLower, manualNesting);
+
+    // Recurse a directory's children (lazily loaded) once it's expanded.
+    const pushDir = (dirPath: string, depth: number) => {
+      // Inline-create as the first child of this directory.
+      if (pendingCreate != null && pendingCreate.parentPath === dirPath) {
+        rows.push({ kind: 'create', path: `__create__:${dirPath}`, depth, createKind: pendingCreate.kind });
+      }
+      const err = childErrors.get(dirPath);
+      if (err != null) {
+        rows.push({ kind: 'error', path: `__error__:${dirPath}`, depth, message: err });
+      }
+      const loaded = childCache.get(dirPath);
+      if (loaded == null) {
+        return; // not loaded yet — spinner shows on the dir row itself
+      }
+      const level = resolveLevel(loaded.filter((c) => !excludeRow(c)), dirPath, treeOrder, filterLower, manualNesting);
+      for (const child of level.roots) {
+        pushEntry(child, depth, level.childrenOf.get(child.path));
+      }
+    };
+
+    // Emit one entry row, then recurse into it if it's an expanded container.
+    const pushEntry = (
+      entry: WorkspaceDirectoryEntry,
+      depth: number,
+      nestedChildren: WorkspaceDirectoryEntry[] | undefined,
+    ) => {
+      if (!entry.isDirectory) {
+        // In filter mode, hide files whose name doesn't match (dirs stay so
+        // matches inside remain reachable — same as the old per-node rule).
+        const nameMatches = filterLower === '' || entry.name.toLowerCase().includes(filterLower);
+        if (!nameMatches) return;
+        const nested = nestedChildren ?? [];
+        const expandable = nested.length > 0;
+        const expanded = expandable && expandedPaths.has(entry.path);
+        rows.push({
+          kind: 'entry',
+          path: entry.path,
+          entry,
+          depth,
+          isNested: false,
+          expandable,
+          expanded,
+          nestedChildren: expandable ? nested : undefined,
+        });
+        if (expanded) {
+          // One level: nested files are plain leaves (never containers).
+          for (const child of nested) {
+            rows.push({
+              kind: 'entry',
+              path: child.path,
+              entry: child,
+              depth: depth + 1,
+              isNested: true,
+              expandable: false,
+              expanded: false,
+            });
+          }
+        }
+        return;
+      }
+      // Directory row.
+      const expanded = expandedPaths.has(entry.path);
+      rows.push({
+        kind: 'entry',
+        path: entry.path,
+        entry,
+        depth,
+        isNested: false,
+        expandable: true,
+        expanded,
+      });
+      if (expanded) {
+        pushDir(entry.path, depth + 1);
+      }
+    };
+
+    for (const entry of rootLevel.roots) {
+      pushEntry(entry, 0, rootLevel.childrenOf.get(entry.path));
+    }
+    return rows;
+  }, [
+    workspaceRoot,
+    entries,
+    pendingCreate,
+    excludeRow,
+    treeOrder,
+    filterLower,
+    manualNesting,
+    childCache,
+    childErrors,
+    expandedPaths,
+  ]);
+
+  // Auto-expand directories while a filter is active so matches inside become
+  // visible. Cascades: as a dir's children load and enter the flat list, they
+  // get expanded too on the next pass. Centralized version of the old per-node
+  // effect.
+  useEffect(() => {
+    if (filterLower === '') return;
+    const toExpand: string[] = [];
+    for (const row of flatRows) {
+      if (row.kind === 'entry' && row.entry.isDirectory && !row.expanded) {
+        toExpand.push(row.entry.path);
+      }
+    }
+    if (toExpand.length === 0) return;
+    setExpandedPaths((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      for (const p of toExpand) {
+        if (!next.has(p)) {
+          next.add(p);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [filterLower, flatRows]);
+
+  // Index of just the focusable rows (entry rows) for keyboard nav. Create /
+  // error pseudo-rows are skipped so arrows move treeitem-to-treeitem.
+  const entryRows = useMemo(
+    () => flatRows.filter((r): r is Extract<FlatRow, { kind: 'entry' }> => r.kind === 'entry'),
+    [flatRows],
+  );
+
+  // ----- Windowing --------------------------------------------------------
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportH, setViewportH] = useState(0);
+  const rowHRef = useRef(DEFAULT_ROW_H);
+  const firstRowRef = useRef<HTMLDivElement>(null);
+
+  // Measure the real row height once a row is on screen (font/zoom-proof). Only
+  // matters in a real browser; jsdom reports 0, in which case we keep the
+  // default and the "render everything" fallback (viewportH === 0) kicks in.
+  useLayoutEffect(() => {
+    const el = firstRowRef.current;
+    if (el == null) return;
+    const h = el.getBoundingClientRect().height;
+    if (h > 0) rowHRef.current = h;
+  });
+
+  // Track the scroll container's height. ResizeObserver keeps windowing correct
+  // when the panel is resized; the initial read seeds it after mount.
+  useLayoutEffect(() => {
+    const el = treeRootRef.current;
+    if (el == null) return;
+    const read = () => setViewportH(el.clientHeight);
+    read();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [entries]);
+
+  const onScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  const rowH = rowHRef.current;
+  const total = flatRows.length;
+  // When we can't measure the viewport (jsdom, or the very first paint), render
+  // everything. This is what keeps tests — which run in a zero-height jsdom —
+  // seeing every row, and it's a safe fallback in production too.
+  const windowed = viewportH > 0 && total > 0;
+  const startIndex = windowed ? Math.max(0, Math.floor(scrollTop / rowH) - OVERSCAN) : 0;
+  const endIndex = windowed
+    ? Math.min(total, Math.ceil((scrollTop + viewportH) / rowH) + OVERSCAN)
+    : total;
+  const topPad = windowed ? startIndex * rowH : 0;
+  const bottomPad = windowed ? Math.max(0, (total - endIndex) * rowH) : 0;
+  const visibleRows = windowed ? flatRows.slice(startIndex, endIndex) : flatRows;
+
+  // ----- Keyboard navigation (WAI-ARIA tree pattern) ----------------------
+  // Index math over the flat entry list — not a DOM walk — so it works even when
+  // the target row is scrolled out of the window and not currently rendered.
+  // A pending-focus path is focused by a layout effect once its row mounts.
+  const pendingFocusRef = useRef<string | null>(null);
+
+  const requestFocus = useCallback((path: string) => {
+    setFocusedPath(path);
+    pendingFocusRef.current = path;
+  }, []);
+
+  // Once the windowed slice settles, focus the row we navigated to (it may have
+  // just scrolled into view). In jsdom everything is rendered, so this runs in
+  // the same commit and synchronous `toHaveFocus()` assertions pass.
+  useLayoutEffect(() => {
+    const path = pendingFocusRef.current;
+    if (path == null) return;
+    const root = treeRootRef.current;
+    if (root == null) return;
+    const el = root.querySelector<HTMLElement>(`[data-path="${cssEscape(path)}"]`);
+    if (el != null) {
+      el.focus();
+      pendingFocusRef.current = null;
+    }
+  });
+
+  const scrollIndexIntoView = useCallback(
+    (index: number) => {
+      if (!windowed) return;
+      const el = treeRootRef.current;
+      if (el == null) return;
+      const top = index * rowH;
+      const bottom = top + rowH;
+      if (top < el.scrollTop) {
+        el.scrollTop = top;
+      } else if (bottom > el.scrollTop + viewportH) {
+        el.scrollTop = bottom - viewportH;
+      }
+    },
+    [windowed, rowH, viewportH],
+  );
+
+  const focusEntryAt = useCallback(
+    (entryIdx: number) => {
+      if (entryRows.length === 0) return;
+      const clamped = Math.max(0, Math.min(entryRows.length - 1, entryIdx));
+      const row = entryRows[clamped];
+      if (row == null) return;
+      // Translate the entry index into the full flat index for scroll math.
+      const flatIdx = flatRows.indexOf(row);
+      if (flatIdx >= 0) scrollIndexIntoView(flatIdx);
+      requestFocus(row.path);
+    },
+    [entryRows, flatRows, scrollIndexIntoView, requestFocus],
+  );
+
+  const onTreeKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (entryRows.length === 0) return;
+      const curPath = focusedPath ?? entryRows[0]?.path ?? null;
+      const idx = curPath != null ? entryRows.findIndex((r) => r.path === curPath) : -1;
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          focusEntryAt(idx + 1);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          focusEntryAt(idx - 1);
+          break;
+        case 'Home':
+          e.preventDefault();
+          focusEntryAt(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          focusEntryAt(entryRows.length - 1);
+          break;
+        case 'ArrowRight': {
+          if (idx < 0) break;
+          e.preventDefault();
+          const row = entryRows[idx]!;
+          if (row.expandable && !row.expanded) {
+            expandPath(row.path);
+          } else if (row.expandable && row.expanded) {
+            focusEntryAt(idx + 1);
+          }
+          break;
+        }
+        case 'ArrowLeft': {
+          if (idx < 0) break;
+          e.preventDefault();
+          const row = entryRows[idx]!;
+          if (row.expandable && row.expanded) {
+            collapsePath(row.path);
+          } else {
+            // Jump to the nearest shallower ancestor row above.
+            for (let i = idx - 1; i >= 0; i--) {
+              if (entryRows[i]!.depth < row.depth) {
+                focusEntryAt(i);
+                break;
+              }
+            }
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    [entryRows, focusedPath, focusEntryAt, expandPath, collapsePath],
+  );
+
   if (workspaceRoot == null || workspaceRoot.path === '') {
     return (
       <div className={styles.stateBox} role="status">
@@ -666,21 +1083,6 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     );
   }
 
-  const visibleEntries =
-    entries == null
-      ? []
-      : entries.filter(
-          (e) =>
-            !excludedPatterns.some((p) => e.name.toLowerCase().includes(p.toLowerCase())),
-        );
-  const rootLevel = resolveLevel(
-    visibleEntries,
-    workspaceRoot.path,
-    treeOrder,
-    filterLower,
-    manualNesting,
-  );
-
   // Root-level drop target — lets the user move a nested file BACK to the
   // workspace root by dragging it onto empty space at the top of the tree.
   // Plain HTML5 DnD; we only react if the payload carries our private MIME.
@@ -707,6 +1109,11 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     void handleMoveInto(source, workspaceRoot.path);
   };
 
+  const firstEntryPath = entryRows[0]?.path ?? null;
+  // First real (entry) row in the on-screen slice — gets the height-measuring ref
+  // (skips create/error pseudo-rows so the measurement reflects a true row).
+  const firstSliceEntryPath = visibleRows.find((r) => r.kind === 'entry')?.path ?? null;
+
   return (
     <GitDecorationsProvider workspaceRoot={workspaceRoot.path}>
       <TreeNavContext.Provider value={treeNav}>
@@ -725,6 +1132,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
           aria-label="Workspace files"
           tabIndex={-1}
           onKeyDown={onTreeKeyDown}
+          onScroll={onScroll}
           onContextMenu={(e) => openCtx(e, workspaceRoot.path, true)}
           onDragOver={onRootDragOver}
           onDragLeave={onRootDragLeave}
@@ -734,41 +1142,54 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
             background: rootDragOver ? 'rgba(255,255,255,0.05)' : undefined,
           }}
         >
-        <ul className={styles.treeList} role="group">
-          {pendingCreate != null && pendingCreate.parentPath === workspaceRoot.path ? (
-            <li className={styles.treeItem} role="none">
-              <InlineCreateRow
-                kind={pendingCreate.kind}
-                depth={0}
-                onSubmit={(name) => void commitPendingCreate(name)}
-                onCancel={cancelPendingCreate}
-              />
-            </li>
-          ) : null}
-          {rootLevel.roots.map((entry, index) => (
-            <li key={entry.path} className={styles.treeItem} role="none">
-              <FileTreeNode
-                workspaceRootPath={workspaceRoot.path}
-                depth={0}
-                entry={entry}
-                activeFilePath={activeFilePath}
-                filterLower={filterLower}
-                excludedPatterns={excludedPatterns}
-                treeOrder={treeOrder}
-                manualNesting={manualNesting}
-                nestedChildren={rootLevel.childrenOf.get(entry.path)}
-                pendingCreate={pendingCreate}
-                isFirstRow={index === 0}
-                onCommitCreate={commitPendingCreate}
-                onCancelCreate={cancelPendingCreate}
-                onOpenFile={openFileFromWorkspace}
-                onContextMenu={openCtx}
-                onMoveInto={handleMoveInto}
-                onNestUnder={handleNestUnder}
-              />
-            </li>
-          ))}
-        </ul>
+          {/* Spacer for the rows scrolled off the top of the window. */}
+          {topPad > 0 ? <div style={{ height: topPad }} aria-hidden="true" /> : null}
+          <ul className={styles.treeList} role="group">
+            {visibleRows.map((row) => {
+              if (row.kind === 'create') {
+                return (
+                  <li key={row.path} className={styles.treeItem} role="none">
+                    <InlineCreateRow
+                      kind={row.createKind}
+                      depth={row.depth}
+                      onSubmit={(name) => void commitPendingCreate(name)}
+                      onCancel={cancelPendingCreate}
+                    />
+                  </li>
+                );
+              }
+              if (row.kind === 'error') {
+                return (
+                  <li key={row.path} className={styles.treeItem} role="none">
+                    <p
+                      className={styles.childError}
+                      role="alert"
+                      style={{ paddingLeft: `${rowPadRem(row.depth) + 1}rem` }}
+                    >
+                      {row.message}
+                    </p>
+                  </li>
+                );
+              }
+              return (
+                <li key={row.path} className={styles.treeItem} role="none">
+                  <Row
+                    row={row}
+                    activeFilePath={activeFilePath}
+                    isFirstRow={row.path === firstEntryPath}
+                    childLoading={childLoading.has(row.path)}
+                    measureRef={row.path === firstSliceEntryPath ? firstRowRef : undefined}
+                    onOpenFile={openFileFromWorkspace}
+                    onContextMenu={openCtx}
+                    onMoveInto={handleMoveInto}
+                    onNestUnder={handleNestUnder}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+          {/* Spacer for the rows below the window. */}
+          {bottomPad > 0 ? <div style={{ height: bottomPad }} aria-hidden="true" /> : null}
         </div>
       </div>
       {ctx != null ? (
@@ -792,6 +1213,16 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
       </TreeNavContext.Provider>
     </GitDecorationsProvider>
   );
+}
+
+/** CSS.escape shim — guards the attribute selector used to focus a row by path
+ *  (paths contain `\`, spaces, dots). Falls back to a manual escape in the
+ *  unlikely event CSS.escape is missing (older jsdom). */
+function cssEscape(value: string): string {
+  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+    return CSS.escape(value);
+  }
+  return value.replace(/["\\]/g, '\\$&');
 }
 
 type TreeHeaderProps = {
@@ -942,31 +1373,6 @@ function CtxMenu({
   );
 }
 
-type FileTreeNodeProps = {
-  workspaceRootPath: string;
-  depth: number;
-  entry: WorkspaceDirectoryEntry;
-  activeFilePath: string | null;
-  filterLower: string;
-  excludedPatterns: readonly string[];
-  treeOrder: TreeOrder;
-  manualNesting: ManualNesting;
-  /** Files auto-nested under THIS entry (only set for a file that owns nests). */
-  nestedChildren?: WorkspaceDirectoryEntry[];
-  /** True when this row is rendered as a nested child (enables "Un-nest"). */
-  isNested?: boolean;
-  pendingCreate: { kind: 'file' | 'folder'; parentPath: string } | null;
-  /** Only the very first root row sets this, to seed the roving tab stop. */
-  isFirstRow?: boolean;
-  onCommitCreate: (name: string) => Promise<void>;
-  onCancelCreate: () => void;
-  onOpenFile: (path: string, opts?: { preview?: boolean }) => Promise<void>;
-  onContextMenu: (ev: MouseEvent, path: string, isDirectory: boolean, isNested?: boolean) => void;
-  onMoveInto: (sourcePath: string, targetDirectory: string) => Promise<void>;
-  /** Drag a sibling file onto another file → nest it under that file. */
-  onNestUnder: (sourcePath: string, targetPath: string) => void;
-};
-
 const DRAG_MIME = 'application/x-cremniy-tree-path';
 // Present on the drag payload only when the dragged item is a FILE — lets a file
 // row light up as a nest target (dragover can read `types` but not the data).
@@ -1032,41 +1438,62 @@ function RowLabel({
   );
 }
 
-function FileTreeNode({
-  workspaceRootPath,
-  depth,
-  entry,
+/** Per-row indent guides: one faint vertical line per ancestor level, replacing
+ *  the old per-<ul> guide (the flat list has no nested lists). Lines sit at the
+ *  same columns the recursive guide used: parent_pad + 0.6rem. */
+function IndentGuides({ depth }: { depth: number }) {
+  if (depth <= 0) return null;
+  const lines = [];
+  for (let d = 0; d < depth; d++) {
+    lines.push(
+      <span
+        key={d}
+        aria-hidden="true"
+        className={styles.indentGuide}
+        style={{ left: `${rowPadRem(d) + 0.6}rem` }}
+      />,
+    );
+  }
+  return <>{lines}</>;
+}
+
+type RowProps = {
+  row: Extract<FlatRow, { kind: 'entry' }>;
+  activeFilePath: string | null;
+  /** Seeds the roving tab stop before the user has focused any row. */
+  isFirstRow: boolean;
+  /** This directory's first child listing is in flight (shows the dir spinner). */
+  childLoading: boolean;
+  /** Attached to the first rendered row so its real height can be measured. */
+  measureRef?: React.Ref<HTMLDivElement>;
+  onOpenFile: (path: string, opts?: { preview?: boolean }) => Promise<void>;
+  onContextMenu: (ev: MouseEvent, path: string, isDirectory: boolean, isNested?: boolean) => void;
+  onMoveInto: (sourcePath: string, targetDirectory: string) => Promise<void>;
+  /** Drag a sibling file onto another file → nest it under that file. */
+  onNestUnder: (sourcePath: string, targetPath: string) => void;
+};
+
+/**
+ * One flattened tree row — directory, plain file, or a file that owns nested
+ * children. This is the recursive FileTreeNode's JSX, lifted out so the windowed
+ * list can render it: identical visuals, classes, data-attributes, drag/drop and
+ * click/keyboard behaviour. All recursion now lives in the flat-row builder.
+ */
+function Row({
+  row,
   activeFilePath,
-  filterLower,
-  excludedPatterns,
-  treeOrder,
-  manualNesting,
-  nestedChildren,
-  isNested,
-  pendingCreate,
   isFirstRow,
-  onCommitCreate,
-  onCancelCreate,
+  childLoading,
+  measureRef,
   onOpenFile,
   onContextMenu,
   onMoveInto,
   onNestUnder,
-}: FileTreeNodeProps) {
-  // NOTE: exclusion is filtered by the PARENT (entries.filter / children.filter)
-  // — never with an early-return here, because the early return would sit
-  // before the hooks below and break the Rules of Hooks (the original bug
-  // that broke drag-drop entirely when any excluded pattern matched).
+}: RowProps) {
   const nav = useTreeNav();
-  const expanded = nav.expandedPaths.has(entry.path);
-  // Git status decoration for this row (badge + colour), live via the poll.
+  const { entry, depth, expanded, expandable, isNested } = row;
   const deco = useGitDecoration(entry.path, entry.isDirectory);
-  const isTabStop =
-    nav.focusedPath === entry.path || (nav.focusedPath == null && isFirstRow === true);
-  const nameMatchesFilter =
-    filterLower === '' || entry.name.toLowerCase().includes(filterLower);
-  const [children, setChildren] = useState<WorkspaceDirectoryEntry[] | null>(null);
-  const [childError, setChildError] = useState<string | null>(null);
-  const [loadingChildren, setLoadingChildren] = useState(false);
+  const isTabStop = nav.focusedPath === entry.path || (nav.focusedPath == null && isFirstRow);
   const [dragOver, setDragOver] = useState(false);
 
   const onDragStart = useCallback(
@@ -1082,7 +1509,8 @@ function FileTreeNode({
     [entry.isDirectory, entry.name, entry.path],
   );
 
-  const onDragOver = useCallback(
+  // Directory drop target (move into folder).
+  const onDirDragOver = useCallback(
     (e: React.DragEvent<HTMLElement>) => {
       if (!entry.isDirectory) {
         return;
@@ -1102,7 +1530,7 @@ function FileTreeNode({
 
   const onDragLeave = useCallback(() => setDragOver(false), []);
 
-  const onDrop = useCallback(
+  const onDirDrop = useCallback(
     (e: React.DragEvent<HTMLElement>) => {
       setDragOver(false);
       if (!entry.isDirectory) {
@@ -1113,10 +1541,9 @@ function FileTreeNode({
         return;
       }
       e.preventDefault();
-      // Stop the drop event from bubbling to an ancestor (nested <ul> or the
-      // root tree). Without this, the same rename fires twice and the second
-      // call errors with "from_path not found" — even though the file is
-      // already in the new location.
+      // Stop the drop from bubbling to an ancestor / the root tree. Without this
+      // the same rename fires twice; the second errors with "from_path not
+      // found" because the file already moved.
       e.stopPropagation();
       void onMoveInto(source, entry.path);
     },
@@ -1153,195 +1580,14 @@ function FileTreeNode({
     [entry.isDirectory, entry.path, onNestUnder],
   );
 
-  const paddingRem = 0.4 + depth * 0.85;
+  const paddingRem = rowPadRem(depth);
 
-  const loadChildren = useCallback(
-    async (silent = false) => {
-      // Silent reloads (auto-refresh) keep the current rows on screen and just
-      // swap in fresh data — no spinner flash. The first load shows the spinner.
-      if (!silent) {
-        setLoadingChildren(true);
-      }
-      setChildError(null);
-      try {
-        const list = await listDirectoryEntries(workspaceRootPath, entry.path);
-        setChildren(list);
-      } catch (e: unknown) {
-        setChildError(e instanceof Error ? e.message : String(e));
-      } finally {
-        if (!silent) {
-          setLoadingChildren(false);
-        }
-      }
-    },
-    [workspaceRootPath, entry.path],
-  );
-
-  const toggleDir = useCallback(() => {
-    if (!entry.isDirectory) {
-      return;
-    }
-    nav.toggleExpand(entry.path);
-  }, [entry.isDirectory, entry.path, nav.toggleExpand]);
-
-  // Load children when this directory is expanded, and re-read on every refresh
-  // tick (nav.revision — bumped by focus/poll/explicit refresh) so an expanded
-  // folder stays in sync with disk without a manual Refresh. The first load
-  // shows a spinner; later refreshes swap rows in silently.
-  useEffect(() => {
-    if (entry.isDirectory && expanded) {
-      void loadChildren(children != null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded, entry.isDirectory, nav.revision]);
-
-  // Auto-expand a directory while a filter is active so matches inside are
-  // immediately visible. Expansion is central now, so we just request it.
-  useEffect(() => {
-    if (filterLower !== '' && entry.isDirectory && !expanded) {
-      nav.expandPath(entry.path);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterLower]);
-
-  if (!entry.isDirectory) {
-    if (!nameMatchesFilter) {
-      return null;
-    }
-    const isActive = activeFilePath === entry.path;
-    const nested = nestedChildren ?? [];
-    if (nested.length === 0) {
-      return (
-        <button
-          type="button"
-          role="treeitem"
-          aria-selected={isActive}
-          className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
-          style={{
-            paddingLeft: `${paddingRem + 1.05}rem`,
-            outline: dragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
-            backgroundColor: dragOver ? 'rgba(255,255,255,0.06)' : undefined,
-          }}
-          tabIndex={isTabStop ? 0 : -1}
-          data-path={entry.path}
-          data-depth={depth}
-          data-expandable="false"
-          draggable
-          onDragStart={onDragStart}
-          onDragOver={onNestDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onNestDrop}
-          onFocus={() => nav.setFocusedPath(entry.path)}
-          onClick={() => void onOpenFile(entry.path, { preview: true })}
-          onDoubleClick={() => void onOpenFile(entry.path)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              void onOpenFile(entry.path);
-            }
-          }}
-          onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
-          title={entry.name}
-        >
-          <FileIcon name={entry.name} />
-          <RowLabel deco={deco} name={entry.name} baseClass={styles.leafName} />
-        </button>
-      );
-    }
-    // A file that owns auto-nested children: the row opens the file, the twistie
-    // expands its nested siblings. One level deep — nested files are plain leaves.
+  // ----- Directory row -----
+  if (entry.isDirectory) {
     return (
-      <div className={styles.dirBlock}>
-        <div
-          role="treeitem"
-          aria-expanded={expanded}
-          aria-selected={isActive}
-          className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
-          style={{
-            paddingLeft: `${paddingRem}rem`,
-            outline: dragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
-            backgroundColor: dragOver ? 'rgba(255,255,255,0.06)' : undefined,
-          }}
-          tabIndex={isTabStop ? 0 : -1}
-          data-path={entry.path}
-          data-depth={depth}
-          data-expandable="true"
-          data-expanded={expanded}
-          draggable
-          onDragStart={onDragStart}
-          onDragOver={onNestDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onNestDrop}
-          onFocus={() => nav.setFocusedPath(entry.path)}
-          onClick={() => void onOpenFile(entry.path, { preview: true })}
-          onDoubleClick={() => void onOpenFile(entry.path)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') void onOpenFile(entry.path);
-          }}
-          onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
-          title={entry.name}
-        >
-          <span
-            className={styles.nestTwistie}
-            aria-hidden="true"
-            onClick={(e) => {
-              e.stopPropagation();
-              nav.toggleExpand(entry.path);
-            }}
-          >
-            <ChevronIcon open={expanded} />
-          </span>
-          <FileIcon name={entry.name} />
-          <RowLabel deco={deco} name={entry.name} baseClass={styles.leafName} />
-        </div>
-        {expanded ? (
-          <ul
-            className={styles.nestedList}
-            role="group"
-            style={{ ['--indent']: `${paddingRem}rem` } as CSSProperties}
-          >
-            {nested.map((child) => (
-              <li key={child.path} className={styles.treeItem} role="none">
-                <FileTreeNode
-                  workspaceRootPath={workspaceRootPath}
-                  depth={depth + 1}
-                  entry={child}
-                  activeFilePath={activeFilePath}
-                  filterLower={filterLower}
-                  excludedPatterns={excludedPatterns}
-                  treeOrder={treeOrder}
-                  manualNesting={manualNesting}
-                  isNested
-                  pendingCreate={pendingCreate}
-                  onCommitCreate={onCommitCreate}
-                  onCancelCreate={onCancelCreate}
-                  onOpenFile={onOpenFile}
-                  onContextMenu={onContextMenu}
-                  onMoveInto={onMoveInto}
-                  onNestUnder={onNestUnder}
-                />
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-    );
-  }
-
-  const childLevel = resolveLevel(
-    (children ?? []).filter(
-      (c) => !excludedPatterns.some((p) => c.name.toLowerCase().includes(p.toLowerCase())),
-    ),
-    entry.path,
-    treeOrder,
-    filterLower,
-    manualNesting,
-  );
-
-  return (
-    <div className={styles.dirBlock}>
       <button
         type="button"
+        ref={measureRef as React.Ref<HTMLButtonElement> | undefined}
         role="treeitem"
         aria-expanded={expanded}
         className={styles.dirRow}
@@ -1357,68 +1603,113 @@ function FileTreeNode({
         data-expanded={expanded}
         draggable
         onDragStart={onDragStart}
-        onDragOver={onDragOver}
+        onDragOver={onDirDragOver}
         onDragLeave={onDragLeave}
-        onDrop={onDrop}
+        onDrop={onDirDrop}
         onFocus={() => nav.setFocusedPath(entry.path)}
-        onClick={() => toggleDir()}
+        onClick={() => nav.toggleExpand(entry.path)}
         onContextMenu={(e) => onContextMenu(e, entry.path, true)}
         title={entry.name}
       >
+        <IndentGuides depth={depth} />
         <ChevronIcon open={expanded} />
         <FolderIcon open={expanded} />
         <RowLabel deco={deco} name={entry.name} baseClass={styles.dirName} />
-        {loadingChildren ? <span className={styles.dirBusy}> …</span> : null}
+        {childLoading ? <span className={styles.dirBusy}> …</span> : null}
       </button>
-      {childError != null ? (
-        <p className={styles.childError} role="alert" style={{ paddingLeft: `${paddingRem + 1}rem` }}>
-          {childError}
-        </p>
-      ) : null}
-      {expanded && children != null ? (
-        <ul
-          className={styles.nestedList}
-          role="group"
-          style={{ ['--indent']: `${paddingRem}rem` } as CSSProperties}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
+    );
+  }
+
+  const isActive = activeFilePath === entry.path;
+
+  // ----- File that owns auto-nested children (twistie expands its siblings) -----
+  if (expandable) {
+    return (
+      <div
+        ref={measureRef}
+        role="treeitem"
+        aria-expanded={expanded}
+        aria-selected={isActive}
+        className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
+        style={{
+          paddingLeft: `${paddingRem}rem`,
+          outline: dragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
+          backgroundColor: dragOver ? 'rgba(255,255,255,0.06)' : undefined,
+        }}
+        tabIndex={isTabStop ? 0 : -1}
+        data-path={entry.path}
+        data-depth={depth}
+        data-expandable="true"
+        data-expanded={expanded}
+        draggable
+        onDragStart={onDragStart}
+        onDragOver={onNestDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onNestDrop}
+        onFocus={() => nav.setFocusedPath(entry.path)}
+        onClick={() => void onOpenFile(entry.path, { preview: true })}
+        onDoubleClick={() => void onOpenFile(entry.path)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') void onOpenFile(entry.path);
+        }}
+        onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
+        title={entry.name}
+      >
+        <IndentGuides depth={depth} />
+        <span
+          className={styles.nestTwistie}
+          aria-hidden="true"
+          onClick={(e) => {
+            e.stopPropagation();
+            nav.toggleExpand(entry.path);
+          }}
         >
-          {pendingCreate != null && pendingCreate.parentPath === entry.path ? (
-            <li className={styles.treeItem} role="none">
-              <InlineCreateRow
-                kind={pendingCreate.kind}
-                depth={depth + 1}
-                onSubmit={(name) => void onCommitCreate(name)}
-                onCancel={onCancelCreate}
-              />
-            </li>
-          ) : null}
-          {childLevel.roots.map((child) => (
-              <li key={child.path} className={styles.treeItem} role="none">
-                <FileTreeNode
-                  workspaceRootPath={workspaceRootPath}
-                  depth={depth + 1}
-                  entry={child}
-                  activeFilePath={activeFilePath}
-                  filterLower={filterLower}
-                  excludedPatterns={excludedPatterns}
-                  treeOrder={treeOrder}
-                  manualNesting={manualNesting}
-                  nestedChildren={childLevel.childrenOf.get(child.path)}
-                  pendingCreate={pendingCreate}
-                  onCommitCreate={onCommitCreate}
-                  onCancelCreate={onCancelCreate}
-                  onOpenFile={onOpenFile}
-                  onContextMenu={onContextMenu}
-                  onMoveInto={onMoveInto}
-                  onNestUnder={onNestUnder}
-                />
-              </li>
-            ))}
-        </ul>
-      ) : null}
-    </div>
+          <ChevronIcon open={expanded} />
+        </span>
+        <FileIcon name={entry.name} />
+        <RowLabel deco={deco} name={entry.name} baseClass={styles.leafName} />
+      </div>
+    );
+  }
+
+  // ----- Plain file leaf -----
+  return (
+    <button
+      type="button"
+      ref={measureRef as React.Ref<HTMLButtonElement> | undefined}
+      role="treeitem"
+      aria-selected={isActive}
+      className={`${styles.leafButton} ${isActive ? styles.leafButtonActive : ''}`}
+      style={{
+        paddingLeft: `${paddingRem + LEAF_GLYPH_REM}rem`,
+        outline: dragOver ? '1px dashed rgba(255,255,255,0.28)' : undefined,
+        backgroundColor: dragOver ? 'rgba(255,255,255,0.06)' : undefined,
+      }}
+      tabIndex={isTabStop ? 0 : -1}
+      data-path={entry.path}
+      data-depth={depth}
+      data-expandable="false"
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onNestDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onNestDrop}
+      onFocus={() => nav.setFocusedPath(entry.path)}
+      onClick={() => void onOpenFile(entry.path, { preview: true })}
+      onDoubleClick={() => void onOpenFile(entry.path)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          void onOpenFile(entry.path);
+        }
+      }}
+      onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
+      title={entry.name}
+    >
+      <IndentGuides depth={depth} />
+      <FileIcon name={entry.name} />
+      <RowLabel deco={deco} name={entry.name} baseClass={styles.leafName} />
+    </button>
   );
 }
 
@@ -1440,7 +1731,7 @@ function InlineCreateRow({
   onCancel: () => void;
 }) {
   const [value, setValue] = useState('');
-  const paddingRem = 0.4 + depth * 0.85 + 1.05;
+  const paddingRem = rowPadRem(depth) + LEAF_GLYPH_REM;
   return (
     <div
       style={{

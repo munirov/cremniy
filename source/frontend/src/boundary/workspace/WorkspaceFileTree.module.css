@@ -79,28 +79,25 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.treeList,
-.nestedList {
+.treeList {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* Indent guide: a faint vertical line down each expanded folder's children,
-   aligned just right of the parent chevron. --indent carries the parent row's
-   left padding (set inline in WorkspaceFileTree). */
-.nestedList {
-  position: relative;
-}
-
-.nestedList::before {
-  content: '';
+/* Indent guides: faint vertical lines marking each ancestor level. The tree is
+   rendered as a flat (windowed) list — no nested <ul> to hang a single line on —
+   so each row paints one guide span per ancestor depth, positioned to line up
+   just right of that ancestor's chevron (left set inline per depth). The row
+   container is position:relative so these anchor to it; pointer-events:none so
+   they never steal a click from the row. */
+.indentGuide {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(var(--indent, 0.4rem) + 0.6rem);
   width: 1px;
   background: rgba(255, 255, 255, 0.07);
+  pointer-events: none;
 }
 
 .treeItem {
@@ -125,10 +122,6 @@
   font-family: inherit;
   font-size: 12px;
   opacity: 0.7;
-}
-
-.dirBlock {
-  width: 100%;
 }
 
 .dirRow,
