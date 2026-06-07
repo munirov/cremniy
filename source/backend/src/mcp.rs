@@ -226,75 +226,145 @@ fn tool_text(text: &str, is_error: bool) -> Value {
 fn screenshot(label: Option<&str>) -> Value {
     match capture_windows(label) {
         Ok(items) if !items.is_empty() => json!({ "content": items, "isError": false }),
-        Ok(_) => tool_text("no Cremniy windows found to capture (minimized?)", true),
+        Ok(_) => tool_text("no Cremniy windows found to capture", true),
         Err(e) => tool_text(&e, true),
     }
 }
 
-/// Capture each Tauri window by cropping it out of its monitor's screenshot.
-/// (xcap doesn't enumerate our borderless WebView2 windows directly, but we know
-/// their geometry from Tauri, so we shoot the monitor and crop.) `label`, if
-/// given, filters by Tauri window label substring (e.g. "main", "terminal").
+/// Render a single window's actual content to a PNG via Win32 `PrintWindow` with
+/// `PW_RENDERFULLCONTENT`. Unlike a monitor grab + crop, this asks the window to
+/// paint itself into our DC, so it works even when the window is hidden,
+/// minimized, occluded by other windows, or off-screen. WebView2/Chromium honor
+/// `PW_RENDERFULLCONTENT`, so the web UI is captured too.
+#[cfg(windows)]
+fn capture_window_png(win: &tauri::WebviewWindow) -> Result<Vec<u8>, String> {
+    use std::ffi::c_void;
+    use windows::Win32::Foundation::{HWND, RECT};
+    use windows::Win32::Graphics::Gdi::{
+        CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDC, GetDIBits,
+        ReleaseDC, SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HGDIOBJ,
+    };
+    // PrintWindow + its flags live under Storage::Xps in this windows version,
+    // not WindowsAndMessaging.
+    use windows::Win32::Storage::Xps::{PrintWindow, PRINT_WINDOW_FLAGS};
+    use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
+
+    /// PrintWindow flag: render the full content of the window (DWM/Chromium).
+    const PW_RENDERFULLCONTENT: u32 = 0x0000_0002;
+
+    let hwnd: HWND = win.hwnd().map_err(|e| e.to_string())?;
+
+    unsafe {
+        let mut rect = RECT::default();
+        GetWindowRect(hwnd, &mut rect).map_err(|e| e.to_string())?;
+        let w = rect.right - rect.left;
+        let h = rect.bottom - rect.top;
+        if w <= 0 || h <= 0 {
+            return Err("window has zero size".to_string());
+        }
+
+        let hdc_screen = GetDC(Some(hwnd));
+        if hdc_screen.is_invalid() {
+            return Err("GetDC failed".to_string());
+        }
+        let hdc_mem = CreateCompatibleDC(Some(hdc_screen));
+        if hdc_mem.is_invalid() {
+            ReleaseDC(Some(hwnd), hdc_screen);
+            return Err("CreateCompatibleDC failed".to_string());
+        }
+        let hbmp = CreateCompatibleBitmap(hdc_screen, w, h);
+        if hbmp.is_invalid() {
+            let _ = DeleteDC(hdc_mem);
+            ReleaseDC(Some(hwnd), hdc_screen);
+            return Err("CreateCompatibleBitmap failed".to_string());
+        }
+        let old = SelectObject(hdc_mem, HGDIOBJ(hbmp.0));
+
+        // Macro-free cleanup helper used on every error path below.
+        let cleanup = |old_obj| {
+            SelectObject(hdc_mem, old_obj);
+            let _ = DeleteObject(HGDIOBJ(hbmp.0));
+            let _ = DeleteDC(hdc_mem);
+            ReleaseDC(Some(hwnd), hdc_screen);
+        };
+
+        if !PrintWindow(hwnd, hdc_mem, PRINT_WINDOW_FLAGS(PW_RENDERFULLCONTENT)).as_bool() {
+            cleanup(old);
+            return Err("PrintWindow failed".to_string());
+        }
+
+        let mut bmi = BITMAPINFO::default();
+        bmi.bmiHeader = BITMAPINFOHEADER {
+            biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+            biWidth: w,
+            // Negative height → top-down rows (origin at top-left).
+            biHeight: -h,
+            biPlanes: 1,
+            biBitCount: 32,
+            biCompression: BI_RGB.0,
+            ..Default::default()
+        };
+
+        let mut buf = vec![0u8; (w as usize) * (h as usize) * 4];
+        let got = GetDIBits(
+            hdc_mem,
+            hbmp,
+            0,
+            h as u32,
+            Some(buf.as_mut_ptr() as *mut c_void),
+            &mut bmi,
+            DIB_RGB_COLORS,
+        );
+        if got == 0 {
+            cleanup(old);
+            return Err("GetDIBits failed".to_string());
+        }
+
+        cleanup(old);
+
+        // GDI gives BGRA; PNG wants RGBA. Swap B/R and force opaque alpha
+        // (PrintWindow leaves the alpha channel unreliable).
+        for px in buf.chunks_exact_mut(4) {
+            px.swap(0, 2);
+            px[3] = 255;
+        }
+
+        let img = image::RgbaImage::from_raw(w as u32, h as u32, buf)
+            .ok_or("bad image buffer")?;
+        let mut bytes: Vec<u8> = Vec::new();
+        image::DynamicImage::ImageRgba8(img)
+            .write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
+            .map_err(|e| e.to_string())?;
+        Ok(bytes)
+    }
+}
+
+/// Capture each Tauri window's actual content (see `capture_window_png`). `label`,
+/// if given, filters by Tauri window-label substring (e.g. "main", "terminal").
+/// Minimized/hidden windows are captured too — that's the point of PrintWindow.
 fn capture_windows(label: Option<&str>) -> Result<Vec<Value>, String> {
     let bridge = BRIDGE.get().ok_or("MCP bridge not initialized")?;
-    let monitors = xcap::Monitor::all().map_err(|e| e.to_string())?;
     let mut items: Vec<Value> = Vec::new();
+    let mut last_err: Option<String> = None;
     for (lbl, win) in bridge.app.webview_windows() {
         if let Some(l) = label {
             if !lbl.contains(l) {
                 continue;
             }
         }
-        if win.is_minimized().unwrap_or(false) {
-            continue;
-        }
-        let pos = match win.outer_position() {
+        let png = match capture_window_png(&win) {
             Ok(p) => p,
-            Err(_) => continue,
+            Err(e) => {
+                last_err = Some(e);
+                continue;
+            }
         };
-        let size = win.outer_size().unwrap_or_default();
-        if size.width == 0 || size.height == 0 {
-            continue;
-        }
-        // Pick the monitor whose physical bounds contain the window's top-left.
-        let mon = monitors
-            .iter()
-            .find(|m| {
-                let (mx, my) = (m.x().unwrap_or(0), m.y().unwrap_or(0));
-                let (mw, mh) = (m.width().unwrap_or(0) as i32, m.height().unwrap_or(0) as i32);
-                pos.x >= mx && pos.x < mx + mw && pos.y >= my && pos.y < my + mh
-            })
-            .or_else(|| monitors.first());
-        let mon = match mon {
-            Some(m) => m,
-            None => continue,
-        };
-        let shot = match mon.capture_image() {
-            Ok(i) => i,
-            Err(_) => continue,
-        };
-        // Window rect relative to the monitor image (physical px), clamped.
-        let ox = (pos.x - mon.x().unwrap_or(0)).max(0) as u32;
-        let oy = (pos.y - mon.y().unwrap_or(0)).max(0) as u32;
-        let cw = size.width.min(shot.width().saturating_sub(ox));
-        let ch = size.height.min(shot.height().saturating_sub(oy));
-        if cw == 0 || ch == 0 {
-            continue;
-        }
-        let cropped = xcap::image::imageops::crop_imm(&shot, ox, oy, cw, ch).to_image();
-        let mut bytes: Vec<u8> = Vec::new();
-        if xcap::image::DynamicImage::ImageRgba8(cropped)
-            .write_to(&mut std::io::Cursor::new(&mut bytes), xcap::image::ImageFormat::Png)
-            .is_err()
-        {
-            continue;
-        }
         let title = win.title().unwrap_or_else(|_| lbl.clone());
         items.push(json!({ "type": "text", "text": format!("{lbl} — {title}") }));
-        items.push(json!({ "type": "image", "data": base64_encode(&bytes), "mimeType": "image/png" }));
+        items.push(json!({ "type": "image", "data": base64_encode(&png), "mimeType": "image/png" }));
     }
     if items.is_empty() {
-        return Err("no capturable app windows (all minimized?)".to_string());
+        return Err(last_err.unwrap_or_else(|| "no capturable app windows".to_string()));
     }
     Ok(items)
 }
