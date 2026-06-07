@@ -297,3 +297,16 @@
   font-size: 0.85em;
   line-height: 1;
 }
+
+/* Rolled-up folder marker — a small right-aligned dot whose colour is driven by
+   the .deco* colour class (currentColor). margin-left:auto pushes it to the row
+   edge; the flex row keeps it vertically centred. */
+.decoDot {
+  flex: none;
+  margin-left: auto;
+  margin-right: 0.25rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: currentColor;
+}

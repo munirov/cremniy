@@ -990,9 +990,10 @@ function decoColorClass(kind: GitDecoKind): string {
 }
 
 /**
- * The name text of a tree row, tinted by git status with a trailing status
- * letter for direct changes (folders get the tint only — `rollup` rows). Falls
- * back to the plain name when there's no decoration.
+ * The name text of a tree row, decorated by git status. A direct change (file)
+ * keeps the tinted name + trailing status letter; a rolled-up folder shows the
+ * plain name plus a small right-aligned coloured dot (trees.software-style).
+ * Falls back to the plain name when there's no decoration.
  */
 function RowLabel({
   deco,
@@ -1007,7 +1008,15 @@ function RowLabel({
     return <span className={baseClass}>{name}</span>;
   }
   const colorClass = decoColorClass(deco.deco.kind);
-  const struck = deco.deco.kind === 'deleted' && !deco.rollup;
+  if (deco.rollup) {
+    return (
+      <>
+        <span className={baseClass}>{name}</span>
+        <span className={`${styles.decoDot} ${colorClass}`} aria-hidden="true" />
+      </>
+    );
+  }
+  const struck = deco.deco.kind === 'deleted';
   return (
     <>
       <span
@@ -1016,11 +1025,9 @@ function RowLabel({
       >
         {name}
       </span>
-      {!deco.rollup ? (
-        <span className={`${styles.decoBadge} ${colorClass}`} aria-hidden="true">
-          {deco.deco.letter}
-        </span>
-      ) : null}
+      <span className={`${styles.decoBadge} ${colorClass}`} aria-hidden="true">
+        {deco.deco.letter}
+      </span>
     </>
   );
 }
