@@ -3,6 +3,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { AppPreferences } from '@domain/preferences/appPreferences';
 import { settingsService } from '@infrastructure/settings/settingsService';
 import { SettingsDialog } from '@boundary/settings/SettingsDialog';
+import { AdvancedGitDialog } from '@boundary/workspace/AdvancedGitDialog';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 
@@ -38,8 +39,21 @@ function SettingsTab() {
   );
 }
 
+function AdvancedGitTab() {
+  const workspaceRoot = useWorkspaceRoot();
+  const { closePanel } = useIdeSession();
+  return (
+    <AdvancedGitDialog
+      embedded
+      workspaceRoot={workspaceRoot?.path ?? null}
+      onClose={() => closePanel('advancedGit')}
+    />
+  );
+}
+
 /** Registry of non-file center panels. Add an entry to host a new view as a
  *  center tab — the tab strip (label) and the editor body (render) pick it up. */
 export const CENTER_PANELS: Record<string, { label: string; render: () => ReactNode }> = {
   settings: { label: 'Settings', render: () => <SettingsTab /> },
+  advancedGit: { label: 'Git', render: () => <AdvancedGitTab /> },
 };

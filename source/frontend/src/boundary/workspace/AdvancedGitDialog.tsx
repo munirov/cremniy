@@ -33,7 +33,10 @@ import {
 import styles from './AdvancedGitDialog.module.css';
 
 export type AdvancedGitDialogProps = {
-  open: boolean;
+  /** Modal mode (ignored when `embedded`). */
+  open?: boolean;
+  /** Render inline without a backdrop, to host inside a center tab. */
+  embedded?: boolean;
   onClose: () => void;
   workspaceRoot: string | null;
 };
@@ -670,7 +673,7 @@ function RemotesPane({ repo, branchInfo }: { repo: string; branchInfo: GitBranch
   );
 }
 
-export function AdvancedGitDialog({ open, onClose, workspaceRoot }: AdvancedGitDialogProps) {
+export function AdvancedGitDialog({ open, embedded, onClose, workspaceRoot }: AdvancedGitDialogProps) {
   const [section, setSection] = useState<Section>('branches');
   const [repos, setRepos] = useState<GitRepoRef[] | null>(null);
   const [repo, setRepo] = useState<string | null>(null);
@@ -678,9 +681,12 @@ export function AdvancedGitDialog({ open, onClose, workspaceRoot }: AdvancedGitD
   // Shared branch info so Remotes can default the publish branch sensibly.
   const [branchInfo, setBranchInfo] = useState<GitBranchInfo | null>(null);
 
+  // Embedded as a center tab is always live; modal only runs while open.
+  const active = embedded || (open ?? false);
+
   // Discover repos whenever the dialog opens (or the workspace changes).
   useEffect(() => {
-    if (!open) {
+    if (!active) {
       return;
     }
     let cancelled = false;
@@ -707,12 +713,12 @@ export function AdvancedGitDialog({ open, onClose, workspaceRoot }: AdvancedGitD
     return () => {
       cancelled = true;
     };
-  }, [open, workspaceRoot]);
+  }, [active, workspaceRoot]);
 
   // Keep shared branch info in step with the selected repo so the Remotes pane's
   // publish branch defaults correctly even before that pane is opened.
   useEffect(() => {
-    if (!open || repo == null) {
+    if (!active || repo == null) {
       setBranchInfo(null);
       return;
     }
@@ -728,27 +734,22 @@ export function AdvancedGitDialog({ open, onClose, workspaceRoot }: AdvancedGitD
     return () => {
       cancelled = true;
     };
-  }, [open, repo, section]);
+  }, [active, repo, section]);
 
-  if (!open) {
+  if (!active) {
     return null;
   }
 
   const hasRepo = repo != null;
 
-  return (
-    <div
-      className={styles.backdrop}
-      role="presentation"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
-    >
+  const body = (
       <div
-        className={styles.dialog}
+        className={`${styles.dialog} ${embedded ? styles.dialogEmbedded : ''}`}
         role="dialog"
-        aria-modal
+        aria-modal={embedded ? undefined : true}
         aria-labelledby="advanced-git-dialog-title"
         onMouseDown={(e) => e.stopPropagation()}
-        onKeyDown={(e) => {
+        onKeyDown={embedded ? undefined : (e) => {
           if (e.key === 'Escape') {
             onClose();
           }
@@ -823,6 +824,18 @@ export function AdvancedGitDialog({ open, onClose, workspaceRoot }: AdvancedGitD
           </div>
         </div>
       </div>
+  );
+
+  if (embedded) {
+    return body;
+  }
+  return (
+    <div
+      className={styles.backdrop}
+      role="presentation"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      {body}
     </div>
   );
 }
