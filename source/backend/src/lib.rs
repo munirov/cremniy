@@ -47,6 +47,7 @@ pub fn run() {
             binary_analysis::analyze_binary,
             search::search_workspace,
             search::replace_in_file,
+            git::git_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -54,6 +55,7 @@ pub fn run() {
 
 mod binary_analysis;
 mod disassembly;
+mod git;
 mod panes;
 mod process;
 mod radare2;
