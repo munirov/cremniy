@@ -385,6 +385,90 @@ export async function gitPublish(
   return invoke<void>("git_publish", { workspaceRoot, remote, branch });
 }
 
+export type GitBranchInfo = { current: string | null; local: string[]; remote: string[] };
+export type GitStashEntry = { index: number; message: string };
+export type GitCommit = {
+  hash: string;
+  shortHash: string;
+  author: string;
+  date: string;
+  subject: string;
+};
+
+/** Merge `branch` into the current branch. */
+export async function gitMerge(workspaceRoot: string, branch: string): Promise<void> {
+  return invoke<void>("git_merge", { workspaceRoot, branch });
+}
+
+/** Abort an in-progress merge. */
+export async function gitMergeAbort(workspaceRoot: string): Promise<void> {
+  return invoke<void>("git_merge_abort", { workspaceRoot });
+}
+
+/** Rebase the current branch onto `branch`. */
+export async function gitRebase(workspaceRoot: string, branch: string): Promise<void> {
+  return invoke<void>("git_rebase", { workspaceRoot, branch });
+}
+
+/** Abort an in-progress rebase. */
+export async function gitRebaseAbort(workspaceRoot: string): Promise<void> {
+  return invoke<void>("git_rebase_abort", { workspaceRoot });
+}
+
+/** Continue a rebase after conflicts are resolved (no editor). */
+export async function gitRebaseContinue(workspaceRoot: string): Promise<void> {
+  return invoke<void>("git_rebase_continue", { workspaceRoot });
+}
+
+/** Delete a local branch (`force` → `-D`, drops even if unmerged). */
+export async function gitBranchDelete(
+  workspaceRoot: string,
+  name: string,
+  force: boolean,
+): Promise<void> {
+  return invoke<void>("git_branch_delete", { workspaceRoot, name, force });
+}
+
+/** Local + remote branches plus the current branch (null when detached). */
+export async function gitBranchInfo(workspaceRoot: string): Promise<GitBranchInfo> {
+  return invoke<GitBranchInfo>("git_branch_info", { workspaceRoot });
+}
+
+/** Fetch with `--prune`; optional explicit remote. */
+export async function gitFetch(workspaceRoot: string, remote?: string): Promise<void> {
+  return invoke<void>("git_fetch", { workspaceRoot, remote: remote ?? null });
+}
+
+/** List stash entries (index + message). */
+export async function gitStashList(workspaceRoot: string): Promise<GitStashEntry[]> {
+  return invoke<GitStashEntry[]>("git_stash_list", { workspaceRoot });
+}
+
+/** Stash the working-tree changes, with an optional message. */
+export async function gitStashPush(workspaceRoot: string, message?: string): Promise<void> {
+  return invoke<void>("git_stash_push", { workspaceRoot, message: message ?? null });
+}
+
+/** Apply a stash entry by index (keeps it in the list). */
+export async function gitStashApply(workspaceRoot: string, index: number): Promise<void> {
+  return invoke<void>("git_stash_apply", { workspaceRoot, index });
+}
+
+/** Apply a stash entry by index and drop it. */
+export async function gitStashPop(workspaceRoot: string, index: number): Promise<void> {
+  return invoke<void>("git_stash_pop", { workspaceRoot, index });
+}
+
+/** Drop a stash entry by index without applying. */
+export async function gitStashDrop(workspaceRoot: string, index: number): Promise<void> {
+  return invoke<void>("git_stash_drop", { workspaceRoot, index });
+}
+
+/** Recent commits (newest first), up to `limit`. Empty for a fresh repo. */
+export async function gitLog(workspaceRoot: string, limit: number): Promise<GitCommit[]> {
+  return invoke<GitCommit[]>("git_log", { workspaceRoot, limit });
+}
+
 export async function writeUserFile(path: string, contents: string): Promise<void> {
   return invoke<void>("write_user_file", { path, contents });
 }

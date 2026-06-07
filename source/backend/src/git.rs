@@ -397,6 +397,237 @@ pub fn git_publish(workspace_root: String, remote: String, branch: String) -> Re
     run_git(&root, &["push", "-u", remote.trim(), branch.trim()]).map(|_| ())
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GitBranchInfo {
+    /// Current branch name, or None for a detached HEAD.
+    current: Option<String>,
+    local: Vec<String>,
+    remote: Vec<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GitStashEntry {
+    index: u32,
+    message: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GitCommit {
+    hash: String,
+    short_hash: String,
+    author: String,
+    date: String,
+    subject: String,
+}
+
+/// Merge `branch` into the current branch.
+#[tauri::command]
+pub fn git_merge(workspace_root: String, branch: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["merge", &branch]).map(|_| ())
+}
+
+/// Abort an in-progress merge, restoring the pre-merge state.
+#[tauri::command]
+pub fn git_merge_abort(workspace_root: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["merge", "--abort"]).map(|_| ())
+}
+
+/// Rebase the current branch onto `branch`.
+#[tauri::command]
+pub fn git_rebase(workspace_root: String, branch: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["rebase", &branch]).map(|_| ())
+}
+
+/// Abort an in-progress rebase, restoring the original branch.
+#[tauri::command]
+pub fn git_rebase_abort(workspace_root: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["rebase", "--abort"]).map(|_| ())
+}
+
+/// Continue an in-progress rebase after conflicts are resolved. `core.editor=true`
+/// keeps git from opening an editor for the commit message (non-interactive).
+#[tauri::command]
+pub fn git_rebase_continue(workspace_root: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["-c", "core.editor=true", "rebase", "--continue"]).map(|_| ())
+}
+
+/// Delete a local branch. `force` uses `-D` (drop even if unmerged) instead of `-d`.
+#[tauri::command]
+pub fn git_branch_delete(workspace_root: String, name: String, force: bool) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let flag = if force { "-D" } else { "-d" };
+    run_git(&root, &["branch", flag, &name]).map(|_| ())
+}
+
+/// Local + remote branches plus the current branch (None when detached).
+#[tauri::command]
+pub fn git_branch_info(workspace_root: String) -> Result<GitBranchInfo, String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let local = run_git(&root, &["branch", "--format=%(refname:short)"])?
+        .lines()
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty())
+        .collect();
+    let remote = run_git(&root, &["branch", "-r", "--format=%(refname:short)"])?
+        .lines()
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty() && !l.contains("HEAD"))
+        .collect();
+    // Err here means detached HEAD (or no commits yet) — not a real failure.
+    let current = run_git(&root, &["symbolic-ref", "--quiet", "--short", "HEAD"])
+        .ok()
+        .map(|s| s.trim().to_string());
+    Ok(GitBranchInfo {
+        current,
+        local,
+        remote,
+    })
+}
+
+/// Fetch from the remote and prune deleted remote-tracking branches.
+#[tauri::command]
+pub fn git_fetch(workspace_root: String, remote: Option<String>) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let mut args: Vec<&str> = vec!["fetch", "--prune"];
+    if let Some(r) = remote.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+        args.push(r);
+    }
+    run_git(&root, &args).map(|_| ())
+}
+
+/// List the stash entries (index + message).
+#[tauri::command]
+pub fn git_stash_list(workspace_root: String) -> Result<Vec<GitStashEntry>, String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let out = run_git(&root, &["stash", "list", "--format=%gd%x1f%gs"])?;
+    Ok(parse_stash_list(&out))
+}
+
+/// Stash the working-tree changes, with an optional message.
+#[tauri::command]
+pub fn git_stash_push(workspace_root: String, message: Option<String>) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let mut args: Vec<&str> = vec!["stash", "push"];
+    let msg = message.as_deref().map(str::trim).unwrap_or("");
+    if !msg.is_empty() {
+        args.push("-m");
+        args.push(msg);
+    }
+    run_git(&root, &args).map(|_| ())
+}
+
+/// Apply a stash entry by index, keeping it in the stash list.
+#[tauri::command]
+pub fn git_stash_apply(workspace_root: String, index: u32) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["stash", "apply", &format!("stash@{{{index}}}")]).map(|_| ())
+}
+
+/// Apply a stash entry by index and drop it from the stash list.
+#[tauri::command]
+pub fn git_stash_pop(workspace_root: String, index: u32) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["stash", "pop", &format!("stash@{{{index}}}")]).map(|_| ())
+}
+
+/// Drop a stash entry by index without applying it.
+#[tauri::command]
+pub fn git_stash_drop(workspace_root: String, index: u32) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["stash", "drop", &format!("stash@{{{index}}}")]).map(|_| ())
+}
+
+/// Recent commits (newest first), up to `limit` (clamped to at least 1). A repo
+/// with no commits yet isn't an error here — it maps to an empty list.
+#[tauri::command]
+pub fn git_log(workspace_root: String, limit: u32) -> Result<Vec<GitCommit>, String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let n = limit.max(1).to_string();
+    match run_git(
+        &root,
+        &[
+            "log",
+            "-n",
+            &n,
+            "--pretty=format:%H%x1f%h%x1f%an%x1f%ad%x1f%s",
+            "--date=short",
+        ],
+    ) {
+        Ok(out) => Ok(parse_log(&out)),
+        // Fresh repo with no commits: `git log` exits non-zero. Surface an empty
+        // history instead of a red error.
+        Err(e) if is_no_commits_error(&e) => Ok(Vec::new()),
+        Err(e) => Err(e),
+    }
+}
+
+/// True when a `git log` error just means the repo has no commits / no valid
+/// revision yet (rather than a genuine failure).
+fn is_no_commits_error(stderr: &str) -> bool {
+    let s = stderr.to_lowercase();
+    s.contains("does not have any commits")
+        || s.contains("bad revision")
+        || s.contains("unknown revision")
+        || s.contains("ambiguous argument")
+}
+
+/// Parse `git log --pretty=format:%H%x1f%h%x1f%an%x1f%ad%x1f%s` output. Each line
+/// is 5 unit-separator (\u{1f})-delimited fields; malformed lines are skipped.
+/// Pure (no process / FS), so it's unit-tested.
+fn parse_log(text: &str) -> Vec<GitCommit> {
+    text.lines()
+        .filter_map(|line| {
+            let mut f = line.split('\u{1f}');
+            let hash = f.next()?.to_string();
+            let short_hash = f.next()?.to_string();
+            let author = f.next()?.to_string();
+            let date = f.next()?.to_string();
+            let subject = f.next()?.to_string();
+            // A well-formed line has exactly 5 fields; reject extras.
+            if f.next().is_some() {
+                return None;
+            }
+            Some(GitCommit {
+                hash,
+                short_hash,
+                author,
+                date,
+                subject,
+            })
+        })
+        .collect()
+}
+
+/// Parse `git stash list --format=%gd%x1f%gs` output. Each line is
+/// "stash@{N}\u{1f}<message>"; the index N is parsed out of the left field.
+/// Malformed lines are skipped. Pure, so it's unit-tested.
+fn parse_stash_list(text: &str) -> Vec<GitStashEntry> {
+    text.lines()
+        .filter_map(|line| {
+            let (left, message) = line.split_once('\u{1f}')?;
+            let index = parse_stash_index(left)?;
+            Some(GitStashEntry {
+                index,
+                message: message.to_string(),
+            })
+        })
+        .collect()
+}
+
+/// Pull the integer N out of a stash ref like "stash@{2}".
+fn parse_stash_index(s: &str) -> Option<u32> {
+    let inner = s.trim().strip_prefix("stash@{")?.strip_suffix('}')?;
+    inner.parse().ok()
+}
+
 /// Derive a folder name from a clone URL: the last path segment, minus `.git`.
 /// Handles both normal URLs and scp-like `git@host:owner/repo.git`.
 fn repo_dir_name(url: &str) -> String {
@@ -668,5 +899,58 @@ mod tests {
             "https://github.com/u/r.git"
         );
         assert_eq!(sanitize_remote_url("git@github.com:u/r.git"), "git@github.com:u/r.git");
+    }
+
+    #[test]
+    fn parse_log_reads_fields_and_skips_malformed() {
+        // \u{1f} is the field separator git emits for %x1f.
+        let text = concat!(
+            "abc123\u{1f}abc\u{1f}Alice\u{1f}2024-01-02\u{1f}Initial commit\n",
+            "def456\u{1f}def\u{1f}Bob\u{1f}2024-03-04\u{1f}Fix: thing with: colons\n",
+            "tooFewFields\u{1f}only\u{1f}three\n", // malformed → skipped
+        );
+        let commits = parse_log(text);
+        assert_eq!(commits.len(), 2);
+        assert_eq!(commits[0].hash, "abc123");
+        assert_eq!(commits[0].short_hash, "abc");
+        assert_eq!(commits[0].author, "Alice");
+        assert_eq!(commits[0].date, "2024-01-02");
+        assert_eq!(commits[0].subject, "Initial commit");
+        // Subject is the last field; a literal colon in it is preserved.
+        assert_eq!(commits[1].subject, "Fix: thing with: colons");
+    }
+
+    #[test]
+    fn parse_log_empty_input_is_empty() {
+        assert!(parse_log("").is_empty());
+    }
+
+    #[test]
+    fn parse_stash_list_reads_index_and_message() {
+        let text = concat!(
+            "stash@{0}\u{1f}WIP on main: 1a2b3c subject\n",
+            "stash@{2}\u{1f}On feature: hand-written message\n",
+        );
+        let entries = parse_stash_list(text);
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0].index, 0);
+        assert_eq!(entries[0].message, "WIP on main: 1a2b3c subject");
+        assert_eq!(entries[1].index, 2);
+        assert_eq!(entries[1].message, "On feature: hand-written message");
+    }
+
+    #[test]
+    fn parse_stash_list_skips_malformed_lines() {
+        let text = concat!(
+            "stash@{0}\u{1f}good\n",
+            "no-separator-here\n",          // no \u{1f} → skipped
+            "stash@{notanumber}\u{1f}bad\n", // unparseable index → skipped
+            "stash@{1}\u{1f}also good\n",
+        );
+        let entries = parse_stash_list(text);
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0].index, 0);
+        assert_eq!(entries[1].index, 1);
+        assert_eq!(entries[1].message, "also good");
     }
 }
