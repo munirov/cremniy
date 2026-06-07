@@ -300,6 +300,30 @@ export async function gitPull(workspaceRoot: string): Promise<void> {
   return invoke<void>("git_pull", { workspaceRoot });
 }
 
+/** List local branch names. */
+export async function gitBranches(workspaceRoot: string): Promise<string[]> {
+  return invoke<string[]>("git_branches", { workspaceRoot });
+}
+
+/** Switch to an existing branch. */
+export async function gitCheckout(workspaceRoot: string, branch: string): Promise<void> {
+  return invoke<void>("git_checkout", { workspaceRoot, branch });
+}
+
+/** Create a new branch from HEAD and switch to it. */
+export async function gitCreateBranch(workspaceRoot: string, name: string): Promise<void> {
+  return invoke<void>("git_create_branch", { workspaceRoot, name });
+}
+
+/** Discard working-tree changes for the given paths (untracked → removed). */
+export async function gitDiscard(
+  workspaceRoot: string,
+  paths: string[],
+  untracked: boolean,
+): Promise<void> {
+  return invoke<void>("git_discard", { workspaceRoot, paths, untracked });
+}
+
 export async function writeUserFile(path: string, contents: string): Promise<void> {
   return invoke<void>("write_user_file", { path, contents });
 }

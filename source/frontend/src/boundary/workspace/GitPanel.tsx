@@ -2,7 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import {
+  gitBranches,
+  gitCheckout,
   gitCommit,
+  gitCreateBranch,
+  gitDiscard,
   gitInit,
   gitPull,
   gitPush,
@@ -44,6 +48,10 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [commitMenu, setCommitMenu] = useState(false);
+  const [branchMenu, setBranchMenu] = useState(false);
+  const [branches, setBranches] = useState<string[]>([]);
+  const [newBranchMode, setNewBranchMode] = useState(false);
+  const [newBranchName, setNewBranchName] = useState('');
 
   const refresh = useCallback(async () => {
     const root = workspaceRoot?.path;
@@ -119,6 +127,40 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
     });
   };
 
+  const openBranchMenu = () => {
+    const root = workspaceRoot?.path;
+    if (root == null || root === '') return;
+    setNewBranchMode(false);
+    setNewBranchName('');
+    void gitBranches(root)
+      .then(setBranches)
+      .catch(() => setBranches([]));
+    setBranchMenu((v) => !v);
+  };
+
+  const checkout = (b: string) => {
+    setBranchMenu(false);
+    void runGit((r) => gitCheckout(r, b));
+  };
+
+  const createBranch = () => {
+    const name = newBranchName.trim();
+    if (name === '') {
+      return;
+    }
+    setBranchMenu(false);
+    setNewBranchMode(false);
+    setNewBranchName('');
+    void runGit((r) => gitCreateBranch(r, name));
+  };
+
+  const discardFile = (f: GitFileStatus) => {
+    if (!window.confirm(`Discard changes in “${f.name}”? This can't be undone.`)) {
+      return;
+    }
+    void runGit((r) => gitDiscard(r, [f.path], f.untracked));
+  };
+
   const fileRow = (f: GitFileStatus) => (
     <div key={f.path} className={styles.fileRow}>
       <button
@@ -132,6 +174,16 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
         {f.isDir ? <FolderIcon /> : <FileIcon name={f.name} />}
         <span className={styles.fileName}>{f.name}</span>
         <span className={styles.dir}>{dirOf(f.path)}</span>
+      </button>
+      <button
+        type="button"
+        className={styles.action}
+        title="Discard changes"
+        aria-label={`Discard changes in ${f.name}`}
+        disabled={busy}
+        onClick={() => discardFile(f)}
+      >
+        ↺
       </button>
       <button
         type="button"
@@ -156,11 +208,70 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
       <div className={styles.header}>
         <span className={styles.headerName}>Source Control</span>
         {status?.branch != null ? (
-          <span className={styles.branch} title={`Branch: ${status.branch}`}>
-            {status.branch}
-            {status.behind > 0 ? <span className={styles.track}>↓{status.behind}</span> : null}
-            {status.ahead > 0 ? <span className={styles.track}>↑{status.ahead}</span> : null}
-          </span>
+          <div className={styles.branchWrap}>
+            <button
+              type="button"
+              className={styles.branch}
+              title={`Branch: ${status.branch} — click to switch`}
+              onClick={openBranchMenu}
+            >
+              {status.branch}
+              {status.behind > 0 ? <span className={styles.track}>↓{status.behind}</span> : null}
+              {status.ahead > 0 ? <span className={styles.track}>↑{status.ahead}</span> : null}
+            </button>
+            {branchMenu ? (
+              <ul
+                className={styles.branchMenu}
+                role="menu"
+                onMouseLeave={() => setBranchMenu(false)}
+              >
+                {newBranchMode ? (
+                  <li role="none">
+                    <input
+                      className={styles.branchInput}
+                      autoFocus
+                      placeholder="New branch name"
+                      value={newBranchName}
+                      onChange={(e) => setNewBranchName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          createBranch();
+                        } else if (e.key === 'Escape') {
+                          setNewBranchMode(false);
+                          setNewBranchName('');
+                        }
+                      }}
+                    />
+                  </li>
+                ) : (
+                  <li role="none">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={styles.branchMenuItem}
+                      onClick={() => setNewBranchMode(true)}
+                    >
+                      ＋ Create new branch…
+                    </button>
+                  </li>
+                )}
+                {branches.map((b) => (
+                  <li role="none" key={b}>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={`${styles.branchMenuItem} ${b === status.branch ? styles.branchCurrent : ''}`}
+                      disabled={b === status.branch}
+                      onClick={() => checkout(b)}
+                    >
+                      {b === status.branch ? '● ' : '  '}
+                      {b}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         ) : null}
         <div className={styles.headerActions}>
           {isRepo ? (

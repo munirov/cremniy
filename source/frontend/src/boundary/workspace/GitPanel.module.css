@@ -24,15 +24,86 @@
   opacity: 0.7;
 }
 
-.branch {
+.branchWrap {
+  position: relative;
   flex: 1;
   min-width: 0;
+}
+
+.branch {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 0.1rem 0.2rem;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
   font-family: var(--font-family-mono);
   font-size: 11px;
-  opacity: 0.5;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.branch:hover {
+  opacity: 0.95;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.branchMenu {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 40;
+  min-width: 12rem;
+  max-height: 16rem;
+  overflow: auto;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-pane);
+  border-radius: 4px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.45);
+}
+
+.branchMenuItem {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  color: inherit;
+  background: transparent;
+  white-space: pre;
+  cursor: pointer;
+}
+
+.branchMenuItem:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.branchCurrent {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.branchInput {
+  width: calc(100% - 0.8rem);
+  margin: 0 0.4rem;
+  padding: 0.25rem 0.4rem;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  outline: none;
 }
 
 .headerActions {
