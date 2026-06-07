@@ -8,8 +8,10 @@ import {
 } from '@domain/project/cremniyMeta';
 import { readCremniyMeta, writeCremniyMeta } from '@infrastructure/tauri/bridge';
 import { registerAgentCommands } from '@shared/agent/agentBridge';
+import { subscribeOpenConnection } from '@shared/connections/connectionBus';
 
 import { TerminalInstance } from './TerminalInstance';
+import { SerialInstance } from './SerialInstance';
 import styles from './TerminalFooterPanel.module.css';
 
 export type TerminalFooterPanelProps = {
@@ -27,6 +29,15 @@ export type TerminalFooterPanelProps = {
   onClose?: () => void;
 };
 
+type SerialTabConn = {
+  /** Profile id — used to de-dup tabs (re-opening a host focuses its tab). */
+  connId: string;
+  /** Stable serial session id for this tab's SerialInstance. */
+  sessionId: string;
+  port: string;
+  baud: number;
+};
+
 type TerminalTab = {
   id: number;
   /** Live shell name reported by the instance (e.g. "powershell"); null while
@@ -34,6 +45,9 @@ type TerminalTab = {
   shell: string | null;
   /** User-given name (double-click the tab to rename); null = auto label. */
   title: string | null;
+  /** Set when this tab is a serial connection rather than a local shell. Such
+      tabs render a {@link SerialInstance} and are ephemeral (not persisted). */
+  conn?: SerialTabConn | null;
 };
 
 /** Friendly tab label from a shell path: "…\powershell.exe" → "powershell". */
@@ -165,13 +179,17 @@ export function TerminalFooterPanel({
     const meta = metaRef.current;
     if (!loaded || root === '' || meta == null) return;
 
-    const activeIndex = Math.max(0, tabs.findIndex((t) => t.id === activeId));
-    const names = tabs.map((t) => t.title);
+    // Serial connection tabs are ephemeral — only the local shell tabs persist,
+    // so reopening the workspace doesn't silently re-open serial ports.
+    const shellTabs = tabs.filter((t) => t.conn == null);
+    const activeIndex = Math.max(0, shellTabs.findIndex((t) => t.id === activeId));
+    const names = shellTabs.map((t) => t.title);
+    const count = Math.max(1, shellTabs.length);
     // Keep .cremniy minimal — only write `names` once the user has named a tab.
     const hasNames = names.some((n) => n != null && n !== '');
     const candidate = hasNames
-      ? { count: tabs.length, activeIndex, names }
-      : { count: tabs.length, activeIndex };
+      ? { count, activeIndex, names }
+      : { count, activeIndex };
     const prev = meta.session.terminals;
     if (prev != null && JSON.stringify(prev) === JSON.stringify(candidate)) {
       return;
@@ -194,6 +212,39 @@ export function TerminalFooterPanel({
     setTabs((prev) => [...prev, { id, shell: null, title: null }]);
     setActiveId(id);
   }, []);
+
+  // Open (or focus) a tab for a saved host, published by the Hosts manager over
+  // the connection bus. De-dup by profile id via tabsRef so a re-open focuses
+  // the live tab instead of stacking duplicates. id + sessionId are computed
+  // outside the state updater (StrictMode-safe — no double-consumed ids).
+  const openConnectionTab = useCallback(
+    (req: { connId: string; label: string; serial?: { port: string; baud: number } }) => {
+      onExpand?.();
+      const existing = tabsRef.current.find((t) => t.conn?.connId === req.connId);
+      if (existing != null) {
+        setActiveId(existing.id);
+        return;
+      }
+      const serial = req.serial;
+      if (serial == null) return; // only serial transport is wired today
+      const id = nextIdRef.current;
+      nextIdRef.current += 1;
+      const sessionId = crypto.randomUUID();
+      setTabs((prev) => [
+        ...prev,
+        {
+          id,
+          shell: null,
+          title: req.label,
+          conn: { connId: req.connId, sessionId, port: serial.port, baud: serial.baud },
+        },
+      ]);
+      setActiveId(id);
+    },
+    [onExpand],
+  );
+
+  useEffect(() => subscribeOpenConnection(openConnectionTab), [openConnectionTab]);
 
   const startRename = useCallback((id: number, current: string) => {
     skipBlurRef.current = false;
@@ -479,13 +530,23 @@ export function TerminalFooterPanel({
             className={styles.instanceWrap}
             style={{ display: tab.id === activeId ? 'flex' : 'none' }}
           >
-            <TerminalInstance
-              workspaceRoot={workspaceRoot}
-              active={tab.id === activeId}
-              collapsed={collapsed}
-              onShellChange={(shell) => handleShell(tab.id, shell)}
-              onReaderChange={(read) => handleReader(tab.id, read)}
-            />
+            {tab.conn != null ? (
+              <SerialInstance
+                sessionId={tab.conn.sessionId}
+                port={tab.conn.port}
+                baud={tab.conn.baud}
+                active={tab.id === activeId}
+                collapsed={collapsed}
+              />
+            ) : (
+              <TerminalInstance
+                workspaceRoot={workspaceRoot}
+                active={tab.id === activeId}
+                collapsed={collapsed}
+                onShellChange={(shell) => handleShell(tab.id, shell)}
+                onReaderChange={(read) => handleReader(tab.id, read)}
+              />
+            )}
           </div>
         ))}
         {loaded && tabs.length === 0 ? (
