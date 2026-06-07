@@ -32,6 +32,7 @@ export function IdeEditorTabStrip() {
     closeAllOpenFiles,
     openPanels,
     activePanel,
+    previewFilePath,
     activatePanel,
     closePanel,
   } = useIdeSession();
@@ -178,6 +179,7 @@ export function IdeEditorTabStrip() {
           const isActive = activeFilePath === path && activePanel == null;
           const isDirty = dirtyFiles.has(path);
           const isPinned = pinnedFilePaths.has(path);
+          const isPreview = previewFilePath === path;
           return (
             <div
               key={path}
@@ -215,7 +217,9 @@ export function IdeEditorTabStrip() {
                 title={path}
                 onClick={() => activateOpenFile(path)}
               >
-                <span className={styles.tabLabel}>
+                <span
+                  className={`${styles.tabLabel}${isPreview ? ` ${styles.tabLabelPreview}` : ''}`}
+                >
                   {isPinned ? '📌 ' : ''}
                   {isDirty ? `${label} *` : label}
                 </span>

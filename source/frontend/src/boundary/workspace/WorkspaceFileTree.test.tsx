@@ -185,8 +185,8 @@ describe('WorkspaceFileTree', () => {
 
       const item = await screen.findByRole('treeitem', { name: 'notes.txt' });
       item.focus();
-      // The leaf is a <button>, so Enter activates it natively (click).
-      fireEvent.click(item);
+      // Enter opens the file for keeps (not a preview).
+      fireEvent.keyDown(item, { key: 'Enter' });
       expect(ideSessionMocks.openFileFromWorkspace).toHaveBeenCalledWith('/w/notes.txt');
     });
   });
@@ -205,7 +205,10 @@ describe('WorkspaceFileTree', () => {
     fireEvent.click(screen.getByRole('treeitem', { name: 'notes.txt' }));
 
     expect(ideSessionMocks.openFileFromWorkspace).toHaveBeenCalledTimes(1);
-    expect(ideSessionMocks.openFileFromWorkspace).toHaveBeenCalledWith('/w/notes.txt');
+    // Single click opens a preview tab.
+    expect(ideSessionMocks.openFileFromWorkspace).toHaveBeenCalledWith('/w/notes.txt', {
+      preview: true,
+    });
   });
 
   it('shows error when root listDirectoryEntries rejects', async () => {

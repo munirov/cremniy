@@ -44,7 +44,7 @@ export type IdeSessionContextValue = {
   dirtyFilePaths: string[];
   activeDocumentDirty: boolean;
   setDocumentText: (value: string) => void;
-  openFileFromWorkspace: (filePath: string) => Promise<void>;
+  openFileFromWorkspace: (filePath: string, opts?: { preview?: boolean }) => Promise<void>;
   /** Open a file (if needed) and reveal a 1-based line — used by Search. */
   openFileAtLine: (filePath: string, line: number) => Promise<void>;
   /** Set by openFileAtLine; the editor reveals it once the file is active. */
@@ -55,6 +55,8 @@ export type IdeSessionContextValue = {
   /** Non-file center tabs (settings, etc.) opened in the editor "tab space". */
   openPanels: string[];
   activePanel: string | null;
+  /** The single file tab in preview mode (italic; replaced on next single-click). */
+  previewFilePath: string | null;
   openPanel: (id: string) => void;
   activatePanel: (id: string) => void;
   closePanel: (id: string) => void;
@@ -100,6 +102,9 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   // activePanel non-null means the center shows that panel instead of the file.
   const [openPanels, setOpenPanels] = useState<string[]>([]);
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  // The one file tab in "preview" mode (single-click open): italic, and the
+  // next single-click preview replaces it. Double-click / edit promotes it.
+  const [previewFilePath, setPreviewFilePath] = useState<string | null>(null);
 
   const openTabsRef = useRef<string[]>([]);
   const buffersRef = useRef<Record<string, string>>({});
@@ -107,6 +112,15 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   // UTF-8 BOM preservation: each open path remembers whether its on-disk
   // bytes started with EF BB BF, so save() can re-emit the BOM.
   const bomFlagsRef = useRef<Record<string, boolean>>({});
+  // Mirrors for the MRU close logic (read current open/active without stale
+  // closures). Center-tab focus order: closing the visible tab falls back to
+  // the most recently used remaining tab (file OR panel), never an empty pane.
+  const openPanelsRef = useRef<string[]>([]);
+  const activeFilePathRef = useRef<string | null>(null);
+  const activePanelRef = useRef<string | null>(null);
+  const previewFilePathRef = useRef<string | null>(null);
+  // MRU stack of tab keys — file path, or `panel:<id>` for a center panel.
+  const tabMruRef = useRef<string[]>([]);
 
   useEffect(() => {
     openTabsRef.current = openTabs;
@@ -119,6 +133,57 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     savedBuffersRef.current = savedBuffers;
   }, [savedBuffers]);
+
+  useEffect(() => {
+    openPanelsRef.current = openPanels;
+  }, [openPanels]);
+  useEffect(() => {
+    activeFilePathRef.current = activeFilePath;
+  }, [activeFilePath]);
+  useEffect(() => {
+    activePanelRef.current = activePanel;
+  }, [activePanel]);
+  useEffect(() => {
+    previewFilePathRef.current = previewFilePath;
+  }, [previewFilePath]);
+
+  // ── Center-tab MRU (focus order across files + panels) ──────────────────
+  const recordTabFocus = useCallback((key: string) => {
+    tabMruRef.current = [...tabMruRef.current.filter((k) => k !== key), key];
+  }, []);
+  const forgetTabFocus = useCallback((key: string) => {
+    tabMruRef.current = tabMruRef.current.filter((k) => k !== key);
+  }, []);
+  const showFileTab = useCallback((p: string) => {
+    setActivePanel(null);
+    setActiveFilePath(p);
+    setDocumentTextState(buffersRef.current[p] ?? '');
+  }, []);
+  // Activate the most-recently-used tab still open (excluding `excludeKey`),
+  // given the post-close open files/panels. Falls back to last tab, then clear.
+  const activateMostRecentTab = useCallback(
+    (excludeKey: string, openFiles: string[], openPanelIds: string[]) => {
+      const isOpen = (k: string) =>
+        k.startsWith('panel:') ? openPanelIds.includes(k.slice(6)) : openFiles.includes(k);
+      for (let i = tabMruRef.current.length - 1; i >= 0; i--) {
+        const k = tabMruRef.current[i]!;
+        if (k === excludeKey || !isOpen(k)) continue;
+        if (k.startsWith('panel:')) setActivePanel(k.slice(6));
+        else showFileTab(k);
+        return;
+      }
+      if (openFiles.length > 0) {
+        showFileTab(openFiles[openFiles.length - 1]!);
+      } else if (openPanelIds.length > 0) {
+        setActivePanel(openPanelIds[openPanelIds.length - 1]!);
+      } else {
+        setActiveFilePath(null);
+        setActivePanel(null);
+        setDocumentTextState('');
+      }
+    },
+    [showFileTab],
+  );
 
   const bumpFileTreeRevision = useCallback(() => {
     setFileTreeRevision((n) => n + 1);
@@ -190,18 +255,22 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     [navigateToWorkspace],
   );
 
-  const activateOpenFile = useCallback((filePath: string) => {
-    const path = filePath.trim();
-    if (path === '') {
-      return;
-    }
-    if (!openTabsRef.current.includes(path)) {
-      return;
-    }
-    setActivePanel(null);
-    setActiveFilePath(path);
-    setDocumentTextState(buffersRef.current[path] ?? '');
-  }, []);
+  const activateOpenFile = useCallback(
+    (filePath: string) => {
+      const path = filePath.trim();
+      if (path === '') {
+        return;
+      }
+      if (!openTabsRef.current.includes(path)) {
+        return;
+      }
+      recordTabFocus(path);
+      setActivePanel(null);
+      setActiveFilePath(path);
+      setDocumentTextState(buffersRef.current[path] ?? '');
+    },
+    [recordTabFocus],
+  );
 
   const closeOpenFile = useCallback(
     (filePath: string) => {
@@ -227,6 +296,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       delete nextSavedBuffers[path];
 
       setOpenTabs(nextTabs);
+      openTabsRef.current = nextTabs; // keep current for the MRU pick below
       setBuffers(nextBuffers);
       setSavedBuffers(nextSavedBuffers);
       setPinnedFilePaths((prev) => {
@@ -235,24 +305,19 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         next.delete(path);
         return next;
       });
+      if (previewFilePathRef.current === path) {
+        setPreviewFilePath(null);
+      }
+      forgetTabFocus(path);
 
-      if (activeFilePath !== path) {
+      // Re-pick the visible tab only if the closed file was the one on screen;
+      // fall back to the most-recently-used remaining tab (file OR panel).
+      if (activePanelRef.current != null || activeFilePathRef.current !== path) {
         return;
       }
-
-      if (nextTabs.length === 0) {
-        setActiveFilePath(null);
-        setDocumentTextState('');
-        return;
-      }
-
-      const oldIdx = tabsBefore.indexOf(path);
-      const nextIdx = oldIdx > 0 ? oldIdx - 1 : 0;
-      const nextPath = nextTabs[nextIdx] ?? nextTabs[0];
-      setActiveFilePath(nextPath);
-      setDocumentTextState(nextBuffers[nextPath] ?? '');
+      activateMostRecentTab(path, nextTabs, openPanelsRef.current);
     },
-    [activeFilePath],
+    [forgetTabFocus, activateMostRecentTab],
   );
 
   const closeOtherOpenFiles = useCallback(
@@ -282,6 +347,13 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       setDocumentTextState(value);
       if (activeFilePath != null && activeFilePath !== '') {
         setBuffers((prev) => ({ ...prev, [activeFilePath]: value }));
+        // Editing the previewed file promotes it to a permanent tab.
+        if (
+          previewFilePathRef.current === activeFilePath &&
+          value !== (savedBuffersRef.current[activeFilePath] ?? '')
+        ) {
+          setPreviewFilePath(null);
+        }
       }
     },
     [activeFilePath],
@@ -418,7 +490,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   const revealNonceRef = useRef(0);
 
   const openFileFromWorkspace = useCallback(
-    async (filePath: string) => {
+    async (filePath: string, opts?: { preview?: boolean }) => {
       const trimmed = filePath.trim();
       if (trimmed === '') {
         return;
@@ -428,8 +500,14 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         notify.warn('No workspace is open. Open a folder from the File menu first.');
         return;
       }
+      // Single-click opens a preview tab; double-click / other callers open it
+      // for keeps (default). Opening the current preview "for keeps" promotes it.
+      const preview = opts?.preview ?? false;
       if (openTabsRef.current.includes(trimmed)) {
         activateOpenFile(trimmed);
+        if (!preview && previewFilePathRef.current === trimmed) {
+          setPreviewFilePath(null);
+        }
         return;
       }
       try {
@@ -438,9 +516,46 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         const hasBom = raw.charCodeAt(0) === 0xfeff;
         const text = hasBom ? raw.slice(1) : raw;
         bomFlagsRef.current = { ...bomFlagsRef.current, [trimmed]: hasBom };
-        setOpenTabs((t) => [...t, trimmed]);
-        setBuffers((b) => ({ ...b, [trimmed]: text }));
-        setSavedBuffers((b) => ({ ...b, [trimmed]: text }));
+
+        // A single-click preview reuses the current preview tab in place (when
+        // it's clean), instead of piling up tabs. Dirty preview is kept.
+        const old = previewFilePathRef.current;
+        const canReplace =
+          preview &&
+          old != null &&
+          old !== trimmed &&
+          openTabsRef.current.includes(old) &&
+          (buffersRef.current[old] ?? '') === (savedBuffersRef.current[old] ?? '');
+
+        if (canReplace && old != null) {
+          const nextTabs = openTabsRef.current.map((p) => (p === old ? trimmed : p));
+          openTabsRef.current = nextTabs;
+          setOpenTabs(nextTabs);
+          setBuffers((b) => {
+            const n = { ...b, [trimmed]: text };
+            delete n[old];
+            return n;
+          });
+          setSavedBuffers((b) => {
+            const n = { ...b, [trimmed]: text };
+            delete n[old];
+            return n;
+          });
+          forgetTabFocus(old);
+        } else {
+          const nextTabs = [...openTabsRef.current, trimmed];
+          openTabsRef.current = nextTabs;
+          setOpenTabs(nextTabs);
+          setBuffers((b) => ({ ...b, [trimmed]: text }));
+          setSavedBuffers((b) => ({ ...b, [trimmed]: text }));
+        }
+
+        // Only mark a preview when previewing; opening for keeps leaves any
+        // existing preview untouched.
+        if (preview) {
+          setPreviewFilePath(trimmed);
+        }
+        recordTabFocus(trimmed);
         setActivePanel(null);
         setActiveFilePath(trimmed);
         setDocumentTextState(text);
@@ -448,7 +563,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         notify.error('Could not open file', formatUserMessage(e));
       }
     },
-    [notify, workspaceRoot?.path, activateOpenFile],
+    [notify, workspaceRoot?.path, activateOpenFile, forgetTabFocus, recordTabFocus],
   );
 
   const openFileAtLine = useCallback(
@@ -487,19 +602,41 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     bumpFileContentRevision();
   }, [workspaceRoot?.path, activeFilePath, bumpFileContentRevision]);
 
-  const openPanel = useCallback((id: string) => {
-    setOpenPanels((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    setActivePanel(id);
-  }, []);
+  const openPanel = useCallback(
+    (id: string) => {
+      if (!openPanelsRef.current.includes(id)) {
+        openPanelsRef.current = [...openPanelsRef.current, id];
+      }
+      setOpenPanels(openPanelsRef.current);
+      recordTabFocus(`panel:${id}`);
+      setActivePanel(id);
+    },
+    [recordTabFocus],
+  );
 
-  const activatePanel = useCallback((id: string) => {
-    setActivePanel(id);
-  }, []);
+  const activatePanel = useCallback(
+    (id: string) => {
+      recordTabFocus(`panel:${id}`);
+      setActivePanel(id);
+    },
+    [recordTabFocus],
+  );
 
-  const closePanel = useCallback((id: string) => {
-    setOpenPanels((prev) => prev.filter((p) => p !== id));
-    setActivePanel((prev) => (prev === id ? null : prev));
-  }, []);
+  const closePanel = useCallback(
+    (id: string) => {
+      const nextPanels = openPanelsRef.current.filter((p) => p !== id);
+      setOpenPanels(nextPanels);
+      openPanelsRef.current = nextPanels;
+      forgetTabFocus(`panel:${id}`);
+      // Re-pick the visible tab only if this panel was on screen; fall back to
+      // the most-recently-used remaining tab (file OR panel) — never empty.
+      if (activePanelRef.current !== id) {
+        return;
+      }
+      activateMostRecentTab(`panel:${id}`, openTabsRef.current, nextPanels);
+    },
+    [forgetTabFocus, activateMostRecentTab],
+  );
 
   const closeWorkspaceFlow = useCallback(() => {
     setOpenTabs([]);
@@ -621,6 +758,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       reloadCleanOpenBuffers,
       openPanels,
       activePanel,
+      previewFilePath,
       openPanel,
       activatePanel,
       closePanel,
@@ -650,6 +788,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       reloadCleanOpenBuffers,
       openPanels,
       activePanel,
+      previewFilePath,
       openPanel,
       activatePanel,
       closePanel,

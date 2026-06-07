@@ -71,6 +71,12 @@
   text-overflow: ellipsis;
 }
 
+/* Preview tab (single-click open): italic, like VS Code — replaced by the next
+   single-click preview, promoted to permanent on double-click or edit. */
+.tabLabelPreview {
+  font-style: italic;
+}
+
 .tabCloseBtn {
   flex-shrink: 0;
   /* No divider + narrower, so the × sits close to the name (≈ the left

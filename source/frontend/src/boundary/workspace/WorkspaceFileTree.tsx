@@ -960,7 +960,7 @@ type FileTreeNodeProps = {
   isFirstRow?: boolean;
   onCommitCreate: (name: string) => Promise<void>;
   onCancelCreate: () => void;
-  onOpenFile: (path: string) => Promise<void>;
+  onOpenFile: (path: string, opts?: { preview?: boolean }) => Promise<void>;
   onContextMenu: (ev: MouseEvent, path: string, isDirectory: boolean, isNested?: boolean) => void;
   onMoveInto: (sourcePath: string, targetDirectory: string) => Promise<void>;
   /** Drag a sibling file onto another file → nest it under that file. */
@@ -1232,7 +1232,14 @@ function FileTreeNode({
           onDragLeave={onDragLeave}
           onDrop={onNestDrop}
           onFocus={() => nav.setFocusedPath(entry.path)}
-          onClick={() => void onOpenFile(entry.path)}
+          onClick={() => void onOpenFile(entry.path, { preview: true })}
+          onDoubleClick={() => void onOpenFile(entry.path)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              void onOpenFile(entry.path);
+            }
+          }}
           onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
           title={entry.name}
         >
@@ -1266,7 +1273,8 @@ function FileTreeNode({
           onDragLeave={onDragLeave}
           onDrop={onNestDrop}
           onFocus={() => nav.setFocusedPath(entry.path)}
-          onClick={() => void onOpenFile(entry.path)}
+          onClick={() => void onOpenFile(entry.path, { preview: true })}
+          onDoubleClick={() => void onOpenFile(entry.path)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') void onOpenFile(entry.path);
           }}
