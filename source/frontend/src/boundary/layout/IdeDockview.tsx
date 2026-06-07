@@ -366,11 +366,13 @@ export function IdeDockview({
 
   // Outer horizontal split: [fileTree?, center, toolPane?]. Empty slots are
   // skipped, so a hidden FileTree just gives the center more room.
-  const outerEntries = [
-    fileTreeNode != null ? { key: 'fileTree' as const, node: fileTreeNode } : null,
-    { key: 'center' as const, node: centerNode },
-    toolPaneNode != null ? { key: 'toolDock' as const, node: toolPaneNode } : null,
-  ].filter((x): x is { key: 'fileTree' | 'center' | 'toolDock'; node: ReactNode } => x != null);
+  type OuterEntry = { key: 'fileTree' | 'center' | 'toolDock'; node: ReactNode };
+  const outerCandidates: Array<OuterEntry | null> = [
+    fileTreeNode != null ? { key: 'fileTree', node: fileTreeNode } : null,
+    { key: 'center', node: centerNode },
+    toolPaneNode != null ? { key: 'toolDock', node: toolPaneNode } : null,
+  ];
+  const outerEntries = outerCandidates.filter((x): x is OuterEntry => x != null);
 
   const outerSizes = outerEntries.map((e) => {
     if (e.key === 'fileTree') return initial.outer[0] ?? 2;
