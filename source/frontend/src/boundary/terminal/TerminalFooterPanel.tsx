@@ -7,6 +7,7 @@ import {
   type CremniyMeta,
 } from '@domain/project/cremniyMeta';
 import { readCremniyMeta, writeCremniyMeta } from '@infrastructure/tauri/bridge';
+import { registerAgentCommands } from '@shared/agent/agentBridge';
 
 import { TerminalInstance } from './TerminalInstance';
 import styles from './TerminalFooterPanel.module.css';
@@ -95,6 +96,21 @@ export function TerminalFooterPanel({
   // When a rename ends via Enter/Escape we tear the input down ourselves; this
   // flag tells the resulting blur not to commit a second (or unwanted) time.
   const skipBlurRef = useRef(false);
+
+  // Per-tab pure scrollback readers (tab id → read fn), reported up by each live
+  // TerminalInstance. Backs the `terminal.read` / `terminal.list` agent commands.
+  // Refs (not state): the registration effect runs once, so `run` reads these
+  // live instead of closing over a stale snapshot.
+  const readersRef = useRef<Map<number, () => string>>(new Map());
+  const tabsRef = useRef<TerminalTab[]>(tabs);
+  tabsRef.current = tabs;
+  const activeIdRef = useRef(activeId);
+  activeIdRef.current = activeId;
+
+  const handleReader = useCallback((id: number, read: (() => string) | null) => {
+    if (read == null) readersRef.current.delete(id);
+    else readersRef.current.set(id, read);
+  }, []);
 
   // Restore tab layout from .cremniy when the workspace opens / changes.
   useEffect(() => {
@@ -248,6 +264,63 @@ export function TerminalFooterPanel({
 
   const handleShell = useCallback((id: number, shell: string | null) => {
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, shell } : t)));
+  }, []);
+
+  // Type-1 (read-only) agent commands: hand an agent the full terminal
+  // scrollback as text — the whole buffer, not just what's on screen. Pure data
+  // return; they never scroll/resize/focus the terminal. Registered once; `run`
+  // reads tabs/active/readers through refs. Docs: AGENT_CONTROL.md.
+  useEffect(() => {
+    const labelFor = (tab: TerminalTab, i: number): string =>
+      tab.title ?? shellLabel(tab.shell) ?? `Terminal ${i + 1}`;
+
+    return registerAgentCommands([
+      {
+        name: 'terminal.read',
+        description:
+          'Read the full terminal scrollback as text { lines? } (no UI change). Reads the active terminal; `lines` keeps only the last N lines. Use terminal.list for other tabs.',
+        run: (args) => {
+          const tabs = tabsRef.current;
+          if (tabs.length === 0) throw new Error('No terminal is open.');
+          const activeIdNow = activeIdRef.current;
+          const index = Math.max(0, tabs.findIndex((t) => t.id === activeIdNow));
+          const tab = tabs[index]!;
+          const read = readersRef.current.get(tab.id);
+          if (read == null) {
+            throw new Error('The active terminal is not ready yet (no buffer).');
+          }
+          let text = read();
+          const total = text === '' ? 0 : text.split('\n').length;
+          const n = typeof args.lines === 'number' ? Math.floor(args.lines) : null;
+          if (n != null && n > 0) {
+            text = text.split('\n').slice(-n).join('\n');
+          }
+          return {
+            sessionIndex: index,
+            label: labelFor(tab, index),
+            terminalCount: tabs.length,
+            lineCount: total,
+            text,
+          };
+        },
+      },
+      {
+        name: 'terminal.list',
+        description:
+          'List open terminals { } — index, label, whether active and whether its buffer is readable (no UI change).',
+        run: () => {
+          const tabs = tabsRef.current;
+          const activeIdNow = activeIdRef.current;
+          return tabs.map((tab, i) => ({
+            index: i,
+            label: labelFor(tab, i),
+            shell: tab.shell,
+            active: tab.id === activeIdNow,
+            readable: readersRef.current.has(tab.id),
+          }));
+        },
+      },
+    ]);
   }, []);
 
   return (
@@ -411,6 +484,7 @@ export function TerminalFooterPanel({
               active={tab.id === activeId}
               collapsed={collapsed}
               onShellChange={(shell) => handleShell(tab.id, shell)}
+              onReaderChange={(read) => handleReader(tab.id, read)}
             />
           </div>
         ))}

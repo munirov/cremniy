@@ -29,6 +29,10 @@ export type TerminalInstanceProps = {
   /** Reports the live shell name (e.g. "powershell") so the owning tab can
       label itself; null when idle / exited. */
   onShellChange?: (shell: string | null) => void;
+  /** Hands the panel a pure reader for this instance's full xterm scrollback
+      (used by the `terminal.read` agent command). Passes null on unmount so the
+      panel can drop it. The reader never mutates the terminal (no scroll/focus).*/
+  onReaderChange?: (read: (() => string) | null) => void;
 };
 
 function formatError(error: unknown): string {
@@ -112,6 +116,7 @@ export function TerminalInstance({
   active,
   collapsed = false,
   onShellChange,
+  onReaderChange,
 }: TerminalInstanceProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -129,6 +134,10 @@ export function TerminalInstance({
   // on every parent render).
   const onShellRef = useRef(onShellChange);
   onShellRef.current = onShellChange;
+  // Same for the reader-report callback — kept in a ref so re-registering it
+  // (parent re-render) never tears down and rebuilds the xterm.
+  const onReaderRef = useRef(onReaderChange);
+  onReaderRef.current = onReaderChange;
 
   const rootPath = workspaceRoot?.trim() ?? '';
 
@@ -309,6 +318,25 @@ export function TerminalInstance({
     termRef.current = term;
     fitRef.current = fit;
 
+    // Pure scrollback reader for the `terminal.read` agent command. Walks the
+    // ENTIRE active buffer (scrollback + viewport), not just the visible rows —
+    // `buffer.length` counts every row xterm retains (up to `scrollback`). Pure
+    // read: no scroll/resize/focus, so calling it never disturbs the terminal.
+    const readScrollback = (): string => {
+      const buf = term.buffer.active;
+      const lines: string[] = [];
+      for (let i = 0; i < buf.length; i += 1) {
+        lines.push(buf.getLine(i)?.translateToString() ?? '');
+      }
+      // Drop trailing blank rows xterm pads the viewport with, but keep interior
+      // blanks so multi-line output spacing survives.
+      while (lines.length > 0 && lines[lines.length - 1]!.trim() === '') {
+        lines.pop();
+      }
+      return lines.join('\n');
+    };
+    onReaderRef.current?.(readScrollback);
+
     const handleResize = () => {
       try {
         fit.fit();
@@ -323,6 +351,7 @@ export function TerminalInstance({
     return () => {
       window.removeEventListener('resize', handleResize);
       observer.disconnect();
+      onReaderRef.current?.(null);
       term.dispose();
       termRef.current = null;
       fitRef.current = null;
