@@ -5,12 +5,13 @@ import type { WorkspaceRoot } from '@domain/workspace/types';
 
 import { WorkspaceFileTree } from './WorkspaceFileTree';
 import { SearchPanel } from './SearchPanel';
-import { ExplorerIcon, SearchIcon, ChevronDownIcon } from './activityBarIcons';
+import { GitPanel } from './GitPanel';
+import { ExplorerIcon, SearchIcon, GitIcon, ChevronDownIcon } from './activityBarIcons';
 import { ViewsMenu } from './ViewsMenu';
 
 import styles from './SidePanel.module.css';
 
-type ViewId = 'explorer' | 'search';
+type ViewId = 'explorer' | 'search' | 'git';
 
 /**
  * The registry of side-panel views. Today: Explorer + Search. This is the seam
@@ -21,6 +22,7 @@ type ViewId = 'explorer' | 'search';
 const VIEWS: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
   { id: 'explorer', label: 'Explorer', icon: <ExplorerIcon size={17} /> },
   { id: 'search', label: 'Search', icon: <SearchIcon size={17} /> },
+  { id: 'git', label: 'Source Control', icon: <GitIcon size={17} /> },
 ];
 
 const PIN_STORAGE_KEY = 'cremniy.pinnedViews';
@@ -96,8 +98,10 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
         <div className={styles.viewBody}>
           {active === 'explorer' ? (
             <WorkspaceFileTree workspaceRoot={workspaceRoot} />
-          ) : (
+          ) : active === 'search' ? (
             <SearchPanel workspaceRoot={workspaceRoot} />
+          ) : (
+            <GitPanel workspaceRoot={workspaceRoot} />
           )}
         </div>
         {menuAnchor != null ? (

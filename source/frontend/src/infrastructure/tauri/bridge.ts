@@ -239,6 +239,28 @@ export async function replaceInFile(
   });
 }
 
+export type GitFileStatus = {
+  path: string;
+  absPath: string;
+  name: string;
+  indexStatus: string;
+  workStatus: string;
+  staged: boolean;
+  untracked: boolean;
+};
+
+export type GitStatus = {
+  isRepo: boolean;
+  branch: string | null;
+  files: GitFileStatus[];
+};
+
+/** Working-tree status of the workspace's git repo (porcelain). `isRepo` is
+ *  false when the folder isn't a repo or git isn't on PATH. */
+export async function gitStatus(workspaceRoot: string): Promise<GitStatus> {
+  return invoke<GitStatus>("git_status", { workspaceRoot });
+}
+
 export async function writeUserFile(path: string, contents: string): Promise<void> {
   return invoke<void>("write_user_file", { path, contents });
 }
