@@ -21,7 +21,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0.7;
+  opacity: 0.55;
 }
 
 .branchWrap {
@@ -44,7 +44,7 @@
   color: inherit;
   font-family: var(--font-family-mono);
   font-size: 11px;
-  opacity: 0.6;
+  opacity: 0.8;
   cursor: pointer;
 }
 
@@ -149,7 +149,7 @@
   overflow: auto;
   padding: 0.25rem 0 0.5rem;
   font-family: var(--font-family-mono);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-primary);
 }
 
@@ -296,7 +296,7 @@
 .stateLine {
   margin: 0 0 0.3rem;
   font-family: var(--font-family-mono);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .stateHint {
@@ -508,7 +508,7 @@
   white-space: nowrap;
   font-family: var(--font-family-mono);
   font-size: 12px;
-  font-weight: 600;
+  opacity: 0.85;
 }
 
 /* Indent a repo's commit box / groups / files under its header. */
@@ -584,7 +584,7 @@
   max-width: 9rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 .repoListBranch {
