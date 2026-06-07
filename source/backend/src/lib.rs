@@ -58,6 +58,7 @@ pub fn run() {
             git::git_checkout,
             git::git_create_branch,
             git::git_discard,
+            git::git_repos,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

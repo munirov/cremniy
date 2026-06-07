@@ -300,6 +300,13 @@ export async function gitPull(workspaceRoot: string): Promise<void> {
   return invoke<void>("git_pull", { workspaceRoot });
 }
 
+export type GitRepoRef = { path: string; name: string };
+
+/** Discover git repos under the workspace (root + nested microservice repos). */
+export async function gitRepos(workspaceRoot: string): Promise<GitRepoRef[]> {
+  return invoke<GitRepoRef[]>("git_repos", { workspaceRoot });
+}
+
 /** List local branch names. */
 export async function gitBranches(workspaceRoot: string): Promise<string[]> {
   return invoke<string[]>("git_branches", { workspaceRoot });

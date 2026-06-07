@@ -35,6 +35,14 @@ pub struct GitStatus {
     files: Vec<GitFileStatus>,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RepoRef {
+    /// Absolute repo root (used as the workspace_root arg to the other commands).
+    path: String,
+    name: String,
+}
+
 /// Working-tree status via `git status --porcelain`. Returns `is_repo: false`
 /// (not an error) when the folder isn't a git repo or git isn't on PATH, so the
 /// panel can show a friendly empty state instead of a red error.
@@ -208,6 +216,44 @@ pub fn git_discard(workspace_root: String, paths: Vec<String>, untracked: bool) 
         args.extend(paths.iter().map(String::as_str));
         run_git(&root, &args).map(|_| ())
     }
+}
+
+/// Discover git repositories under the workspace — the root itself plus nested
+/// repos (e.g. microservices). Bounded-depth walk that skips heavy directories.
+#[tauri::command]
+pub fn git_repos(workspace_root: String) -> Result<Vec<RepoRef>, String> {
+    use ignore::WalkBuilder;
+    let root = canonical_workspace_root(&workspace_root)?;
+    let mut repos: Vec<RepoRef> = Vec::new();
+    let mut builder = WalkBuilder::new(&root);
+    builder
+        .max_depth(Some(6))
+        .hidden(false)
+        .git_ignore(false)
+        .git_global(false)
+        .require_git(false)
+        .filter_entry(|e| {
+            let n = e.file_name().to_string_lossy();
+            n != ".git" && n != "node_modules" && n != "target" && n != "dist"
+        });
+    for dent in builder.build().flatten() {
+        if !dent.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+            continue;
+        }
+        if dent.path().join(".git").exists() {
+            let path = crate::pretty_path(dent.path().to_path_buf())
+                .to_string_lossy()
+                .into_owned();
+            let name = dent
+                .path()
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| path.clone());
+            repos.push(RepoRef { path, name });
+        }
+    }
+    repos.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    Ok(repos)
 }
 
 /// Parse `git status --porcelain=v1 --branch` output into a branch name + file
