@@ -30,6 +30,28 @@ function statusBadge(f: GitFileStatus): string {
   return code === '' ? '•' : code;
 }
 
+/** Full status word for the badge tooltip — A/M/D/U are otherwise cryptic. */
+function statusLabel(f: GitFileStatus): string {
+  if (f.untracked) return 'Untracked';
+  const code = (f.staged ? f.indexStatus : f.workStatus).trim();
+  switch (code) {
+    case 'M':
+      return 'Modified';
+    case 'A':
+      return 'Added';
+    case 'D':
+      return 'Deleted';
+    case 'R':
+      return 'Renamed';
+    case 'C':
+      return 'Copied';
+    case 'U':
+      return 'Conflict';
+    default:
+      return 'Changed';
+  }
+}
+
 function dirOf(rel: string): string {
   const i = Math.max(rel.lastIndexOf('/'), rel.lastIndexOf('\\'));
   return i > 0 ? rel.slice(0, i) : '';
@@ -197,7 +219,10 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
       >
         {f.staged ? '−' : '+'}
       </button>
-      <span className={`${styles.badge} ${f.untracked ? styles.badgeUntracked : ''}`}>
+      <span
+        className={`${styles.badge} ${f.untracked ? styles.badgeUntracked : ''}`}
+        title={statusLabel(f)}
+      >
         {statusBadge(f)}
       </span>
     </div>

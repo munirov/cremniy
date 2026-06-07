@@ -331,19 +331,21 @@
 
 .commitBtn {
   align-self: stretch;
-  padding: 0.35rem 0.6rem;
+  padding: 0.45rem 0.6rem;
   font-family: var(--font-family-mono);
   font-size: 12px;
+  font-weight: 600;
   color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  /* Primary action — the brightest neutral fill in the panel (no blue; canon). */
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.12s ease;
 }
 
 .commitBtn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .commitBtn:disabled {
@@ -384,14 +386,14 @@
   padding: 0;
   font-size: 11px;
   color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .commitCaret:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .commitCaret:disabled {
