@@ -150,32 +150,45 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     };
   }, [workspaceRoot?.path]);
 
+  // Tracks which workspace's root we've already loaded. A refresh tick reuses it
+  // (silent reload); only a genuine workspace change does the full clear+spinner.
+  const loadedRootRef = useRef<string | null>(null);
   useEffect(() => {
     if (workspaceRoot == null || workspaceRoot.path === '') {
+      loadedRootRef.current = null;
       setEntries(null);
       setError(null);
       setLoading(false);
       return;
     }
 
+    // Initial load (new workspace) shows the spinner and clears stale rows.
+    // A refresh tick (focus/poll) reloads silently — no null flash, no spinner,
+    // no scroll jump — so the tree doesn't twitch every few seconds.
+    const isInitial = loadedRootRef.current !== workspaceRoot.path;
+    loadedRootRef.current = workspaceRoot.path;
+
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setEntries(null);
+    if (isInitial) {
+      setLoading(true);
+      setError(null);
+      setEntries(null);
+    }
 
     void listDirectoryEntries(workspaceRoot.path, workspaceRoot.path)
       .then((list) => {
         if (!cancelled) {
           setEntries(list);
+          setError(null);
         }
       })
       .catch((e: unknown) => {
-        if (!cancelled) {
+        if (!cancelled && isInitial) {
           setError(e instanceof Error ? e.message : String(e));
         }
       })
       .finally(() => {
-        if (!cancelled) {
+        if (!cancelled && isInitial) {
           setLoading(false);
         }
       });
