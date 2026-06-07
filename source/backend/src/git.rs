@@ -160,6 +160,56 @@ pub fn git_pull(workspace_root: String) -> Result<(), String> {
     run_git(&root, &["pull"]).map(|_| ())
 }
 
+/// List local branch names.
+#[tauri::command]
+pub fn git_branches(workspace_root: String) -> Result<Vec<String>, String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    let out = run_git(&root, &["branch", "--format=%(refname:short)"])?;
+    Ok(out
+        .lines()
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty())
+        .collect())
+}
+
+/// Switch to an existing branch.
+#[tauri::command]
+pub fn git_checkout(workspace_root: String, branch: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["checkout", branch.trim()]).map(|_| ())
+}
+
+/// Create a new branch from HEAD and switch to it.
+#[tauri::command]
+pub fn git_create_branch(workspace_root: String, name: String) -> Result<(), String> {
+    let n = name.trim();
+    if n.is_empty() {
+        return Err(String::from("Branch name is empty"));
+    }
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["checkout", "-b", n]).map(|_| ())
+}
+
+/// Discard working-tree changes for the given repo-relative paths. Untracked
+/// files are removed; tracked files are reverted to HEAD.
+#[tauri::command]
+pub fn git_discard(workspace_root: String, paths: Vec<String>, untracked: bool) -> Result<(), String> {
+    if paths.is_empty() {
+        return Ok(());
+    }
+    let root = canonical_workspace_root(&workspace_root)?;
+    if untracked {
+        // `git clean -f -- <paths>` removes untracked files.
+        let mut args: Vec<&str> = vec!["clean", "-f", "--"];
+        args.extend(paths.iter().map(String::as_str));
+        run_git(&root, &args).map(|_| ())
+    } else {
+        let mut args: Vec<&str> = vec!["checkout", "HEAD", "--"];
+        args.extend(paths.iter().map(String::as_str));
+        run_git(&root, &args).map(|_| ())
+    }
+}
+
 /// Parse `git status --porcelain=v1 --branch` output into a branch name + file
 /// list. Pure (only `pretty_path` string work, no process / FS), so it's
 /// unit-tested against the M / A / D / ?? / rename shapes the live tree can't
