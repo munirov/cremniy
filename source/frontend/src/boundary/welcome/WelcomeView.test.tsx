@@ -171,11 +171,14 @@ describe('WelcomeView', () => {
     const user = userEvent.setup();
     renderWelcomeWithIdeRoute();
 
+    // Wait for the prefs-load + prune pass to settle into the full recent list
+    // (all rows present, not a transient pruned subset) before interacting.
     await waitFor(() => {
-      expect(screen.getByText('cremniy-sample')).toBeInTheDocument();
+      expect(screen.getAllByRole('option')).toHaveLength(MOCK_RECENT_PATHS.length);
     });
-
     const options = screen.getAllByRole('option');
+    expect(options[1]).toHaveTextContent('cremniy-sample');
+
     await user.dblClick(options[1]);
 
     await waitFor(() => {
@@ -205,8 +208,11 @@ describe('WelcomeView', () => {
     const user = userEvent.setup();
     renderWelcomeWithIdeRoute();
 
+    // The ArrowDown handler bails when the recent list is still empty, so wait
+    // for the prefs-load + prune pass to populate every row before keying. If
+    // we key too early the selection never lands and the test flakes.
     await waitFor(() => {
-      expect(screen.getByRole('listbox', { name: /recent workspaces/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('option')).toHaveLength(MOCK_RECENT_PATHS.length);
     });
 
     const list = screen.getByRole('listbox', { name: /recent workspaces/i });
