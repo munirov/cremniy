@@ -24,22 +24,42 @@ describe('appPreferences', () => {
   it('roundtrips known preferences via JSON', () => {
     const prefs = {
       theme: 'light' as const,
+      locale: 'ru' as const,
       recentWorkspacePaths: ['C:\\a', 'D:\\b'],
       terminalPanelVisible: false,
       editorWordWrap: false,
+      editorFontSize: 18,
+      editorInsertSpaces: true,
+      editorTabWidth: 2 as const,
+      excludedFilePatterns: '.git\nnode_modules',
+      hexOptions: {
+        bytesPerLine: 32,
+        addressWidth: 16,
+        groupLength: 4,
+      },
       disassembly: {
         backend: 'objdump' as const,
         objdumpPath: 'C:\\tools\\objdump.exe',
         archHint: 'i386',
         instructionLimit: 5000,
         syntax: 'att' as const,
+        radare2Path: 'C:\\tools\\r2.exe',
+        radare2AnalysisLevel: 'aaa' as const,
+        radare2PreCommands: 'e asm.bytes=false\ne scr.color=0',
       },
+      dockLayout: null,
     };
     const again = parseAppPreferences(stringifyAppPreferences(prefs));
     expect(again.theme).toBe(prefs.theme);
+    expect(again.locale).toBe(prefs.locale);
     expect(again.recentWorkspacePaths).toEqual(prefs.recentWorkspacePaths);
     expect(again.terminalPanelVisible).toBe(false);
     expect(again.editorWordWrap).toBe(false);
+    expect(again.editorFontSize).toBe(18);
+    expect(again.editorInsertSpaces).toBe(true);
+    expect(again.editorTabWidth).toBe(2);
+    expect(again.excludedFilePatterns).toBe(prefs.excludedFilePatterns);
+    expect(again.hexOptions).toEqual(prefs.hexOptions);
     expect(again.disassembly).toEqual(prefs.disassembly);
   });
 
@@ -53,14 +73,20 @@ describe('appPreferences', () => {
           archHint: ' i386:x86-64 ',
           instructionLimit: 1,
           syntax: 'unknown',
+          radare2Path: '  /usr/bin/r2  ',
+          radare2AnalysisLevel: 'aaa',
+          radare2PreCommands: '  e asm.bytes=false  ',
         },
       }).disassembly,
     ).toEqual({
-      backend: 'objdump',
+      backend: 'radare2',
       objdumpPath: '/usr/bin/objdump',
       archHint: 'i386:x86-64',
       instructionLimit: 50,
       syntax: 'intel',
+      radare2Path: '/usr/bin/r2',
+      radare2AnalysisLevel: 'aaa',
+      radare2PreCommands: 'e asm.bytes=false',
     });
   });
 
@@ -82,7 +108,7 @@ describe('appPreferences', () => {
     ).toBe(123);
   });
 
-  it('does not persist unavailable radare2 as the active backend', () => {
+  it('preserves radare2 as the active backend when selected', () => {
     expect(
       normalizeAppPreferences({
         disassembly: {
@@ -90,7 +116,7 @@ describe('appPreferences', () => {
           objdumpPath: '/usr/bin/objdump',
         },
       }).disassembly.backend,
-    ).toBe('objdump');
+    ).toBe('radare2');
   });
 
   it('dedupes, trims, and caps recentWorkspacePaths when normalizing', () => {

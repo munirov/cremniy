@@ -19,10 +19,17 @@ describe('preferencesBridge', () => {
     vi.mocked(invoke).mockResolvedValueOnce(json);
     await expect(loadPreferences()).resolves.toEqual({
       theme: 'light',
+      locale: DEFAULT_APP_PREFERENCES.locale,
       recentWorkspacePaths: ['/a'],
       terminalPanelVisible: true,
       editorWordWrap: DEFAULT_APP_PREFERENCES.editorWordWrap,
+      editorFontSize: DEFAULT_APP_PREFERENCES.editorFontSize,
+      editorInsertSpaces: DEFAULT_APP_PREFERENCES.editorInsertSpaces,
+      editorTabWidth: DEFAULT_APP_PREFERENCES.editorTabWidth,
+      excludedFilePatterns: DEFAULT_APP_PREFERENCES.excludedFilePatterns,
+      hexOptions: DEFAULT_APP_PREFERENCES.hexOptions,
       disassembly: DEFAULT_APP_PREFERENCES.disassembly,
+      dockLayout: DEFAULT_APP_PREFERENCES.dockLayout,
     });
     expect(invoke).toHaveBeenCalledWith('read_app_preferences');
   });
