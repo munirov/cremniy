@@ -369,6 +369,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         openDialogs: {
           settings: u.settingsOpen,
           advancedGit: u.openPanels?.includes('advancedGit') ?? false,
+          connections: u.openPanels?.includes('connections') ?? false,
           reverseCalculator: u.calcOpen,
           reference: u.refsOpen,
         },
