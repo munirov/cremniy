@@ -8,16 +8,25 @@ function statusRegion() {
   return screen.getByRole('status');
 }
 
+// "Hex" appears as both an offset-radix radio and a search-mode radio, so scope
+// the search-mode pick to its own group.
+function selectHexSearchMode() {
+  return within(screen.getByRole('group', { name: 'Search mode' })).getByRole('radio', {
+    name: 'Hex',
+  });
+}
+
 describe('BinaryFindGoDialog', () => {
   it('shows offset validation when Go is pressed with empty offset', async () => {
     const user = userEvent.setup();
     const onGoToOffset = vi.fn();
     render(
       <BinaryFindGoDialog
-        bufferLength={100}
+        buffer={new Uint8Array(100)}
+        cursorOffset={0}
         onClose={vi.fn()}
-        onFindBytes={() => true}
         onGoToOffset={onGoToOffset}
+        onSelectRange={vi.fn()}
       />,
     );
 
@@ -31,10 +40,11 @@ describe('BinaryFindGoDialog', () => {
     const user = userEvent.setup();
     render(
       <BinaryFindGoDialog
-        bufferLength={100}
+        buffer={new Uint8Array(100)}
+        cursorOffset={0}
         onClose={vi.fn()}
-        onFindBytes={() => true}
         onGoToOffset={vi.fn()}
+        onSelectRange={vi.fn()}
       />,
     );
 
@@ -51,38 +61,62 @@ describe('BinaryFindGoDialog', () => {
     const user = userEvent.setup();
     render(
       <BinaryFindGoDialog
-        bufferLength={100}
+        buffer={new Uint8Array(100)}
+        cursorOffset={0}
         onClose={vi.fn()}
-        onFindBytes={vi.fn()}
         onGoToOffset={vi.fn()}
+        onSelectRange={vi.fn()}
       />,
     );
 
-    await user.type(screen.getByLabelText('Pattern'), '414');
-    await user.click(screen.getByRole('button', { name: 'Find' }));
+    await user.click(selectHexSearchMode());
+    await user.type(screen.getByLabelText('Find'), '414');
+    await user.click(screen.getByRole('button', { name: 'Find next' }));
 
     expect(
       within(statusRegion()).getByText('Hex bytes need an even number of digits.'),
     ).toBeInTheDocument();
   });
 
-  it('shows not found when onFindBytes returns false', async () => {
+  it('shows not found when the pattern is absent from the buffer', async () => {
     const user = userEvent.setup();
-    const onFindBytes = vi.fn().mockReturnValue(false);
+    const onSelectRange = vi.fn();
     render(
       <BinaryFindGoDialog
-        bufferLength={4}
+        buffer={new Uint8Array([0x41, 0x42, 0x43, 0x44])}
+        cursorOffset={0}
         onClose={vi.fn()}
-        onFindBytes={onFindBytes}
         onGoToOffset={vi.fn()}
+        onSelectRange={onSelectRange}
       />,
     );
 
-    await user.type(screen.getByLabelText('Pattern'), 'ff');
-    await user.click(screen.getByRole('button', { name: 'Find' }));
+    await user.click(selectHexSearchMode());
+    await user.type(screen.getByLabelText('Find'), 'ff');
+    await user.click(screen.getByRole('button', { name: 'Find next' }));
 
-    expect(onFindBytes).toHaveBeenCalled();
+    expect(onSelectRange).not.toHaveBeenCalled();
     expect(within(statusRegion()).getByText('Not found.')).toBeInTheDocument();
+  });
+
+  it('selects the match range when the pattern is found in the buffer', async () => {
+    const user = userEvent.setup();
+    const onSelectRange = vi.fn();
+    render(
+      <BinaryFindGoDialog
+        buffer={new Uint8Array([0x41, 0x42, 0xff, 0x43])}
+        cursorOffset={0}
+        onClose={vi.fn()}
+        onGoToOffset={vi.fn()}
+        onSelectRange={onSelectRange}
+      />,
+    );
+
+    await user.click(selectHexSearchMode());
+    await user.type(screen.getByLabelText('Find'), 'ff');
+    await user.click(screen.getByRole('button', { name: 'Find next' }));
+
+    expect(onSelectRange).toHaveBeenCalledWith(2, 1);
   });
 
   it('calls onGoToOffset for valid hex offset', async () => {
@@ -90,10 +124,11 @@ describe('BinaryFindGoDialog', () => {
     const onGoToOffset = vi.fn();
     render(
       <BinaryFindGoDialog
-        bufferLength={256}
+        buffer={new Uint8Array(256)}
+        cursorOffset={0}
         onClose={vi.fn()}
-        onFindBytes={() => true}
         onGoToOffset={onGoToOffset}
+        onSelectRange={vi.fn()}
       />,
     );
 
@@ -109,10 +144,11 @@ describe('BinaryFindGoDialog', () => {
     const onClose = vi.fn();
     render(
       <BinaryFindGoDialog
-        bufferLength={10}
+        buffer={new Uint8Array(10)}
+        cursorOffset={0}
         onClose={onClose}
-        onFindBytes={() => true}
         onGoToOffset={vi.fn()}
+        onSelectRange={vi.fn()}
       />,
     );
 
@@ -124,10 +160,11 @@ describe('BinaryFindGoDialog', () => {
     const onClose = vi.fn();
     render(
       <BinaryFindGoDialog
-        bufferLength={10}
+        buffer={new Uint8Array(10)}
+        cursorOffset={0}
         onClose={onClose}
-        onFindBytes={() => true}
         onGoToOffset={vi.fn()}
+        onSelectRange={vi.fn()}
       />,
     );
 
@@ -140,10 +177,11 @@ describe('BinaryFindGoDialog', () => {
     const onGoToOffset = vi.fn();
     render(
       <BinaryFindGoDialog
-        bufferLength={256}
+        buffer={new Uint8Array(256)}
+        cursorOffset={0}
         onClose={vi.fn()}
-        onFindBytes={() => true}
         onGoToOffset={onGoToOffset}
+        onSelectRange={vi.fn()}
       />,
     );
 

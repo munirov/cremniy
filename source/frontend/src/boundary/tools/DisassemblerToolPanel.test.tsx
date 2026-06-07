@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { IdeSessionContextValue } from '@boundary/workspace/IdeSessionContext';
 import type {
@@ -27,16 +27,32 @@ function stubSession(activeFilePath: string | null): IdeSessionContextValue {
   return {
     activeFilePath,
     openFilePaths: activeFilePath ? [activeFilePath] : [],
+    pinnedFilePaths: new Set(),
+    togglePinFilePath: vi.fn(),
+    reorderOpenFiles: vi.fn(),
     documentText: '',
     dirtyFilePaths: [],
     activeDocumentDirty: false,
     setDocumentText: vi.fn(),
     openFileFromWorkspace: vi.fn(),
+    openFileAtLine: vi.fn(),
+    revealTarget: null,
+    reloadCleanOpenBuffers: vi.fn(),
+    openPanels: [],
+    activePanel: null,
+    previewFilePath: null,
+    openPanel: vi.fn(),
+    activatePanel: vi.fn(),
+    closePanel: vi.fn(),
     activateOpenFile: vi.fn(),
     closeOpenFile: vi.fn(),
+    closeOtherOpenFiles: vi.fn(),
+    closeAllOpenFiles: vi.fn(),
     runFileMenuAction: vi.fn(),
     fileTreeRevision: 0,
     bumpFileTreeRevision: vi.fn(),
+    fileContentRevision: 0,
+    bumpFileContentRevision: vi.fn(),
   };
 }
 
@@ -74,34 +90,37 @@ Idx Name          Size      VMA               LMA               File off  Algn
   };
 }
 
-function largeDisassemblyResult(rowCount: number): DisassemblyCommandResult {
-  const rows = Array.from({ length: rowCount }, (_, index) => {
-    const address = (0x1040 + index).toString(16);
-    return `    ${address}:\t90                   \tnop`;
-  }).join('\n');
-
-  return disassemblyResult({
-    stdout: `
-Disassembly of section .text:
-${rows}
-`,
-    sectionHeadersStdout: `
-Idx Name          Size      VMA               LMA               File off  Algn
- 13 .text         00001000  0000000000001040  0000000000001040  00001040  2**4
-`,
-  });
+// Instruction cells syntax-highlight their text into per-token <span>s, so the
+// mnemonic/operands are split across elements. Match the listing cell by its
+// combined (whitespace-collapsed) text instead of a single text node.
+function instr(text: string) {
+  return (_content: string, element: Element | null): boolean =>
+    element?.getAttribute('role') === 'cell' &&
+    element.textContent?.replace(/\s+/g, ' ').trim() === text;
 }
 
 describe('DisassemblerToolPanel', () => {
   let disassembleFile: ReturnType<typeof vi.fn<DisassembleWorkspaceFile>>;
-  let scrollIntoView: ReturnType<typeof vi.fn>;
+  let scrollTo: ReturnType<typeof vi.fn>;
+
+  beforeAll(() => {
+    if (globalThis.ResizeObserver === undefined) {
+      globalThis.ResizeObserver = class {
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      } as typeof ResizeObserver;
+    }
+  });
 
   beforeEach(() => {
     disassembleFile = vi.fn<DisassembleWorkspaceFile>();
-    scrollIntoView = vi.fn();
-    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+    // The listing jumps by scrolling its container (el.scrollTo), not the row's
+    // scrollIntoView. jsdom implements neither, so stub the one the panel uses.
+    scrollTo = vi.fn();
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollTo', {
       configurable: true,
-      value: scrollIntoView,
+      value: scrollTo,
     });
     mockUseIdeSession.mockReset();
     mockUseWorkspaceRoot.mockReset();
@@ -137,7 +156,7 @@ describe('DisassemblerToolPanel', () => {
 
     render(<DisassemblerToolPanel disassembleFile={disassembleFile} />);
 
-    expect(screen.getByText('Disassembling with objdump…')).toBeInTheDocument();
+    expect(screen.getByText('Disassembling…')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('<_start>')).toBeInTheDocument();
@@ -148,7 +167,7 @@ describe('DisassemblerToolPanel', () => {
     expect(screen.getByText('00001040')).toBeInTheDocument();
     expect(screen.getByText('f3 0f 1e fa')).toBeInTheDocument();
     expect(screen.getByText('endbr64')).toBeInTheDocument();
-    expect(screen.getByText('xor ebp,ebp')).toBeInTheDocument();
+    expect(screen.getByText(instr('xor ebp,ebp'))).toBeInTheDocument();
     expect(screen.queryByText(/not implemented/i)).not.toBeInTheDocument();
     expect(screen.getByText('2 section(s)')).toBeInTheDocument();
     expect(screen.getByText('2 function label(s)')).toBeInTheDocument();
@@ -181,7 +200,7 @@ describe('DisassemblerToolPanel', () => {
 
     render(<DisassemblerToolPanel disassembleFile={disassembleFile} />);
 
-    expect(screen.getByText('Disassembling with objdump…')).toBeInTheDocument();
+    expect(screen.getByText('Disassembling…')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Disassembly cancelled.')).toBeInTheDocument();
 
@@ -201,17 +220,17 @@ describe('DisassemblerToolPanel', () => {
     render(<DisassemblerToolPanel disassembleFile={disassembleFile} />);
 
     await waitFor(() => {
-      expect(screen.getByText('xor ebp,ebp')).toBeInTheDocument();
+      expect(screen.getByText(instr('xor ebp,ebp'))).toBeInTheDocument();
     });
 
     await user.type(screen.getByLabelText('Search'), '55');
-    expect(screen.getByText('push rbp')).toBeInTheDocument();
-    expect(screen.queryByText('xor ebp,ebp')).not.toBeInTheDocument();
+    expect(screen.getByText(instr('push rbp'))).toBeInTheDocument();
+    expect(screen.queryByText(instr('xor ebp,ebp'))).not.toBeInTheDocument();
 
     await user.clear(screen.getByLabelText('Search'));
     await user.type(screen.getByLabelText('Search'), '1044');
-    expect(screen.getByText('xor ebp,ebp')).toBeInTheDocument();
-    expect(screen.queryByText('push rbp')).not.toBeInTheDocument();
+    expect(screen.getByText(instr('xor ebp,ebp'))).toBeInTheDocument();
+    expect(screen.queryByText(instr('push rbp'))).not.toBeInTheDocument();
 
     await user.clear(screen.getByLabelText('Search'));
     await user.type(screen.getByLabelText('Search'), 'endbr64');
@@ -233,7 +252,7 @@ describe('DisassemblerToolPanel', () => {
     await user.selectOptions(screen.getByLabelText('Section'), '.data');
 
     expect(screen.getByText('Disassembly of section .data')).toBeInTheDocument();
-    expect(screen.getByText('add BYTE PTR [rax],al')).toBeInTheDocument();
+    expect(screen.getByText(instr('add BYTE PTR [rax],al'))).toBeInTheDocument();
     expect(screen.queryByText('endbr64')).not.toBeInTheDocument();
   });
 
@@ -280,7 +299,7 @@ describe('DisassemblerToolPanel', () => {
     await user.selectOptions(screen.getByLabelText('Function'), '0000000000001130');
 
     await waitFor(() => {
-      expect(scrollIntoView).toHaveBeenCalled();
+      expect(scrollTo).toHaveBeenCalled();
     });
     expect(screen.getByLabelText('Search')).toHaveValue('');
     expect(screen.getByLabelText('Section')).toHaveValue('.text');
@@ -295,7 +314,7 @@ describe('DisassemblerToolPanel', () => {
 
     render(<DisassemblerToolPanel disassembleFile={disassembleFile} />);
 
-    const pushCell = await screen.findByText('push rbp');
+    const pushCell = await screen.findByText(instr('push rbp'));
     await user.click(pushCell);
 
     const details = await screen.findByLabelText('Instruction details');
@@ -316,21 +335,5 @@ describe('DisassemblerToolPanel', () => {
 
     const details = await screen.findByLabelText('Instruction details');
     expect(within(details).getByLabelText('Hex patch')).toBeInTheDocument();
-  });
-
-  it('shows render cap messaging when many rows match', async () => {
-    disassembleFile.mockResolvedValueOnce(largeDisassemblyResult(2_001));
-    mockUseIdeSession.mockReturnValue(stubSession('/w/a.bin'));
-    mockUseWorkspaceRoot.mockReturnValue({ path: '/w' });
-
-    render(<DisassemblerToolPanel disassembleFile={disassembleFile} />);
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          'Showing 2000 of 2001 matching row(s). Narrow the search or section filter to see more.',
-        ),
-      ).toBeInTheDocument();
-    });
   });
 });

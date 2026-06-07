@@ -3,19 +3,30 @@ import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { IdeSessionContextValue } from '@boundary/workspace/IdeSessionContext';
+import { DEFAULT_APP_PREFERENCES } from '@domain/preferences/appPreferences';
 import { readWorkspaceFileBytes, writeWorkspaceFileBytes } from '@infrastructure/tauri/bridge';
 
 import { BinaryToolPanel } from './BinaryToolPanel';
 import panelStyles from './BinaryToolPanel.module.css';
 
-const { mockUseIdeSession, mockUseWorkspaceRoot } = vi.hoisted(() => ({
-  mockUseIdeSession: vi.fn(),
-  mockUseWorkspaceRoot: vi.fn(),
-}));
+const { mockUseIdeSession, mockUseWorkspaceRoot, mockLoadPreferences, mockSavePreferences } =
+  vi.hoisted(() => ({
+    mockUseIdeSession: vi.fn(),
+    mockUseWorkspaceRoot: vi.fn(),
+    mockLoadPreferences: vi.fn(),
+    mockSavePreferences: vi.fn(),
+  }));
 
 vi.mock('@infrastructure/tauri/bridge', () => ({
   readWorkspaceFileBytes: vi.fn(),
   writeWorkspaceFileBytes: vi.fn(),
+}));
+
+// BinaryToolPanel reads hex layout prefs on mount; stub the bridge so it doesn't
+// hit the (unavailable) Tauri invoke and reject in the background.
+vi.mock('@infrastructure/preferences/preferencesBridge', () => ({
+  loadPreferences: mockLoadPreferences,
+  savePreferences: mockSavePreferences,
 }));
 
 vi.mock('@boundary/workspace/IdeSessionContext', () => ({
@@ -30,16 +41,32 @@ function stubSession(activeFilePath: string | null): IdeSessionContextValue {
   return {
     activeFilePath,
     openFilePaths: activeFilePath ? [activeFilePath] : [],
+    pinnedFilePaths: new Set(),
+    togglePinFilePath: vi.fn(),
+    reorderOpenFiles: vi.fn(),
     documentText: '',
     dirtyFilePaths: [],
     activeDocumentDirty: false,
     setDocumentText: vi.fn(),
     openFileFromWorkspace: vi.fn(),
+    openFileAtLine: vi.fn(),
+    revealTarget: null,
+    reloadCleanOpenBuffers: vi.fn(),
+    openPanels: [],
+    activePanel: null,
+    previewFilePath: null,
+    openPanel: vi.fn(),
+    activatePanel: vi.fn(),
+    closePanel: vi.fn(),
     activateOpenFile: vi.fn(),
     closeOpenFile: vi.fn(),
+    closeOtherOpenFiles: vi.fn(),
+    closeAllOpenFiles: vi.fn(),
     runFileMenuAction: vi.fn(),
     fileTreeRevision: 0,
     bumpFileTreeRevision: vi.fn(),
+    fileContentRevision: 0,
+    bumpFileContentRevision: vi.fn(),
   };
 }
 
@@ -80,8 +107,17 @@ describe('BinaryToolPanel', () => {
 
   beforeEach(() => {
     vi.mocked(readWorkspaceFileBytes).mockReset();
+    // Default to a resolved (empty) buffer so panels that load on mount don't
+    // call `.then` on undefined; value-specific tests override this.
+    vi.mocked(readWorkspaceFileBytes).mockResolvedValue(new Uint8Array());
     vi.mocked(writeWorkspaceFileBytes).mockReset();
     vi.mocked(writeWorkspaceFileBytes).mockResolvedValue(undefined);
+    // The panel reads hex-layout prefs on mount via loadPreferences().then(...);
+    // give it a resolved value so the mount doesn't `.then` on undefined.
+    mockLoadPreferences.mockReset();
+    mockLoadPreferences.mockResolvedValue(DEFAULT_APP_PREFERENCES);
+    mockSavePreferences.mockReset();
+    mockSavePreferences.mockResolvedValue(undefined);
     mockUseIdeSession.mockReset();
     mockUseWorkspaceRoot.mockReset();
     mockUseIdeSession.mockImplementation(() => stubSession(null));
@@ -134,9 +170,17 @@ describe('BinaryToolPanel', () => {
     });
 
     expect(readWorkspaceFileBytes).toHaveBeenCalledWith('/w', '/w/a.bin');
-    expect(screen.getByText('41')).toBeInTheDocument();
-    expect(screen.getByText('42')).toBeInTheDocument();
-    expect(screen.getByText('03')).toBeInTheDocument();
+    // Byte values render as editable cells; query by the cell aria-label so the
+    // assertion targets the hex grid (the column-header row also shows "03").
+    expect(
+      screen.getByRole('button', { name: 'Edit byte at offset 00000000, current value 41' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Edit byte at offset 00000001, current value 42' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Edit byte at offset 00000002, current value 03' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('00000000')).toBeInTheDocument();
     const region = screen.getByRole('region', { name: 'Binary tool' });
     expect(region.textContent).toMatch(/AB\./);
@@ -296,7 +340,9 @@ describe('BinaryToolPanel', () => {
 
     await user.click(screen.getByRole('button', { name: /Find \/ go to/i }));
 
-    expect(screen.getByRole('dialog', { name: /Find \/ go to offset/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('dialog', { name: /Find \/ replace \/ go to offset/i }),
+    ).toBeInTheDocument();
 
     await user.clear(screen.getByLabelText('Offset'));
     await user.type(screen.getByLabelText('Offset'), '80');
@@ -324,10 +370,10 @@ describe('BinaryToolPanel', () => {
 
     await user.click(screen.getByRole('button', { name: /Find \/ go to/i }));
 
-    await user.type(screen.getByLabelText('Pattern'), 'ff');
-    await user.click(screen.getByRole('button', { name: 'Find' }));
+    await user.type(screen.getByLabelText('Find'), 'ff');
+    await user.click(screen.getByRole('button', { name: 'Find next' }));
 
-    const dialog = screen.getByRole('dialog', { name: /Find \/ go to offset/i });
+    const dialog = screen.getByRole('dialog', { name: /Find \/ replace \/ go to offset/i });
     expect(within(dialog).getByRole('status')).toHaveTextContent('Not found.');
   });
 
@@ -685,8 +731,15 @@ describe('BinaryToolPanel', () => {
     await user.keyboard('{Enter}');
 
     await user.click(screen.getByRole('button', { name: /Find \/ go to/i }));
-    await user.type(screen.getByLabelText('Pattern'), 'ff');
-    await user.click(screen.getByRole('button', { name: 'Find' }));
+    // Default search mode is Text; pick Hex so "ff" matches the byte 0xff. The
+    // search runs against the current (committed-edit) buffer, including 0xff.
+    await user.click(
+      within(screen.getByRole('group', { name: 'Search mode' })).getByRole('radio', {
+        name: 'Hex',
+      }),
+    );
+    await user.type(screen.getByLabelText('Find'), 'ff');
+    await user.click(screen.getByRole('button', { name: 'Find next' }));
 
     expect(
       screen.getByRole('button', {
