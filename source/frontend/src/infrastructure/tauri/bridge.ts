@@ -18,6 +18,7 @@ import type {
 } from "@domain/process/workspaceProcess";
 
 const TERMINAL_OUTPUT_EVENT = "terminal://output";
+const SERIAL_OUTPUT_EVENT = "serial://output";
 
 export async function pickFolder(): Promise<string | null> {
   return invoke<string | null>("pick_folder");
@@ -666,4 +667,88 @@ export async function analyzeBinary(
   filePath: string,
 ): Promise<BinaryAnalysisDto> {
   return invoke<BinaryAnalysisDto>("analyze_binary", { workspaceRoot, filePath });
+}
+
+// Connections pack — persisted connection profiles (SSH / serial hosts).
+
+export type SshConn = {
+  address: string;
+  port: number;
+  username: string;
+  /** Stored in plaintext in connections.json for now (see backend note). */
+  password?: string | null;
+};
+
+export type SerialConn = {
+  port: string;
+  baud: number;
+};
+
+export type Connection = {
+  id: string;
+  label: string;
+  /** "ssh" | "serial". */
+  kind: string;
+  group?: string | null;
+  tags: string[];
+  ssh?: SshConn | null;
+  serial?: SerialConn | null;
+};
+
+/** All saved connection profiles ([] on first run). */
+export async function connList(): Promise<Connection[]> {
+  return invoke<Connection[]>("conn_list");
+}
+
+/** Upsert a profile by `id` (caller supplies id via crypto.randomUUID). */
+export async function connSave(conn: Connection): Promise<void> {
+  return invoke<void>("conn_save", { conn });
+}
+
+/** Delete a profile by `id`. */
+export async function connDelete(id: string): Promise<void> {
+  return invoke<void>("conn_delete", { id });
+}
+
+// Connections pack — serial terminal engine (mirrors the PTY terminal).
+
+export type SerialPortInfo = {
+  name: string;
+};
+
+export type SerialOutputEvent = {
+  sessionId: string;
+  data: string;
+};
+
+/** Serial ports the OS currently sees (COMx / /dev/tty*). */
+export async function serialPorts(): Promise<SerialPortInfo[]> {
+  return invoke<SerialPortInfo[]>("serial_ports");
+}
+
+/** Open `port` at `baud` (8N1) under `sessionId`; emits `serial://output`. */
+export async function serialOpen(
+  sessionId: string,
+  port: string,
+  baud: number,
+): Promise<void> {
+  return invoke<void>("serial_open", { sessionId, port, baud });
+}
+
+/** Write bytes to the open serial port. */
+export async function serialWrite(sessionId: string, data: string): Promise<void> {
+  return invoke<void>("serial_write", { sessionId, data });
+}
+
+/** Close the serial port and stop its reader. */
+export async function serialClose(sessionId: string): Promise<void> {
+  return invoke<void>("serial_close", { sessionId });
+}
+
+export async function listenSerialOutput(
+  onOutput: (payload: SerialOutputEvent) => void,
+): Promise<UnlistenFn> {
+  return listen<SerialOutputEvent>(SERIAL_OUTPUT_EVENT, (event: Event<SerialOutputEvent>) => {
+    onOutput(event.payload);
+  });
 }

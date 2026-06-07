@@ -2,6 +2,7 @@
 pub fn run() {
     tauri::Builder::default()
         .manage(terminal::TerminalSessions::default())
+        .manage(serial::SerialSessions::default())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // Start the in-app MCP server so an agent can drive the UI + read
@@ -47,6 +48,13 @@ pub fn run() {
             terminal::interrupt_terminal_session,
             terminal::resize_terminal_session,
             terminal::get_terminal_capabilities,
+            connections::conn_list,
+            connections::conn_save,
+            connections::conn_delete,
+            serial::serial_ports,
+            serial::serial_open,
+            serial::serial_write,
+            serial::serial_close,
             panes::popout_pane,
             panes::close_popout_pane,
             panes::list_popout_panes,
@@ -92,6 +100,7 @@ pub fn run() {
 }
 
 mod binary_analysis;
+mod connections;
 mod disassembly;
 mod git;
 mod mcp;
@@ -99,6 +108,7 @@ mod panes;
 mod process;
 mod radare2;
 mod search;
+mod serial;
 mod shellcode;
 mod terminal;
 
@@ -807,7 +817,7 @@ fn save_app_preferences(app: AppHandle, json: String) -> Result<(), String> {
     write_bytes_under_app_config(&app, PREFERENCES_RELATIVE_PATH, json.as_bytes())
 }
 
-fn write_bytes_under_app_config(
+pub(crate) fn write_bytes_under_app_config(
     app: &AppHandle,
     relative_path: &str,
     contents: &[u8],
@@ -819,7 +829,19 @@ fn write_bytes_under_app_config(
     std::fs::write(&path, contents).map_err(|e| e.to_string())
 }
 
-fn resolve_under_app_config(app: &AppHandle, relative_path: &str) -> Result<PathBuf, String> {
+/// Read a file under the app config dir as a String. Unlike
+/// `read_app_preferences`, this surfaces the raw `io::Error` (so callers can
+/// distinguish `NotFound` and decide their own empty-state default).
+pub(crate) fn read_string_under_app_config(
+    app: &AppHandle,
+    relative_path: &str,
+) -> Result<String, std::io::Error> {
+    let path = resolve_under_app_config(app, relative_path)
+        .map_err(|e| std::io::Error::new(ErrorKind::InvalidInput, e))?;
+    std::fs::read_to_string(&path)
+}
+
+pub(crate) fn resolve_under_app_config(app: &AppHandle, relative_path: &str) -> Result<PathBuf, String> {
     let trimmed = relative_path.trim();
     if trimmed.is_empty() {
         return Err(String::from("relative_path must not be empty"));
