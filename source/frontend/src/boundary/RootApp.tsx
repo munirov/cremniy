@@ -254,9 +254,11 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       if (id === 'newTerminal') {
         void persistTerminal(true);
         setNewTerminalSignal((s) => s + 1);
+      } else if (id === 'openConnections') {
+        ide.openPanel('connections');
       }
     },
-    [persistTerminal],
+    [persistTerminal, ide.openPanel],
   );
 
   // Collapse the terminal panel (used by its own hide / close buttons).
@@ -405,6 +407,11 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         run: () => agentUiRef.current.openPanel('advancedGit'),
       },
       {
+        name: 'dialog.openConnections',
+        description: 'Open the Connections (Hosts) panel — saved serial / SSH hosts — as a center tab.',
+        run: () => agentUiRef.current.openPanel('connections'),
+      },
+      {
         name: 'dialog.openReverseCalculator',
         description: 'Open the Reverse Calculator dialog (Tools).',
         run: () => agentUiRef.current.setCalcOpen(true),
@@ -426,6 +433,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         run: () => {
           agentUiRef.current.setSettingsOpen(false);
           agentUiRef.current.closePanel('advancedGit');
+          agentUiRef.current.closePanel('connections');
           agentUiRef.current.setCalcOpen(false);
           agentUiRef.current.setRefsOpen(null);
         },

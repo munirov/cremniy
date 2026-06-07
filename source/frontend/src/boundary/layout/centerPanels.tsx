@@ -4,6 +4,7 @@ import type { AppPreferences } from '@domain/preferences/appPreferences';
 import { settingsService } from '@infrastructure/settings/settingsService';
 import { SettingsDialog } from '@boundary/settings/SettingsDialog';
 import { AdvancedGitDialog } from '@boundary/workspace/AdvancedGitDialog';
+import { ConnectionsPanel } from '@boundary/connections/ConnectionsPanel';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 
@@ -56,4 +57,5 @@ function AdvancedGitTab() {
 export const CENTER_PANELS: Record<string, { label: string; render: () => ReactNode }> = {
   settings: { label: 'Settings', render: () => <SettingsTab /> },
   advancedGit: { label: 'Git', render: () => <AdvancedGitTab /> },
+  connections: { label: 'Connections', render: () => <ConnectionsPanel /> },
 };

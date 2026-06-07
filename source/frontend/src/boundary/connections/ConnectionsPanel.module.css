@@ -1,0 +1,290 @@
+/* Hosts manager — a center panel (Settings / Advanced Git density). No blue;
+   hover / selected states use rgba(255,255,255,N) per the design canon. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  padding: 0.7rem 1.1rem;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.9rem 1.1rem 1.2rem;
+}
+
+/* ── empty state ─────────────────────────────────────────────────── */
+.empty {
+  max-width: 28rem;
+  margin: 2.5rem auto 0;
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0 0 0.4rem;
+  font-size: 0.86rem;
+}
+
+.emptyHint {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+/* ── host grid ───────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 6px;
+  background: var(--color-bg-base);
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--color-border-pane);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.cardIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.cardName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.84rem;
+}
+
+.cardKind {
+  flex-shrink: 0;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  font-family: var(--font-family-mono);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.cardSub {
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardActions {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+/* ── form ────────────────────────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  max-width: 30rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fieldLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.input,
+.select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 4px;
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: 0.78rem;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-border-pane);
+}
+
+.inlineRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 4px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.segment {
+  padding: 0.28rem 0.8rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: 0.76rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: background-color 0.12s ease, opacity 0.12s ease;
+}
+
+.segment:hover {
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 1;
+}
+
+.segmentOn,
+.segmentOn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+/* ── buttons (shared with the Settings panel vocabulary) ─────────── */
+.btn {
+  padding: 0.24rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-muted);
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  padding: 0.24rem 0.7rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-pane);
+  background: var(--color-menubar-item-selected);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnDanger {
+  padding: 0.24rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid #7f1d1d;
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+/* ── footer ──────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.55rem 1.1rem;
+  border-top: 1px solid var(--color-border-muted);
+}
+
+.footerSpacer {
+  flex: 1;
+}
+
+.error {
+  margin: 0.6rem 0 0;
+  font-size: 0.76rem;
+  color: #ef4444;
+}
