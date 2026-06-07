@@ -54,9 +54,9 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
   }, [discover, fileTreeRevision]);
 
   // Lightweight per-repo status for the REPOSITORIES overview (branch + counts).
-  // Only needed when there are multiple repos; CHANGES loads its own per section.
+  // CHANGES loads its own full status per section.
   useEffect(() => {
-    if (repos == null || repos.length < 2) {
+    if (repos == null || repos.length === 0) {
       return;
     }
     let cancelled = false;
@@ -129,13 +129,8 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
     );
   }
 
-  // Single repo → render its changes directly (no REPOSITORIES list, like VS Code).
-  if (repos.length === 1) {
-    const r = repos[0]!;
-    return <GitRepoSection repoPath={r.path} repoName={r.name} multi={false} />;
-  }
-
-  // Multiple repos → two collapsible sections: REPOSITORIES + CHANGES.
+  // Always show the two collapsible sections (REPOSITORIES + CHANGES) — even for
+  // a single repo, per the requested layout.
   return (
     <div className={styles.section}>
       <div className={styles.scrollArea}>
