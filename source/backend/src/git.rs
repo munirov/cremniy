@@ -29,6 +29,9 @@ pub struct GitFileStatus {
 pub struct GitStatus {
     is_repo: bool,
     branch: Option<String>,
+    /// Commits ahead / behind the upstream (0 when no upstream).
+    ahead: u32,
+    behind: u32,
     files: Vec<GitFileStatus>,
 }
 
@@ -57,16 +60,20 @@ pub fn git_status(workspace_root: String) -> Result<GitStatus, String> {
             return Ok(GitStatus {
                 is_repo: false,
                 branch: None,
+                ahead: 0,
+                behind: 0,
                 files: Vec::new(),
             })
         }
     };
 
     let text = String::from_utf8_lossy(&output.stdout);
-    let (branch, files) = parse_porcelain(&text, &root);
+    let (branch, ahead, behind, files) = parse_porcelain(&text, &root);
     Ok(GitStatus {
         is_repo: true,
         branch,
+        ahead,
+        behind,
         files,
     })
 }
@@ -120,27 +127,54 @@ pub fn git_unstage(workspace_root: String, paths: Vec<String>) -> Result<(), Str
 }
 
 /// Commit the staged changes with the user's message. The commit is authored by
-/// the repo's own git identity — no extra trailers are added.
+/// the repo's own git identity — no extra trailers are added. `amend` rewrites
+/// the last commit (keeping its message when a new one isn't given).
 #[tauri::command]
-pub fn git_commit(workspace_root: String, message: String) -> Result<(), String> {
+pub fn git_commit(workspace_root: String, message: String, amend: bool) -> Result<(), String> {
     let msg = message.trim();
+    let root = canonical_workspace_root(&workspace_root)?;
+    if amend {
+        return if msg.is_empty() {
+            run_git(&root, &["commit", "--amend", "--no-edit"]).map(|_| ())
+        } else {
+            run_git(&root, &["commit", "--amend", "-m", msg]).map(|_| ())
+        };
+    }
     if msg.is_empty() {
         return Err(String::from("Commit message is empty"));
     }
-    let root = canonical_workspace_root(&workspace_root)?;
     run_git(&root, &["commit", "-m", msg]).map(|_| ())
+}
+
+/// `git push` — publish local commits to the upstream.
+#[tauri::command]
+pub fn git_push(workspace_root: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["push"]).map(|_| ())
+}
+
+/// `git pull` — integrate upstream commits into the working tree.
+#[tauri::command]
+pub fn git_pull(workspace_root: String) -> Result<(), String> {
+    let root = canonical_workspace_root(&workspace_root)?;
+    run_git(&root, &["pull"]).map(|_| ())
 }
 
 /// Parse `git status --porcelain=v1 --branch` output into a branch name + file
 /// list. Pure (only `pretty_path` string work, no process / FS), so it's
 /// unit-tested against the M / A / D / ?? / rename shapes the live tree can't
 /// always exercise.
-fn parse_porcelain(text: &str, root: &Path) -> (Option<String>, Vec<GitFileStatus>) {
+fn parse_porcelain(text: &str, root: &Path) -> (Option<String>, u32, u32, Vec<GitFileStatus>) {
     let mut branch: Option<String> = None;
+    let mut ahead = 0u32;
+    let mut behind = 0u32;
     let mut files: Vec<GitFileStatus> = Vec::new();
     for line in text.lines() {
         if let Some(rest) = line.strip_prefix("## ") {
             branch = Some(parse_branch(rest));
+            let (a, b) = parse_ahead_behind(rest);
+            ahead = a;
+            behind = b;
             continue;
         }
         if line.len() < 3 {
@@ -182,7 +216,7 @@ fn parse_porcelain(text: &str, root: &Path) -> (Option<String>, Vec<GitFileStatu
             is_dir,
         });
     }
-    (branch, files)
+    (branch, ahead, behind, files)
 }
 
 /// Pull the branch name out of a porcelain `## ` header line, e.g.
@@ -193,6 +227,24 @@ fn parse_branch(s: &str) -> String {
     }
     let head = s.split("...").next().unwrap_or(s);
     head.split(" [").next().unwrap_or(head).trim().to_string()
+}
+
+/// Read "ahead N" / "behind M" from a porcelain header's "[ahead 1, behind 2]"
+/// suffix. Missing → 0.
+fn parse_ahead_behind(s: &str) -> (u32, u32) {
+    (count_after(s, "ahead "), count_after(s, "behind "))
+}
+
+fn count_after(s: &str, key: &str) -> u32 {
+    match s.find(key) {
+        Some(i) => s[i + key.len()..]
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .collect::<String>()
+            .parse()
+            .unwrap_or(0),
+        None => 0,
+    }
 }
 
 /// Strip the surrounding quotes git adds around paths with unusual characters.
@@ -210,7 +262,8 @@ mod tests {
     use super::*;
 
     fn parse(text: &str) -> (Option<String>, Vec<GitFileStatus>) {
-        parse_porcelain(text, Path::new("/repo"))
+        let (branch, _ahead, _behind, files) = parse_porcelain(text, Path::new("/repo"));
+        (branch, files)
     }
 
     #[test]
@@ -276,7 +329,7 @@ mod tests {
     fn nested_file_abs_path_uses_native_separators() {
         use std::path::MAIN_SEPARATOR;
         let root_str = if cfg!(windows) { "C:\\repo" } else { "/repo" };
-        let (_b, files) = parse_porcelain(" M src/a/b.txt\n", Path::new(root_str));
+        let (_b, _a, _be, files) = parse_porcelain(" M src/a/b.txt\n", Path::new(root_str));
         let f = &files[0];
         assert_eq!(f.path, "src/a/b.txt"); // repo-relative stays '/' (git-friendly, display)
         assert_eq!(f.name, "b.txt");
@@ -285,5 +338,16 @@ mod tests {
         if cfg!(windows) {
             assert!(!f.abs_path.contains('/'), "mixed separators: {}", f.abs_path);
         }
+    }
+
+    #[test]
+    fn parses_ahead_behind_counts() {
+        let (_b, ahead, behind, _f) =
+            parse_porcelain("## main...origin/main [ahead 2, behind 3]\n", Path::new("/repo"));
+        assert_eq!(ahead, 2);
+        assert_eq!(behind, 3);
+        // No upstream bracket → zeros.
+        let (_b2, a2, be2, _f2) = parse_porcelain("## main\n", Path::new("/repo"));
+        assert_eq!((a2, be2), (0, 0));
     }
 }
