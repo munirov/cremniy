@@ -1334,7 +1334,6 @@ function InlineCreateRow({
 }) {
   const [value, setValue] = useState('');
   const paddingRem = 0.4 + depth * 0.85 + 1.05;
-  const icon = kind === 'folder' ? '📁' : '📄';
   return (
     <div
       style={{
@@ -1346,9 +1345,7 @@ function InlineCreateRow({
         height: '1.6rem',
       }}
     >
-      <span aria-hidden style={{ opacity: 0.7, fontSize: 12 }}>
-        {icon}
-      </span>
+      {kind === 'folder' ? <FolderIcon /> : <FileIcon name={value} />}
       <input
         autoFocus
         type="text"
