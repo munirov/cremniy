@@ -1,0 +1,454 @@
+/* Advanced Git — same two-pane surface as the Settings dialog (nav rail left,
+   sectioned panes right) so the two read as one family. Monochrome neutral base;
+   colour is reserved for the one primary action per area + semantic git status. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.dialog {
+  display: flex;
+  width: min(56rem, calc(100vw - 2rem));
+  height: min(40rem, calc(100vh - 2rem));
+  border: 1px solid var(--color-border-pane);
+  border-radius: 6px;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+/* ── left nav rail ─────────────────────────────────────────────── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 12.5rem;
+  padding: 0.75rem 0.5rem;
+  gap: 0.05rem;
+  border-right: 1px solid var(--color-border-muted);
+  background: var(--color-bg-base);
+  overflow-y: auto;
+}
+
+.sidebarTitle {
+  margin: 0.25rem 0.55rem 0.65rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+}
+
+.navItem {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: background-color 0.12s ease, opacity 0.12s ease;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 1;
+}
+
+.navItemActive,
+.navItemActive:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
+/* ── right pane ────────────────────────────────────────────────── */
+.main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.mainScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.1rem 1.4rem 1.4rem;
+}
+
+.catTitle {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.helpText {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* ── repo selector (header strip above the sections) ───────────── */
+.repoBar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  padding: 0.55rem 1.4rem;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.repoBarLabel {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+}
+
+/* ── controls (mirror Settings) ────────────────────────────────── */
+.select,
+.input {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 4px;
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: 0.85rem;
+}
+
+.select {
+  min-width: 9rem;
+}
+
+.input {
+  min-width: 0;
+}
+
+.inputGrow {
+  flex: 1;
+  min-width: 6rem;
+}
+
+.fullInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 4px;
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: 0.82rem;
+}
+
+/* groups of inputs + a button on one line (create branch, add remote, …) */
+.formRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.groupTitle {
+  margin: 1.4rem 0 0.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+}
+
+.groupTitleFirst {
+  margin-top: 0;
+}
+
+/* ── buttons (mirror Settings) ─────────────────────────────────── */
+.btn {
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-muted);
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The ONE primary action per area — coloured CTA, used sparingly. */
+.btnPrimary {
+  padding: 0.35rem 0.9rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-cta);
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.12s ease;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--color-cta-hover);
+  border-color: var(--color-cta-hover);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* A quieter destructive affordance — neutral chrome, semantic-red text. */
+.btnDanger {
+  color: var(--git-deleted);
+}
+
+/* ── lists (branches / stash / history / remotes) ──────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-family-mono);
+  font-size: 0.85rem;
+}
+
+.rowSub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.rowActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* radio-style branch pick (used for merge/rebase target selection) */
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.pick input {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+/* current-branch marker + remote-branch tag (semantic git colours) */
+.tagCurrent {
+  flex-shrink: 0;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--git-added);
+  background: rgba(129, 184, 139, 0.14);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.mono {
+  font-family: var(--font-family-mono);
+}
+
+/* current branch callout at the top of the Branches pane */
+.currentBranch {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 6px;
+  background: var(--color-bg-base);
+}
+
+.currentBranchLabel {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+}
+
+.currentBranchName {
+  font-family: var(--font-family-mono);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ── history rows ──────────────────────────────────────────────── */
+.commitRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.commitRow:last-child {
+  border-bottom: none;
+}
+
+.commitHash {
+  flex-shrink: 0;
+  font-family: var(--font-family-mono);
+  font-size: 0.8rem;
+  color: var(--git-modified);
+}
+
+.commitBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.commitSubject {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.commitMeta {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+/* ── conflict / error callout (semantic — sanctioned by the canon) ── */
+.conflictBox {
+  margin-top: 0.85rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-error-border);
+  border-radius: 6px;
+  background: var(--color-error-surface);
+}
+
+.conflictText {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-family-mono);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.conflictActions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* per-section inline error line */
+.error {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: var(--git-deleted);
+}
+
+.emptyLine {
+  margin: 0.6rem 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* ── footer ────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.7rem 1.4rem;
+  border-top: 1px solid var(--color-border-muted);
+}
+
+.footerSpacer {
+  flex: 1;
+}
+
+/* empty state — no workspace / no repos */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex: 1;
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}

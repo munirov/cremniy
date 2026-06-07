@@ -26,6 +26,7 @@ import { RootLayout } from '@boundary/layout/RootLayout';
 import { DataConverterDialog } from '@boundary/tools/DataConverterDialog';
 import { ReverseCalculatorDialog } from '@boundary/tools/ReverseCalculatorDialog';
 import { ShellCodeGeneratorDialog } from '@boundary/tools/ShellCodeGeneratorDialog';
+import { AdvancedGitDialog } from '@boundary/workspace/AdvancedGitDialog';
 import { IdeSessionProvider, useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { ToolDockProvider, useToolDock } from '@boundary/workspace/ToolDockContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
@@ -41,6 +42,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
   const ide = useIdeSession();
   const toolDock = useToolDock();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [advancedGitOpen, setAdvancedGitOpen] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
   const [dataConverterOpen, setDataConverterOpen] = useState(false);
   const [shellCodeOpen, setShellCodeOpen] = useState(false);
@@ -314,11 +316,13 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
     terminalVisible,
     wordWrapEnabled,
     settingsOpen,
+    advancedGitOpen,
     calcOpen,
     refsOpen,
     handleViewMenu,
     handleToolsMenu,
     setSettingsOpen,
+    setAdvancedGitOpen,
     setCalcOpen,
     setRefsOpen,
     setEditorCommand,
@@ -330,11 +334,13 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       terminalVisible,
       wordWrapEnabled,
       settingsOpen,
+      advancedGitOpen,
       calcOpen,
       refsOpen,
       handleViewMenu,
       handleToolsMenu,
       setSettingsOpen,
+      setAdvancedGitOpen,
       setCalcOpen,
       setRefsOpen,
       setEditorCommand,
@@ -360,6 +366,7 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         editorWordWrap: u.wordWrapEnabled,
         openDialogs: {
           settings: u.settingsOpen,
+          advancedGit: u.advancedGitOpen,
           reverseCalculator: u.calcOpen,
           reference: u.refsOpen,
         },
@@ -393,6 +400,11 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         run: () => agentUiRef.current.setSettingsOpen(true),
       },
       {
+        name: 'dialog.openAdvancedGit',
+        description: 'Open the Advanced Git dialog (branches, merge, rebase, stash, history, remotes).',
+        run: () => agentUiRef.current.setAdvancedGitOpen(true),
+      },
+      {
         name: 'dialog.openReverseCalculator',
         description: 'Open the Reverse Calculator dialog (Tools).',
         run: () => agentUiRef.current.setCalcOpen(true),
@@ -410,9 +422,10 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       },
       {
         name: 'dialog.closeAll',
-        description: 'Close any open Settings / Reverse Calculator / References dialog.',
+        description: 'Close any open Settings / Advanced Git / Reverse Calculator / References dialog.',
         run: () => {
           agentUiRef.current.setSettingsOpen(false);
+          agentUiRef.current.setAdvancedGitOpen(false);
           agentUiRef.current.setCalcOpen(false);
           agentUiRef.current.setRefsOpen(null);
         },
@@ -508,6 +521,12 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         onSaved={(next) => setPrefs(next)}
         workspaceRoot={workspaceRoot?.path ?? null}
         service={settingsService}
+      />
+
+      <AdvancedGitDialog
+        open={advancedGitOpen}
+        onClose={() => setAdvancedGitOpen(false)}
+        workspaceRoot={workspaceRoot?.path ?? null}
       />
 
       {calcOpen ? (

@@ -9,6 +9,8 @@ import {
   type GitStatus,
 } from '@infrastructure/tauri/bridge';
 
+import { runAgentCommand } from '@shared/agent/agentBridge';
+
 import { useIdeSession } from './IdeSessionContext';
 import { ChevronIcon } from './fileIcons';
 import { GitRepoSection } from './GitRepoSection';
@@ -149,6 +151,15 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
             <span className={styles.count}>{repos.length}</span>
           </button>
           <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.headerBtn}
+              title="Advanced Git (branches, merge, rebase, stash, history, remotes)"
+              aria-label="Advanced Git"
+              onClick={() => void runAgentCommand('dialog.openAdvancedGit')}
+            >
+              ⎇
+            </button>
             <button
               type="button"
               className={styles.headerBtn}
