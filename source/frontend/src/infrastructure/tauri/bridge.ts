@@ -254,6 +254,8 @@ export type GitFileStatus = {
 export type GitStatus = {
   isRepo: boolean;
   branch: string | null;
+  ahead: number;
+  behind: number;
   files: GitFileStatus[];
 };
 
@@ -278,9 +280,24 @@ export async function gitUnstage(workspaceRoot: string, paths: string[]): Promis
   return invoke<void>("git_unstage", { workspaceRoot, paths });
 }
 
-/** Commit the staged changes with the given message (no extra trailers). */
-export async function gitCommit(workspaceRoot: string, message: string): Promise<void> {
-  return invoke<void>("git_commit", { workspaceRoot, message });
+/** Commit the staged changes with the given message (no extra trailers).
+ *  `amend` rewrites the last commit (keeps its message if `message` is empty). */
+export async function gitCommit(
+  workspaceRoot: string,
+  message: string,
+  amend = false,
+): Promise<void> {
+  return invoke<void>("git_commit", { workspaceRoot, message, amend });
+}
+
+/** Push local commits to the upstream. */
+export async function gitPush(workspaceRoot: string): Promise<void> {
+  return invoke<void>("git_push", { workspaceRoot });
+}
+
+/** Pull upstream commits into the working tree. */
+export async function gitPull(workspaceRoot: string): Promise<void> {
+  return invoke<void>("git_pull", { workspaceRoot });
 }
 
 export async function writeUserFile(path: string, contents: string): Promise<void> {

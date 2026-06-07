@@ -4,6 +4,8 @@ import type { WorkspaceRoot } from '@domain/workspace/types';
 import {
   gitCommit,
   gitInit,
+  gitPull,
+  gitPush,
   gitStage,
   gitStatus,
   gitUnstage,
@@ -41,6 +43,7 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [commitMenu, setCommitMenu] = useState(false);
 
   const refresh = useCallback(async () => {
     const root = workspaceRoot?.path;
@@ -95,6 +98,26 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
   const staged = status?.files.filter((f) => f.staged) ?? [];
   const changes = status?.files.filter((f) => !f.staged) ?? [];
   const isRepo = status?.isRepo ?? false;
+  const hasMessage = message.trim() !== '';
+
+  // One entry-point for every commit variant: `all` stages all changes first,
+  // `push` pushes after, `amend` rewrites the last commit.
+  const doCommit = (opts: { all?: boolean; push?: boolean; amend?: boolean } = {}) => {
+    setCommitMenu(false);
+    void runGit(async (r) => {
+      if (opts.all && changes.length > 0) {
+        await gitStage(
+          r,
+          changes.map((f) => f.path),
+        );
+      }
+      await gitCommit(r, message, opts.amend ?? false);
+      if (opts.push) {
+        await gitPush(r);
+      }
+      setMessage('');
+    });
+  };
 
   const fileRow = (f: GitFileStatus) => (
     <div key={f.path} className={styles.fileRow}>
@@ -132,8 +155,31 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
     <div className={styles.section}>
       <div className={styles.header}>
         <span className={styles.headerName}>Source Control</span>
-        {status?.branch != null ? <span className={styles.branch}>{status.branch}</span> : null}
+        {status?.branch != null ? (
+          <span className={styles.branch} title={`Branch: ${status.branch}`}>
+            {status.branch}
+            {status.behind > 0 ? <span className={styles.track}>↓{status.behind}</span> : null}
+            {status.ahead > 0 ? <span className={styles.track}>↑{status.ahead}</span> : null}
+          </span>
+        ) : null}
         <div className={styles.headerActions}>
+          {isRepo ? (
+            <button
+              type="button"
+              className={styles.headerBtn}
+              title="Sync (pull, then push)"
+              aria-label="Sync"
+              disabled={busy}
+              onClick={() =>
+                void runGit(async (r) => {
+                  await gitPull(r);
+                  await gitPush(r);
+                })
+              }
+            >
+              ⇅
+            </button>
+          ) : null}
           <button
             type="button"
             className={styles.headerBtn}
@@ -177,28 +223,79 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={(e) => {
                     // Ctrl/Cmd+Enter commits, like VS Code.
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && staged.length > 0) {
+                    if (
+                      (e.ctrlKey || e.metaKey) &&
+                      e.key === 'Enter' &&
+                      staged.length > 0 &&
+                      hasMessage
+                    ) {
                       e.preventDefault();
-                      void runGit(async (r) => {
-                        await gitCommit(r, message);
-                        setMessage('');
-                      });
+                      doCommit();
                     }
                   }}
                 />
-                <button
-                  type="button"
-                  className={styles.commitBtn}
-                  disabled={busy || staged.length === 0 || message.trim() === ''}
-                  onClick={() =>
-                    void runGit(async (r) => {
-                      await gitCommit(r, message);
-                      setMessage('');
-                    })
-                  }
-                >
-                  Commit{staged.length > 0 ? ` (${staged.length})` : ''}
-                </button>
+                <div className={styles.commitRow}>
+                  <button
+                    type="button"
+                    className={styles.commitBtn}
+                    disabled={busy || staged.length === 0 || !hasMessage}
+                    onClick={() => doCommit()}
+                  >
+                    ✓ Commit{staged.length > 0 ? ` (${staged.length})` : ''}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.commitCaret}
+                    title="Commit options"
+                    aria-label="Commit options"
+                    aria-haspopup="menu"
+                    disabled={busy}
+                    onClick={() => setCommitMenu((v) => !v)}
+                  >
+                    ▾
+                  </button>
+                  {commitMenu ? (
+                    <ul
+                      className={styles.commitMenu}
+                      role="menu"
+                      onMouseLeave={() => setCommitMenu(false)}
+                    >
+                      <li role="none">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={styles.commitMenuItem}
+                          disabled={busy || staged.length === 0 || !hasMessage}
+                          onClick={() => doCommit({ push: true })}
+                        >
+                          Commit &amp; Push
+                        </button>
+                      </li>
+                      <li role="none">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={styles.commitMenuItem}
+                          disabled={busy || staged.length + changes.length === 0 || !hasMessage}
+                          onClick={() => doCommit({ all: true })}
+                        >
+                          Commit All
+                        </button>
+                      </li>
+                      <li role="none">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={styles.commitMenuItem}
+                          disabled={busy}
+                          onClick={() => doCommit({ amend: true })}
+                        >
+                          Amend Last Commit
+                        </button>
+                      </li>
+                    </ul>
+                  ) : null}
+                </div>
               </div>
             ) : null}
 
@@ -211,7 +308,9 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
             {staged.length > 0 ? (
               <>
                 <div className={styles.groupLabel}>
-                  <span>Staged Changes</span>
+                  <span>
+                    Staged Changes <span className={styles.count}>{staged.length}</span>
+                  </span>
                   <button
                     type="button"
                     className={styles.groupAction}
@@ -230,7 +329,9 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
             {changes.length > 0 ? (
               <>
                 <div className={styles.groupLabel}>
-                  <span>Changes</span>
+                  <span>
+                    Changes <span className={styles.count}>{changes.length}</span>
+                  </span>
                   <button
                     type="button"
                     className={styles.groupAction}
