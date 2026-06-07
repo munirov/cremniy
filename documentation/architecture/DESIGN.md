@@ -242,6 +242,22 @@ backdrop: rgba(0,0,0,0.4) + blur(4px)
 enter animation: cremniyFadeIn 0.18s
 ```
 
+### Center panel (вкладка Рабочего поля)
+
+Большой экран, открытый вкладкой в центре (Settings, Advanced Git). Стандарт плотности —
+**компактный**, под chrome (12px-моно), чтобы во всю ширину поля не разъезжалось:
+
+```
+двухпанельно: nav-rail слева ~9.5rem + контент справа
+шрифты: заголовок секции ~0.92rem, строки/контролы 0.78–0.8rem, подписи 0.66–0.72rem
+паддинги: строки секций ~0.28–0.5rem, межсекционные отступы ~1rem
+КЛЮЧЕВОЕ: контент .mainScroll { width:100%; max-width: 44rem } — колонка, не тянется
+embedded-режим (в табе): без backdrop/Esc, width/height 100%
+```
+
+Эталон — `AdvancedGitDialog` / `SettingsDialog` (общие имена классов, одинаковые значения).
+Новая центр-панель держит ту же плотность (см. PLUGINS.md → «Добавить center-пак»).
+
 ## Иконки
 
 - Всегда **SVG inline**, `viewBox="0 0 24 24"`, `stroke="currentColor" fill="none" stroke-width="1.5"`. Размер задаётся снаружи через `width/height` (16–22px).
