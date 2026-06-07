@@ -263,6 +263,26 @@ export async function gitStatus(workspaceRoot: string): Promise<GitStatus> {
   return invoke<GitStatus>("git_status", { workspaceRoot });
 }
 
+/** `git init` in the workspace folder. */
+export async function gitInit(workspaceRoot: string): Promise<void> {
+  return invoke<void>("git_init", { workspaceRoot });
+}
+
+/** Stage repo-relative paths (`git add`). */
+export async function gitStage(workspaceRoot: string, paths: string[]): Promise<void> {
+  return invoke<void>("git_stage", { workspaceRoot, paths });
+}
+
+/** Unstage repo-relative paths (`git reset HEAD`). */
+export async function gitUnstage(workspaceRoot: string, paths: string[]): Promise<void> {
+  return invoke<void>("git_unstage", { workspaceRoot, paths });
+}
+
+/** Commit the staged changes with the given message (no extra trailers). */
+export async function gitCommit(workspaceRoot: string, message: string): Promise<void> {
+  return invoke<void>("git_commit", { workspaceRoot, message });
+}
+
 export async function writeUserFile(path: string, contents: string): Promise<void> {
   return invoke<void>("write_user_file", { path, contents });
 }

@@ -83,20 +83,64 @@
 }
 
 .groupLabel {
-  padding: 0.3rem 0.6rem 0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.4rem 0.15rem 0.6rem;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.groupLabel > span {
   opacity: 0.45;
+}
+
+.groupAction {
+  flex-shrink: 0;
+  padding: 0 0.25rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.groupLabel:hover .groupAction {
+  opacity: 0.75;
+}
+
+.groupAction:hover {
+  opacity: 1;
+}
+
+.groupAction:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 .fileRow {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
   width: 100%;
+  padding-right: 0.4rem;
+}
+
+.fileRow:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* The clickable open area (icon + name + dir) — most of the row. */
+.fileOpen {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
   margin: 0;
-  padding: 2px 0.5rem;
+  padding: 2px 0.25rem 2px 0.5rem;
   text-align: left;
   font: inherit;
   color: inherit;
@@ -105,10 +149,40 @@
   background: transparent;
   line-height: 1.5;
   white-space: nowrap;
+  overflow: hidden;
 }
 
-.fileRow:hover {
-  background-color: rgba(255, 255, 255, 0.04);
+/* Per-file stage (+) / unstage (−) — revealed on row hover, like VS Code. */
+.action {
+  flex-shrink: 0;
+  width: 1.3rem;
+  height: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.fileRow:hover .action {
+  opacity: 0.7;
+}
+
+.action:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.action:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 .fileName {
@@ -157,4 +231,60 @@
   font-family: var(--font-family-mono);
   font-size: 12px;
   opacity: 0.7;
+}
+
+.commitBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.commitMessage {
+  width: 100%;
+  resize: vertical;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.45rem;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  outline: none;
+}
+
+.commitMessage:focus {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.commitBtn {
+  align-self: stretch;
+  padding: 0.35rem 0.6rem;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.commitBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.commitBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Semantic error (allowed by the design canon) — git op failures. */
+.errorLine {
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: rgba(239, 68, 68, 0.9);
 }

@@ -2,7 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import {
+  gitCommit,
+  gitInit,
+  gitStage,
   gitStatus,
+  gitUnstage,
   revealInFileManager,
   type GitFileStatus,
   type GitStatus,
@@ -27,13 +31,14 @@ function dirOf(rel: string): string {
 
 /**
  * Source Control view — the first real "pack" built on the side-panel seam (see
- * documentation/architecture/PLUGINS.md). Lists the workspace repo's changed
- * files via the `git_status` Rust command; click a file to open it. Stage /
- * commit / diff come in later iterations.
+ * documentation/architecture/PLUGINS.md). Full working-tree git through the UI:
+ * init, stage/unstage (pick what to commit), and commit with a message — no
+ * command line needed. Diff-on-click, push/pull, and branch switching come next.
  */
 export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | null }) {
-  const { openFileFromWorkspace, fileTreeRevision } = useIdeSession();
+  const { openFileFromWorkspace, fileTreeRevision, bumpFileTreeRevision } = useIdeSession();
   const [status, setStatus] = useState<GitStatus | null>(null);
+  const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +65,25 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
     void refresh();
   }, [refresh, fileTreeRevision]);
 
+  // Run a git mutation, surface its error, then refresh status + tree decorations.
+  const runGit = useCallback(
+    async (op: (root: string) => Promise<void>) => {
+      const root = workspaceRoot?.path;
+      if (root == null || root === '') {
+        return;
+      }
+      setError(null);
+      try {
+        await op(root);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+      await refresh();
+      bumpFileTreeRevision();
+    },
+    [workspaceRoot?.path, refresh, bumpFileTreeRevision],
+  );
+
   if (workspaceRoot == null || workspaceRoot.path === '') {
     return (
       <div className={styles.stateBox} role="status">
@@ -70,24 +94,38 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
 
   const staged = status?.files.filter((f) => f.staged) ?? [];
   const changes = status?.files.filter((f) => !f.staged) ?? [];
+  const isRepo = status?.isRepo ?? false;
 
   const fileRow = (f: GitFileStatus) => (
-    <button
-      key={f.path}
-      type="button"
-      className={styles.fileRow}
-      title={f.path}
-      onClick={() =>
-        f.isDir ? void revealInFileManager(f.absPath) : void openFileFromWorkspace(f.absPath)
-      }
-    >
-      {f.isDir ? <FolderIcon /> : <FileIcon name={f.name} />}
-      <span className={styles.fileName}>{f.name}</span>
-      <span className={styles.dir}>{dirOf(f.path)}</span>
+    <div key={f.path} className={styles.fileRow}>
+      <button
+        type="button"
+        className={styles.fileOpen}
+        title={f.path}
+        onClick={() =>
+          f.isDir ? void revealInFileManager(f.absPath) : void openFileFromWorkspace(f.absPath)
+        }
+      >
+        {f.isDir ? <FolderIcon /> : <FileIcon name={f.name} />}
+        <span className={styles.fileName}>{f.name}</span>
+        <span className={styles.dir}>{dirOf(f.path)}</span>
+      </button>
+      <button
+        type="button"
+        className={styles.action}
+        title={f.staged ? 'Unstage' : 'Stage'}
+        aria-label={`${f.staged ? 'Unstage' : 'Stage'} ${f.name}`}
+        disabled={busy}
+        onClick={() =>
+          void runGit((r) => (f.staged ? gitUnstage(r, [f.path]) : gitStage(r, [f.path])))
+        }
+      >
+        {f.staged ? '−' : '+'}
+      </button>
       <span className={`${styles.badge} ${f.untracked ? styles.badgeUntracked : ''}`}>
         {statusBadge(f)}
       </span>
-    </button>
+    </div>
   );
 
   return (
@@ -107,31 +145,103 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
           </button>
         </div>
       </div>
+
       <div className={styles.body}>
         {error != null ? (
-          <p className={styles.stateLine} role="alert">
+          <p className={styles.errorLine} role="alert">
             {error}
           </p>
-        ) : status != null && !status.isRepo ? (
+        ) : null}
+
+        {status != null && !isRepo ? (
           <div className={styles.stateBox} role="status">
             <p className={styles.stateLine}>Not a git repository.</p>
-            <p className={styles.stateHint}>Run “git init” here to start tracking changes.</p>
-          </div>
-        ) : status != null && status.files.length === 0 ? (
-          <div className={styles.stateBox} role="status">
-            <p className={styles.stateLine}>{busy ? 'Loading…' : 'No changes.'}</p>
+            <button
+              type="button"
+              className={styles.commitBtn}
+              disabled={busy}
+              onClick={() => void runGit((r) => gitInit(r))}
+            >
+              Initialize Repository
+            </button>
           </div>
         ) : (
           <>
+            {isRepo ? (
+              <div className={styles.commitBox}>
+                <textarea
+                  className={styles.commitMessage}
+                  placeholder="Message — commits the staged changes"
+                  rows={2}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Ctrl/Cmd+Enter commits, like VS Code.
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && staged.length > 0) {
+                      e.preventDefault();
+                      void runGit(async (r) => {
+                        await gitCommit(r, message);
+                        setMessage('');
+                      });
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className={styles.commitBtn}
+                  disabled={busy || staged.length === 0 || message.trim() === ''}
+                  onClick={() =>
+                    void runGit(async (r) => {
+                      await gitCommit(r, message);
+                      setMessage('');
+                    })
+                  }
+                >
+                  Commit{staged.length > 0 ? ` (${staged.length})` : ''}
+                </button>
+              </div>
+            ) : null}
+
+            {isRepo && staged.length === 0 && changes.length === 0 ? (
+              <div className={styles.stateBox} role="status">
+                <p className={styles.stateLine}>{busy ? 'Loading…' : 'No changes.'}</p>
+              </div>
+            ) : null}
+
             {staged.length > 0 ? (
               <>
-                <div className={styles.groupLabel}>Staged Changes</div>
+                <div className={styles.groupLabel}>
+                  <span>Staged Changes</span>
+                  <button
+                    type="button"
+                    className={styles.groupAction}
+                    title="Unstage all"
+                    aria-label="Unstage all"
+                    disabled={busy}
+                    onClick={() => void runGit((r) => gitUnstage(r, staged.map((f) => f.path)))}
+                  >
+                    −
+                  </button>
+                </div>
                 {staged.map(fileRow)}
               </>
             ) : null}
+
             {changes.length > 0 ? (
               <>
-                <div className={styles.groupLabel}>Changes</div>
+                <div className={styles.groupLabel}>
+                  <span>Changes</span>
+                  <button
+                    type="button"
+                    className={styles.groupAction}
+                    title="Stage all"
+                    aria-label="Stage all"
+                    disabled={busy}
+                    onClick={() => void runGit((r) => gitStage(r, changes.map((f) => f.path)))}
+                  >
+                    +
+                  </button>
+                </div>
                 {changes.map(fileRow)}
               </>
             ) : null}
