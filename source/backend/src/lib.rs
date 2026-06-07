@@ -3,6 +3,7 @@ pub fn run() {
     tauri::Builder::default()
         .manage(terminal::TerminalSessions::default())
         .manage(serial::SerialSessions::default())
+        .manage(ssh::SshSessions::default())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // Start the in-app MCP server so an agent can drive the UI + read
@@ -55,6 +56,9 @@ pub fn run() {
             serial::serial_open,
             serial::serial_write,
             serial::serial_close,
+            ssh::ssh_open,
+            ssh::ssh_write,
+            ssh::ssh_close,
             panes::popout_pane,
             panes::close_popout_pane,
             panes::list_popout_panes,
@@ -110,6 +114,7 @@ mod radare2;
 mod search;
 mod serial;
 mod shellcode;
+mod ssh;
 mod terminal;
 
 use std::io::{ErrorKind, Read, Write};

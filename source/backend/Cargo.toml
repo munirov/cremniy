@@ -28,6 +28,15 @@ goblin = "0.9"
 portable-pty = "0.8"
 # Cross-platform serial I/O (talks to OS serial APIs directly, no external tool).
 serialport = "4.9"
+# Pure-Rust SSH client (no system libssh / OpenSSL). Runs on the tokio runtime
+# Tauri already provides via `tauri::async_runtime`.
+russh = "0.45"
+# Handler trait in russh 0.45 is `#[async_trait]`; the macro isn't re-exported.
+async-trait = "0.1"
+# `mpsc` + `select!` for the SSH read/write loop. Tauri runs on tokio, but
+# doesn't re-export these; this pulls in only the sync/macros surface (the
+# runtime itself is shared with Tauri).
+tokio = { version = "1", features = ["sync", "macros"] }
 # Workspace content search: ripgrep's walker (.gitignore + globs) + regex.
 ignore = "0.4"
 regex = "1"
