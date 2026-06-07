@@ -4,7 +4,7 @@ import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
 import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
-import { CENTER_PANELS } from '@boundary/layout/centerPanels';
+import { resolveCenterPanel } from '@boundary/layout/centerPanels';
 import { IdeStatusStrip } from '@boundary/layout/IdeStatusStrip';
 import { IdeToolDock } from '@boundary/layout/IdeToolDock';
 import { Pane } from '@boundary/layout/Pane';
@@ -258,7 +258,7 @@ export function IdeDockview({
           </div>
         ) : null}
         {ide.activePanel != null ? (
-          <div className={styles.editorBody}>{CENTER_PANELS[ide.activePanel]?.render() ?? null}</div>
+          <div className={styles.editorBody}>{resolveCenterPanel(ide.activePanel)?.render() ?? null}</div>
         ) : (
           <>
             <IdeBreadcrumb

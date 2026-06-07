@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { registerAgentCommands, registerAgentState } from '@shared/agent/agentBridge';
+import { pluginCommands } from '@shared/plugins/registry';
+import { setPluginHost } from '@shared/plugins/host';
 import type { ToolTabId } from '@domain/toolTabs/toolTabId';
 import { AgentWorkspaceCommands } from '@boundary/agent/AgentWorkspaceCommands';
 
@@ -254,11 +256,9 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       if (id === 'newTerminal') {
         void persistTerminal(true);
         setNewTerminalSignal((s) => s + 1);
-      } else if (id === 'openConnections') {
-        ide.openPanel('connections');
       }
     },
-    [persistTerminal, ide.openPanel],
+    [persistTerminal],
   );
 
   // Collapse the terminal panel (used by its own hide / close buttons).
@@ -408,11 +408,6 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         run: () => agentUiRef.current.openPanel('advancedGit'),
       },
       {
-        name: 'dialog.openConnections',
-        description: 'Open the Connections (Hosts) panel — saved serial / SSH hosts — as a center tab.',
-        run: () => agentUiRef.current.openPanel('connections'),
-      },
-      {
         name: 'dialog.openReverseCalculator',
         description: 'Open the Reverse Calculator dialog (Tools).',
         run: () => agentUiRef.current.setCalcOpen(true),
@@ -430,15 +425,17 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       },
       {
         name: 'dialog.closeAll',
-        description: 'Close any open Settings / Advanced Git / Reverse Calculator / References dialog.',
+        description: 'Close any open center panel (Settings / Git / plugin panels) and the Reverse Calculator / References dialogs.',
         run: () => {
-          agentUiRef.current.setSettingsOpen(false);
-          agentUiRef.current.closePanel('advancedGit');
-          agentUiRef.current.closePanel('connections');
-          agentUiRef.current.setCalcOpen(false);
-          agentUiRef.current.setRefsOpen(null);
+          const u = agentUiRef.current;
+          u.setSettingsOpen(false);
+          (u.openPanels ?? []).forEach((id) => u.closePanel(id));
+          u.setCalcOpen(false);
+          u.setRefsOpen(null);
         },
       },
+      // Plugin-contributed agent commands (e.g. dialog.openConnections).
+      ...pluginCommands(),
     ]);
 
     return () => {
@@ -459,6 +456,11 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
     setSettingsAction(() => openCenterPanel('settings'));
     return () => setSettingsAction(null);
   }, [setSettingsAction, openCenterPanel]);
+  // Install the plugin host API so plugin contributions (menu items / commands)
+  // can open or close center panels through the live IDE session.
+  useEffect(() => {
+    setPluginHost({ openPanel: ide.openPanel, closePanel: ide.closePanel });
+  }, [ide.openPanel, ide.closePanel]);
   useEffect(() => {
     setMenu(
       <MenuBar

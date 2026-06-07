@@ -10,6 +10,7 @@ import { TOOLS_MENU_ENTRIES, type ToolsMenuActionId } from '@domain/menu/toolsMe
 import { VIEW_MENU_ENTRIES, type ViewMenuActionId } from '@domain/menu/viewMenu';
 import { Menu } from '@boundary/common/Menu';
 import { useT } from '@boundary/i18n/LocaleContext';
+import { pluginMenuItems } from '@shared/plugins/registry';
 
 import styles from './MenuBar.module.css';
 
@@ -362,10 +363,20 @@ export function MenuBar({
                       position={{ kind: 'anchor', el: terminalAnchor }}
                       onClose={closeDropdown}
                       groups={[
-                        TERMINAL_MENU_ENTRIES.map((item) => ({
-                          label: item.label,
-                          onClick: () => runTerminal(item.id),
-                        })),
+                        [
+                          ...TERMINAL_MENU_ENTRIES.map((item) => ({
+                            label: item.label,
+                            onClick: () => runTerminal(item.id),
+                          })),
+                          // Plugin-contributed Terminal items (e.g. Connections).
+                          ...pluginMenuItems('terminal').map((item) => ({
+                            label: item.label,
+                            onClick: () => {
+                              closeDropdown();
+                              item.run();
+                            },
+                          })),
+                        ],
                       ]}
                     />
                   ) : null}

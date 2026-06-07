@@ -13,7 +13,7 @@ import { fileNameFromPath } from '@domain/workspace/paths';
 
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 
-import { CENTER_PANELS } from './centerPanels';
+import { resolveCenterPanel } from './centerPanels';
 import styles from './IdeEditorTabStrip.module.css';
 
 const DRAG_MIME = 'application/x-cremniy-tab';
@@ -240,7 +240,7 @@ export function IdeEditorTabStrip() {
           );
         })}
         {openPanels.map((id) => {
-          const def = CENTER_PANELS[id];
+          const def = resolveCenterPanel(id);
           if (def == null) return null;
           const panelActive = activePanel === id;
           return (

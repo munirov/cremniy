@@ -4,9 +4,9 @@ import type { AppPreferences } from '@domain/preferences/appPreferences';
 import { settingsService } from '@infrastructure/settings/settingsService';
 import { SettingsDialog } from '@boundary/settings/SettingsDialog';
 import { AdvancedGitDialog } from '@boundary/workspace/AdvancedGitDialog';
-import { ConnectionsPanel } from '@boundary/connections/ConnectionsPanel';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
+import { pluginCenterPanels } from '@shared/plugins/registry';
 
 /**
  * The center "tab space" is a generic host: a tab can be a file editor OR one
@@ -52,10 +52,21 @@ function AdvancedGitTab() {
   );
 }
 
-/** Registry of non-file center panels. Add an entry to host a new view as a
- *  center tab — the tab strip (label) and the editor body (render) pick it up. */
-export const CENTER_PANELS: Record<string, { label: string; render: () => ReactNode }> = {
+type CenterPanelDef = { label: string; render: () => ReactNode };
+
+/** Core (first-party) non-file center panels. Plugins add more via contributions
+ *  — resolve any panel (core or plugin) through {@link resolveCenterPanel}. */
+export const CENTER_PANELS: Record<string, CenterPanelDef> = {
   settings: { label: 'Settings', render: () => <SettingsTab /> },
   advancedGit: { label: 'Git', render: () => <AdvancedGitTab /> },
-  connections: { label: 'Connections', render: () => <ConnectionsPanel /> },
 };
+
+/** Look up a center panel by id: core panels first, then plugin contributions.
+ *  Use this instead of indexing CENTER_PANELS so plugin panels resolve too. */
+export function resolveCenterPanel(id: string | null | undefined): CenterPanelDef | undefined {
+  if (id == null) return undefined;
+  const core = CENTER_PANELS[id];
+  if (core != null) return core;
+  const contributed = pluginCenterPanels().find((p) => p.id === id);
+  return contributed != null ? { label: contributed.label, render: contributed.render } : undefined;
+}

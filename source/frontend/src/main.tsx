@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { installAgentBridge } from '@shared/agent/agentBridge';
 import { installAgentRemote } from '@shared/agent/agentRemote';
+import { loadPlugins } from '@shared/plugins/loadPlugins';
 
 self.MonacoEnvironment = {
   getWorker() {
@@ -27,6 +28,9 @@ loader.config({ monaco });
 installAgentBridge();
 // Bridge the in-app MCP server (backend) to window.cremniy. Harmless outside Tauri.
 void installAgentRemote();
+// Register plugins from the top-level plugins/ folder before mount so their
+// contributions (panels, menu items, commands) are present on first render.
+loadPlugins();
 
 // Suppress the WebView's default right-click menu (Back/Reload/Save As/Print/Inspect).
 // Components with their own onContextMenu handlers keep working — those run before

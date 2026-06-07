@@ -21,7 +21,7 @@ vi.mock('@shared/connections/connectionBus', () => ({
   openConnection: mockOpenConnection,
 }));
 
-import { ConnectionsPanel } from './ConnectionsPanel';
+import { ConnectionsPanel } from '@plugins/connections/ConnectionsPanel';
 
 describe('ConnectionsPanel', () => {
   beforeEach(() => {
