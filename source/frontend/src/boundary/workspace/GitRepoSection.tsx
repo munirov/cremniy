@@ -399,9 +399,7 @@ export function GitRepoSection({ repoPath, repoName, multi, defaultExpanded = tr
       {staged.length > 0 ? (
         <>
           <div className={styles.groupLabel}>
-            <span>
-              Staged Changes <span className={styles.count}>{staged.length}</span>
-            </span>
+            <span className={styles.groupTitle}>Staged Changes</span>
             <button
               type="button"
               className={styles.groupAction}
@@ -412,6 +410,7 @@ export function GitRepoSection({ repoPath, repoName, multi, defaultExpanded = tr
             >
               −
             </button>
+            <span className={styles.count}>{staged.length}</span>
           </div>
           {staged.map(fileRow)}
         </>
@@ -419,9 +418,7 @@ export function GitRepoSection({ repoPath, repoName, multi, defaultExpanded = tr
       {changes.length > 0 ? (
         <>
           <div className={styles.groupLabel}>
-            <span>
-              Changes <span className={styles.count}>{changes.length}</span>
-            </span>
+            <span className={styles.groupTitle}>Changes</span>
             <button
               type="button"
               className={styles.groupAction}
@@ -432,6 +429,7 @@ export function GitRepoSection({ repoPath, repoName, multi, defaultExpanded = tr
             >
               +
             </button>
+            <span className={styles.count}>{changes.length}</span>
           </div>
           {changes.map(fileRow)}
         </>

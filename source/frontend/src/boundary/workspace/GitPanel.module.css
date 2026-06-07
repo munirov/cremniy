@@ -156,14 +156,16 @@
 .groupLabel {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.3rem 0.4rem 0.15rem 0.6rem;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem 0.15rem 0.6rem;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.groupLabel > span {
+.groupTitle {
+  flex: 1;
+  min-width: 0;
   opacity: 0.45;
 }
 
