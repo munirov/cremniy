@@ -510,3 +510,78 @@
 .repoHeader .headerActions:focus-within {
   opacity: 1;
 }
+
+/* Two-section multi-repo layout: REPOSITORIES (overview) + CHANGES (work). */
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  height: 1.7rem;
+  padding: 0 0.3rem;
+}
+
+.sectionToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+.sectionHeader .headerActions {
+  opacity: 0.55;
+}
+
+.sectionHeader:hover .headerActions {
+  opacity: 1;
+}
+
+/* REPOSITORIES overview rows — compact, not expandable (vs CHANGES). */
+.repoListRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2px 0.5rem 2px 1.2rem;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.repoListRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.repoListName {
+  flex-shrink: 0;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.9;
+}
+
+.repoListBranch {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  opacity: 0.5;
+}

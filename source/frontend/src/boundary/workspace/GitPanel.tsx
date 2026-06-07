@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
-import { gitInit, gitRepos, type GitRepoRef } from '@infrastructure/tauri/bridge';
+import {
+  gitInit,
+  gitRepos,
+  gitStatus,
+  type GitRepoRef,
+  type GitStatus,
+} from '@infrastructure/tauri/bridge';
 
 import { useIdeSession } from './IdeSessionContext';
+import { ChevronIcon } from './fileIcons';
 import { GitRepoSection } from './GitRepoSection';
 
 import styles from './GitPanel.module.css';
@@ -11,15 +18,18 @@ import styles from './GitPanel.module.css';
 /**
  * Source Control view — the first real "pack" on the side-panel seam (see
  * documentation/architecture/PLUGINS.md). Discovers the git repos under the
- * workspace and renders each one's changes (commit / stage / branch / discard)
- * via GitRepoSection — a single repo directly, multiple repos nested under a
- * Repositories list, so the commit button always commits its own repo.
+ * workspace. One repo → its changes directly; multiple → two collapsible
+ * sections like VS Code: REPOSITORIES (compact overview) and CHANGES (each repo
+ * expands to its own commit box + groups + files), so commit is always per-repo.
  */
 export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | null }) {
   const { fileTreeRevision, bumpFileTreeRevision } = useIdeSession();
   const [repos, setRepos] = useState<GitRepoRef[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reposOpen, setReposOpen] = useState(true);
+  const [changesOpen, setChangesOpen] = useState(true);
+  const [overview, setOverview] = useState<Record<string, GitStatus>>({});
 
   const discover = useCallback(async () => {
     const root = workspaceRoot?.path;
@@ -42,6 +52,32 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
   useEffect(() => {
     void discover();
   }, [discover, fileTreeRevision]);
+
+  // Lightweight per-repo status for the REPOSITORIES overview (branch + counts).
+  // Only needed when there are multiple repos; CHANGES loads its own per section.
+  useEffect(() => {
+    if (repos == null || repos.length < 2) {
+      return;
+    }
+    let cancelled = false;
+    void Promise.all(
+      repos.map((r) =>
+        gitStatus(r.path)
+          .then((s) => [r.path, s] as const)
+          .catch(() => null),
+      ),
+    ).then((pairs) => {
+      if (cancelled) return;
+      const m: Record<string, GitStatus> = {};
+      for (const pair of pairs) {
+        if (pair) m[pair[0]] = pair[1];
+      }
+      setOverview(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [repos, fileTreeRevision]);
 
   if (workspaceRoot == null || workspaceRoot.path === '') {
     return (
@@ -93,40 +129,82 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
     );
   }
 
-  // Single repo → render it directly (no Repositories list, like VS Code).
+  // Single repo → render its changes directly (no REPOSITORIES list, like VS Code).
   if (repos.length === 1) {
     const r = repos[0]!;
     return <GitRepoSection repoPath={r.path} repoName={r.name} multi={false} />;
   }
 
-  // Multiple repos → a Repositories header + one nested section per repo.
+  // Multiple repos → two collapsible sections: REPOSITORIES + CHANGES.
   return (
     <div className={styles.section}>
-      <div className={styles.header}>
-        <span className={styles.headerName}>Repositories</span>
-        <span className={styles.count}>{repos.length}</span>
-        <div className={styles.headerActions}>
+      <div className={styles.scrollArea}>
+        <div className={styles.sectionHeader}>
           <button
             type="button"
-            className={styles.headerBtn}
-            title="Rescan repositories"
-            aria-label="Rescan repositories"
-            onClick={() => void discover()}
+            className={styles.sectionToggle}
+            onClick={() => setReposOpen((v) => !v)}
           >
-            ⟳
+            <ChevronIcon open={reposOpen} />
+            <span className={styles.sectionTitle}>Repositories</span>
+            <span className={styles.count}>{repos.length}</span>
+          </button>
+          <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.headerBtn}
+              title="Rescan repositories"
+              aria-label="Rescan repositories"
+              onClick={() => void discover()}
+            >
+              ⟳
+            </button>
+          </div>
+        </div>
+        {reposOpen
+          ? repos.map((r) => {
+              const s = overview[r.path];
+              return (
+                <div key={r.path} className={styles.repoListRow} title={r.path}>
+                  <span className={styles.repoListName}>{r.name}</span>
+                  {s?.branch != null ? (
+                    <span className={styles.repoListBranch}>
+                      ⎇ {s.branch}
+                      {s.behind > 0 ? ` ↓${s.behind}` : ''}
+                      {s.ahead > 0 ? ` ↑${s.ahead}` : ''}
+                    </span>
+                  ) : (
+                    <span className={styles.repoListBranch} />
+                  )}
+                  {s != null && s.files.length > 0 ? (
+                    <span className={styles.count}>{s.files.length}</span>
+                  ) : null}
+                </div>
+              );
+            })
+          : null}
+
+        <div className={styles.sectionHeader}>
+          <button
+            type="button"
+            className={styles.sectionToggle}
+            onClick={() => setChangesOpen((v) => !v)}
+          >
+            <ChevronIcon open={changesOpen} />
+            <span className={styles.sectionTitle}>Changes</span>
           </button>
         </div>
-      </div>
-      <div className={styles.body}>
-        {repos.map((r, i) => (
-          <GitRepoSection
-            key={r.path}
-            repoPath={r.path}
-            repoName={r.name}
-            multi
-            defaultExpanded={i === 0}
-          />
-        ))}
+        {changesOpen
+          ? repos.map((r, i) => (
+              <GitRepoSection
+                key={r.path}
+                repoPath={r.path}
+                repoName={r.name}
+                multi
+                defaultExpanded={i === 0}
+              />
+            ))
+          : null}
       </div>
     </div>
   );
