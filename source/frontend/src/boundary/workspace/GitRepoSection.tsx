@@ -340,7 +340,7 @@ export function GitRepoSection({ repoPath, repoName, multi, defaultExpanded = tr
           disabled={busy}
           onClick={() => setCommitMenu((v) => !v)}
         >
-          ▾
+          <ChevronIcon open size={14} />
         </button>
         {commitMenu ? (
           <ul className={styles.commitMenu} role="menu" onMouseLeave={() => setCommitMenu(false)}>
