@@ -31,3 +31,5 @@ ignore = "0.4"
 regex = "1"
 # Tiny HTTP server hosting the in-app MCP endpoint (agent control).
 tiny_http = "0.12"
+# Per-window screen capture for the MCP `screenshot` tool (re-exports `image`).
+xcap = "0.4.1"

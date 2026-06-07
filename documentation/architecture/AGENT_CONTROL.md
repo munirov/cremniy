@@ -91,11 +91,41 @@ useEffect(() => registerAgentCommands([
 абсолютного пути, чтобы build-then-run работал на всех ОС; PATH-инструменты (например, `cargo`)
 остаются как есть.
 
+## MCP-сервер (внешний доступ)
+
+`window.cremniy` живёт внутри webview. Чтобы тем же управлял внешний агент (ИИ),
+приложение поднимает **MCP-сервер прямо в себе**: HTTP на `127.0.0.1:41547/mcp`
+(стартует в `setup()` бэкенда — `source/backend/src/mcp.rs`).
+
+Подключение MCP-клиента (например Claude Code) — тип `http`. Создай `.mcp.json` в корне
+репо (или добавь в свой клиентский конфиг):
+
+```json
+{ "mcpServers": { "cremniy": { "type": "http", "url": "http://127.0.0.1:41547/mcp" } } }
+```
+
+Инструменты:
+
+| Tool | Что делает |
+|---|---|
+| `list_commands` | как `window.cremniy.commands()` — команды текущего экрана. |
+| `run_command` `{ name, args? }` | как `window.cremniy.run(...)` — дёрнуть любую UI-команду. |
+| `get_state` | как `window.cremniy.state()` — снимок состояния экрана. |
+| `list_windows` | окна приложения (главное + вынесенные панели). |
+| `screenshot` `{ label? }` | PNG каждого окна (или указанного по label) — визуальный контроль. |
+
+Поток: HTTP → бэкенд эмитит `agent://request` в webview → слушатель
+(`shared/agent/agentRemote.ts`) зовёт `window.cremniy` → ответ командой `agent_reply` →
+HTTP-ответ. Второй реализации команд нет: MCP — тонкий внешний мост к той же поверхности,
+что и кнопки. Скриншоты снимает бэкенд по геометрии окон Tauri.
+
 ## Карта кода
 
 | Файл | Роль |
 |---|---|
 | `source/frontend/src/shared/agent/agentBridge.ts` | Реестр + API `window.cremniy`. |
+| `source/frontend/src/shared/agent/agentRemote.ts` | Мост MCP-сервер ↔ `window.cremniy`. |
+| `source/backend/src/mcp.rs` | MCP HTTP-сервер + захват окон. |
 | `source/frontend/src/boundary/agent/AgentWorkspaceCommands.tsx` | `fs.*` / `process.*`. |
 | `source/frontend/src/boundary/RootApp.tsx` | IDE chrome + state `ui`. |
 | `source/frontend/src/boundary/workspace/IdeSessionContext.tsx` | `file.*` / `session.*` + state `session`. |

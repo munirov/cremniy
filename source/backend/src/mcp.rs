@@ -188,6 +188,11 @@ fn call_tool(params: Option<&Value>) -> Result<Value, (i64, String)> {
     let params = params.ok_or((-32602, "missing params".to_string()))?;
     let name = params.get("name").and_then(Value::as_str).unwrap_or("");
     let args = params.get("arguments").cloned().unwrap_or_else(|| json!({}));
+    // Screenshot returns image content, not text — handle it before the
+    // text-wrapped tools.
+    if name == "screenshot" {
+        return Ok(screenshot(args.get("label").and_then(Value::as_str)));
+    }
     let outcome: Result<Value, String> = match name {
         "list_commands" => bridge_request("commands", "", Value::Null),
         "get_state" => bridge_request("state", "", Value::Null),
@@ -213,6 +218,102 @@ fn call_tool(params: Option<&Value>) -> Result<Value, (i64, String)> {
 
 fn tool_text(text: &str, is_error: bool) -> Value {
     json!({ "content": [ { "type": "text", "text": text } ], "isError": is_error })
+}
+
+/// Capture each of the app's windows as a PNG (MCP image content). Our windows
+/// are identified by an OS title starting with "Cremniy" (see panes.rs for the
+/// pop-out titles). `label`, if given, further filters by title substring.
+fn screenshot(label: Option<&str>) -> Value {
+    match capture_windows(label) {
+        Ok(items) if !items.is_empty() => json!({ "content": items, "isError": false }),
+        Ok(_) => tool_text("no Cremniy windows found to capture (minimized?)", true),
+        Err(e) => tool_text(&e, true),
+    }
+}
+
+/// Capture each Tauri window by cropping it out of its monitor's screenshot.
+/// (xcap doesn't enumerate our borderless WebView2 windows directly, but we know
+/// their geometry from Tauri, so we shoot the monitor and crop.) `label`, if
+/// given, filters by Tauri window label substring (e.g. "main", "terminal").
+fn capture_windows(label: Option<&str>) -> Result<Vec<Value>, String> {
+    let bridge = BRIDGE.get().ok_or("MCP bridge not initialized")?;
+    let monitors = xcap::Monitor::all().map_err(|e| e.to_string())?;
+    let mut items: Vec<Value> = Vec::new();
+    for (lbl, win) in bridge.app.webview_windows() {
+        if let Some(l) = label {
+            if !lbl.contains(l) {
+                continue;
+            }
+        }
+        if win.is_minimized().unwrap_or(false) {
+            continue;
+        }
+        let pos = match win.outer_position() {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        let size = win.outer_size().unwrap_or_default();
+        if size.width == 0 || size.height == 0 {
+            continue;
+        }
+        // Pick the monitor whose physical bounds contain the window's top-left.
+        let mon = monitors
+            .iter()
+            .find(|m| {
+                let (mx, my) = (m.x().unwrap_or(0), m.y().unwrap_or(0));
+                let (mw, mh) = (m.width().unwrap_or(0) as i32, m.height().unwrap_or(0) as i32);
+                pos.x >= mx && pos.x < mx + mw && pos.y >= my && pos.y < my + mh
+            })
+            .or_else(|| monitors.first());
+        let mon = match mon {
+            Some(m) => m,
+            None => continue,
+        };
+        let shot = match mon.capture_image() {
+            Ok(i) => i,
+            Err(_) => continue,
+        };
+        // Window rect relative to the monitor image (physical px), clamped.
+        let ox = (pos.x - mon.x().unwrap_or(0)).max(0) as u32;
+        let oy = (pos.y - mon.y().unwrap_or(0)).max(0) as u32;
+        let cw = size.width.min(shot.width().saturating_sub(ox));
+        let ch = size.height.min(shot.height().saturating_sub(oy));
+        if cw == 0 || ch == 0 {
+            continue;
+        }
+        let cropped = xcap::image::imageops::crop_imm(&shot, ox, oy, cw, ch).to_image();
+        let mut bytes: Vec<u8> = Vec::new();
+        if xcap::image::DynamicImage::ImageRgba8(cropped)
+            .write_to(&mut std::io::Cursor::new(&mut bytes), xcap::image::ImageFormat::Png)
+            .is_err()
+        {
+            continue;
+        }
+        let title = win.title().unwrap_or_else(|_| lbl.clone());
+        items.push(json!({ "type": "text", "text": format!("{lbl} — {title}") }));
+        items.push(json!({ "type": "image", "data": base64_encode(&bytes), "mimeType": "image/png" }));
+    }
+    if items.is_empty() {
+        return Err("no capturable app windows (all minimized?)".to_string());
+    }
+    Ok(items)
+}
+
+/// Standard base64 (with padding) — small enough to hand-roll, avoids a dep.
+fn base64_encode(data: &[u8]) -> String {
+    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity((data.len() + 2) / 3 * 4);
+    for chunk in data.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = *chunk.get(1).unwrap_or(&0) as u32;
+        let b2 = *chunk.get(2).unwrap_or(&0) as u32;
+        let n = (b0 << 16) | (b1 << 8) | b2;
+        out.push(T[((n >> 18) & 63) as usize] as char);
+        out.push(T[((n >> 12) & 63) as usize] as char);
+        out.push(if chunk.len() > 1 { T[((n >> 6) & 63) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { T[(n & 63) as usize] as char } else { '=' });
+    }
+    out
 }
 
 fn tool_defs() -> Value {
@@ -243,6 +344,14 @@ fn tool_defs() -> Value {
             "name": "list_windows",
             "description": "List the app's open windows — the main window plus any popped-out panes (file tree, editor, terminal, tool dock).",
             "inputSchema": { "type": "object", "properties": {} }
+        },
+        {
+            "name": "screenshot",
+            "description": "Capture a PNG of each app window (main + popped-out panes) so you can see the UI. Optional { label } filters by Tauri window-label substring, e.g. \"main\" or \"terminal\".",
+            "inputSchema": {
+                "type": "object",
+                "properties": { "label": { "type": "string", "description": "Optional window-label substring filter (e.g. main, popout-terminal)." } }
+            }
         }
     ])
 }
