@@ -120,6 +120,7 @@ export function GitRepoSection({ repoPath, repoName, multi, defaultExpanded = tr
   const staged = status?.files.filter((f) => f.staged) ?? [];
   const changes = status?.files.filter((f) => !f.staged) ?? [];
   const hasMessage = message.trim() !== '';
+  const canCommit = !busy && staged.length > 0 && hasMessage;
 
   const doCommit = (opts: { all?: boolean; push?: boolean; amend?: boolean } = {}) => {
     setCommitMenu(false);
@@ -325,14 +326,14 @@ export function GitRepoSection({ repoPath, repoName, multi, defaultExpanded = tr
         <button
           type="button"
           className={styles.commitBtn}
-          disabled={busy || staged.length === 0 || !hasMessage}
+          disabled={!canCommit}
           onClick={() => doCommit()}
         >
           ✓ Commit{staged.length > 0 ? ` (${staged.length})` : ''}
         </button>
         <button
           type="button"
-          className={styles.commitCaret}
+          className={`${styles.commitCaret} ${canCommit ? '' : styles.commitCaretMuted}`}
           title="Commit options"
           aria-label="Commit options"
           aria-haspopup="menu"

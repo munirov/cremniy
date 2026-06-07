@@ -15,9 +15,9 @@
   /* CTA — the ONE colored accent, reserved for the most important actions
      (Commit, Initialize…). The UI stays monochrome everywhere else; colour is
      spent sparingly so these primary actions stand out. */
-  --color-cta: #87a6c4;
-  --color-cta-hover: #97b3cd;
-  --color-cta-text: #14202e;
+  --color-cta: #8fb2da;
+  --color-cta-hover: #a1c2e6;
+  --color-cta-text: #10202f;
 
   /* Accent / selection — neutral; "accent" is a slightly brighter neutral, not
      a brand colour. Colour is reserved for CTAs (above) + semantics. */

@@ -350,7 +350,7 @@
 }
 
 .commitBtn:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: default;
 }
 
@@ -401,8 +401,14 @@
 }
 
 .commitCaret:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: default;
+}
+
+/* Caret stays clickable (Amend works without a message) but dims to match the
+   disabled Commit half — so the unified button never looks two-toned. */
+.commitCaretMuted {
+  opacity: 0.5;
 }
 
 .commitMenu {
