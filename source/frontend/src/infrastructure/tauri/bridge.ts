@@ -19,6 +19,8 @@ import type {
 
 const TERMINAL_OUTPUT_EVENT = "terminal://output";
 const SERIAL_OUTPUT_EVENT = "serial://output";
+const SSH_OUTPUT_EVENT = "ssh://output";
+const SSH_EXIT_EVENT = "ssh://exit";
 
 export async function pickFolder(): Promise<string | null> {
   return invoke<string | null>("pick_folder");
@@ -750,5 +752,60 @@ export async function listenSerialOutput(
 ): Promise<UnlistenFn> {
   return listen<SerialOutputEvent>(SERIAL_OUTPUT_EVENT, (event: Event<SerialOutputEvent>) => {
     onOutput(event.payload);
+  });
+}
+
+// Connections pack — interactive SSH engine (mirrors the serial engine).
+
+export type SshOutputEvent = {
+  sessionId: string;
+  data: string;
+};
+
+export type SshExitEvent = {
+  sessionId: string;
+};
+
+/** Open an interactive SSH shell on `sessionId`; emits `ssh://output` /
+ *  `ssh://exit`. Password is optional (null/undefined → tries `none` auth). */
+export async function sshOpen(
+  sessionId: string,
+  address: string,
+  port: number,
+  username: string,
+  password?: string | null,
+): Promise<void> {
+  return invoke<void>("ssh_open", {
+    sessionId,
+    address,
+    port,
+    username,
+    password: password == null || password === "" ? null : password,
+  });
+}
+
+/** Write bytes to the open SSH shell's stdin. */
+export async function sshWrite(sessionId: string, data: string): Promise<void> {
+  return invoke<void>("ssh_write", { sessionId, data });
+}
+
+/** Close the SSH session (drops its channel + read/write loop). */
+export async function sshClose(sessionId: string): Promise<void> {
+  return invoke<void>("ssh_close", { sessionId });
+}
+
+export async function listenSshOutput(
+  onOutput: (payload: SshOutputEvent) => void,
+): Promise<UnlistenFn> {
+  return listen<SshOutputEvent>(SSH_OUTPUT_EVENT, (event: Event<SshOutputEvent>) => {
+    onOutput(event.payload);
+  });
+}
+
+export async function listenSshExit(
+  onExit: (payload: SshExitEvent) => void,
+): Promise<UnlistenFn> {
+  return listen<SshExitEvent>(SSH_EXIT_EVENT, (event: Event<SshExitEvent>) => {
+    onExit(event.payload);
   });
 }

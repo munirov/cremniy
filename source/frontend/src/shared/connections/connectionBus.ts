@@ -13,8 +13,10 @@ export type OpenConnectionRequest = {
   connId: string;
   /** Tab label (the host's friendly name). */
   label: string;
-  /** Serial transport params. SSH lands here once its engine is wired. */
+  /** Serial transport params (set for a serial host). */
   serial?: { port: string; baud: number };
+  /** SSH transport params (set for an SSH host). */
+  ssh?: { address: string; port: number; username: string; password?: string | null };
 };
 
 type Listener = (req: OpenConnectionRequest) => void;

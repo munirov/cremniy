@@ -69,19 +69,26 @@ describe('ConnectionsPanel', () => {
     });
   });
 
-  it('disables Connect for SSH hosts (engine not wired yet)', async () => {
+  it('connects a saved SSH host through the connection bus', async () => {
     mockConnList.mockResolvedValue([
       {
         id: 's1',
         label: 'prod',
         kind: 'ssh',
         tags: [],
-        ssh: { address: '10.0.0.1', port: 22, username: 'root' },
+        ssh: { address: '10.0.0.1', port: 22, username: 'root', password: 'hunter2' },
       },
     ]);
     render(<ConnectionsPanel />);
 
     const connect = await screen.findByRole('button', { name: /^connect$/i });
-    expect(connect).toBeDisabled();
+    expect(connect).not.toBeDisabled();
+
+    fireEvent.click(connect);
+    expect(mockOpenConnection).toHaveBeenCalledWith({
+      connId: 's1',
+      label: 'prod',
+      ssh: { address: '10.0.0.1', port: 22, username: 'root', password: 'hunter2' },
+    });
   });
 });

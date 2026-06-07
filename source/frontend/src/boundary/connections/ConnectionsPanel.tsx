@@ -128,6 +128,17 @@ export function ConnectionsPanel() {
         label: conn.label || conn.serial.port,
         serial: { port: conn.serial.port, baud: conn.serial.baud },
       });
+    } else if (conn.kind === 'ssh' && conn.ssh != null && conn.ssh.address.trim() !== '') {
+      openConnection({
+        connId: conn.id,
+        label: conn.label || conn.ssh.address,
+        ssh: {
+          address: conn.ssh.address,
+          port: conn.ssh.port,
+          username: conn.ssh.username,
+          password: conn.ssh.password,
+        },
+      });
     }
   }, []);
 
@@ -215,8 +226,7 @@ export function ConnectionsPanel() {
                           type="button"
                           className={styles.btnPrimary}
                           onClick={() => connect(conn)}
-                          disabled={!isSerial}
-                          title={isSerial ? 'Open a serial console tab' : 'SSH sessions coming soon'}
+                          title="Open a session tab"
                         >
                           Connect
                         </button>
@@ -426,9 +436,6 @@ function ConnectionForm({
                   }
                 />
               </label>
-              <p className={styles.note}>
-                SSH sessions aren't wired yet — saved hosts are ready for when the SSH engine lands.
-              </p>
             </>
           )}
 

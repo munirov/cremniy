@@ -12,6 +12,7 @@ import { subscribeOpenConnection } from '@shared/connections/connectionBus';
 
 import { TerminalInstance } from './TerminalInstance';
 import { SerialInstance } from './SerialInstance';
+import { SshInstance } from './SshInstance';
 import styles from './TerminalFooterPanel.module.css';
 
 export type TerminalFooterPanelProps = {
@@ -29,14 +30,20 @@ export type TerminalFooterPanelProps = {
   onClose?: () => void;
 };
 
-type SerialTabConn = {
-  /** Profile id — used to de-dup tabs (re-opening a host focuses its tab). */
-  connId: string;
-  /** Stable serial session id for this tab's SerialInstance. */
-  sessionId: string;
-  port: string;
-  baud: number;
-};
+/** A connection-backed tab (serial or SSH) rather than a local shell. The
+    `connId` (profile id) de-dups tabs — re-opening a host focuses its tab — and
+    `sessionId` keys the backend session for the instance. */
+type TabConn =
+  | { kind: 'serial'; connId: string; sessionId: string; port: string; baud: number }
+  | {
+      kind: 'ssh';
+      connId: string;
+      sessionId: string;
+      address: string;
+      port: number;
+      username: string;
+      password?: string | null;
+    };
 
 type TerminalTab = {
   id: number;
@@ -45,9 +52,10 @@ type TerminalTab = {
   shell: string | null;
   /** User-given name (double-click the tab to rename); null = auto label. */
   title: string | null;
-  /** Set when this tab is a serial connection rather than a local shell. Such
-      tabs render a {@link SerialInstance} and are ephemeral (not persisted). */
-  conn?: SerialTabConn | null;
+  /** Set when this tab is a connection (serial / SSH) rather than a local
+      shell. Such tabs render a {@link SerialInstance} / {@link SshInstance} and
+      are ephemeral (not persisted). */
+  conn?: TabConn | null;
 };
 
 /** Friendly tab label from a shell path: "…\powershell.exe" → "powershell". */
@@ -218,27 +226,43 @@ export function TerminalFooterPanel({
   // the live tab instead of stacking duplicates. id + sessionId are computed
   // outside the state updater (StrictMode-safe — no double-consumed ids).
   const openConnectionTab = useCallback(
-    (req: { connId: string; label: string; serial?: { port: string; baud: number } }) => {
+    (req: {
+      connId: string;
+      label: string;
+      serial?: { port: string; baud: number };
+      ssh?: { address: string; port: number; username: string; password?: string | null };
+    }) => {
       onExpand?.();
       const existing = tabsRef.current.find((t) => t.conn?.connId === req.connId);
       if (existing != null) {
         setActiveId(existing.id);
         return;
       }
-      const serial = req.serial;
-      if (serial == null) return; // only serial transport is wired today
+      let conn: TabConn | null = null;
+      const sessionId = crypto.randomUUID();
+      if (req.serial != null) {
+        conn = {
+          kind: 'serial',
+          connId: req.connId,
+          sessionId,
+          port: req.serial.port,
+          baud: req.serial.baud,
+        };
+      } else if (req.ssh != null) {
+        conn = {
+          kind: 'ssh',
+          connId: req.connId,
+          sessionId,
+          address: req.ssh.address,
+          port: req.ssh.port,
+          username: req.ssh.username,
+          password: req.ssh.password ?? null,
+        };
+      }
+      if (conn == null) return; // no recognised transport
       const id = nextIdRef.current;
       nextIdRef.current += 1;
-      const sessionId = crypto.randomUUID();
-      setTabs((prev) => [
-        ...prev,
-        {
-          id,
-          shell: null,
-          title: req.label,
-          conn: { connId: req.connId, sessionId, port: serial.port, baud: serial.baud },
-        },
-      ]);
+      setTabs((prev) => [...prev, { id, shell: null, title: req.label, conn }]);
       setActiveId(id);
     },
     [onExpand],
@@ -530,11 +554,21 @@ export function TerminalFooterPanel({
             className={styles.instanceWrap}
             style={{ display: tab.id === activeId ? 'flex' : 'none' }}
           >
-            {tab.conn != null ? (
+            {tab.conn?.kind === 'serial' ? (
               <SerialInstance
                 sessionId={tab.conn.sessionId}
                 port={tab.conn.port}
                 baud={tab.conn.baud}
+                active={tab.id === activeId}
+                collapsed={collapsed}
+              />
+            ) : tab.conn?.kind === 'ssh' ? (
+              <SshInstance
+                sessionId={tab.conn.sessionId}
+                address={tab.conn.address}
+                port={tab.conn.port}
+                username={tab.conn.username}
+                password={tab.conn.password}
                 active={tab.id === activeId}
                 collapsed={collapsed}
               />
