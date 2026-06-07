@@ -449,3 +449,60 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* Multi-repo: each repository is a collapsible row, its changes indented. */
+.repo {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.repoHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 1.8rem;
+  padding: 0 0.2rem 0 0.3rem;
+}
+
+.repoHeader:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.repoToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.2rem;
+  height: 1.2rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.repoToggle:hover {
+  opacity: 0.9;
+}
+
+.repoName {
+  flex-shrink: 0;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Indent a repo's commit box / groups / files under its header. */
+.repoBody {
+  padding-left: 0.6rem;
+}
+
+.repoHeader:hover .headerActions,
+.repoHeader .headerActions:focus-within {
+  opacity: 1;
+}
