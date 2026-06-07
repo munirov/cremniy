@@ -172,6 +172,43 @@ function AdvancedGitTab() {
 
 ---
 
+## Полная карта точек расширения
+
+Всё, что пак может занять. ✅ — добавляется записью в реестр / вызовом хука;
+⚠️ — есть, но правится точечно в коде; ❌ — шва пока нет (цель — не выдумывай загрузчик).
+
+| # | Шов | Файл | Как добавить | |
+|---|-----|------|--------------|---|
+| 1 | View (боковая панель) | `boundary/workspace/SidePanel.tsx` | запись в `VIEWS` + ветка рендера + иконка | ✅ |
+| 2 | Центр-панель (вкладка в Рабочем поле) | `boundary/layout/centerPanels.tsx` | запись в `CENTER_PANELS` + `openPanel(id)` | ✅ |
+| 3 | Tool-таб (нижний док) | `domain/toolTabs/toolTabCatalog.ts` | id в `TOOL_TAB_IDS` + запись в каталог + ветка в `IdeToolDock.tsx` | ✅ |
+| 4 | Команды агента | `shared/agent/agentBridge.ts` | `registerAgentCommands([...])` в эффекте | ✅ |
+| 5 | Состояние агента | `shared/agent/agentBridge.ts` | `registerAgentState(key, () => snapshot)` | ✅ |
+| 6 | MCP-инструмент | `backend/src/mcp.rs` | запись в `tool_defs()` + ветка в `call_tool` (обычно мост в команду агента) | ✅ |
+| 7 | Backend-команда | `backend/src/lib.rs` | `#[tauri::command]` + `generate_handler!` + мост в `bridge.ts` | ✅ |
+| 8 | Иконка активити-бара | `boundary/workspace/activityBarIcons.tsx` | новый `currentColor`-SVG компонент | ✅ |
+| 9 | Иконки типов файлов | `boundary/workspace/fileicons/` | SVG в `icons/` + запись в `theme.json` | ✅ |
+| 10 | Pane (вынос панели в окно) | `boundary/layout/paneRegistry.ts` | `registerPaneRenderer(id, () => <Pane/>)` | ✅ |
+| 11 | Пункт меню | `domain/menu/<x>Menu.ts` + `chrome/MenuBar.tsx` | id в union + запись + диспатч в `RootApp` | ✅ |
+| 12 | Тосты / уведомления | `boundary/notifications/NotificationContext.tsx` | хук `useNotify()` | ✅ |
+| 13 | Префы (per-user) | `domain/preferences/appPreferences.ts` | поле в `AppPreferences` + save/load | ✅ |
+| 14 | Сессия проекта (`.cremniy`) | `domain/project/cremniyMeta.ts` | поле в `CremniySessionState` + read/write meta | ✅ |
+| 15 | localStorage (per-workspace) | `boundary/workspace/treeView.ts` (паттерн) | свой ключ `cremniy.<feature>:<root>` | ✅ |
+| 16 | Декорации дерева (git-точки) | `boundary/workspace/gitDecorations.ts` | правится в коде (`GitDecoKind` / `fileDeco`) | ⚠️ |
+| 17 | Хоткеи | `domain/menu/menuShortcuts.ts` | правится в `matchShortcutAction` (реестра нет) | ⚠️ |
+| 18 | Меню Build | — | заглушка-плейсхолдер, шва ещё нет | ❌ |
+| 19 | Статус-бар | — | компонента нет | ❌ |
+
+Группами: **UI** — 1, 2, 3, 8, 9, 10, 12; **управление / агент** — 4, 5, 6 (одна поверхность,
+см. [AGENT_CONTROL.md](./AGENT_CONTROL.md): команда сначала, кнопка/MCP зовут её); **backend** —
+7; **меню / ввод** — 11, 16, 17; **состояние** — 13 (глобальное), 14 (на проект), 15 (мелочь
+на воркспейс).
+
+Типичный пак занимает несколько швов сразу. Source Control (git) = backend-команды (7) +
+мост + View-панель (1) + центр-панель «Advanced Git» (2) + декорации (16) + команды агента
+(4) + иконки (8, 9). Это и есть «расширить всё»: один пак, разные двери, без правки ядра
+(кроме записи в реестры).
+
 ## Чеклист перед коммитом пака
 
 - `npx tsc --noEmit` из `source/frontend` — без новых ошибок (база известна).
