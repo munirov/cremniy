@@ -247,6 +247,8 @@ export type GitFileStatus = {
   workStatus: string;
   staged: boolean;
   untracked: boolean;
+  /** True for an untracked directory (git collapses it to one `path/` entry). */
+  isDir: boolean;
 };
 
 export type GitStatus = {

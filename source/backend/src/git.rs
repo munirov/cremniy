@@ -19,6 +19,9 @@ pub struct GitFileStatus {
     work_status: String,
     staged: bool,
     untracked: bool,
+    /// True for an untracked *directory* — git collapses these to a single
+    /// `path/` entry. The UI renders a folder glyph and doesn't open it as a file.
+    is_dir: bool,
 }
 
 #[derive(Serialize)]
@@ -90,7 +93,10 @@ fn parse_porcelain(text: &str, root: &Path) -> (Option<String>, Vec<GitFileStatu
         if let Some(idx) = rel.find(" -> ") {
             rel = rel[idx + 4..].to_string();
         }
-        let rel = unquote(&rel);
+        let raw = unquote(&rel);
+        // Untracked directories arrive as "path/" — strip the slash, flag as dir.
+        let is_dir = raw.ends_with('/');
+        let rel = raw.trim_end_matches('/').to_string();
         let untracked = x == "?" && y == "?";
         let staged = !untracked && x != " " && x != "?";
         let name = Path::new(&rel)
@@ -108,6 +114,7 @@ fn parse_porcelain(text: &str, root: &Path) -> (Option<String>, Vec<GitFileStatu
             work_status: y.to_string(),
             staged,
             untracked,
+            is_dir,
         });
     }
     (branch, files)
@@ -187,5 +194,16 @@ mod tests {
     fn unquotes_paths_with_spaces() {
         let (_b, files) = parse("## main\n?? \"weird name.txt\"\n");
         assert_eq!(files[0].path, "weird name.txt");
+    }
+
+    #[test]
+    fn untracked_directory_is_flagged_and_slash_stripped() {
+        let (_b, files) = parse("## main\n?? node_modules/\n?? docs/sub/\n");
+        let nm = files.iter().find(|f| f.name == "node_modules").expect("node_modules");
+        assert!(nm.is_dir && nm.untracked);
+        assert_eq!(nm.path, "node_modules"); // trailing slash stripped → path not broken
+        let sub = files.iter().find(|f| f.name == "sub").expect("sub");
+        assert!(sub.is_dir);
+        assert_eq!(sub.path, "docs/sub");
     }
 }

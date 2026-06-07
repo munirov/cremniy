@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
-import { gitStatus, type GitFileStatus, type GitStatus } from '@infrastructure/tauri/bridge';
+import {
+  gitStatus,
+  revealInFileManager,
+  type GitFileStatus,
+  type GitStatus,
+} from '@infrastructure/tauri/bridge';
 
 import { useIdeSession } from './IdeSessionContext';
-import { FileIcon } from './fileIcons';
+import { FileIcon, FolderIcon } from './fileIcons';
 
 import styles from './GitPanel.module.css';
 
@@ -72,9 +77,11 @@ export function GitPanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nul
       type="button"
       className={styles.fileRow}
       title={f.path}
-      onClick={() => void openFileFromWorkspace(f.absPath)}
+      onClick={() =>
+        f.isDir ? void revealInFileManager(f.absPath) : void openFileFromWorkspace(f.absPath)
+      }
     >
-      <FileIcon name={f.name} />
+      {f.isDir ? <FolderIcon /> : <FileIcon name={f.name} />}
       <span className={styles.fileName}>{f.name}</span>
       <span className={styles.dir}>{dirOf(f.path)}</span>
       <span className={`${styles.badge} ${f.untracked ? styles.badgeUntracked : ''}`}>
