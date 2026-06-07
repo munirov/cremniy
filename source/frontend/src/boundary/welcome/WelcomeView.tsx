@@ -9,6 +9,8 @@ import {
 import { DEFAULT_APP_PREFERENCES, withOpenedWorkspacePinned, type AppPreferences } from '@domain/preferences/appPreferences';
 import {
   createCremniyProject,
+  gitClone,
+  gitSaveCredentials,
   pickFile,
   pickFolder,
 } from '@infrastructure/tauri/bridge';
@@ -44,7 +46,7 @@ function parentOf(path: string): string {
   return m ? m[1] : '';
 }
 
-type WelcomePage = 'welcome' | 'create';
+type WelcomePage = 'welcome' | 'create' | 'clone';
 
 const LANGUAGE_OPTIONS = ['C', 'C++', 'ASM', 'C + ASM', 'Custom'] as const;
 
@@ -62,6 +64,11 @@ export function WelcomeView() {
   const [parentPath, setParentPath] = useState('');
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Clone form (page === 'clone').
+  const [repoUrl, setRepoUrl] = useState('');
+  const [gitUser, setGitUser] = useState('');
+  const [gitToken, setGitToken] = useState('');
 
   selectedIndexRef.current = selectedIndex;
 
@@ -207,6 +214,45 @@ export function WelcomeView() {
     navigate(`/ide?root=${encodeURIComponent(parent)}`);
   }, [navigate, prefs]);
 
+  const resetCloneForm = useCallback(() => {
+    setRepoUrl('');
+    setGitUser('');
+    setGitToken('');
+    setParentPath('');
+    setInfo(null);
+  }, []);
+
+  const handleClone = useCallback(async () => {
+    setInfo(null);
+    const url = repoUrl.trim();
+    if (url === '') {
+      setInfo('Enter a repository URL.');
+      return;
+    }
+    if (parentPath.trim() === '') {
+      setInfo('Choose a folder to clone into.');
+      return;
+    }
+    setBusy(true);
+    try {
+      // For https with a token, store it in the OS credential manager first so
+      // the clone runs non-interactively. SSH / public repos skip this.
+      if (gitToken.trim() !== '') {
+        await gitSaveCredentials(url, gitUser.trim(), gitToken.trim());
+      }
+      const clonedPath = await gitClone(url, parentPath.trim());
+      const base = prefs ?? DEFAULT_APP_PREFERENCES;
+      const next = withOpenedWorkspacePinned(base, clonedPath);
+      await savePreferences(next);
+      setPrefs(next);
+      navigate(`/ide?root=${encodeURIComponent(clonedPath)}`);
+    } catch (e) {
+      setInfo(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }, [gitToken, gitUser, navigate, parentPath, prefs, repoUrl]);
+
   const handleRecentListKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       if (recentPaths.length === 0) {
@@ -291,6 +337,11 @@ export function WelcomeView() {
         name: 'welcome.gotoCreate',
         description: 'Switch the Welcome screen to the Create-project form.',
         run: () => agentWelcomeRef.current.setPage('create'),
+      },
+      {
+        name: 'welcome.gotoClone',
+        description: 'Switch the Welcome screen to the Clone-from-git form.',
+        run: () => agentWelcomeRef.current.setPage('clone'),
       },
     ]);
     return () => {
@@ -392,6 +443,116 @@ export function WelcomeView() {
     );
   }
 
+  if (page === 'clone') {
+    return (
+      <div className={styles.welcomeRoot}>
+        <div className={styles.welcomeCenter}>
+          <div className={styles.hero}>
+            <img
+              src="/cremniy-logo.svg"
+              alt=""
+              aria-hidden
+              className={styles.heroLogo}
+              draggable={false}
+            />
+            <div className={styles.heroName}>CLONE REPOSITORY</div>
+          </div>
+
+          <div className={styles.createGrid}>
+            <label className={styles.fieldLabel} htmlFor="clone-url">
+              URL
+            </label>
+            <input
+              id="clone-url"
+              className={styles.fieldInput}
+              value={repoUrl}
+              onChange={(e) => {
+                setRepoUrl(e.target.value);
+                setInfo(null);
+              }}
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="https://host/user/repo.git  ·  git@host:user/repo.git"
+            />
+
+            <label className={styles.fieldLabel} htmlFor="clone-user">
+              Username
+            </label>
+            <input
+              id="clone-user"
+              className={styles.fieldInput}
+              value={gitUser}
+              onChange={(e) => setGitUser(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="HTTPS only — optional"
+            />
+
+            <label className={styles.fieldLabel} htmlFor="clone-token">
+              Token
+            </label>
+            <input
+              id="clone-token"
+              type="password"
+              className={styles.fieldInput}
+              value={gitToken}
+              onChange={(e) => setGitToken(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="HTTPS personal access token — optional"
+            />
+
+            <span className={styles.fieldLabel}>Location</span>
+            <div className={styles.pathRow}>
+              <input
+                className={styles.fieldInput}
+                readOnly
+                value={parentPath}
+                placeholder="Choose a folder to clone into…"
+              />
+              <button type="button" className={styles.actionBtn} onClick={() => void handlePickParent()}>
+                Browse…
+              </button>
+            </div>
+          </div>
+
+          <p className={styles.cloneHint}>
+            SSH (<code>git@…</code>) uses your system keys — leave Username/Token blank. For private
+            HTTPS repos, the token is saved to your OS credential manager (never to the repo).
+          </p>
+
+          {info != null ? (
+            <p className={styles.infoLabel} role="alert">
+              {info}
+            </p>
+          ) : null}
+
+          <div className={styles.buttonRow}>
+            <button
+              type="button"
+              className={styles.actionBtn}
+              disabled={busy}
+              onClick={() => {
+                resetCloneForm();
+                setPage('welcome');
+              }}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
+              disabled={busy}
+              onClick={() => void handleClone()}
+            >
+              {busy ? 'Cloning…' : 'Clone'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const activeOptionId = selectedIndex !== null ? `${listId}-opt-${selectedIndex}` : undefined;
   // Recent list is capped at 5 visible rows like Cursor; the rest live behind
   // the "View all" link (which currently jumps to the same list — Recent
@@ -435,6 +596,21 @@ export function WelcomeView() {
               <path d="M14 3v5h5" />
             </svg>
             <span className={styles.cardLabel}>Open file</span>
+          </button>
+          <button
+            type="button"
+            className={styles.card}
+            onClick={() => {
+              resetCloneForm();
+              setPage('clone');
+            }}
+          >
+            <svg className={styles.cardIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 3v10" />
+              <path d="m8 9 4 4 4-4" />
+              <path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
+            </svg>
+            <span className={styles.cardLabel}>Clone from Git</span>
           </button>
         </div>
 

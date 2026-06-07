@@ -50,7 +50,7 @@
 /* — Three action cards (Cursor-style: left-aligned, generous radius) — */
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
   width: 100%;
 }
@@ -291,4 +291,17 @@
   text-align: center;
   color: #ef4444;
   font-size: 0.85rem;
+}
+
+/* Muted helper text under the Clone form (not an error — quiet guidance). */
+.cloneHint {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  opacity: 0.5;
+}
+
+.cloneHint code {
+  font-family: var(--font-family-mono);
+  opacity: 0.85;
 }

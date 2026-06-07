@@ -331,6 +331,60 @@ export async function gitDiscard(
   return invoke<void>("git_discard", { workspaceRoot, paths, untracked });
 }
 
+export type GitRemote = { name: string; url: string };
+
+/** Clone a repo into `parentDir`; resolves to the new repo's absolute path
+ *  (origin is configured by clone). For https, call `gitSaveCredentials` first. */
+export async function gitClone(
+  repoUrl: string,
+  parentDir: string,
+  dirName?: string,
+): Promise<string> {
+  return invoke<string>("git_clone", {
+    repoUrl,
+    parentDir,
+    dirName: dirName == null || dirName === "" ? null : dirName,
+  });
+}
+
+/** Store http(s) credentials in the OS credential manager (git credential
+ *  approve). The token is never written to repo config or the remote URL. */
+export async function gitSaveCredentials(
+  url: string,
+  username: string,
+  token: string,
+): Promise<void> {
+  return invoke<void>("git_save_credentials", { url, username, token });
+}
+
+/** Configured remotes (URLs sanitized — no embedded credentials). */
+export async function gitRemotes(workspaceRoot: string): Promise<GitRemote[]> {
+  return invoke<GitRemote[]>("git_remotes", { workspaceRoot });
+}
+
+/** Add a remote, or update its URL if `name` already exists. */
+export async function gitRemoteAdd(
+  workspaceRoot: string,
+  name: string,
+  url: string,
+): Promise<void> {
+  return invoke<void>("git_remote_add", { workspaceRoot, name, url });
+}
+
+/** Remove a remote by name. */
+export async function gitRemoteRemove(workspaceRoot: string, name: string): Promise<void> {
+  return invoke<void>("git_remote_remove", { workspaceRoot, name });
+}
+
+/** First "publish" push for a branch — pushes and sets upstream (`-u`). */
+export async function gitPublish(
+  workspaceRoot: string,
+  remote: string,
+  branch: string,
+): Promise<void> {
+  return invoke<void>("git_publish", { workspaceRoot, remote, branch });
+}
+
 export async function writeUserFile(path: string, contents: string): Promise<void> {
   return invoke<void>("write_user_file", { path, contents });
 }
