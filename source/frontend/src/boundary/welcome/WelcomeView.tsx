@@ -128,9 +128,8 @@ export function WelcomeView() {
     setInfo(null);
   }, []);
 
-  const openPathAtIndex = useCallback(
-    async (index: number) => {
-      const path = recentPaths[index];
+  const openPath = useCallback(
+    async (path: string) => {
       if (path == null || path === '') {
         return;
       }
@@ -140,7 +139,15 @@ export function WelcomeView() {
       setPrefs(next);
       navigate(`/ide?root=${encodeURIComponent(path)}`);
     },
-    [navigate, prefs, recentPaths],
+    [navigate, prefs],
+  );
+
+  const openPathAtIndex = useCallback(
+    async (index: number) => {
+      const path = recentPaths[index];
+      return path != null ? openPath(path) : undefined;
+    },
+    [openPath, recentPaths],
   );
 
   const handlePickFolder = useCallback(async () => {
@@ -306,9 +313,9 @@ export function WelcomeView() {
 
   // welcome.* commands + `ui` state for window.cremniy.
   // Docs: documentation/architecture/AGENT_CONTROL.md
-  const agentWelcomeRef = useRef({ page, recentPaths, openPathAtIndex, handlePickFolder, setPage });
+  const agentWelcomeRef = useRef({ page, recentPaths, openPath, openPathAtIndex, handlePickFolder, setPage });
   useEffect(() => {
-    agentWelcomeRef.current = { page, recentPaths, openPathAtIndex, handlePickFolder, setPage };
+    agentWelcomeRef.current = { page, recentPaths, openPath, openPathAtIndex, handlePickFolder, setPage };
   });
   useEffect(() => {
     const unregisterState = registerAgentState('ui', () => ({
@@ -326,6 +333,17 @@ export function WelcomeView() {
             throw new Error('welcome.openRecent requires an integer { index }.');
           }
           return agentWelcomeRef.current.openPathAtIndex(index);
+        },
+      },
+      {
+        name: 'welcome.openPath',
+        description: 'Open a workspace folder by absolute path { path }.',
+        run: (args) => {
+          const path = String(args.path ?? '');
+          if (path === '') {
+            throw new Error('welcome.openPath requires a { path }.');
+          }
+          return agentWelcomeRef.current.openPath(path);
         },
       },
       {
