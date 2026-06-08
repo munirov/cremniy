@@ -2,46 +2,70 @@
 
 On macOS, use `Cmd` instead of `Ctrl` for standard sequences!
 
-| hotkey | action |
+## Global
+
+| Hotkey | Action |
 |---|---|
-| Ctrl+S | File: Save File |
-| Ctrl+, | Edit: Settings |
-| Ctrl+Shift+R | Tools: Reverse Calculator |
-| F5 | Disassembler: re-run disassembly |
-| Ctrl+F | Code Editor: open search |
-| Esc | Code Editor: close search |
-| Ctrl+Plus / Ctrl+= | Code Editor: zoom in |
-| Ctrl+Minus | Code Editor: zoom out |
-| Ctrl+Scroll | Code Editor: zoom with mouse wheel |
-| Ctrl+Space | Code Editor: trigger completion |
-| ALT+MWheel UP/DOWN | Code Editor: switch between tabs |
-| ALT+Arrow LEFT/RIGHT | Code Editor: switch between tabs |
-| Ctrl+W | Code Editor: close current tab |
-| Mouse Middle Button | Code Editor: close current tab |
-| Tab | Code Editor: insert 4 spaces |
-| Shift+Tab | Code Editor: decrease indent (up to 4 spaces) |
-| Enter | Code Editor: auto-indent (including `{}`) |
-| Ctrl+` | Terminal: open / close |
-| Ctrl+C | Terminal: copy selection or send interrupt when no selection |
-| Ctrl+A | Terminal: select from last prompt to end |
-| Enter | Terminal: run command |
-| Up / Down | Terminal: command history |
-| Left / Right | Hex View: move cursor |
-| Shift+Left / Shift+Right | Hex View: select by char |
-| Up / Down | Hex View: move by line |
-| Shift+Up / Shift+Down | Hex View: select by line |
-| PageUp / PageDown | Hex View: page up/down |
-| Shift+PageUp / Shift+PageDown | Hex View: select by page |
-| Home / End | Hex View: line start/end |
-| Shift+Home / Shift+End | Hex View: select to line start/end |
-| Ctrl+Home / Ctrl+End | Hex View: document start/end |
-| Ctrl+Shift+Home / Ctrl+Shift+End | Hex View: select to document start/end |
-| Ctrl+A | Hex View: select all |
-| Ctrl+Z | Hex View: undo |
-| Ctrl+Y / Ctrl+Shift+Z | Hex View: redo |
-| Ctrl+X | Hex View: cut |
-| Ctrl+C | Hex View: copy |
-| Ctrl+V | Hex View: paste |
-| Insert | Hex View: toggle insert/overwrite |
-| Backspace | Hex View: delete previous byte |
-| Delete | Hex View: delete current byte |
+| Ctrl+O | File: Open file |
+| Ctrl+Shift+O | File: Open folder |
+| Ctrl+S | File: Save |
+| Ctrl+Shift+S | File: Save as |
+| Ctrl+, | File: Preferences |
+| Ctrl+W | File: Close editor tab |
+| Ctrl+Shift+W | File: Close workspace |
+| Ctrl+F | Edit: Find in editor |
+| Ctrl+` | View: Toggle terminal panel |
+| Ctrl+B | View: Toggle file tree |
+
+## Code Editor
+
+| Hotkey | Action |
+|---|---|
+| Ctrl+F | Open search bar |
+| Esc | Close search bar |
+| Ctrl+Plus / Ctrl+= | Zoom in |
+| Ctrl+Minus | Zoom out |
+| Ctrl+Scroll | Zoom with mouse wheel |
+| Ctrl+Space | Trigger completion |
+| ALT+MWheel UP/DOWN | Switch between tabs |
+| ALT+Arrow LEFT/RIGHT | Switch between tabs |
+| Ctrl+W | Close current tab |
+| Mouse Middle Button | Close current tab |
+| Tab | Insert spaces (or tab, see Preferences) |
+| Shift+Tab | Decrease indent |
+| Enter | Auto-indent (including `{}`) |
+
+## Terminal
+
+| Hotkey | Action |
+|---|---|
+| Ctrl+C | Copy selection (does NOT send interrupt) |
+| Ctrl+V | Paste into terminal |
+| Ctrl+A | Select current typed input (or all if nothing typed) |
+| Ctrl+Break | Send interrupt signal to the running process |
+| Enter | Run command |
+| Up / Down | Command history |
+
+## Hex View
+
+| Hotkey | Action |
+|---|---|
+| Left / Right | Move cursor |
+| Shift+Left / Shift+Right | Select by character |
+| Up / Down | Move by line |
+| Shift+Up / Shift+Down | Select by line |
+| PageUp / PageDown | Page up / down |
+| Shift+PageUp / Shift+PageDown | Select by page |
+| Home / End | Line start / end |
+| Shift+Home / Shift+End | Select to line start / end |
+| Ctrl+Home / Ctrl+End | Document start / end |
+| Ctrl+Shift+Home / Ctrl+Shift+End | Select to document start / end |
+| Ctrl+A | Select all |
+| Ctrl+Z | Undo |
+| Ctrl+Y / Ctrl+Shift+Z | Redo |
+| Ctrl+X | Cut |
+| Ctrl+C | Copy |
+| Ctrl+V | Paste |
+| Insert | Toggle insert / overwrite mode |
+| Backspace | Delete previous byte |
+| Delete | Delete current byte |

@@ -15,6 +15,26 @@ The web stack was picked so an AI can work in Cremniy the same way a human does 
 buttons, but through commands that those same buttons call. See
 [AGENT_CONTROL](../architecture/AGENT_CONTROL.md).
 
+## What's in the box
+
+The current build ships the following built-in tools and plugins:
+
+**Core tools**
+- Code editor (Monaco-based, syntax highlighting, search, zoom)
+- Hex / binary editor (byte-level editing, search, undo/redo, patch export)
+- Disassembler (backed by `objdump` / `radare2` via the Rust subprocess runner)
+- Reverse Calculator (multi-base number conversion)
+- Data Converter
+- Shellcode Generator
+- Integrated terminal (persistent history, Cyrillic-layout correction)
+
+**Plugins** (`plugins/` directory, loaded at build time)
+- **Connections** — serial port, SSH, SFTP host manager
+- **Source Control (Git)** — status view, staging, commit, advanced git operations
+- **Binary Tools** — memory map, strings, patches, resources, symbol table, function list
+
+**References panel** — ASCII chart, keyboard scan codes
+
 ## Principles
 
 - **All in one.** Everything needed for low-level work in one environment.
@@ -25,3 +45,6 @@ buttons, but through commands that those same buttons call. See
 - **Capability first, button second.** Every UI capability is a named command in
   `window.cremniy`. Buttons call commands. Humans use buttons, scripts and AI use commands —
   same logic, same data.
+- **Plugin system.** Features are packaged as plugins (`plugins/<id>/`) that declare
+  contributions (panels, menu items, commands) — the host slots them in without core changes.
+  See [PLUGINS.md](../architecture/PLUGINS.md).

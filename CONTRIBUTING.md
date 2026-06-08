@@ -23,6 +23,27 @@ You can help in several ways:
 - Suggest new features (create a new **Issue** with the `idea` tag)
 - Improve documentation
 - Submit pull requests ([more info](#pull-requests))
+- Write or improve **plugins** (see [documentation/architecture/PLUGINS.md](documentation/architecture/PLUGINS.md))
+
+## Development Setup
+
+The project is **Tauri 2 + React 18 + TypeScript**. Prerequisites: Node.js ≥ 20, Rust stable, and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your OS.
+
+```bash
+cd source/frontend
+npm install
+npm run tauri:dev      # launches the desktop app with hot-reload
+npm run tauri:build    # produces a platform installer
+```
+
+Installers are written to `source/backend/target/release/bundle/`.
+
+For a full feature walkthrough and architecture map see [documentation/](documentation/README.md).
+
+**Plugins** live in `plugins/<id>/` at the repo root. Each plugin exports a `PluginManifest`
+from its `index.tsx` and is registered in `plugins/index.ts`. See
+[documentation/architecture/PLUGINS.md](documentation/architecture/PLUGINS.md) for the full
+contribution API.
 
 ## Roadmap
 
@@ -92,6 +113,26 @@ and mentioned at the end of each video on the [YouTube channel](https://www.yout
 - предлагать новые функции (создайте новый **Issue** с тегом `idea`)
 - улучшать документацию
 - отправлять pull request ([подробнее](#contributing-ru-pull-requests))
+- писать или улучшать **плагины** (см. [documentation/architecture/PLUGINS.md](documentation/architecture/PLUGINS.md))
+
+## Настройка окружения
+
+Проект — **Tauri 2 + React 18 + TypeScript**. Требования: Node.js ≥ 20, Rust stable и [пресреквизиты Tauri](https://tauri.app/start/prerequisites/) для вашей ОС.
+
+```bash
+cd source/frontend
+npm install
+npm run tauri:dev      # запускает десктоп с hot-reload
+npm run tauri:build    # собирает инсталлятор
+```
+
+Инсталляторы — в `source/backend/target/release/bundle/`.
+
+Обзор фич и архитектурная карта — в [documentation/](documentation/README.md).
+
+**Плагины** находятся в `plugins/<id>/` в корне репо. Каждый плагин экспортирует `PluginManifest`
+из своего `index.tsx` и регистрируется в `plugins/index.ts`. Подробнее —
+[documentation/architecture/PLUGINS.md](documentation/architecture/PLUGINS.md).
 
 ## План развития
 

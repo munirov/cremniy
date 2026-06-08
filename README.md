@@ -75,7 +75,7 @@ The legacy **Qt/C++** IDE has been **removed** from this repository. The last re
 | [`source/frontend/`](source/frontend/) | Tauri + React app (BMFP inside `source/frontend/src/`). |
 | [`source/backend/`](source/backend/) | Rust Tauri crate — native shell (IPC, window, plugins). |
 | [`documentation/`](documentation/) | User & contributor documentation (EN/RU); [architecture index](documentation/architecture/README.md). |
-| [`ai_docs/`](ai_docs/) | ADRs, audits, migration notes. |
+| [`plugins/`](plugins/) | First-party plugins (Connections, Git, Binary Tools). |
 | [`tools/`](tools/) | Repository tooling (e.g. scripts under `tools/scripts/`). |
 | [`tests/`](tests/) | Repository-level tests and orchestration (package tests stay next to each app). |
 | [`.github/workflows/`](.github/workflows/) | CI and release. |
@@ -112,14 +112,19 @@ You constantly **switch** between different windows, and the tools are **not lin
 
 ### Available now
 
-Early **Tauri** builds focus on shell, workspace flow, and parity with the former welcome/IDE chrome. Deep tool parity (hex, disassembly UI, integrated terminal, etc.) is tracked in [ROADMAP.md](ROADMAP.md) and `ai_docs/`.
+- Code editor (Monaco, syntax highlighting, search, zoom)
+- Hex / binary editor (byte-level editing, undo/redo, patch export)
+- Disassembler (backed by `objdump` / `radare2`)
+- Integrated terminal (persistent history, Cyrillic-layout correction)
+- Reverse Calculator, Data Converter, Shellcode Generator
+- **Plugins:** Connections (serial/SSH/SFTP), Source Control (Git), Binary Tools (memory map, strings, patches, symbols, functions)
+- References panel (ASCII chart, keyboard scan codes)
 
 ### Coming soon
 
-- Full **HEX editor** and binary views in the web UI
-- **Disassembler** UI backed by the Rust subprocess contract
 - **Debugger** — step through execution, inspect registers and memory
 - **Memory visualization** — visual maps of memory layout and allocation
+- **Plugin marketplace** — remote plugin loading and distribution
 
 ## Contributing
 
@@ -186,8 +191,6 @@ npm run tauri:build
 
 Историческое приложение на **Qt/C++** из каталога **`src/` удалено** из этого репозитория. Последняя ревизия с деревом `src/` помечена тегом **`pre-qt-removal-2026-05-01`** (`git checkout` по тегу — если нужны исходники для справки).
 
-> **Важно:** Qt отвечал не только за «внешний вид», а за весь старый стек десктопа (виджеты, окна, интеграция инструментов). Текущая кодовая база переносит функциональность в веб-UI и Rust-оболочку Tauri.
-
 ## Структура репозитория
 
 | Путь | Роль |
@@ -195,7 +198,7 @@ npm run tauri:build
 | [`source/frontend/`](source/frontend/) | Приложение Tauri + React (BMFP внутри `source/frontend/src/`). |
 | [`source/backend/`](source/backend/) | Крейт Tauri на Rust — нативная оболочка (IPC, окно, плагины). |
 | [`documentation/`](documentation/) | Документация (EN/RU); [индекс архитектуры](documentation/architecture/README.md). |
-| [`ai_docs/`](ai_docs/) | ADR, аудиты, миграции. |
+| [`plugins/`](plugins/) | Встроенные плагины (Connections, Git, Binary Tools). |
 | [`tools/`](tools/) | Вспомогательные скрипты и утилиты репозитория (`tools/scripts/` и др.). |
 | [`tests/`](tests/) | Тесты уровня репозитория; тесты пакетов — рядом с приложением. |
 | [`.github/workflows/`](.github/workflows/) | CI и релиз. |
@@ -232,14 +235,19 @@ npm run tauri:build
 
 ### Доступно сейчас
 
-Ранние сборки **Tauri** закрывают оболочку, сценарий воркспейса и визуальный паритет стартового/IDE-хрома. Полный паритет инструментов (HEX, дизассемблер, терминал и т.д.) — в [ROADMAP.md](ROADMAP.md) и `ai_docs/`.
+- Редактор кода (Monaco, подсветка синтаксиса, поиск, масштаб)
+- HEX/бинарный редактор (правка байтов, undo/redo, экспорт патчей)
+- Дизассемблер (использует `objdump` / `radare2`)
+- Встроенный терминал (история команд, коррекция кириллической раскладки)
+- Обратный калькулятор, конвертер данных, генератор шелл-кода
+- **Плагины:** Connections (serial/SSH/SFTP), Source Control (Git), Binary Tools (карта памяти, строки, патчи, символы, функции)
+- Панель References (таблица ASCII, скан-коды клавиш)
 
 ### В планах
 
-- Полноценный **HEX-редактор** и просмотр бинарных форматов в UI
-- UI **дизассемблера** поверх Rust-контракта subprocess
 - **Отладчик** — пошаговое выполнение, просмотр регистров и памяти
 - **Визуализация памяти** — наглядные карты расположения и выделения памяти
+- **Маркетплейс плагинов** — удалённая загрузка и распространение плагинов
 
 ## Участие в разработке
 

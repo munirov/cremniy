@@ -14,8 +14,8 @@ cremniy/
 ├── source/
 │   ├── frontend/                # BMFP-фронт: Vite + React + TS
 │   └── backend/                 # нативная оболочка: Rust-крейт Tauri
+├── plugins/                     # встроенные плагины (connections, git, tools)
 ├── documentation/               # дока продукта (EN/RU + architecture/)
-├── ai_docs/                     # ADR, аудиты, миграции, внутренние планы
 ├── tools/                       # автоматизация репозитория
 ├── tests/                       # репо-уровневые / E2E (юнит-тесты — рядом с кодом)
 └── screenshots/                 # ассеты для README/доков
@@ -25,8 +25,8 @@ cremniy/
 |---|---|
 | `source/frontend/` | UI: страницы, hex, дизассемблер, редактор, терминал, настройки. Слои — [BMFP](./BMFP.md). |
 | `source/backend/` | Нативная оболочка Tauri: окно, IPC-команды, доступ к ФС, запуск процессов. |
+| `plugins/` | Встроенные плагины: Connections, Git, Binary Tools. Каждый — отдельная папка `plugins/<id>/`. |
 | `documentation/` | Дока продукта и архитектуры. |
-| `ai_docs/` | ADR (`develop/architecture/ADR-*`), аудиты, миграции. |
 
 ## Нативная оболочка
 
@@ -75,4 +75,4 @@ boundary перерисовывается
 - [BMFP](./BMFP.md) — слои фронта.
 - [BMBP](./BMBP.md) — слои бэка (ментальная карта для нативной оболочки).
 - [AGENT_CONTROL](./AGENT_CONTROL.md) — правило «способность = команда», API и карта кода.
-- Заметки и аудиты: [`ai_docs/develop/`](../../ai_docs/develop/).
+- [PLUGINS](./PLUGINS.md) — система плагинов, точки расширения, написание плагина.

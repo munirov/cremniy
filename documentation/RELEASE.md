@@ -26,10 +26,9 @@
 4. **Автоматическая сборка**
    
    GitHub Actions автоматически:
-   - Соберет приложение для Linux, Windows и macOS
-   - Упакует бинарные файлы
-   - Создаст релиз на GitHub
-   - Прикрепит собранные файлы к релизу
+   - Собирает приложение для Linux, Windows и macOS с помощью `npm run tauri:build`
+   - Создаёт релиз на GitHub
+   - Прикрепляет собранные файлы к релизу
 
 5. **Проверьте релиз**
    
@@ -37,12 +36,13 @@
 
 ### Структура артефактов
 
-После сборки будут доступны следующие файлы:
+После сборки будут доступны следующие файлы из `source/backend/target/release/bundle/`:
 
-- `cremniy-linux.tar.gz` - сборка для Linux (tar.gz архив)
-- `cremniy-linux.AppImage` - сборка для Linux (AppImage, запускается на любом дистрибутиве)
-- `cremniy-windows.zip` - сборка для Windows (включает все необходимые DLL)
-- `cremniy-macos.tar.gz` - сборка для macOS
+| Платформа | Файлы |
+|-----------|-------|
+| Linux | `.AppImage` (AppImage), `.deb` (Debian/Ubuntu) |
+| Windows | `.msi` (MSI), `.exe` (NSIS) |
+| macOS | `.dmg` |
 
 ### Ручной запуск сборки
 
@@ -64,6 +64,7 @@
 ## Automatic Release
 
 The project is configured for automatic build and release through GitHub Actions.
+Workflow file: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 
 ### How to create a new release
 
@@ -87,10 +88,9 @@ The project is configured for automatic build and release through GitHub Actions
 4. **Automatic build**
    
    GitHub Actions will automatically:
-   - Build the application for Linux, Windows, and macOS
-   - Package the binaries
+   - Build the application for Linux, Windows, and macOS using `npm run tauri:build`
    - Create a release on GitHub
-   - Attach the built files to the release
+   - Attach the built bundle files to the release
 
 5. **Check the release**
    
@@ -98,11 +98,13 @@ The project is configured for automatic build and release through GitHub Actions
 
 ### Artifact structure
 
-After building, the following files will be available:
+Build outputs from `source/backend/target/release/bundle/`:
 
-- `cremniy-linux.tar.gz` - Linux build
-- `cremniy-windows.zip` - Windows build (includes all necessary DLLs)
-- `cremniy-macos.tar.gz` - macOS build
+| Platform | Files |
+|----------|-------|
+| Linux | `.AppImage`, `.deb` |
+| Windows | `.msi`, `.exe` (NSIS) |
+| macOS | `.dmg` |
 
 ### Manual workflow run
 
@@ -117,4 +119,4 @@ Artifacts will be available in the "Artifacts" section of the workflow run.
 
 ### Continuous Integration
 
-On every push to `main`, `master`, or `develop` branches, as well as on Pull Request creation, a CI build is automatically triggered to verify that the code compiles on all platforms. 
+On every push to `main`, `master`, or `develop` branches, as well as on Pull Request creation, a CI build is automatically triggered to verify that the code compiles on all platforms.

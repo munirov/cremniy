@@ -8,109 +8,101 @@
 <details name="roadmap-lang" open>
 <summary><strong>English</strong></summary>
 
-# 🚀 Roadmap
+# Roadmap
 
-## 🎯 Project Goal
+## Project goal
 
-Create a **unified tool for system programming** that eliminates the need for scattered solutions and simplifies the development process.
+Create a **unified tool for low-level and reverse-engineering work** — hex editor, disassembler,
+code editor, connections, git, and binary analysis tools in one linked application, with an
+open plugin system that can grow to cover embedded toolchains (STM32 and friends).
 
-## 📦 Current Version
+## Current state
 
-[v0.1.3](https://github.com/Cremniy-Project/cremniy/releases/tag/v0.1.3) — basic development environment with:
+The desktop application is built on **Tauri 2 + React + TypeScript**. The following is
+shipped and working:
 
-- Code editor (full support for low-level languages)
-- HEX editor (view bytes in RAW format)
-- Disassembler (can use `objdump` and `radare2`)
-- Calculator for converting between number systems
-- Integrated toolset
+- Code editor (Monaco, syntax highlighting, search, zoom, indent settings)
+- Hex / binary editor (byte-level editing, undo/redo, find/go, patch export)
+- Disassembler (backed by `objdump` / `radare2`, instruction help, string refs, patches)
+- Integrated terminal (persistent history, Cyrillic-layout correction, interrupt via Ctrl+Break)
+- Reverse Calculator, Data Converter, Shellcode Generator
+- **Plugin system** — contribution-based architecture (`plugins/<id>/index.tsx`)
+  - Connections plugin (serial port, SSH, SFTP host manager)
+  - Source Control plugin (Git status, staging, commit, advanced operations)
+  - Binary Tools plugin (memory map, strings, patches, resources, symbol table, function list)
+- References panel (ASCII chart, keyboard scan codes)
+- Agent / MCP control surface (`window.cremniy` commands)
+- Cyrillic keyboard layout support throughout
 
-## 🛠 Short-Term Tasks
+## Near-term
 
-### 🐞 Bugs
+- [ ] Debugger — step through execution, inspect registers and memory
+- [ ] Memory visualization — visual maps of memory layout and allocation
+- [ ] Full-text search across workspace files
+- [ ] Hover tooltips: numbers in all bases (hex / dec / oct / bin)
+- [ ] Improved terminal (PTY resize, color themes)
 
-- [ ] [Display bar in HEX-Editor on Windows](https://github.com/Cremniy-Project/cremniy/issues/33)
+## Plugin system
 
-### ✨ Improvements and New Tasks
+- [ ] Auto-discovery of `plugins/` folders without manual registration in `plugins/index.ts`
+- [ ] Remote plugin loading and a plugin marketplace
+- [ ] STM32 / embedded toolchain packs (replacing ST's Cube/ST-LINK tooling) — long-term target
 
-- [ ] 🟡 [Display numbers in different numeral systems on hover](https://github.com/Cremniy-Project/cremniy/issues/28)
-- [ ] 🟡 [Improve Terminal](https://github.com/munirov/cremniy/issues/100)
-- [ ] 🟢 [Add multilingual support](https://github.com/Cremniy-Project/cremniy/issues/67)
-- [ ] 🟢 [Search string across all project files](https://github.com/Cremniy-Project/cremniy/issues/76)
-- [ ] 🟢 [Git integration](https://github.com/Cremniy-Project/cremniy/issues/42)
-- [x] 🔴 [Implement custom QPlainText for Code Editor](https://github.com/Cremniy-Project/cremniy/issues/56)
-- [x] 🔴 [Optimize data storage in QHexView](https://github.com/Cremniy-Project/cremniy/issues/57)
-- [x] 🟡 [Improve the design of the search bar in the editor](https://github.com/munirov/cremniy/issues/177)
-- [x] 🟡 [Improve Disassembler design](https://github.com/munirov/cremniy/issues/55)
-- [x] 🟡 [Keyboard scancode reference guide](https://github.com/munirov/cremniy/issues/89)
-- [x] 🟡 [Add a data storage unit converter](https://github.com/munirov/cremniy/issues/104)
-- [x] 🟡 [Use Breeze icons for files in QTreeView](https://github.com/Cremniy-Project/cremniy/issues/72)
-- [x] 🟡 [Implement StatusBar](https://github.com/Cremniy-Project/cremniy/issues/73)
-- [x] 🟢 [Pin file tabs (FileTab)](https://github.com/Cremniy-Project/cremniy/issues/75)
-- [x] 🟢 [Move files between directories in QTreeView](https://github.com/Cremniy-Project/cremniy/issues/77)
+## Long-term
 
-## 🕓 Long-Term Tasks
-
-- [ ] [Foundation of basic architecture for extensibility](https://github.com/Cremniy-Project/cremniy/issues/29)
-
-## 🔮 Future Plans
-
-- Build user projects
-- Debugger for running programs
-- Memory viewer for running programs
+- Build system integration (run and build projects from within Cremniy)
+- Live process inspection (memory viewer, register watch for a running process)
+- Debugger with step-through, breakpoints, call stack
 
 </details>
 
 <details name="roadmap-lang">
 <summary><strong>Русский</strong></summary>
 
-# 🚀 Дорожная карта
+# Дорожная карта
 
-## 🎯 Цель проекта
+## Цель проекта
 
-Создать **единый инструмент для системного программирования**, устраняющий необходимость использования разрозненных решений и упрощающий процесс разработки.
+Создать **единый инструмент для низкоуровневой работы и обратной разработки** — HEX-редактор,
+дизассемблер, редактор кода, подключения, git и инструменты анализа бинарников в одном связанном
+приложении с открытой системой плагинов, которая сможет покрыть и embedded-тулчейны
+(STM32 и другие).
 
-## 📦 Текущая версия
+## Текущее состояние
 
-[v0.1.3](https://github.com/Cremniy-Project/cremniy/releases/tag/v0.1.3) — базовая среда разработки с:
+Десктоп-приложение на **Tauri 2 + React + TypeScript**. Работает и поставляется:
 
-- редактором кода (полный набор низкоуровневых языков)
-- HEX-редактором (просмотр байтов в RAW формате)
-- дизассемблером (может использовать `objdump` и `radare2`)
-- калькулятором для преобразования в разные системы счисления
-- и связанностью инструментов
+- Редактор кода (Monaco, подсветка синтаксиса, поиск, масштаб, настройки отступов)
+- HEX/бинарный редактор (правка байтов, undo/redo, поиск/переход, экспорт патчей)
+- Дизассемблер (использует `objdump` / `radare2`, справка по инструкциям, строковые ссылки, патчи)
+- Встроенный терминал (история команд, коррекция кириллической раскладки, прерывание через Ctrl+Break)
+- Обратный калькулятор, конвертер данных, генератор шелл-кода
+- **Система плагинов** — вклады (`plugins/<id>/index.tsx`)
+  - Плагин Connections (serial-порт, SSH, SFTP)
+  - Плагин Source Control (Git-статус, стейджинг, коммит, расширенные операции)
+  - Плагин Binary Tools (карта памяти, строки, патчи, ресурсы, таблица символов, функции)
+- Панель References (таблица ASCII, скан-коды клавиш)
+- Командная поверхность для агентов/MCP (`window.cremniy`)
+- Поддержка кириллической раскладки клавиатуры
 
-## 🛠 Ближайшие задачи
+## Ближайшие задачи
 
-### 🐞 Баги
+- [ ] Отладчик — пошаговое выполнение, просмотр регистров и памяти
+- [ ] Визуализация памяти — наглядные карты расположения памяти
+- [ ] Полнотекстовый поиск по файлам рабочего пространства
+- [ ] Всплывающие подсказки: числа во всех системах счисления (hex / dec / oct / bin)
+- [ ] Улучшенный терминал (ресайз PTY, цветовые темы)
 
-- [ ] [Отображение полоски в HEX-Editor на Windows](https://github.com/Cremniy-Project/cremniy/issues/33)
+## Система плагинов
 
-### ✨ Улучшения и новые задачи
+- [ ] Авто-дискавери папок `plugins/` без ручной регистрации в `plugins/index.ts`
+- [ ] Удалённая загрузка плагинов и маркетплейс
+- [ ] Паки для STM32 / embedded-тулчейна (замена Cube/ST-LINK от ST) — долгосрочная цель
 
-- [ ] 🟡 [Отображение чисел в разных системах счисления при наведении](https://github.com/Cremniy-Project/cremniy/issues/28)
-- [ ] 🟡 [Улучшить терминал](https://github.com/munirov/cremniy/issues/100)
-- [ ] 🟢 [Добавить многоязычность](https://github.com/Cremniy-Project/cremniy/issues/67)
-- [ ] 🟢 [Поиск строки по всем файлам проекта](https://github.com/Cremniy-Project/cremniy/issues/76)
-- [ ] 🟢 [Работа с Git](https://github.com/Cremniy-Project/cremniy/issues/42)
-- [x] 🔴 [Реализация кастомного QPlainText для Code Editor](https://github.com/Cremniy-Project/cremniy/issues/56)
-- [x] 🔴 [Оптимизировать хранение данных у QHexView](https://github.com/Cremniy-Project/cremniy/issues/57)
-- [x] 🟡 [Улучшить дизайн формы поиска строки в редакторе](https://github.com/munirov/cremniy/issues/177)
-- [x] 🟡 [Улучшение дизайна Disassembler](https://github.com/Cremniy-Project/cremniy/issues/55)
-- [x] 🟡 [Справочник по скан-кодам клавиш](https://github.com/munirov/cremniy/issues/89)
-- [x] 🟡 [Добавить конвертер единиц хранения данных](https://github.com/munirov/cremniy/issues/104)
-- [x] 🟡 [Использование иконок Breeze для файлов в QTreeView](https://github.com/Cremniy-Project/cremniy/issues/72)
-- [x] 🟡 [Реализовать StatusBar](https://github.com/Cremniy-Project/cremniy/issues/73)
-- [x] 🟢 [Закрепление вкладки файла (FileTab)](https://github.com/Cremniy-Project/cremniy/issues/75)
-- [x] 🟢 [Перемещение файлов по директориям в QTreeView](https://github.com/Cremniy-Project/cremniy/issues/77)
+## Долгосрочные
 
-## 🕓 Долгосрочные задачи
-
-- [ ] [Основы базовой архитектуры для обеспечения расширяемости](https://github.com/Cremniy-Project/cremniy/issues/29)
-
-## 🔮 Будущие планы
-
-- Сборка проекта пользователя
-- Отладчик запущенной программы
-- Просмотр памяти запущенной программы
+- Интеграция системы сборки (запуск и сборка проектов прямо из Cremniy)
+- Инспекция живых процессов (просмотр памяти, регистры запущенного процесса)
+- Отладчик с пошаговым выполнением, точками останова, стеком вызовов
 
 </details>

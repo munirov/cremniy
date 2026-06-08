@@ -12,5 +12,5 @@
 - Делаешь UI → [BMFP](./BMFP.md).
 - Добавляешь способность (кнопка/хоткей/инструмент) → [AGENT_CONTROL](./AGENT_CONTROL.md).
 - Трогаешь Tauri-крейт или меняешь корни репо → [BMAP](./BMAP.md).
-
-Внутренние заметки и аудиты — в [`ai_docs/develop/`](../../ai_docs/develop/) (паритет Qt→React, опции бэкенда дизассемблера).
+- Пишешь плагин → [PLUGINS](./PLUGINS.md).
+- Дизайн/стили → [DESIGN](./DESIGN.md).
