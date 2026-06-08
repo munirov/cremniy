@@ -31,11 +31,21 @@ import {
   type HexCommandStackState,
 } from '@domain/hexView/hexCommandStack';
 import { clearSessionPatches, pushSessionPatch } from '@domain/hexView/sessionPatchStore';
-import { computeVisibleHexRows, type HexRow } from '@domain/hexView/hexViewModel';
+import {
+  byteSpanForRows,
+  computeVisibleHexRows,
+  type HexRow,
+} from '@domain/hexView/hexViewModel';
 import { DEFAULT_HEX_OPTIONS, type HexOptions } from '@domain/preferences/appPreferences';
 import { fileNameFromPath } from '@domain/workspace/paths';
 import { loadPreferences } from '@infrastructure/preferences/preferencesBridge';
-import { readWorkspaceFileBytesForAnalysis, writeWorkspaceFileBytes } from '@infrastructure/tauri/bridge';
+import {
+  MAX_INLINE_ANALYSIS_BYTES,
+  getWorkspaceFileSize,
+  readWorkspaceFileBytesForAnalysis,
+  readWorkspaceFileChunk,
+  writeWorkspaceFileBytes,
+} from '@infrastructure/tauri/bridge';
 import { useBinarySelection, useSetBinarySelection } from '@boundary/workspace/BinarySelectionContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
@@ -46,10 +56,61 @@ import styles from './BinaryToolPanel.module.css';
 
 const ROW_PX = 18;
 
+// Files past this load whole-file into an editable buffer (today's behaviour).
+// Anything larger switches to a read-only windowed view that only ever holds a
+// slice in memory. Fall back to 16 MiB if the bridge constant is unavailable
+// (e.g. a mocked bridge module in tests) so the comparison stays well-defined.
+const INLINE_ANALYSIS_LIMIT =
+  typeof MAX_INLINE_ANALYSIS_BYTES === 'number' ? MAX_INLINE_ANALYSIS_BYTES : 16 * 1024 * 1024;
+
+// Rows of headroom fetched on each side of the viewport so small scrolls don't
+// trigger a refetch every frame.
+const WINDOW_BUFFER_ROWS = 256;
+// Cap a single loaded window so a big file never holds more than this slice.
+const WINDOW_MAX_BYTES = 1.5 * 1024 * 1024;
+// Per-call ceiling of readWorkspaceFileChunk; larger windows loop and concat.
+const CHUNK_MAX_BYTES = 4 * 1024 * 1024;
+// Bytes fed to the format detector (read once from offset 0).
+const FORMAT_CHUNK_BYTES = 64 * 1024;
+
+type HexWindow = { offset: number; bytes: Uint8Array };
+
 type PanelLoadState =
   | { status: 'loading' }
   | { status: 'ready'; buffer: BinaryBufferState }
+  | { status: 'windowed'; fileSize: number }
   | { status: 'error'; message: string };
+
+/** Read `[offset, offset+length)` from a workspace file, looping the 4 MiB-capped
+ *  chunk bridge and concatenating so a window larger than one chunk still works.
+ *  `length` is clamped so the read never runs past `fileSize`. */
+async function readFileRange(
+  workspacePath: string,
+  filePath: string,
+  offset: number,
+  length: number,
+  fileSize: number,
+): Promise<Uint8Array> {
+  const start = Math.max(0, Math.min(offset, fileSize));
+  const end = Math.max(start, Math.min(offset + length, fileSize));
+  const total = end - start;
+  if (total <= 0) {
+    return new Uint8Array();
+  }
+  const out = new Uint8Array(total);
+  let read = 0;
+  while (read < total) {
+    const chunkLen = Math.min(CHUNK_MAX_BYTES, total - read);
+    const chunk = await readWorkspaceFileChunk(workspacePath, filePath, start + read, chunkLen);
+    if (chunk.length === 0) {
+      // Backend returned short — stop rather than spin; return what we have.
+      return out.subarray(0, read);
+    }
+    out.set(chunk.subarray(0, Math.min(chunk.length, total - read)), read);
+    read += chunk.length;
+  }
+  return out;
+}
 
 type SaveTarget = {
   workspacePath: string;
@@ -99,6 +160,15 @@ function byteColor(pair: string): string | undefined {
 
 function formatOffsetHex(offset: number, width: number): string {
   return offset.toString(16).padStart(width, '0');
+}
+
+/** Human file size for the read-only note (MB for big files, KB below 1 MB). */
+function formatFileSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) {
+    const mb = bytes / (1024 * 1024);
+    return `${mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB`;
+  }
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 function parseSingleHexByte(input: string): { ok: true; value: number } | { ok: false } {
@@ -296,6 +366,13 @@ export function BinaryToolPanel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
+  // Windowed read-only mode (files > INLINE_ANALYSIS_LIMIT): only the visible
+  // slice is held in `hexWindow`; `formatChunk` is the first chunk for format
+  // detection. A ref guards against overlapping fetches racing each other.
+  const [hexWindow, setHexWindow] = useState<HexWindow | null>(null);
+  const [formatChunk, setFormatChunk] = useState<Uint8Array | null>(null);
+  const [windowError, setWindowError] = useState('');
+  const windowFetchRef = useRef(0);
   const [findGoOpen, setFindGoOpen] = useState(false);
   const [highlightRange, setHighlightRange] = useState<{
     start: number;
@@ -335,21 +412,48 @@ export function BinaryToolPanel() {
 
     let cancelled = false;
     setLoadState({ status: 'loading' });
+    setHexWindow(null);
+    setFormatChunk(null);
+    setWindowError('');
 
-    // Bytes loaded via Tauri, like WorkspaceFileTree. Guarded by a size cap so a
-    // huge file can't balloon webview memory loading the whole thing as a number[].
-    void readWorkspaceFileBytesForAnalysis(workspacePath, activeFilePath).then(
-      (data) => {
+    // Size-first: a file past the inline limit can't be slurped whole as a
+    // number[] without ballooning webview memory, so it switches to a read-only
+    // windowed view that only ever holds the visible slice.
+    void getWorkspaceFileSize(workspacePath, activeFilePath)
+      .then(async (fileSize) => {
+        if (cancelled) {
+          return;
+        }
+        if (fileSize > INLINE_ANALYSIS_LIMIT) {
+          // Read-only windowed mode. Grab the first chunk up front for format
+          // detection; the scroll effect fetches the visible window.
+          const head = await readFileRange(
+            workspacePath,
+            activeFilePath,
+            0,
+            Math.min(FORMAT_CHUNK_BYTES, fileSize),
+            fileSize,
+          );
+          if (cancelled) {
+            return;
+          }
+          setFormatChunk(head);
+          setLoadState({ status: 'windowed', fileSize });
+          return;
+        }
+
+        // Small file: today's whole-file editable load (the analysis read also
+        // re-checks the size cap, which is harmless here).
+        const data = await readWorkspaceFileBytesForAnalysis(workspacePath, activeFilePath);
         if (!cancelled) {
           setLoadState({ status: 'ready', buffer: createBinaryBufferState(data) });
         }
-      },
-      (e: unknown) => {
+      })
+      .catch((e: unknown) => {
         if (!cancelled) {
           setLoadState({ status: 'error', message: formatUserMessage(e) });
         }
-      },
-    );
+      });
 
     return () => {
       cancelled = true;
@@ -415,7 +519,10 @@ export function BinaryToolPanel() {
     [bufferState],
   );
 
-  const scrollViewportMounted = readyData != null && readyData.length > 0;
+  const windowedFileSize = loadState?.status === 'windowed' ? loadState.fileSize : null;
+  const isWindowed = windowedFileSize != null;
+
+  const scrollViewportMounted = (readyData != null && readyData.length > 0) || isWindowed;
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -432,8 +539,11 @@ export function BinaryToolPanel() {
     };
   }, [scrollViewportMounted]);
 
-  const totalRows =
-    readyData == null || readyData.length === 0 ? 0 : Math.ceil(readyData.length / bytesPerRow);
+  // Content length driving the scrollbar: the loaded buffer for small files,
+  // the full file size for windowed mode.
+  const contentLength = isWindowed ? windowedFileSize! : (readyData?.length ?? 0);
+
+  const totalRows = contentLength === 0 ? 0 : Math.ceil(contentLength / bytesPerRow);
 
   const innerHeightPx = totalRows * ROW_PX;
 
@@ -443,19 +553,103 @@ export function BinaryToolPanel() {
     Math.ceil((viewportHeight || ROW_PX) / ROW_PX) + 2,
   );
 
+  const firstVisibleRowOffset = firstRowIndex * bytesPerRow;
+
   const visibleRows = useMemo(() => {
+    if (isWindowed) {
+      // Render from the loaded slice; bytes outside it render as gaps until the
+      // fetch effect fills the window in.
+      const windowBytes = hexWindow?.bytes ?? new Uint8Array();
+      return computeVisibleHexRows({
+        data: windowBytes,
+        bufferStartOffset: hexWindow?.offset ?? 0,
+        startOffset: firstVisibleRowOffset,
+        bytesPerRow,
+        viewportRowCount,
+        totalByteLength: windowedFileSize!,
+      });
+    }
     if (readyData == null || readyData.length === 0) {
       return [];
     }
     return computeVisibleHexRows({
       data: readyData,
       bufferStartOffset: 0,
-      startOffset: firstRowIndex * bytesPerRow,
+      startOffset: firstVisibleRowOffset,
       bytesPerRow,
       viewportRowCount,
       totalByteLength: readyData.length,
     });
-  }, [readyData, firstRowIndex, viewportRowCount, bytesPerRow]);
+  }, [
+    isWindowed,
+    hexWindow,
+    windowedFileSize,
+    readyData,
+    firstVisibleRowOffset,
+    viewportRowCount,
+    bytesPerRow,
+  ]);
+
+  // Windowed mode: on mount and on scroll/resize, fetch the byte window covering
+  // the viewport (± buffer rows) if the current window doesn't already cover it.
+  useEffect(() => {
+    if (!isWindowed || activeFilePath == null || activeFilePath === '' || workspacePath === '') {
+      return;
+    }
+    const fileSize = windowedFileSize!;
+
+    const bufferBytes = byteSpanForRows(WINDOW_BUFFER_ROWS, bytesPerRow);
+    const viewportBytes = byteSpanForRows(viewportRowCount, bytesPerRow);
+    const needStart = Math.max(0, firstVisibleRowOffset - bufferBytes);
+    const needEnd = Math.min(fileSize, firstVisibleRowOffset + viewportBytes + bufferBytes);
+
+    const windowEnd = hexWindow == null ? -1 : hexWindow.offset + hexWindow.bytes.length;
+    const covered =
+      hexWindow != null &&
+      hexWindow.offset <= needStart &&
+      // Covers the needed range, or already reaches EOF (can't grow further — a
+      // short read at the tail of the file must not trigger an endless refetch).
+      (windowEnd >= needEnd || windowEnd >= fileSize);
+    if (covered || needEnd <= needStart) {
+      return;
+    }
+
+    // Anchor the fetch a buffer ahead of the viewport and take a generous window
+    // (capped at WINDOW_MAX_BYTES) so nearby scrolling stays in the loaded slice.
+    const fetchStart = needStart;
+    const fetchLength = Math.min(WINDOW_MAX_BYTES, fileSize - fetchStart);
+    const token = windowFetchRef.current + 1;
+    windowFetchRef.current = token;
+
+    let cancelled = false;
+    void readFileRange(workspacePath, activeFilePath, fetchStart, fetchLength, fileSize)
+      .then((bytes) => {
+        if (cancelled || windowFetchRef.current !== token) {
+          return;
+        }
+        setHexWindow({ offset: fetchStart, bytes });
+        setWindowError('');
+      })
+      .catch((e: unknown) => {
+        if (cancelled || windowFetchRef.current !== token) {
+          return;
+        }
+        setWindowError(formatUserMessage(e));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isWindowed,
+    windowedFileSize,
+    activeFilePath,
+    workspacePath,
+    firstVisibleRowOffset,
+    viewportRowCount,
+    bytesPerRow,
+    hexWindow,
+  ]);
 
   const handleScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
@@ -870,6 +1064,81 @@ export function BinaryToolPanel() {
   const displayName =
     activeFilePath != null && activeFilePath !== '' ? fileNameFromPath(activeFilePath) : '';
 
+  // Shared hex grid (column header + virtualized scroll body). Read-only in
+  // windowed mode — HexDumpRow's `disabled` blocks the edit affordances, and the
+  // gap bytes outside the loaded window render until the fetch effect fills it.
+  const hexGrid = (
+    <>
+      <div
+        className={styles.hexRow}
+        aria-hidden
+        style={{ opacity: 0.6, borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+      >
+        <span className={styles.offset}>{'Offset'.padStart(hexOptions.addressWidth, ' ')}</span>
+        <span className={styles.hexCells}>
+          {Array.from({ length: bytesPerRow }, (_, i) => {
+            const showGap = hexOptions.groupLength > 0 && i > 0 && i % hexOptions.groupLength === 0;
+            const label = i.toString(16).padStart(2, '0').toUpperCase();
+            return (
+              <span key={`hd-${i}`}>
+                {showGap ? <span className={styles.hexByteGap} /> : null}
+                <span
+                  className={styles.hexByte}
+                  style={{
+                    background: hoverColumn === i ? 'rgba(255,255,255,0.08)' : undefined,
+                  }}
+                >
+                  {label}
+                </span>
+              </span>
+            );
+          })}
+        </span>
+        <span className={styles.ascii}>
+          {Array.from({ length: bytesPerRow }, (_, i) => i.toString(16).toUpperCase()[0] ?? '·').join('')}
+        </span>
+      </div>
+      <div
+        key={activeFilePath}
+        ref={scrollRef}
+        className={styles.scroll}
+        onScroll={handleScroll}
+      >
+        <div className={styles.scrollInner} style={{ height: Math.max(innerHeightPx, 1) }}>
+          <div className={styles.hexViewport} style={{ top: firstRowIndex * ROW_PX }}>
+            {visibleRows.map((row) => (
+              <HexDumpRow
+                key={row.offset}
+                row={row}
+                dirtyOffsets={dirtyOffsets}
+                editingOffset={editingOffset}
+                editValue={editValue}
+                editError={editError}
+                editErrorId={editErrorId}
+                disabled={isSaving || isWindowed}
+                highlightStart={highlightRange?.start ?? null}
+                highlightEndExclusive={highlightRange?.endExclusive ?? null}
+                addressWidth={hexOptions.addressWidth}
+                groupLength={hexOptions.groupLength}
+                hoverColumn={hoverColumn}
+                onHoverColumn={setHoverColumn}
+                onContextMenu={(e, offset) => {
+                  e.preventDefault();
+                  setCtxMenu({ x: e.clientX, y: e.clientY, offset });
+                }}
+                commentForOffset={commentForOffset}
+                onBeginEdit={beginEditingByte}
+                onEditValueChange={handleEditValueChange}
+                onCommitEdit={commitEditingByte}
+                onCancelEdit={cancelEditingByte}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
   if (activeFilePath == null || activeFilePath === '') {
     return (
       <section className={styles.root} aria-label="Binary tool">
@@ -905,6 +1174,22 @@ export function BinaryToolPanel() {
       ) : null}
 
       {readyData != null ? <BinaryFormatPanel bytes={formatData ?? readyData} /> : null}
+      {isWindowed && formatChunk != null ? <BinaryFormatPanel bytes={formatChunk} /> : null}
+
+      {isWindowed ? (
+        <>
+          <p className={styles.subtitle} role="status">
+            Read-only windowed view — {formatFileSize(windowedFileSize!)}. The whole file is too
+            large to edit inline; scroll to load more.
+          </p>
+          {windowError !== '' ? (
+            <p className={styles.messageError} role="alert">
+              {windowError}
+            </p>
+          ) : null}
+          {hexGrid}
+        </>
+      ) : null}
 
       {bufferState != null && readyData != null && readyData.length > 0 ? (
         <>
@@ -1048,73 +1333,7 @@ export function BinaryToolPanel() {
               {saveError}
             </p>
           ) : null}
-          <div
-            className={styles.hexRow}
-            aria-hidden
-            style={{ opacity: 0.6, borderBottom: '1px solid rgba(255,255,255,0.07)' }}
-          >
-            <span className={styles.offset}>{'Offset'.padStart(hexOptions.addressWidth, ' ')}</span>
-            <span className={styles.hexCells}>
-              {Array.from({ length: bytesPerRow }, (_, i) => {
-                const showGap = hexOptions.groupLength > 0 && i > 0 && i % hexOptions.groupLength === 0;
-                const label = i.toString(16).padStart(2, '0').toUpperCase();
-                return (
-                  <span key={`hd-${i}`}>
-                    {showGap ? <span className={styles.hexByteGap} /> : null}
-                    <span
-                      className={styles.hexByte}
-                      style={{
-                        background: hoverColumn === i ? 'rgba(255,255,255,0.08)' : undefined,
-                      }}
-                    >
-                      {label}
-                    </span>
-                  </span>
-                );
-              })}
-            </span>
-            <span className={styles.ascii}>
-              {Array.from({ length: bytesPerRow }, (_, i) => i.toString(16).toUpperCase()[0] ?? '·').join('')}
-            </span>
-          </div>
-          <div
-            key={activeFilePath}
-            ref={scrollRef}
-            className={styles.scroll}
-            onScroll={handleScroll}
-          >
-            <div className={styles.scrollInner} style={{ height: Math.max(innerHeightPx, 1) }}>
-              <div className={styles.hexViewport} style={{ top: firstRowIndex * ROW_PX }}>
-                {visibleRows.map((row) => (
-                  <HexDumpRow
-                    key={row.offset}
-                    row={row}
-                    dirtyOffsets={dirtyOffsets}
-                    editingOffset={editingOffset}
-                    editValue={editValue}
-                    editError={editError}
-                    editErrorId={editErrorId}
-                    disabled={isSaving}
-                    highlightStart={highlightRange?.start ?? null}
-                    highlightEndExclusive={highlightRange?.endExclusive ?? null}
-                    addressWidth={hexOptions.addressWidth}
-                    groupLength={hexOptions.groupLength}
-                    hoverColumn={hoverColumn}
-                    onHoverColumn={setHoverColumn}
-                    onContextMenu={(e, offset) => {
-                      e.preventDefault();
-                      setCtxMenu({ x: e.clientX, y: e.clientY, offset });
-                    }}
-                    commentForOffset={commentForOffset}
-                    onBeginEdit={beginEditingByte}
-                    onEditValueChange={handleEditValueChange}
-                    onCommitEdit={commitEditingByte}
-                    onCancelEdit={cancelEditingByte}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
+          {hexGrid}
         </>
       ) : null}
 

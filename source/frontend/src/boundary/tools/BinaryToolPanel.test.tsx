@@ -4,7 +4,12 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { IdeSessionContextValue } from '@boundary/workspace/IdeSessionContext';
 import { DEFAULT_APP_PREFERENCES } from '@domain/preferences/appPreferences';
-import { readWorkspaceFileBytes, writeWorkspaceFileBytes } from '@infrastructure/tauri/bridge';
+import {
+  getWorkspaceFileSize,
+  readWorkspaceFileBytes,
+  readWorkspaceFileChunk,
+  writeWorkspaceFileBytes,
+} from '@infrastructure/tauri/bridge';
 
 import { BinaryToolPanel } from '@plugins/tools/BinaryToolPanel';
 import panelStyles from '@plugins/tools/BinaryToolPanel.module.css';
@@ -17,6 +22,8 @@ const { mockUseIdeSession, mockUseWorkspaceRoot, mockLoadPreferences, mockSavePr
     mockSavePreferences: vi.fn(),
   }));
 
+const MAX_INLINE_ANALYSIS_BYTES = 16 * 1024 * 1024;
+
 vi.mock('@infrastructure/tauri/bridge', () => {
   const readWorkspaceFileBytes = vi.fn();
   return {
@@ -27,6 +34,10 @@ vi.mock('@infrastructure/tauri/bridge', () => {
       readWorkspaceFileBytes(root, path),
     writeWorkspaceFileBytes: vi.fn(),
     getWorkspaceFileSize: vi.fn().mockResolvedValue(0),
+    // Windowed read-only mode (files past the inline cap) reads slices through
+    // these; default to an empty slice so the panel never `.then`s on undefined.
+    readWorkspaceFileChunk: vi.fn().mockResolvedValue(new Uint8Array()),
+    MAX_INLINE_ANALYSIS_BYTES: 16 * 1024 * 1024,
   };
 });
 
@@ -121,6 +132,12 @@ describe('BinaryToolPanel', () => {
     vi.mocked(readWorkspaceFileBytes).mockResolvedValue(new Uint8Array());
     vi.mocked(writeWorkspaceFileBytes).mockReset();
     vi.mocked(writeWorkspaceFileBytes).mockResolvedValue(undefined);
+    // Default size 0 keeps every existing test on the small-file editable path;
+    // windowed-mode tests override getWorkspaceFileSize per-test.
+    vi.mocked(getWorkspaceFileSize).mockReset();
+    vi.mocked(getWorkspaceFileSize).mockResolvedValue(0);
+    vi.mocked(readWorkspaceFileChunk).mockReset();
+    vi.mocked(readWorkspaceFileChunk).mockResolvedValue(new Uint8Array());
     // The panel reads hex-layout prefs on mount via loadPreferences().then(...);
     // give it a resolved value so the mount doesn't `.then` on undefined.
     mockLoadPreferences.mockReset();
@@ -756,4 +773,143 @@ describe('BinaryToolPanel', () => {
       }),
     ).toHaveClass(panelStyles.hexByteHighlight);
   });
+
+  describe('windowed read-only mode (large files)', () => {
+    const ROW_PX = 18;
+    const BYTES_PER_ROW = 16;
+
+    // Deterministic byte at an absolute offset, so window/format reads return a
+    // value the test can predict regardless of which slice was requested.
+    const byteAt = (offset: number): number => offset & 0xff;
+
+    function mockChunkReads(fileSize: number): void {
+      vi.mocked(readWorkspaceFileChunk).mockImplementation(
+        async (_root: string, _path: string, offset: number, length: number) => {
+          const start = Math.max(0, Math.min(offset, fileSize));
+          const end = Math.max(start, Math.min(offset + length, fileSize));
+          const out = new Uint8Array(end - start);
+          for (let i = 0; i < out.length; i += 1) {
+            out[i] = byteAt(start + i);
+          }
+          return out;
+        },
+      );
+    }
+
+    it('enters read-only windowed mode for a file past the inline cap', async () => {
+      const fileSize = MAX_INLINE_ANALYSIS_BYTES + 4 * 1024 * 1024; // 20 MiB
+      vi.mocked(getWorkspaceFileSize).mockResolvedValue(fileSize);
+      mockChunkReads(fileSize);
+
+      mockUseIdeSession.mockReturnValue(stubSession('/w/huge.bin'));
+      mockUseWorkspaceRoot.mockReturnValue({ path: '/w' });
+
+      render(<BinaryToolPanel />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Read-only windowed view/i)).toBeInTheDocument();
+      });
+
+      // The whole-file read must never run for a file this size.
+      expect(readWorkspaceFileBytes).not.toHaveBeenCalled();
+
+      // Format detection still runs, fed by the first chunk read from offset 0.
+      expect(screen.getByText(/^Detected:/)).toBeInTheDocument();
+      expect(readWorkspaceFileChunk).toHaveBeenCalledWith('/w', '/w/huge.bin', 0, expect.any(Number));
+
+      // Edit / save / find-write controls are hidden in read-only mode.
+      expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Find \/ go to/i })).not.toBeInTheDocument();
+
+      // The scrollbar represents the whole file: ceil(size / bpr) * ROW_PX.
+      const section = screen.getByRole('region', { name: 'Binary tool' });
+      const scroller = section.querySelector(`.${panelStyles.scroll}`) as HTMLDivElement;
+      expect(scroller).not.toBeNull();
+      const inner = scroller.querySelector(`.${panelStyles.scrollInner}`) as HTMLDivElement;
+      const expectedRows = Math.ceil(fileSize / BYTES_PER_ROW);
+      expect(inner.style.height).toBe(`${expectedRows * ROW_PX}px`);
+
+      // The visible window is rendered read-only (disabled byte cells).
+      const firstCell = await screen.findByRole('button', {
+        name: 'Edit byte at offset 00000000, current value 00',
+      });
+      expect(firstCell).toBeDisabled();
+    });
+
+    it('fetches a further window when the user scrolls deep into the file', async () => {
+      const fileSize = 64 * 1024 * 1024; // 64 MiB
+      vi.mocked(getWorkspaceFileSize).mockResolvedValue(fileSize);
+      mockChunkReads(fileSize);
+
+      mockUseIdeSession.mockReturnValue(stubSession('/w/huge.bin'));
+      mockUseWorkspaceRoot.mockReturnValue({ path: '/w' });
+
+      render(<BinaryToolPanel />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Read-only windowed view/i)).toBeInTheDocument();
+      });
+
+      // Initial window is anchored at offset 0; the byte at 0 renders.
+      await screen.findByRole('button', {
+        name: 'Edit byte at offset 00000000, current value 00',
+      });
+
+      // Scroll to a row deep past the initial 1.5 MiB window so a new fetch is
+      // required. Row 0x300000 → byte offset 0x3000000 (48 MiB).
+      const section = screen.getByRole('region', { name: 'Binary tool' });
+      const scroller = section.querySelector(`.${panelStyles.scroll}`) as HTMLDivElement;
+      const targetRow = 0x300000;
+      const targetOffset = targetRow * BYTES_PER_ROW;
+
+      vi.mocked(readWorkspaceFileChunk).mockClear();
+      await act(async () => {
+        scroller.scrollTop = targetRow * ROW_PX;
+        scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
+      });
+
+      // A new window covering the scrolled-to region is fetched, and its bytes
+      // render at the new offset (value = offset & 0xff = 0x3000000 & 0xff = 0x00).
+      await waitFor(() => {
+        expect(readWorkspaceFileChunk).toHaveBeenCalled();
+      });
+      const lastCall = vi.mocked(readWorkspaceFileChunk).mock.calls.at(-1)!;
+      const requestedOffset = lastCall[2] as number;
+      const requestedLength = lastCall[3] as number;
+      expect(requestedOffset).toBeLessThanOrEqual(targetOffset);
+      expect(requestedOffset + requestedLength).toBeGreaterThan(targetOffset);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(formatOffset(targetOffset)),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('keeps small files on the editable whole-file path (no chunk reads)', async () => {
+      // Size at the cap is still inline-editable; the chunk bridge must stay idle.
+      vi.mocked(getWorkspaceFileSize).mockResolvedValue(3);
+      vi.mocked(readWorkspaceFileBytes).mockResolvedValueOnce(new Uint8Array([0x41, 0x42, 0x43]));
+
+      mockUseIdeSession.mockReturnValue(stubSession('/w/small.bin'));
+      mockUseWorkspaceRoot.mockReturnValue({ path: '/w' });
+
+      render(<BinaryToolPanel />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: 'Edit byte at offset 00000000, current value 41' }),
+        ).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText(/Read-only windowed view/i)).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+      expect(readWorkspaceFileChunk).not.toHaveBeenCalled();
+    });
+  });
 });
+
+// Offset label as the panel renders it (8-wide lowercase hex).
+function formatOffset(offset: number): string {
+  return offset.toString(16).padStart(8, '0');
+}
