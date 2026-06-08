@@ -6,6 +6,7 @@ import { useRegistryVersion } from '@shared/plugins/useRegistry';
 import { setPluginHost } from '@shared/plugins/host';
 import { isPluginDisabled } from '@shared/plugins/pluginState';
 import { setPluginActive } from '@shared/plugins/pluginToggle';
+import { setSelectedExtension } from '@boundary/extensions/extensionDetailsStore';
 import { PLUGINS } from '@plugins/index';
 import type { ToolTabId } from '@domain/toolTabs/toolTabId';
 import { AgentWorkspaceCommands } from '@boundary/agent/AgentWorkspaceCommands';
@@ -462,6 +463,19 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
           }
           setPluginActive(id, args.enabled !== false);
           return { id, enabled: args.enabled !== false };
+        },
+      },
+      {
+        name: 'plugin.showDetails',
+        description: "Open a plugin's details page as a center tab { id }.",
+        run: (args) => {
+          const id = String(args.id ?? '');
+          if (!PLUGINS.some((p) => p.id === id)) {
+            throw new Error(`Unknown plugin: ${id}`);
+          }
+          setSelectedExtension(id);
+          agentUiRef.current.openPanel('extensionDetails');
+          return { id };
         },
       },
       // Plugin-contributed agent commands (e.g. dialog.openConnections).
