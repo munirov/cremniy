@@ -23,7 +23,7 @@ shipped and working:
 
 - Code editor (Monaco, syntax highlighting, search, zoom, indent settings)
 - Hex / binary editor (byte-level editing, undo/redo, find/go, patch export)
-- Disassembler (backed by `objdump` / `radare2`, instruction help, string refs, patches)
+- Disassembler (embedded `iced-x86` + `goblin`, instruction help, string refs, patches; optional `radare2`)
 - Integrated terminal (persistent history, Cyrillic-layout correction, interrupt via Ctrl+Break)
 - Reverse Calculator, Data Converter, Shellcode Generator
 - **Plugin system** — contribution-based architecture (`plugins/<id>/index.tsx`)
@@ -74,7 +74,7 @@ shipped and working:
 
 - Редактор кода (Monaco, подсветка синтаксиса, поиск, масштаб, настройки отступов)
 - HEX/бинарный редактор (правка байтов, undo/redo, поиск/переход, экспорт патчей)
-- Дизассемблер (использует `objdump` / `radare2`, справка по инструкциям, строковые ссылки, патчи)
+- Дизассемблер (встроенный `iced-x86` + `goblin`, справка по инструкциям, строковые ссылки, патчи; опционально `radare2`)
 - Встроенный терминал (история команд, коррекция кириллической раскладки, прерывание через Ctrl+Break)
 - Обратный калькулятор, конвертер данных, генератор шелл-кода
 - **Система плагинов** — вклады (`plugins/<id>/index.tsx`)

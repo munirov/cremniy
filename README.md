@@ -114,7 +114,7 @@ You constantly **switch** between different windows, and the tools are **not lin
 
 - Code editor (Monaco, syntax highlighting, search, zoom)
 - Hex / binary editor (byte-level editing, undo/redo, patch export)
-- Disassembler (backed by `objdump` / `radare2`)
+- Disassembler (embedded `iced-x86` engine, no external toolchain; optional `radare2`)
 - Integrated terminal (persistent history, Cyrillic-layout correction)
 - Reverse Calculator, Data Converter, Shellcode Generator
 - **Plugins:** Connections (serial/SSH/SFTP), Source Control (Git), Binary Tools (memory map, strings, patches, symbols, functions)
@@ -246,7 +246,7 @@ npm run tauri:build
 
 - Редактор кода (Monaco, подсветка синтаксиса, поиск, масштаб)
 - HEX/бинарный редактор (правка байтов, undo/redo, экспорт патчей)
-- Дизассемблер (использует `objdump` / `radare2`)
+- Дизассемблер (встроенный движок `iced-x86`, без внешнего тулчейна; опционально `radare2`)
 - Встроенный терминал (история команд, коррекция кириллической раскладки)
 - Обратный калькулятор, конвертер данных, генератор шелл-кода
 - **Плагины:** Connections (serial/SSH/SFTP), Source Control (Git), Binary Tools (карта памяти, строки, патчи, символы, функции)

@@ -22,7 +22,7 @@ The current build ships the following built-in tools and plugins:
 **Core tools**
 - Code editor (Monaco-based, syntax highlighting, search, zoom)
 - Hex / binary editor (byte-level editing, search, undo/redo, patch export)
-- Disassembler (backed by `objdump` / `radare2` via the Rust subprocess runner)
+- Disassembler (embedded pure-Rust engine — `goblin` + `iced-x86`, no external toolchain; optional `radare2` backend)
 - Reverse Calculator (multi-base number conversion)
 - Data Converter
 - Shellcode Generator
