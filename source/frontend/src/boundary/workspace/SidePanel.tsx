@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import { pluginViews } from '@shared/plugins/registry';
 import { useRegistryVersion } from '@shared/plugins/useRegistry';
+import { registerAgentCommands } from '@shared/agent/agentBridge';
 
 import { ExtensionsPanel } from '@boundary/extensions/ExtensionsPanel';
 
@@ -111,6 +112,59 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
   useEffect(() => {
     if (!views.some((v) => v.id === active)) setActive('explorer');
   }, [views, active]);
+
+  // Live refs so the agent commands (registered once) read current state.
+  const viewsRef = useRef(views);
+  viewsRef.current = views;
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const unpinnedRef = useRef(unpinned);
+  unpinnedRef.current = unpinned;
+
+  // Agent / MCP control of the side panel — open a view, pin/unpin it — so the
+  // same actions are available to automation (mirrors tool.select).
+  useEffect(() => {
+    return registerAgentCommands([
+      {
+        name: 'view.list',
+        description: 'List side-panel views { } — id, label, active, pinned.',
+        run: () =>
+          viewsRef.current.map((v) => ({
+            id: v.id,
+            label: v.label,
+            active: v.id === activeRef.current,
+            pinned: !unpinnedRef.current.has(v.id),
+          })),
+      },
+      {
+        name: 'view.select',
+        description: 'Open a side-panel view by id { id } (e.g. explorer, search, git, extensions).',
+        run: (args) => {
+          const id = String(args.id ?? '');
+          if (!viewsRef.current.some((v) => v.id === id)) {
+            throw new Error(`Unknown view: ${id}`);
+          }
+          setActive(id);
+          return { id };
+        },
+      },
+      {
+        name: 'view.setPinned',
+        description: 'Pin or unpin a side-panel view in the activity bar { id, pinned: boolean }.',
+        run: (args) => {
+          const id = String(args.id ?? '');
+          const pin = args.pinned !== false;
+          setUnpinned((prev) => {
+            const next = new Set(prev);
+            if (pin) next.delete(id);
+            else next.add(id);
+            return next;
+          });
+          return { id, pinned: pin };
+        },
+      },
+    ]);
+  }, []);
 
   const togglePin = (id: string) =>
     setUnpinned((prev) => {
