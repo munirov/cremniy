@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
@@ -68,21 +68,26 @@ function buildViews(): ViewEntry[] {
   return [...core, ...plugin, extensions];
 }
 
-const PIN_STORAGE_KEY = 'cremniy.pinnedViews';
+// Persist the UNPINNED ids (the inverse of "pinned"): a view shows in the
+// activity bar unless the user explicitly hides it from the Views menu. Storing
+// the inverse means a newly-introduced view — Extensions added in an update, or a
+// freshly-enabled plugin — is shown by DEFAULT, instead of vanishing because it
+// wasn't part of an older saved "pinned" set.
+const UNPIN_STORAGE_KEY = 'cremniy.unpinnedViews';
 
-function loadPinned(viewIds: string[]): Set<string> {
+function loadUnpinned(): Set<string> {
   try {
-    const raw = localStorage.getItem(PIN_STORAGE_KEY);
+    const raw = localStorage.getItem(UNPIN_STORAGE_KEY);
     if (raw != null) {
       const arr: unknown = JSON.parse(raw);
       if (Array.isArray(arr)) {
-        return new Set(arr.filter((x): x is string => viewIds.includes(x)));
+        return new Set(arr.filter((x): x is string => typeof x === 'string'));
       }
     }
   } catch {
-    // ignore — fall back to all pinned
+    // ignore — default: nothing hidden
   }
-  return new Set(viewIds);
+  return new Set();
 }
 
 export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | null }) {
@@ -91,34 +96,16 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
   const registryVersion = useRegistryVersion();
   const views = useMemo(() => buildViews(), [registryVersion]);
   const [active, setActive] = useState<string>('explorer');
-  const [pinned, setPinned] = useState<Set<string>>(() => loadPinned(views.map((v) => v.id)));
-  const seenViewsRef = useRef<Set<string>>(new Set(views.map((v) => v.id)));
+  const [unpinned, setUnpinned] = useState<Set<string>>(loadUnpinned);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     try {
-      localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify([...pinned]));
+      localStorage.setItem(UNPIN_STORAGE_KEY, JSON.stringify([...unpinned]));
     } catch {
       // ignore
     }
-  }, [pinned]);
-
-  // A newly-enabled plugin's view should show in the activity bar → auto-pin any
-  // view id we haven't seen before (disabling just drops it from `views`).
-  useEffect(() => {
-    setPinned((prev) => {
-      let changed = false;
-      const next = new Set(prev);
-      for (const v of views) {
-        if (!seenViewsRef.current.has(v.id)) {
-          seenViewsRef.current.add(v.id);
-          next.add(v.id);
-          changed = true;
-        }
-      }
-      return changed ? next : prev;
-    });
-  }, [views]);
+  }, [unpinned]);
 
   // If the active view's plugin was just disabled, fall back to Explorer.
   useEffect(() => {
@@ -126,14 +113,14 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
   }, [views, active]);
 
   const togglePin = (id: string) =>
-    setPinned((prev) => {
+    setUnpinned((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) next.delete(id); // currently hidden → show it
+      else next.add(id); // currently shown → hide it
       return next;
     });
 
-  const pinnedViews = views.filter((v) => pinned.has(v.id));
+  const pinnedViews = views.filter((v) => !unpinned.has(v.id));
   const activeView = views.find((v) => v.id === active);
 
   return (
@@ -182,7 +169,7 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
               id: v.id,
               label: v.label,
               icon: v.icon,
-              pinned: pinned.has(v.id),
+              pinned: !unpinned.has(v.id),
               active: active === v.id,
             }))}
             onSelect={(id) => {
