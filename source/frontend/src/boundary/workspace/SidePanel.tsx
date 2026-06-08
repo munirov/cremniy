@@ -120,7 +120,11 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
       return next;
     });
 
-  const pinnedViews = views.filter((v) => !unpinned.has(v.id));
+  // The activity bar shows pinned views PLUS the active one — so opening an
+  // unpinned view from the Views menu still surfaces its icon (highlighted) while
+  // it's open, instead of leaving the bar with no indication. It drops back out
+  // of the bar once you switch away (VS Code behaviour).
+  const pinnedViews = views.filter((v) => !unpinned.has(v.id) || v.id === active);
   const activeView = views.find((v) => v.id === active);
 
   return (
