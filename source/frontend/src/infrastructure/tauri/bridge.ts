@@ -699,6 +699,15 @@ export async function analyzeBinary(
   workspaceRoot: string,
   filePath: string,
 ): Promise<BinaryAnalysisDto> {
+  // Same size cap as the other inline analysers. A large binary (e.g. a debug
+  // build) yields a symbol / section / function set huge enough to balloon
+  // webview memory into the gigabytes once serialised across the IPC bridge.
+  const size = await getWorkspaceFileSize(workspaceRoot, filePath);
+  if (size > MAX_INLINE_ANALYSIS_BYTES) {
+    throw new Error(
+      `File is ${formatMiB(size)} — too large to analyse inline (limit ${formatMiB(MAX_INLINE_ANALYSIS_BYTES)}). Large-file support is on the way.`,
+    );
+  }
   return invoke<BinaryAnalysisDto>("analyze_binary", { workspaceRoot, filePath });
 }
 
