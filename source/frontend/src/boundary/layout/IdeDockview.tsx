@@ -4,6 +4,7 @@ import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
 import { BinaryFilePlaceholder } from '@boundary/editor/BinaryFilePlaceholder';
 import { ImageTab } from '@boundary/editor/ImageTab';
+import { MarkdownPreview } from '@boundary/editor/MarkdownPreview';
 import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
 import { resolveCenterPanel } from '@boundary/layout/centerPanels';
@@ -207,6 +208,20 @@ export function IdeDockview({
     }
   }, [editorSplit, activeToolTab, setActiveToolTab]);
 
+  // Markdown files get a VS Code-style "Markdown | Preview" toggle at the
+  // editor's top-right. Preview swaps the Monaco source for the rendered doc.
+  // Reset to source mode whenever the active file changes so a freshly opened
+  // file always lands in the editor, not someone else's stale preview.
+  const isMarkdown = isMarkdownPath(ide.activeFilePath);
+  const [mdPreview, setMdPreview] = useState(false);
+  useEffect(() => {
+    setMdPreview(false);
+  }, [ide.activeFilePath]);
+  // Only render markdown as preview when it's actually the source-editor branch
+  // (not a center panel, not a binary/image file).
+  const showMarkdownPreview =
+    isMarkdown && mdPreview && ide.activePanel == null && !ide.activeFileIsBinary;
+
   const paneVisibility: Record<BuiltinPaneId, boolean> = {
     fileTree: paneVisibilityProp?.fileTree ?? true,
     editor: paneVisibilityProp?.editor ?? true,
@@ -244,6 +259,30 @@ export function IdeDockview({
         {ide.openFilePaths.length > 0 || ide.openPanels.length > 0 ? (
           <div className={styles.tabStrip} role="region" aria-label="Document tabs">
             <IdeEditorTabStrip />
+            {/* Markdown source/preview toggle — only for .md/.markdown in the
+                source-editor branch, pinned top-right like VS Code. */}
+            {isMarkdown && ide.activePanel == null && !ide.activeFileIsBinary ? (
+              <div className={styles.mdToggle} role="group" aria-label="Markdown view">
+                <button
+                  type="button"
+                  className={`${styles.mdToggleBtn} ${!mdPreview ? styles.mdToggleBtnActive : ''}`}
+                  onClick={() => setMdPreview(false)}
+                  aria-pressed={!mdPreview}
+                  title="Edit Markdown source"
+                >
+                  Markdown
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.mdToggleBtn} ${mdPreview ? styles.mdToggleBtnActive : ''}`}
+                  onClick={() => setMdPreview(true)}
+                  aria-pressed={mdPreview}
+                  title="Preview rendered Markdown"
+                >
+                  Preview
+                </button>
+              </div>
+            ) : null}
             {/* While split, the toggle lives on the right pane (far edge) so it's
                 not stuck to the left window — see IdeToolDock's onToggleSplit. */}
             {!editorSplit ? (
@@ -282,6 +321,16 @@ export function IdeDockview({
             />
             <div className={styles.editorBody}>
               <BinaryFilePlaceholder filePath={ide.activeFilePath} />
+            </div>
+          </>
+        ) : showMarkdownPreview ? (
+          <>
+            <IdeBreadcrumb
+              filePath={ide.activeFilePath}
+              workspaceRoot={workspaceRoot?.path ?? null}
+            />
+            <div className={styles.editorBody}>
+              <MarkdownPreview source={ide.documentText} />
             </div>
           </>
         ) : (
@@ -486,6 +535,19 @@ function isImagePath(path: string | null): boolean {
     return false;
   }
   return IMAGE_EXTENSIONS.has(path.slice(dot + 1).toLowerCase());
+}
+
+/** True when the path's (lowercased) extension is `md` or `markdown`. */
+function isMarkdownPath(path: string | null): boolean {
+  if (path == null) {
+    return false;
+  }
+  const dot = path.lastIndexOf('.');
+  if (dot < 0) {
+    return false;
+  }
+  const ext = path.slice(dot + 1).toLowerCase();
+  return ext === 'md' || ext === 'markdown';
 }
 
 function parseLayout(raw: unknown): IdeLayoutSizes {

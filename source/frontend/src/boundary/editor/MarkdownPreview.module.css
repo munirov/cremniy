@@ -1,0 +1,18 @@
+/* Scrollable preview surface for a Markdown document on the editor background.
+   The inner Markdown renderer handles all prose styling (DESIGN.md canon — no
+   blue, mono for code); this wrapper only supplies the dark editor backdrop,
+   scrolling, and comfortable reading gutters / measure. */
+.root {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  background: var(--color-bg-editor, #1e1e1e);
+}
+
+.prose {
+  /* Centered reading column with generous padding, like a rendered readme. */
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.6rem 2rem 3rem;
+}

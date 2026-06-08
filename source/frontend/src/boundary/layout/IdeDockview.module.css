@@ -66,6 +66,47 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Markdown source/preview segmented toggle, pinned right of the document tabs
+   (just left of the split button). Monochrome — the active segment is marked
+   with a white-opacity fill, never a brand colour (DESIGN.md canon). */
+.mdToggle {
+  display: inline-flex;
+  align-self: center;
+  flex-shrink: 0;
+  margin-left: 0.4rem;
+  padding: 1px;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 4px;
+  background: transparent;
+}
+
+.mdToggleBtn {
+  padding: 0.1rem 0.5rem;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: calc(var(--font-size-base) * 0.92);
+  line-height: 1.5;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.mdToggleBtn:hover {
+  opacity: 0.9;
+}
+
+.mdToggleBtnActive {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mdToggleBtnActive:hover {
+  opacity: 1;
+}
+
 .editorBody {
   flex: 1;
   display: flex;
