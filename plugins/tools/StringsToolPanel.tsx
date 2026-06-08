@@ -4,7 +4,6 @@ import { fileNameFromPath } from '@domain/workspace/paths';
 import { extractAsciiStrings, filterStrings, type ExtractedString } from '@domain/strings/stringExtraction';
 import { readWorkspaceFileBytesForAnalysis } from '@infrastructure/tauri/bridge';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
-import { useToolDock } from '@boundary/workspace/ToolDockContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 
 import styles from './BinaryToolPanel.module.css';
@@ -12,8 +11,7 @@ import styles from './BinaryToolPanel.module.css';
 const MIN_LENGTHS = [4, 5, 6, 8, 10, 16];
 
 export function StringsToolPanel() {
-  const { activeFilePath, fileContentRevision } = useIdeSession();
-  const { selectToolTab } = useToolDock();
+  const { activeFilePath, fileContentRevision, openPanel } = useIdeSession();
   const workspaceRoot = useWorkspaceRoot();
   const workspacePath = workspaceRoot?.path?.trim() ?? '';
 
@@ -89,7 +87,7 @@ export function StringsToolPanel() {
         <button
           type="button"
           className={styles.toolbarBtn}
-          onClick={() => selectToolTab('binary')}
+          onClick={() => openPanel('binary')}
           title="Jump back to HEX view"
         >
           Open HEX

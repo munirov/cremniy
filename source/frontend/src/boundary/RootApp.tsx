@@ -240,18 +240,19 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         return;
       }
       if (id === 'openBinaryTool') {
-        toolDock.setActiveToolTab('binary');
+        ide.openPanel('binary');
         return;
       }
       if (id === 'openCodeEditorTool') {
+        // The code-editor "tool" is the editor-split mirror, not a center tab.
         toolDock.setActiveToolTab('codeEditor');
         return;
       }
       if (id === 'openDisassemblerTool') {
-        toolDock.setActiveToolTab('disassembler');
+        ide.openPanel('disassembler');
       }
     },
-    [toolDock],
+    [toolDock, ide],
   );
 
   const handleRefsMenu = useCallback((id: ReferencesMenuActionId) => {
@@ -398,8 +399,8 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       {
         name: 'tool.select',
         description:
-          'Select a tool panel on the rail { id: binary | disassembler | strings | symbols | memoryMap | functions | patches | resources }.',
-        run: (args) => agentUiRef.current.toolDock.setActiveToolTab(toToolTabId(args.id)),
+          'Open a byte tool as a center tab { id: binary | disassembler | strings | symbols | memoryMap | functions | patches | resources }.',
+        run: (args) => agentUiRef.current.openPanel(toToolTabId(args.id)),
       },
       {
         name: 'edit.find',

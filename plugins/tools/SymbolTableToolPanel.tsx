@@ -4,15 +4,13 @@ import { fileNameFromPath } from '@domain/workspace/paths';
 import { analyzeBinary, type BinaryAnalysisDto, type BinarySymbolDto } from '@infrastructure/tauri/bridge';
 import { useSetBinarySelection } from '@boundary/workspace/BinarySelectionContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
-import { useToolDock } from '@boundary/workspace/ToolDockContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 
 import styles from './BinaryToolPanel.module.css';
 
 export function SymbolTableToolPanel() {
-  const { activeFilePath, fileContentRevision } = useIdeSession();
+  const { activeFilePath, fileContentRevision, openPanel } = useIdeSession();
   const setSelection = useSetBinarySelection();
-  const { selectToolTab } = useToolDock();
   const workspaceRoot = useWorkspaceRoot();
   const workspacePath = workspaceRoot?.path?.trim() ?? '';
 
@@ -133,7 +131,7 @@ export function SymbolTableToolPanel() {
               const addr = Number.parseInt(sym.address, 16);
               if (Number.isFinite(addr)) {
                 setSelection({ offset: addr, length: sym.size ?? 1, source: 'symbols' });
-                selectToolTab('binary');
+                openPanel('binary');
               }
             }}
           />

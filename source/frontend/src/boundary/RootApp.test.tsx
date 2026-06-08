@@ -54,6 +54,8 @@ import { TitleBar } from './chrome/TitleBar';
 import { NotificationProvider } from './notifications/NotificationContext';
 import { WorkspaceProvider } from './workspace/WorkspaceContext';
 import { RootApp } from './RootApp';
+import toolsPlugin from '@plugins/tools';
+import { registerPlugin } from '@shared/plugins/registry';
 
 const mockLoadPreferences = vi.fn<SettingsService['loadPreferences']>();
 const mockSavePreferences = vi.fn<SettingsService['savePreferences']>();
@@ -112,6 +114,9 @@ function deferred<T>() {
 
 describe('RootApp', () => {
   beforeEach(() => {
+    // The right-edge tool rail only renders when a tool plugin contributes
+    // icons; register Binary Tools so the shell-regions test sees the rail.
+    registerPlugin(toolsPlugin);
     mockLoadPreferences.mockReset();
     mockSavePreferences.mockReset();
     mockLoadPreferences.mockResolvedValue({

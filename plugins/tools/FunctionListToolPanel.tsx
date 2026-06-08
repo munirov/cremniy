@@ -4,7 +4,6 @@ import { fileNameFromPath } from '@domain/workspace/paths';
 import { analyzeBinary, type BinaryAnalysisDto } from '@infrastructure/tauri/bridge';
 import { useSetBinarySelection } from '@boundary/workspace/BinarySelectionContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
-import { useToolDock } from '@boundary/workspace/ToolDockContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 
 import styles from './BinaryToolPanel.module.css';
@@ -15,8 +14,7 @@ import styles from './BinaryToolPanel.module.css';
  * function symbols extracted from the binary, independent of the disasm run.
  */
 export function FunctionListToolPanel() {
-  const { activeFilePath, fileContentRevision } = useIdeSession();
-  const { selectToolTab } = useToolDock();
+  const { activeFilePath, fileContentRevision, openPanel } = useIdeSession();
   const setSelection = useSetBinarySelection();
   const workspaceRoot = useWorkspaceRoot();
   const workspacePath = workspaceRoot?.path?.trim() ?? '';
@@ -96,7 +94,7 @@ export function FunctionListToolPanel() {
         <button
           type="button"
           className={styles.toolbarBtn}
-          onClick={() => selectToolTab('disassembler')}
+          onClick={() => openPanel('disassembler')}
           title="Switch to Disassembler tab"
         >
           Open Disasm
@@ -128,7 +126,7 @@ export function FunctionListToolPanel() {
               const addr = Number.parseInt(f.address, 16);
               if (Number.isFinite(addr)) {
                 setSelection({ offset: addr, length: f.size ?? 1, source: 'functions' });
-                selectToolTab('binary');
+                openPanel('binary');
               }
             }}
             style={{

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { fileNameFromPath } from '@domain/workspace/paths';
 import { subscribeSessionPatches, type SessionPatchEntry } from '@domain/hexView/sessionPatchStore';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
-import { useToolDock } from '@boundary/workspace/ToolDockContext';
 
 import styles from './BinaryToolPanel.module.css';
 
@@ -43,8 +42,7 @@ function kindColor(kind: string): string {
  * does the same).
  */
 export function PatchesToolPanel() {
-  const { activeFilePath } = useIdeSession();
-  const { selectToolTab } = useToolDock();
+  const { activeFilePath, openPanel } = useIdeSession();
   const [patches, setPatches] = useState<readonly SessionPatchEntry[]>([]);
 
   useEffect(() => {
@@ -72,7 +70,7 @@ export function PatchesToolPanel() {
         <button
           type="button"
           className={styles.toolbarBtn}
-          onClick={() => selectToolTab('binary')}
+          onClick={() => openPanel('binary')}
           title="Back to hex view"
         >
           Open HEX

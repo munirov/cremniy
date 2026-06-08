@@ -6,6 +6,7 @@ import { BinaryFilePlaceholder } from '@boundary/editor/BinaryFilePlaceholder';
 import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
 import { resolveCenterPanel } from '@boundary/layout/centerPanels';
+import { pluginToolTabs } from '@shared/plugins/registry';
 import { useRegistryVersion } from '@shared/plugins/useRegistry';
 import { IdeStatusStrip } from '@boundary/layout/IdeStatusStrip';
 import { IdeToolDock } from '@boundary/layout/IdeToolDock';
@@ -412,7 +413,10 @@ export function IdeDockview({
           </SplitContainer>
         )}
       </div>
-      <ToolRail />
+      {/* The rail is a launcher for the byte tools — hide it entirely when no
+          tool plugin contributes icons (e.g. Binary Tools disabled), so an empty
+          right strip doesn't linger. */}
+      {pluginToolTabs().length > 0 ? <ToolRail /> : null}
 
       {dockMenu != null ? (
         <ul

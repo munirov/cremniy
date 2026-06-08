@@ -6,7 +6,7 @@ import { SettingsDialog } from '@boundary/settings/SettingsDialog';
 import { ExtensionDetailsPanel } from '@boundary/extensions/ExtensionDetailsPanel';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
-import { pluginCenterPanels } from '@shared/plugins/registry';
+import { pluginCenterPanels, pluginToolTabs } from '@shared/plugins/registry';
 
 /**
  * The center "tab space" is a generic host: a tab can be a file editor OR one
@@ -52,12 +52,17 @@ export const CENTER_PANELS: Record<string, CenterPanelDef> = {
   extensionDetails: { label: 'Extension', render: () => <ExtensionDetailsPanel /> },
 };
 
-/** Look up a center panel by id: core panels first, then plugin contributions.
- *  Use this instead of indexing CENTER_PANELS so plugin panels resolve too. */
+/** Look up a center panel by id: core panels first, then plugin center-panel
+ *  contributions, then plugin tool tabs. The rail tools (hex, disassembler,
+ *  strings, …) open as ordinary center tabs — same tab space as files and the
+ *  Git / Connections panels — so they resolve here too. */
 export function resolveCenterPanel(id: string | null | undefined): CenterPanelDef | undefined {
   if (id == null) return undefined;
   const core = CENTER_PANELS[id];
   if (core != null) return core;
   const contributed = pluginCenterPanels().find((p) => p.id === id);
-  return contributed != null ? { label: contributed.label, render: contributed.render } : undefined;
+  if (contributed != null) return { label: contributed.label, render: contributed.render };
+  const tool = pluginToolTabs().find((t) => t.id === id);
+  if (tool != null) return { label: tool.label, render: tool.render };
+  return undefined;
 }
