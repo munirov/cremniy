@@ -53,6 +53,8 @@ function AdvancedGitTab() {
 const git: PluginManifest = {
   id: 'git',
   name: 'Git',
+  description: 'Source control — status, branches, merge, rebase, stash, history, remotes.',
+  delivery: 'bundled',
   views: [
     {
       id: VIEW_ID,

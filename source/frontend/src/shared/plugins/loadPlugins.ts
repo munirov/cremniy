@@ -1,6 +1,7 @@
 import { PLUGINS } from '@plugins/index';
 
 import { registerPlugin } from './registry';
+import { isPluginDisabled } from './pluginState';
 
 /**
  * Discover and register every plugin shipped in the top-level `plugins/` folder.
@@ -13,6 +14,10 @@ import { registerPlugin } from './registry';
  */
 export function loadPlugins(): void {
   for (const plugin of PLUGINS) {
+    // Bundled plugins always load; a recommended plugin loads unless the user
+    // turned it off in the Extensions panel.
+    const bundled = (plugin.delivery ?? 'recommended') === 'bundled';
+    if (!bundled && isPluginDisabled(plugin.id)) continue;
     registerPlugin(plugin);
   }
 }

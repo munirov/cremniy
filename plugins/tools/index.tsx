@@ -27,6 +27,8 @@ import { SymbolTableToolPanel } from './SymbolTableToolPanel';
 const tools: PluginManifest = {
   id: 'tools',
   name: 'Binary Tools',
+  description: 'Reverse-engineering rail: hex, disassembler, strings, symbols, sections, functions, patches, resources.',
+  delivery: 'bundled',
   toolTabs: [
     {
       id: 'binary',

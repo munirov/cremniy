@@ -66,12 +66,25 @@ export type CommandContribution = {
   run: (args: Record<string, unknown>) => unknown;
 };
 
+/**
+ * How a plugin reaches the user. `bundled` ships with the IDE and is always on
+ * (e.g. Git). `recommended` is first-party/official but not part of the base
+ * install — it's enabled through the Extensions panel so the base package stays
+ * small (e.g. Connections). Defaults to `recommended` when omitted. (Third-party
+ * marketplace delivery is a later step — see PLUGINS.md.)
+ */
+export type PluginDelivery = 'bundled' | 'recommended';
+
 /** Everything a plugin contributes to the IDE. */
 export type PluginManifest = {
   /** Stable unique id (also the folder name under plugins/). */
   id: string;
-  /** Human-readable name (shown in a future plugins manager). */
+  /** Human-readable name (shown in the Extensions panel). */
   name: string;
+  /** One-line summary for the Extensions panel. */
+  description?: string;
+  /** Delivery model — see {@link PluginDelivery}. Defaults to `recommended`. */
+  delivery?: PluginDelivery;
   centerPanels?: CenterPanelContribution[];
   toolTabs?: ToolTabContribution[];
   /** Side-panel views (activity bar) this plugin adds — e.g. Source Control. */

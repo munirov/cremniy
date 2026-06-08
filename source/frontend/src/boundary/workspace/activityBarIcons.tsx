@@ -48,6 +48,19 @@ export function SearchIcon({ size = 16 }: { size?: number }) {
 // The git-branch glyph moved to the Git plugin (plugins/git/index.tsx →
 // railIconPath), since Source Control is now a plugin `view` contribution.
 
+export function ExtensionsIcon({ size = 16 }: { size?: number }) {
+  // The "blocks" glyph: three squares + one detached (rotated) square — the
+  // conventional extensions/plugins mark.
+  return (
+    <UiIcon size={size}>
+      <rect x="3" y="3" width="8" height="8" rx="1" />
+      <rect x="3" y="13" width="8" height="8" rx="1" />
+      <rect x="13" y="13" width="8" height="8" rx="1" />
+      <path d="M17 2.5l4.5 4.5-4.5 4.5-4.5-4.5z" />
+    </UiIcon>
+  );
+}
+
 export function ChevronDownIcon({ size = 15 }: { size?: number }) {
   return (
     <UiIcon size={size}>

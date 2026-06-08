@@ -4,9 +4,11 @@ import type { ReactNode } from 'react';
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import { pluginViews } from '@shared/plugins/registry';
 
+import { ExtensionsPanel } from '@boundary/extensions/ExtensionsPanel';
+
 import { WorkspaceFileTree } from './WorkspaceFileTree';
 import { SearchPanel } from './SearchPanel';
-import { ExplorerIcon, SearchIcon, ChevronDownIcon } from './activityBarIcons';
+import { ExplorerIcon, SearchIcon, ExtensionsIcon, ChevronDownIcon } from './activityBarIcons';
 import { ViewsMenu } from './ViewsMenu';
 
 import styles from './SidePanel.module.css';
@@ -55,7 +57,14 @@ function buildViews(): ViewEntry[] {
     icon: <PluginViewIcon path={v.railIconPath} />,
     render: v.render,
   }));
-  return [...core, ...plugin];
+  // Extensions (the plugin manager) sits last, like VS Code — a core view.
+  const extensions: ViewEntry = {
+    id: 'extensions',
+    label: 'Extensions',
+    icon: <ExtensionsIcon size={17} />,
+    render: () => <ExtensionsPanel />,
+  };
+  return [...core, ...plugin, extensions];
 }
 
 const PIN_STORAGE_KEY = 'cremniy.pinnedViews';
