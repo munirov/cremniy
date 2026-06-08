@@ -31,6 +31,9 @@ serialport = "4.9"
 # Pure-Rust SSH client (no system libssh / OpenSSL). Runs on the tokio runtime
 # Tauri already provides via `tauri::async_runtime`.
 russh = "0.45"
+# SFTP (file transfer) over a russh channel. 2.x only needs the channel's
+# byte-stream (AsyncRead+AsyncWrite), so it's decoupled from the russh version.
+russh-sftp = "2.3"
 # Handler trait in russh 0.45 is `#[async_trait]`; the macro isn't re-exported.
 async-trait = "0.1"
 # `mpsc` + `select!` for the SSH read/write loop. Tauri runs on tokio, but
