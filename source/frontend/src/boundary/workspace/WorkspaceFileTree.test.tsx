@@ -235,6 +235,37 @@ describe('WorkspaceFileTree', () => {
     });
   });
 
+  it('reveals an active file nested two folders deep by expanding its ancestors', async () => {
+    // The tricky case: activeFilePath is under folders that haven't loaded yet.
+    // The reveal must expand the whole chain (src → src/lib) so the lazily
+    // loaded file row appears and is selected — without anyone clicking.
+    ideSessionMocks.activeFilePath = '/w/src/lib/deep.ts';
+    // Key the listing on the requested directory so load order doesn't matter
+    // (ancestors load in parallel).
+    vi.mocked(listDirectoryEntries).mockImplementation((_root, dir) => {
+      switch (dir) {
+        case '/w':
+          return Promise.resolve([{ name: 'src', path: '/w/src', isDirectory: true }]);
+        case '/w/src':
+          return Promise.resolve([{ name: 'lib', path: '/w/src/lib', isDirectory: true }]);
+        case '/w/src/lib':
+          return Promise.resolve([
+            { name: 'deep.ts', path: '/w/src/lib/deep.ts', isDirectory: false },
+          ]);
+        default:
+          return Promise.resolve([]);
+      }
+    });
+
+    render(<WorkspaceFileTree workspaceRoot={{ path: '/w' }} />);
+
+    // Both ancestor folders auto-expand and the deep file surfaces, selected.
+    const deep = await screen.findByRole('treeitem', { name: 'deep.ts' });
+    expect(deep).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('treeitem', { name: 'src' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('treeitem', { name: 'lib' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('context menu on a file leaf offers New file and New folder (parent directory)', async () => {
     vi.mocked(listDirectoryEntries).mockResolvedValueOnce([
       { name: 'readme.md', path: '/w/readme.md', isDirectory: false },

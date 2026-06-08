@@ -12,7 +12,12 @@ import type { LegacyRef, MouseEvent } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import type { WorkspaceDirectoryEntry } from '@domain/workspace/directoryEntry';
-import { fileNameFromPath, joinFilePath, parentDirectoryPath } from '@domain/workspace/paths';
+import {
+  fileNameFromPath,
+  joinFilePath,
+  normalizeFsPath,
+  parentDirectoryPath,
+} from '@domain/workspace/paths';
 import { validateWorkspaceEntryName } from '@domain/workspace/workspaceEntryValidation';
 import {
   createDirectoryUnderWorkspace,
@@ -74,6 +79,30 @@ const LEAF_GLYPH_REM = 1.05;
 
 function rowPadRem(depth: number): number {
   return BASE_PAD_REM + depth * INDENT_REM;
+}
+
+/** Folder paths from the workspace root (exclusive) down to `filePath`'s parent
+ *  (inclusive), in root→down order — the directories the tree must expand so
+ *  `filePath`'s row becomes visible ("reveal active file"). The root itself is
+ *  omitted (its children are the top-level rows, so it's never an expandable
+ *  row). Returns [] when the file isn't under the root. Handles `/` and `\\`;
+ *  the climb compares via normalizeFsPath so Windows drive/UNC + case
+ *  differences don't break the match. */
+function ancestorFoldersToReveal(filePath: string, rootPath: string): string[] {
+  if (filePath === '' || rootPath === '') return [];
+  const rootKey = normalizeFsPath(rootPath);
+  const chain: string[] = [];
+  let dir = parentDirectoryPath(filePath);
+  while (dir !== '' && normalizeFsPath(dir) !== rootKey) {
+    chain.push(dir);
+    const parent = parentDirectoryPath(dir);
+    if (parent === dir) return []; // no upward progress — bail rather than loop
+    dir = parent;
+  }
+  // Valid only if the climb landed exactly on the root; otherwise the file lived
+  // outside the workspace and the partial chain is discarded.
+  if (normalizeFsPath(dir) !== rootKey) return [];
+  return chain.reverse();
 }
 
 /** Fallback row height (px) used for windowing math until a real row is measured.
@@ -189,6 +218,11 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set());
   // Roving-tabindex focus: path of the row that currently owns the tab stop.
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
+  // "Reveal active file" target: set when activeFilePath changes, cleared once
+  // its row is found + scrolled into view (or the chain is fully loaded without
+  // it). Kept separate from focusedPath because the row may not exist yet while
+  // its ancestor folders are still loading lazily.
+  const [pendingReveal, setPendingReveal] = useState<string | null>(null);
 
   // Centralized lazy child-loading. The recursive nodes used to each own their
   // children; the flat model needs one shared cache. `childCache` is dirPath →
@@ -854,6 +888,36 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     [flatRows],
   );
 
+  // --- Reveal the active file in the tree (VS Code "reveal active file") -----
+  // Fires ONLY when activeFilePath (or the workspace) changes — never on every
+  // render — so it doesn't undo the user's manual collapses. Expands the whole
+  // ancestor-folder chain at once: the lazy-load effect above iterates
+  // expandedPaths directly, so every level loads in parallel even before its
+  // parent is a visible row, and each level renders open as its children arrive.
+  // The actual select + scroll happens in the resolver effect below, once the
+  // target's row exists in the flat list.
+  useEffect(() => {
+    if (rootPath === '' || activeFilePath == null || activeFilePath === '') return;
+    const ancestors = ancestorFoldersToReveal(activeFilePath, rootPath);
+    if (ancestors.length > 0) {
+      setExpandedPaths((prev) => {
+        let changed = false;
+        const next = new Set(prev);
+        for (const p of ancestors) {
+          if (!next.has(p)) {
+            next.add(p);
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }
+    setPendingReveal(activeFilePath);
+    // Intentionally keyed only on the active file + root: re-running on
+    // expandedPaths/flatRows would re-expand folders the user just collapsed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFilePath, rootPath]);
+
   // The active indent guide: trace the focused tree row (or, before any focus,
   // the open file) up to its parent and brighten that column for the parent's
   // whole subtree, so the path to the selected item reads stronger than the rest.
@@ -913,6 +977,61 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
   const topPad = windowed ? startIndex * rowH : 0;
   const bottomPad = windowed ? Math.max(0, (total - endIndex) * rowH) : 0;
   const visibleRows = windowed ? flatRows.slice(startIndex, endIndex) : flatRows;
+
+  // Resolve a pending "reveal active file": once the target's row appears in the
+  // flat list (its ancestor folders have finished loading), select it (roving
+  // tab stop + active highlight) and centre it in the viewport. Re-runs as rows
+  // stream in. Does NOT pull DOM focus off the editor — VS Code likewise selects
+  // the row but leaves keyboard focus where it is. Bails when the whole chain is
+  // expanded + loaded yet the row never shows (file deleted/excluded), so a stale
+  // target can't linger.
+  useEffect(() => {
+    if (pendingReveal == null) return;
+    const idx = entryRows.findIndex((r) => r.path === pendingReveal);
+    if (idx >= 0) {
+      setFocusedPath(pendingReveal);
+      // Centre only when the row is outside the current window — an already
+      // visible file shouldn't jump.
+      if (windowed) {
+        const el = treeRootRef.current;
+        const row = entryRows[idx];
+        const flatIdx = row != null ? flatRows.indexOf(row) : -1;
+        if (el != null && flatIdx >= 0) {
+          const top = flatIdx * rowH;
+          const bottom = top + rowH;
+          if (top < el.scrollTop || bottom > el.scrollTop + viewportH) {
+            const nextTop = Math.max(0, Math.round(top - viewportH / 2 + rowH / 2));
+            el.scrollTop = nextTop;
+            setScrollTop(nextTop);
+          }
+        }
+      }
+      setPendingReveal(null);
+      return;
+    }
+    // Not found yet. If every ancestor is expanded and done loading (cached or
+    // errored, none still in flight) the target genuinely isn't here — stop.
+    const ancestors = ancestorFoldersToReveal(pendingReveal, rootPath);
+    const settled = ancestors.every(
+      (p) =>
+        expandedPaths.has(p) &&
+        !childLoading.has(p) &&
+        (childCache.has(p) || childErrors.has(p)),
+    );
+    if (settled) setPendingReveal(null);
+  }, [
+    pendingReveal,
+    entryRows,
+    flatRows,
+    expandedPaths,
+    childCache,
+    childErrors,
+    childLoading,
+    rootPath,
+    windowed,
+    rowH,
+    viewportH,
+  ]);
 
   // ----- Keyboard navigation (WAI-ARIA tree pattern) ----------------------
   // Index math over the flat entry list — not a DOM walk — so it works even when
