@@ -5,8 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_APP_PREFERENCES, type AppPreferences } from '@domain/preferences/appPreferences';
 import type { SettingsService } from '@domain/preferences/settingsService';
 
-import ideStyles from './layout/IdeWorkspace.module.css';
-
 vi.mock('@monaco-editor/react', () => ({
   default: ({
     value,
@@ -27,12 +25,33 @@ vi.mock('@monaco-editor/react', () => ({
   ),
 }));
 
+// The terminal panel mounts real xterm instances (canvas), which jsdom can't
+// drive. Stub it with a marker div so we can assert the panel's presence and
+// the workspace root it receives without paying the xterm cost.
 vi.mock('@boundary/terminal/TerminalFooterPanel', () => ({
   TerminalFooterPanel: ({ workspaceRoot }: { workspaceRoot: string | null }) => (
     <div data-testid="terminal-panel">Terminal panel {workspaceRoot ?? 'no workspace'}</div>
   ),
 }));
 
+// The real Files tree (rendered inside the dock) reads excluded-file patterns
+// from preferences over the Tauri bridge on mount. Tauri's `invoke` isn't
+// available under jsdom, so stub the bridge to resolve defaults — otherwise it
+// throws an unhandled rejection. RootApp drives its own prefs through the
+// injected settingsService mock, so this only affects the file tree.
+vi.mock('@infrastructure/preferences/preferencesBridge', async () => {
+  const { DEFAULT_APP_PREFERENCES: defaults } = await import(
+    '@domain/preferences/appPreferences'
+  );
+  return {
+    loadPreferences: vi.fn().mockResolvedValue(defaults),
+    savePreferences: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
+import { MenuSlotProvider, useMenuSlot } from './chrome/MenuSlotContext';
+import { TitleBar } from './chrome/TitleBar';
+import { NotificationProvider } from './notifications/NotificationContext';
 import { WorkspaceProvider } from './workspace/WorkspaceContext';
 import { RootApp } from './RootApp';
 
@@ -47,15 +66,36 @@ const settingsService: SettingsService = {
   importPreferences: vi.fn().mockResolvedValue(null),
 };
 
+/**
+ * Mirrors App.tsx's ChromeShell: the menu RootApp publishes into the MenuSlot
+ * is rendered by the TitleBar one level above the route, and the titlebar gear
+ * is wired to RootApp's settings action. Without this, the menu lives nowhere
+ * (the menu bar moved out of RootApp into the global titlebar).
+ */
+function ChromeShell({ initialEntry }: { initialEntry: string }) {
+  const { menu, settingsAction } = useMenuSlot();
+  return (
+    <div>
+      <TitleBar menu={menu} onOpenSettings={settingsAction ?? undefined} />
+      <Routes>
+        <Route path="/ide" element={<RootApp settingsService={settingsService} />} />
+        <Route path="/" element={<main>Welcome</main>} />
+      </Routes>
+      <span data-testid="route-probe">{initialEntry}</span>
+    </div>
+  );
+}
+
 function renderIde(initialEntry: string) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
-      <WorkspaceProvider>
-        <Routes>
-          <Route path="/ide" element={<RootApp settingsService={settingsService} />} />
-          <Route path="/" element={<main>Welcome</main>} />
-        </Routes>
-      </WorkspaceProvider>
+      <NotificationProvider>
+        <WorkspaceProvider>
+          <MenuSlotProvider>
+            <ChromeShell initialEntry={initialEntry} />
+          </MenuSlotProvider>
+        </WorkspaceProvider>
+      </NotificationProvider>
     </MemoryRouter>,
   );
 }
@@ -83,84 +123,81 @@ describe('RootApp', () => {
     mockSavePreferences.mockResolvedValue(undefined);
   });
 
-  it('navigates to Welcome when Close workspace is activated', () => {
+  it('renders the IDE shell regions (editor area, Files pane, tool rail, terminal)', async () => {
     renderIde('/ide');
 
-    fireEvent.click(screen.getByRole('button', { name: /close workspace/i }));
+    // RootLayout wraps the dock in a labelled "Editor area" region; the dock
+    // builds a Files pane and the right-edge tool selector rail.
+    expect(screen.getByRole('region', { name: /editor area/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /^files$/i })).toBeInTheDocument();
+    expect(screen.getByRole('tablist', { name: /tool selector/i })).toBeInTheDocument();
+    expect(await screen.findByTestId('terminal-panel')).toBeInTheDocument();
+
+    // The main menu bar RootApp publishes is now hosted by the titlebar slot.
+    expect(screen.getByRole('navigation', { name: /main menu/i })).toBeInTheDocument();
+  });
+
+  it('shows the idle editor welcome card when no file is open', () => {
+    renderIde('/ide');
+
+    // No active file + empty scratch buffer → IdeMonacoEditor renders the idle
+    // card (quick-action shortcut rows), not a Monaco surface.
+    expect(screen.getByText('Open file')).toBeInTheDocument();
+    expect(screen.getByText('Open folder')).toBeInTheDocument();
+    // Falls back to the empty Files state until a workspace is opened.
+    expect(screen.getByText(/no workspace folder open/i)).toBeInTheDocument();
+  });
+
+  it('shows the workspace path in the Files pane header from the root query', async () => {
+    const rootPath = 'C:\\Projects\\demo-app';
+    renderIde(`/ide?root=${encodeURIComponent(rootPath)}`);
+
+    // The Files pane is titled "Files — <root>" (its aria-label), and the
+    // mocked terminal panel (visible once prefs load) receives the same root.
+    expect(
+      screen.getByRole('region', {
+        name: new RegExp(`files — ${rootPath.replace(/\\/g, '\\\\')}`, 'i'),
+      }),
+    ).toBeInTheDocument();
+    expect(await screen.findByTestId('terminal-panel')).toHaveTextContent(rootPath);
+  });
+
+  it('navigates to Welcome when File → Close workspace is chosen', () => {
+    renderIde('/ide');
+
+    fireEvent.click(screen.getByRole('button', { name: /^file$/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /close workspace/i }));
 
     expect(screen.getByText('Welcome')).toBeInTheDocument();
   });
 
-  it('renders document editor shell', () => {
+  it('opens Settings as a center tab from the titlebar gear', async () => {
     renderIde('/ide');
-    expect(screen.getByRole('textbox', { name: /active document/i })).toBeInTheDocument();
-    expect(screen.getByTestId('ide-status-strip')).toBeInTheDocument();
-    expect(screen.getByText('Encoding: —')).toBeInTheDocument();
-    expect(screen.getByText(/Ln —, Col —/)).toBeInTheDocument();
+    // Let the prefs load settle so RootApp has published its titlebar settings
+    // action (the gear is wired in an effect after the first paint).
+    await screen.findByTestId('terminal-panel');
+
+    // The titlebar gear opens Settings in the generic center "tab space"
+    // (a tab, not a modal). The tab strip only appears once a panel is open.
+    fireEvent.click(screen.getByRole('button', { name: /^settings$/i }));
+
+    expect(await screen.findByRole('tab', { name: /^settings$/i })).toBeInTheDocument();
   });
 
-  it('shows workspace path from root query in Files sidebar', () => {
-    const rootPath = 'C:\\Projects\\demo-app';
-    renderIde(`/ide?root=${encodeURIComponent(rootPath)}`);
-
-    expect(screen.getByText(/Workspace:/)).toHaveTextContent(`Workspace: ${rootPath}`);
-  });
-
-  it('shows placeholder workspace label when root query is absent', () => {
-    renderIde('/ide');
-
-    expect(screen.getByText(/Workspace:/)).toHaveTextContent('Workspace: —');
-  });
-
-  it('exposes shell landmarks (banner, main, Terminal panel region)', () => {
-    const { container } = renderIde('/ide');
-    expect(screen.getByRole('banner')).toBeInTheDocument();
-    expect(screen.getByRole('main')).toBeInTheDocument();
-    expect(screen.getByTestId('ide-terminal-footer')).toBeInTheDocument();
-
-    expect(container.querySelectorAll('header')).toHaveLength(1);
-    expect(container.querySelectorAll('main')).toHaveLength(1);
-    expect(container.querySelectorAll('footer')).toHaveLength(1);
-    expect(container.querySelectorAll('aside')).toHaveLength(2);
-  });
-
-  it('includes expected semantic shell regions via section label', () => {
-    renderIde('/ide');
-    expect(screen.getByRole('region', { name: /editor area/i })).toBeInTheDocument();
-  });
-
-  it('renders IDE regions (Files sidebar, tabs, editor)', async () => {
-    renderIde('/ide');
-
-    const filesAside = screen.getByRole('complementary', { name: /^files$/i });
-    expect(filesAside).toHaveTextContent(/no workspace folder open/i);
-
-    expect(filesAside).toHaveClass(ideStyles.filesSidebar);
-
-    expect(screen.getByRole('region', { name: /document tabs/i })).toBeInTheDocument();
-    expect(screen.getByRole('complementary', { name: /tool tabs/i })).toBeInTheDocument();
-    expect(await screen.findByTestId('terminal-panel')).toBeInTheDocument();
-  });
-
-  it('toggles the live terminal panel from View without closing Settings', async () => {
+  it('toggles the live terminal panel from View and persists the preference', async () => {
     const rootPath = 'C:\\Projects\\demo-app';
     renderIde(`/ide?root=${encodeURIComponent(rootPath)}`);
 
     expect(await screen.findByTestId('terminal-panel')).toHaveTextContent(rootPath);
 
-    fireEvent.click(screen.getByRole('button', { name: /^file$/i }));
-    fireEvent.click(screen.getByRole('menuitem', { name: /preferences/i }));
-    expect(screen.getByRole('dialog', { name: /preferences/i })).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: /^view$/i }));
-    const checkedTerminalToggle = screen.getByRole('menuitemcheckbox', { name: /terminal panel/i });
-    expect(checkedTerminalToggle).toHaveAttribute('aria-checked', 'true');
-    fireEvent.click(checkedTerminalToggle);
+    const checkedToggle = screen.getByRole('menuitemcheckbox', { name: /terminal panel/i });
+    expect(checkedToggle).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(checkedToggle);
 
     await waitFor(() => {
       expect(screen.queryByTestId('terminal-panel')).not.toBeInTheDocument();
     });
-    expect(screen.getByRole('dialog', { name: /preferences/i })).toBeInTheDocument();
     expect(mockSavePreferences).toHaveBeenLastCalledWith({
       ...DEFAULT_APP_PREFERENCES,
       theme: 'dark',
@@ -169,12 +206,11 @@ describe('RootApp', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: /^view$/i }));
-    const uncheckedTerminalToggle = screen.getByRole('menuitemcheckbox', { name: /terminal panel/i });
-    expect(uncheckedTerminalToggle).toHaveAttribute('aria-checked', 'false');
-    fireEvent.click(uncheckedTerminalToggle);
+    const uncheckedToggle = screen.getByRole('menuitemcheckbox', { name: /terminal panel/i });
+    expect(uncheckedToggle).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(uncheckedToggle);
 
     expect(await screen.findByTestId('terminal-panel')).toHaveTextContent(rootPath);
-    expect(screen.getByRole('dialog', { name: /preferences/i })).toBeInTheDocument();
     expect(mockSavePreferences).toHaveBeenLastCalledWith({
       ...DEFAULT_APP_PREFERENCES,
       theme: 'dark',
@@ -219,18 +255,14 @@ describe('RootApp', () => {
     });
   });
 
-  it('toggles Monaco word wrap from the View menu and persists preference', async () => {
+  it('toggles word wrap from the View menu and persists the preference', async () => {
     renderIde('/ide');
 
-    const editor = screen.getByRole('textbox', { name: /active document/i });
-    expect(editor).toHaveAttribute('data-word-wrap', 'on');
-
+    // Word wrap defaults on; the View toggle reflects that and persists the flip.
     fireEvent.click(screen.getByRole('button', { name: /^view$/i }));
-    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: /word wrap/i }));
-
-    await waitFor(() => {
-      expect(editor).toHaveAttribute('data-word-wrap', 'off');
-    });
+    const wrapToggle = screen.getByRole('menuitemcheckbox', { name: /word wrap/i });
+    expect(wrapToggle).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(wrapToggle);
 
     await waitFor(() => {
       expect(mockSavePreferences).toHaveBeenLastCalledWith(

@@ -7,6 +7,12 @@ import { IdeMonacoEditor, type IdeEditorCommand } from './IdeMonacoEditor';
 const ideSessionMocks = vi.hoisted(() => ({
   documentText: 'body',
   setDocumentText: vi.fn(),
+  activeFilePath: '/proj/main.ts' as string | null,
+  revealTarget: null as { path: string; line: number; nonce: number } | null,
+}));
+
+const toolDockMocks = vi.hoisted(() => ({
+  selectToolTab: vi.fn(),
 }));
 
 const monacoMocks = vi.hoisted(() => ({
@@ -16,9 +22,16 @@ const monacoMocks = vi.hoisted(() => ({
     getAction: vi.fn(),
     hasTextFocus: vi.fn(),
     getPosition: vi.fn(),
+    // The model is updated for tab width / insert-spaces on mount + file change.
+    getModel: vi.fn(() => ({ updateOptions: vi.fn() })),
+    getRawOptions: vi.fn(() => ({ fontSize: 14 })),
+    revealLineInCenter: vi.fn(),
+    setPosition: vi.fn(),
     onDidChangeCursorPosition: vi.fn(),
     onDidFocusEditorWidget: vi.fn(),
     onDidBlurEditorWidget: vi.fn(),
+    // Wired in onMount to persist Ctrl+wheel zoom back into preferences.
+    onDidChangeConfiguration: vi.fn(),
   },
 }));
 
@@ -26,6 +39,14 @@ vi.mock('@boundary/workspace/IdeSessionContext', () => ({
   useIdeSession: () => ({
     documentText: ideSessionMocks.documentText,
     setDocumentText: ideSessionMocks.setDocumentText,
+    activeFilePath: ideSessionMocks.activeFilePath,
+    revealTarget: ideSessionMocks.revealTarget,
+  }),
+}));
+
+vi.mock('@boundary/workspace/ToolDockContext', () => ({
+  useToolDock: () => ({
+    selectToolTab: toolDockMocks.selectToolTab,
   }),
 }));
 
@@ -50,19 +71,30 @@ describe('IdeMonacoEditor', () => {
     monacoMocks.editorInstance.getAction.mockReset();
     monacoMocks.editorInstance.hasTextFocus.mockReset();
     monacoMocks.editorInstance.getPosition.mockReset();
+    monacoMocks.editorInstance.getModel.mockReturnValue({ updateOptions: vi.fn() });
+    monacoMocks.editorInstance.getRawOptions.mockReturnValue({ fontSize: 14 });
     monacoMocks.editorInstance.onDidChangeCursorPosition.mockReturnValue({ dispose: vi.fn() });
     monacoMocks.editorInstance.onDidFocusEditorWidget.mockReturnValue({ dispose: vi.fn() });
     monacoMocks.editorInstance.onDidBlurEditorWidget.mockReturnValue({ dispose: vi.fn() });
+    monacoMocks.editorInstance.onDidChangeConfiguration.mockReturnValue({ dispose: vi.fn() });
+    toolDockMocks.selectToolTab.mockReset();
+    ideSessionMocks.setDocumentText.mockReset();
+    ideSessionMocks.documentText = 'body';
+    ideSessionMocks.activeFilePath = '/proj/main.ts';
+    ideSessionMocks.revealTarget = null;
   });
 
   it('updates Monaco word wrap option when the View menu toggles it', () => {
+    // A dedicated effect mirrors the wordWrapEnabled prop into Monaco via
+    // updateOptions({ wordWrap }). (updateOptions is also called for fontSize /
+    // on mount, so assert on the wordWrap call specifically rather than "last".)
     const { rerender } = render(<IdeMonacoEditor wordWrapEnabled />);
 
-    expect(monacoMocks.editorInstance.updateOptions).toHaveBeenLastCalledWith({ wordWrap: 'on' });
+    expect(monacoMocks.editorInstance.updateOptions).toHaveBeenCalledWith({ wordWrap: 'on' });
 
     rerender(<IdeMonacoEditor wordWrapEnabled={false} />);
 
-    expect(monacoMocks.editorInstance.updateOptions).toHaveBeenLastCalledWith({ wordWrap: 'off' });
+    expect(monacoMocks.editorInstance.updateOptions).toHaveBeenCalledWith({ wordWrap: 'off' });
   });
 
   it('runs Monaco find action for the find editor command', () => {

@@ -7,8 +7,18 @@ const ideSessionMocks = vi.hoisted(() => ({
   openFilePaths: [] as string[],
   activeFilePath: null as string | null,
   dirtyFilePaths: [] as string[],
+  pinnedFilePaths: new Set<string>(),
+  openPanels: [] as string[],
+  activePanel: null as string | null,
+  previewFilePath: null as string | null,
   activateOpenFile: vi.fn(),
   closeOpenFile: vi.fn(),
+  closeOtherOpenFiles: vi.fn(),
+  closeAllOpenFiles: vi.fn(),
+  togglePinFilePath: vi.fn(),
+  reorderOpenFiles: vi.fn(),
+  activatePanel: vi.fn(),
+  closePanel: vi.fn(),
 }));
 
 vi.mock('@boundary/workspace/IdeSessionContext', () => ({
@@ -16,8 +26,18 @@ vi.mock('@boundary/workspace/IdeSessionContext', () => ({
     openFilePaths: ideSessionMocks.openFilePaths,
     activeFilePath: ideSessionMocks.activeFilePath,
     dirtyFilePaths: ideSessionMocks.dirtyFilePaths,
+    pinnedFilePaths: ideSessionMocks.pinnedFilePaths,
+    openPanels: ideSessionMocks.openPanels,
+    activePanel: ideSessionMocks.activePanel,
+    previewFilePath: ideSessionMocks.previewFilePath,
     activateOpenFile: ideSessionMocks.activateOpenFile,
     closeOpenFile: ideSessionMocks.closeOpenFile,
+    closeOtherOpenFiles: ideSessionMocks.closeOtherOpenFiles,
+    closeAllOpenFiles: ideSessionMocks.closeAllOpenFiles,
+    togglePinFilePath: ideSessionMocks.togglePinFilePath,
+    reorderOpenFiles: ideSessionMocks.reorderOpenFiles,
+    activatePanel: ideSessionMocks.activatePanel,
+    closePanel: ideSessionMocks.closePanel,
   }),
 }));
 
@@ -27,8 +47,18 @@ describe('IdeEditorTabStrip', () => {
     ideSessionMocks.openFilePaths = [];
     ideSessionMocks.activeFilePath = null;
     ideSessionMocks.dirtyFilePaths = [];
+    ideSessionMocks.pinnedFilePaths = new Set<string>();
+    ideSessionMocks.openPanels = [];
+    ideSessionMocks.activePanel = null;
+    ideSessionMocks.previewFilePath = null;
     ideSessionMocks.activateOpenFile.mockReset();
     ideSessionMocks.closeOpenFile.mockReset();
+    ideSessionMocks.closeOtherOpenFiles.mockReset();
+    ideSessionMocks.closeAllOpenFiles.mockReset();
+    ideSessionMocks.togglePinFilePath.mockReset();
+    ideSessionMocks.reorderOpenFiles.mockReset();
+    ideSessionMocks.activatePanel.mockReset();
+    ideSessionMocks.closePanel.mockReset();
   });
 
   it('shows empty state when no files are open', () => {
@@ -141,5 +171,65 @@ describe('IdeEditorTabStrip', () => {
     const tabs = screen.getAllByRole('tab');
     expect(tabs[0]).toHaveAttribute('tabIndex', '-1');
     expect(tabs[1]).toHaveAttribute('tabIndex', '0');
+  });
+
+  it('renders pinned tabs first with a pin glyph', () => {
+    ideSessionMocks.openFilePaths = ['/a/first.txt', '/a/pinned.txt'];
+    ideSessionMocks.activeFilePath = '/a/first.txt';
+    ideSessionMocks.pinnedFilePaths = new Set(['/a/pinned.txt']);
+
+    render(<IdeEditorTabStrip />);
+
+    const tabs = screen.getAllByRole('tab');
+    // Pinned tab sorts ahead of the unpinned one and carries the 📌 marker.
+    expect(tabs[0]).toHaveTextContent('📌');
+    expect(tabs[0]).toHaveTextContent('pinned.txt');
+    expect(tabs[1]).toHaveTextContent('first.txt');
+  });
+
+  it('renders a center-panel tab and activates it on click', () => {
+    // Non-file center tabs (settings/git) render alongside file tabs via
+    // resolveCenterPanel. With no file open, the empty-file branch is skipped
+    // because a panel is open.
+    ideSessionMocks.openPanels = ['settings'];
+    ideSessionMocks.activePanel = 'settings';
+
+    render(<IdeEditorTabStrip />);
+
+    const panelTab = screen.getByRole('tab', { name: 'Settings' });
+    expect(panelTab).toHaveAttribute('aria-selected', 'true');
+
+    // Re-clicking re-activates the panel through the session.
+    fireEvent.click(panelTab);
+    expect(ideSessionMocks.activatePanel).toHaveBeenCalledWith('settings');
+  });
+
+  it('closes a center-panel tab via its close control', () => {
+    ideSessionMocks.openPanels = ['advancedGit'];
+    ideSessionMocks.activePanel = 'advancedGit';
+
+    render(<IdeEditorTabStrip />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close Git' }));
+    expect(ideSessionMocks.closePanel).toHaveBeenCalledWith('advancedGit');
+  });
+
+  it('marks the active file tab as unselected while a panel is active', () => {
+    // A file tab is "active" only when its path matches AND no panel is showing.
+    ideSessionMocks.openFilePaths = ['/a/first.txt'];
+    ideSessionMocks.activeFilePath = '/a/first.txt';
+    ideSessionMocks.openPanels = ['settings'];
+    ideSessionMocks.activePanel = 'settings';
+
+    render(<IdeEditorTabStrip />);
+
+    expect(screen.getByRole('tab', { name: 'first.txt' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
+    expect(screen.getByRole('tab', { name: 'Settings' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 });

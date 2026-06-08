@@ -1,4 +1,12 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import {
+  act,
+  configure,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TerminalOutputEvent } from '@domain/terminal/terminalSession';
@@ -38,6 +46,27 @@ vi.mock('@infrastructure/tauri/bridge', () => ({
 }));
 
 import { TerminalFooterPanel } from './TerminalFooterPanel';
+
+// Each tab mounts a real xterm (canvas + fit + ResizeObserver), which is heavy.
+// Under full-suite parallelism a single mount can blow past RTL's default 1s
+// async-util timeout and make findBy*/waitFor flake. Give the async helpers more
+// headroom — this stabilises timing without weakening any assertion.
+configure({ asyncUtilTimeout: 5000 });
+
+/**
+ * The instance registers its output listener (`listenTerminalOutput`) and only
+ * then starts the session, which sets the active session id the event handler
+ * filters on. Waiting until BOTH a listener exists and the live shell label has
+ * rendered guarantees a delivered event is honoured rather than dropped — the
+ * shell label only appears after the session id is live.
+ */
+async function waitForLiveSession(): Promise<(event: TerminalOutputEvent) => void> {
+  await screen.findByRole('tab', { name: /powershell/i });
+  await waitFor(() => {
+    expect(terminalBridge.listeners.length).toBeGreaterThan(0);
+  });
+  return terminalBridge.listeners[0]!;
+}
 
 describe('TerminalFooterPanel', () => {
   beforeEach(() => {
@@ -97,7 +126,7 @@ describe('TerminalFooterPanel', () => {
 
   it('subscribes once and routes streamed stdout events to the live terminal', async () => {
     render(<TerminalFooterPanel workspaceRoot={'C:\\work'} />);
-    await screen.findByRole('tab', { name: /powershell/i });
+    const emit = await waitForLiveSession();
 
     expect(terminalBridge.listenTerminalOutput).toHaveBeenCalledTimes(1);
 
@@ -105,43 +134,41 @@ describe('TerminalFooterPanel', () => {
     // DOM-readable in jsdom). Assert it's handled without throwing and the
     // session stays running — i.e. no error/exit status surfaces.
     act(() => {
-      terminalBridge.listeners[0]?.({
-        sessionId: 'terminal-1',
-        stream: 'stdout',
-        data: 'hello from shell\n',
-      });
+      emit({ sessionId: 'terminal-1', stream: 'stdout', data: 'hello from shell\n' });
     });
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByLabelText(/terminal output/i)).toBeInTheDocument();
+    // Still the live shell tab — output never reverts the label.
+    expect(screen.getByRole('tab', { name: /powershell/i })).toBeInTheDocument();
   });
 
   it('handles stderr output events on the same write path as stdout', async () => {
     render(<TerminalFooterPanel workspaceRoot={'C:\\work'} />);
-    await screen.findByRole('tab', { name: /powershell/i });
+    const emit = await waitForLiveSession();
 
     // stderr is no longer prefixed/styled differently by the panel — it goes to
     // the same terminal write path. Just confirm it's accepted without error and
     // the session keeps running.
     act(() => {
-      terminalBridge.listeners[0]?.({
-        sessionId: 'terminal-1',
-        stream: 'stderr',
-        data: 'command failed\n',
-      });
+      emit({ sessionId: 'terminal-1', stream: 'stderr', data: 'command failed\n' });
     });
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /powershell/i })).toBeInTheDocument();
   });
 
   it('reverts the tab label when the bridge emits an exit event', async () => {
     render(<TerminalFooterPanel workspaceRoot={'C:\\work'} />);
-    await screen.findByRole('tab', { name: /powershell/i });
+    // Wait for a live session before delivering exit — the handler ignores events
+    // whose session id doesn't match the active one, which is only set once the
+    // shell has started (and the powershell label has rendered).
+    const emit = await waitForLiveSession();
 
     // On exit the instance reports a null shell, so the tab falls back to its
     // positional auto label — the DOM-observable signal that the session ended.
     act(() => {
-      terminalBridge.listeners[0]?.({
+      emit({
         sessionId: 'terminal-1',
         stream: 'exit',
         data: 'Terminal exited (exit status: 0).\n',
@@ -149,7 +176,9 @@ describe('TerminalFooterPanel', () => {
     });
 
     await screen.findByRole('tab', { name: /terminal 1/i });
-    expect(screen.queryByRole('tab', { name: /powershell/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('tab', { name: /powershell/i })).not.toBeInTheDocument();
+    });
   });
 
   it('opens an additional terminal tab when the new-terminal signal bumps', async () => {
