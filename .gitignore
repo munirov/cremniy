@@ -141,3 +141,12 @@ ParseCache.txt
 
 # Agent/orchestration scratch (not part of the product tree)
 .cursor/
+.claude/
+
+# Node / JS toolchain (Tauri frontend)
+node_modules/
+dist/
+
+# Rust / Cargo (Tauri backend build output)
+target/
+/source/backend/target/
