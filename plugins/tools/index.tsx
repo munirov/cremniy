@@ -24,11 +24,51 @@ import { SymbolTableToolPanel } from './SymbolTableToolPanel';
  * strokes readable at 16px (2×2 bytes, a listing, quoted T, hashes/indices,
  * stacked sections, f-in-braces, a wrench, a framed picture).
  */
+// 2×2 bytes glyph (same as the Binary/hex rail icon) for the Extensions row.
+const TOOLS_GLYPH = 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z';
+
+const TOOLS_README = `# Binary Tools
+
+The reverse-engineering rail: a set of read-only inspectors for binaries, on the
+right-edge **ToolRail**. Open a file, pick a tool, and read its structure.
+
+## Tools
+
+- **Binary / hex** — raw bytes in a hex viewer.
+- **Disassembler** — instruction listing.
+- **Strings** — printable strings pulled from the file.
+- **Symbols** — imports / exports / symbol table.
+- **Memory map** — sections and their layout.
+- **Function list** — discovered functions.
+- **Patches** — byte-level edits.
+- **Resources** — embedded PE resources.
+
+## How to use
+
+1. Open a binary file in the editor.
+2. Click a tool on the **ToolRail** (right edge) — it opens in the tool dock and reads the active file.
+3. Tools refresh automatically when the file changes on disk.
+
+Binary Tools ships **bundled** with Cremniy and is always on.
+`;
+
 const tools: PluginManifest = {
   id: 'tools',
   name: 'Binary Tools',
   description: 'Reverse-engineering rail: hex, disassembler, strings, symbols, sections, functions, patches, resources.',
   delivery: 'bundled',
+  icon: TOOLS_GLYPH,
+  version: '0.1.0',
+  author: 'Cremniy',
+  categories: ['Reverse Engineering', 'Binary'],
+  links: [
+    {
+      label: 'Documentation',
+      url: 'https://github.com/Ramazanov-Ruslan-IT/cremniy/blob/contrib/tauri-only-desktop/documentation/architecture/PLUGINS.md',
+    },
+    { label: 'Repository', url: 'https://github.com/Ramazanov-Ruslan-IT/cremniy' },
+  ],
+  readme: TOOLS_README,
   toolTabs: [
     {
       id: 'binary',

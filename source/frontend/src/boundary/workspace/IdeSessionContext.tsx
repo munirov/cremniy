@@ -881,3 +881,13 @@ export function useIdeSession(): IdeSessionContextValue {
   }
   return v;
 }
+
+/**
+ * Like {@link useIdeSession} but returns null instead of throwing when there is
+ * no provider. For components that may render outside the IDE shell (e.g. the
+ * Extensions panel in a unit test): they degrade gracefully — the openPanel
+ * affordance is simply inert — rather than requiring the whole provider tree.
+ */
+export function useIdeSessionOptional(): IdeSessionContextValue | null {
+  return useContext(IdeSessionContext);
+}

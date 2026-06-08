@@ -66,6 +66,14 @@ export type CommandContribution = {
   run: (args: Record<string, unknown>) => unknown;
 };
 
+/** An external link shown in a plugin's details page (Resources block). */
+export type PluginLink = {
+  /** Row label (e.g. "Documentation", "Repository"). */
+  label: string;
+  /** Target URL — opened externally. */
+  url: string;
+};
+
 /**
  * How a plugin reaches the user. `bundled` ships with the IDE and is always on
  * (e.g. Git). `recommended` is first-party/official but not part of the base
@@ -85,6 +93,32 @@ export type PluginManifest = {
   description?: string;
   /** Delivery model — see {@link PluginDelivery}. Defaults to `recommended`. */
   delivery?: PluginDelivery;
+
+  // ── Presentation metadata (Extensions panel + details page) ──────────────
+  // Optional, additive: a plugin without these still lists/works; supplying
+  // them makes its Extensions row and details center-tab richer.
+  /**
+   * Plugin glyph — a single 24×24 stroke SVG path `d` (same shape as a view's
+   * `railIconPath`), drawn `stroke="currentColor" fill="none"` at the card size
+   * and large in the details header. Keep it Lucide-style: thin, no fill.
+   */
+  icon?: string;
+  /** Semantic version string shown on the row / details (e.g. "0.1.0"). */
+  version?: string;
+  /** Publisher / author name shown muted next to the plugin name. */
+  author?: string;
+  /** Free-form category tags rendered as chips on the details page. */
+  categories?: string[];
+  /** External resource links (docs / repository) listed on the details page. */
+  links?: PluginLink[];
+  /**
+   * Long description in Markdown — the body of the plugin's details page,
+   * rendered by boundary/extensions/Markdown.tsx. This is where a contributor
+   * describes what the plugin does and how to use it. Falls back to
+   * `description` when absent.
+   */
+  readme?: string;
+
   centerPanels?: CenterPanelContribution[];
   toolTabs?: ToolTabContribution[];
   /** Side-panel views (activity bar) this plugin adds — e.g. Source Control. */

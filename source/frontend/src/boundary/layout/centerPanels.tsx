@@ -3,6 +3,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { AppPreferences } from '@domain/preferences/appPreferences';
 import { settingsService } from '@infrastructure/settings/settingsService';
 import { SettingsDialog } from '@boundary/settings/SettingsDialog';
+import { ExtensionDetailsPanel } from '@boundary/extensions/ExtensionDetailsPanel';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { pluginCenterPanels } from '@shared/plugins/registry';
@@ -46,6 +47,9 @@ type CenterPanelDef = { label: string; render: () => ReactNode };
  *  through {@link resolveCenterPanel}. */
 export const CENTER_PANELS: Record<string, CenterPanelDef> = {
   settings: { label: 'Settings', render: () => <SettingsTab /> },
+  // The Extensions details tab (VS Code's "Extension: <name>"). The Extensions
+  // panel sets the target plugin id in extensionDetailsStore before opening it.
+  extensionDetails: { label: 'Extension', render: () => <ExtensionDetailsPanel /> },
 };
 
 /** Look up a center panel by id: core panels first, then plugin contributions.
