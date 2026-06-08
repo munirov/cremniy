@@ -21,6 +21,7 @@ pub fn run() {
             read_workspace_file_bytes,
             read_workspace_file_chunk,
             get_workspace_file_size,
+            extract_workspace_file_strings,
             write_workspace_file_bytes,
             write_user_file,
             list_directory,
@@ -320,6 +321,99 @@ fn get_workspace_file_size(workspace_root: String, path: String) -> Result<u64, 
         return Err(String::from("path is not a regular file"));
     }
     Ok(meta.len())
+}
+
+#[derive(serde::Serialize)]
+struct ExtractedStringDto {
+    offset: u64,
+    length: u32,
+    text: String,
+}
+
+/// Stream a workspace file and pull out printable-ASCII runs (≥ `min_length`
+/// chars), up to `limit`. Reads in a fixed window and stops at the cap, so it
+/// stays bounded on a file of ANY size — the Strings tool no longer loads the
+/// whole file into the webview.
+#[tauri::command]
+fn extract_workspace_file_strings(
+    workspace_root: String,
+    path: String,
+    min_length: u32,
+    limit: u32,
+) -> Result<Vec<ExtractedStringDto>, String> {
+    use std::io::Read as _;
+
+    let root_canon = canonical_workspace_root(workspace_root.trim())?;
+    let path_canon = PathBuf::from(path.trim())
+        .canonicalize()
+        .map_err(|e| format!("path: {e}"))?;
+    assert_path_starts_with_root(&root_canon, &path_canon)?;
+    let meta = std::fs::metadata(&path_canon).map_err(|e| e.to_string())?;
+    if !meta.is_file() {
+        return Err(String::from("path is not a regular file"));
+    }
+
+    // Cap each run's length too, not just the count — a long printable region
+    // (embedded text / data) would otherwise produce a single multi-MB string
+    // and a huge result. `strings(1)`-style: split long runs at this boundary.
+    const MAX_STRING_LEN: usize = 4096;
+
+    let min_len = min_length.max(1) as usize;
+    let cap = limit.max(1) as usize;
+    let mut file = std::fs::File::open(&path_canon).map_err(|e| e.to_string())?;
+    let mut buf = vec![0_u8; 256 * 1024];
+    let mut out: Vec<ExtractedStringDto> = Vec::new();
+    let mut file_pos: u64 = 0;
+    let mut run_start: u64 = 0;
+    // `run` persists across reads so a string spanning a buffer boundary is kept.
+    let mut run: Vec<u8> = Vec::new();
+
+    'read: loop {
+        let n = file.read(&mut buf).map_err(|e| e.to_string())?;
+        if n == 0 {
+            break;
+        }
+        for (i, &b) in buf[..n].iter().enumerate() {
+            if (0x20..=0x7e).contains(&b) {
+                if run.is_empty() {
+                    run_start = file_pos + i as u64;
+                }
+                run.push(b);
+                if run.len() >= MAX_STRING_LEN {
+                    out.push(ExtractedStringDto {
+                        offset: run_start,
+                        length: run.len() as u32,
+                        text: String::from_utf8_lossy(&run).into_owned(),
+                    });
+                    run.clear();
+                    if out.len() >= cap {
+                        break 'read;
+                    }
+                }
+            } else {
+                if run.len() >= min_len {
+                    out.push(ExtractedStringDto {
+                        offset: run_start,
+                        length: run.len() as u32,
+                        text: String::from_utf8_lossy(&run).into_owned(),
+                    });
+                    if out.len() >= cap {
+                        break 'read;
+                    }
+                }
+                run.clear();
+            }
+        }
+        file_pos += n as u64;
+    }
+    if run.len() >= min_len && out.len() < cap {
+        out.push(ExtractedStringDto {
+            offset: run_start,
+            length: run.len() as u32,
+            text: String::from_utf8_lossy(&run).into_owned(),
+        });
+    }
+    Ok(out)
 }
 
 #[tauri::command]

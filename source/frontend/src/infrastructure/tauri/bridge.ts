@@ -69,6 +69,28 @@ export async function getWorkspaceFileSize(
   return invoke<number>("get_workspace_file_size", { workspaceRoot, path });
 }
 
+export type ExtractedFileString = { offset: number; length: number; text: string };
+
+/**
+ * Pull printable-ASCII strings out of a workspace file, streamed and bounded in
+ * the Rust backend — it reads the file in a fixed window and stops at `limit`,
+ * so the Strings tool works on a file of any size without loading it into the
+ * webview.
+ */
+export async function extractWorkspaceFileStrings(
+  workspaceRoot: string,
+  path: string,
+  minLength: number,
+  limit: number,
+): Promise<ExtractedFileString[]> {
+  return invoke<ExtractedFileString[]>("extract_workspace_file_strings", {
+    workspaceRoot,
+    path,
+    minLength,
+    limit,
+  });
+}
+
 export async function readWorkspaceFileBytes(
   workspaceRoot: string,
   path: string,
