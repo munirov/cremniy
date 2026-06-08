@@ -854,6 +854,19 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
     [flatRows],
   );
 
+  // The active indent guide: trace the focused tree row (or, before any focus,
+  // the open file) up to its parent and brighten that column for the parent's
+  // whole subtree, so the path to the selected item reads stronger than the rest.
+  const activeGuide = useMemo<ActiveGuide | null>(() => {
+    const target = focusedPath ?? activeFilePath;
+    if (target == null || target === '') return null;
+    const row = entryRows.find((r) => r.path === target);
+    if (row == null || row.depth <= 0) return null;
+    const sepIdx = Math.max(target.lastIndexOf('/'), target.lastIndexOf('\\'));
+    if (sepIdx < 0) return null;
+    return { level: row.depth - 1, prefix: target.slice(0, sepIdx + 1) };
+  }, [entryRows, focusedPath, activeFilePath]);
+
   // ----- Windowing --------------------------------------------------------
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportH, setViewportH] = useState(0);
@@ -1176,6 +1189,7 @@ export function WorkspaceFileTree({ workspaceRoot, filter }: WorkspaceFileTreePr
                   <Row
                     row={row}
                     activeFilePath={activeFilePath}
+                    activeGuide={activeGuide}
                     isFirstRow={row.path === firstEntryPath}
                     childLoading={childLoading.has(row.path)}
                     measureRef={row.path === firstSliceEntryPath ? firstRowRef : undefined}
@@ -1438,18 +1452,35 @@ function RowLabel({
   );
 }
 
+/** The indent-guide column that traces the focused/active item: `level` is the
+ *  parent's depth column, brightened for every row whose path is under `prefix`
+ *  (the parent's subtree) — VS Code's active indent guide. */
+type ActiveGuide = { level: number; prefix: string };
+
 /** Per-row indent guides: one faint vertical line per ancestor level, replacing
  *  the old per-<ul> guide (the flat list has no nested lists). Lines sit at the
- *  same columns the recursive guide used: parent_pad + 0.6rem. */
-function IndentGuides({ depth }: { depth: number }) {
+ *  same columns the recursive guide used: parent_pad + 0.6rem. The column leading
+ *  to the selected item (`activeGuide`) is drawn brighter so it reads as the
+ *  active path through the open folders. */
+function IndentGuides({
+  depth,
+  path,
+  activeGuide,
+}: {
+  depth: number;
+  path: string;
+  activeGuide: ActiveGuide | null;
+}) {
   if (depth <= 0) return null;
+  const activeLevel =
+    activeGuide != null && path.startsWith(activeGuide.prefix) ? activeGuide.level : -1;
   const lines = [];
   for (let d = 0; d < depth; d++) {
     lines.push(
       <span
         key={d}
         aria-hidden="true"
-        className={styles.indentGuide}
+        className={d === activeLevel ? styles.indentGuideActive : styles.indentGuide}
         style={{ left: `${rowPadRem(d) + 0.6}rem` }}
       />,
     );
@@ -1471,6 +1502,8 @@ type RowProps = {
   onMoveInto: (sourcePath: string, targetDirectory: string) => Promise<void>;
   /** Drag a sibling file onto another file → nest it under that file. */
   onNestUnder: (sourcePath: string, targetPath: string) => void;
+  /** The brightened indent-guide column tracing the focused/active item. */
+  activeGuide: ActiveGuide | null;
 };
 
 /**
@@ -1482,6 +1515,7 @@ type RowProps = {
 function Row({
   row,
   activeFilePath,
+  activeGuide,
   isFirstRow,
   childLoading,
   measureRef,
@@ -1611,7 +1645,7 @@ function Row({
         onContextMenu={(e) => onContextMenu(e, entry.path, true)}
         title={entry.name}
       >
-        <IndentGuides depth={depth} />
+        <IndentGuides depth={depth} path={entry.path} activeGuide={activeGuide} />
         <ChevronIcon open={expanded} />
         <FolderIcon open={expanded} />
         <RowLabel deco={deco} name={entry.name} baseClass={styles.dirName} />
@@ -1655,7 +1689,7 @@ function Row({
         onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
         title={entry.name}
       >
-        <IndentGuides depth={depth} />
+        <IndentGuides depth={depth} path={entry.path} activeGuide={activeGuide} />
         <span
           className={styles.nestTwistie}
           aria-hidden="true"
@@ -1706,7 +1740,7 @@ function Row({
       onContextMenu={(e) => onContextMenu(e, entry.path, false, isNested)}
       title={entry.name}
     >
-      <IndentGuides depth={depth} />
+      <IndentGuides depth={depth} path={entry.path} activeGuide={activeGuide} />
       <FileIcon name={entry.name} />
       <RowLabel deco={deco} name={entry.name} baseClass={styles.leafName} />
     </button>

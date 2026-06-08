@@ -100,6 +100,17 @@
   pointer-events: none;
 }
 
+/* The active indent guide — the column tracing the focused/selected item — reads
+   brighter than the faint ancestor lines (VS Code's highlightActiveIndentGuide). */
+.indentGuideActive {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
 .treeItem {
   margin: 0;
 }
