@@ -6,8 +6,8 @@ import type { IdeSessionContextValue } from '@boundary/workspace/IdeSessionConte
 import { DEFAULT_APP_PREFERENCES } from '@domain/preferences/appPreferences';
 import { readWorkspaceFileBytes, writeWorkspaceFileBytes } from '@infrastructure/tauri/bridge';
 
-import { BinaryToolPanel } from './BinaryToolPanel';
-import panelStyles from './BinaryToolPanel.module.css';
+import { BinaryToolPanel } from '@plugins/tools/BinaryToolPanel';
+import panelStyles from '@plugins/tools/BinaryToolPanel.module.css';
 
 const { mockUseIdeSession, mockUseWorkspaceRoot, mockLoadPreferences, mockSavePreferences } =
   vi.hoisted(() => ({

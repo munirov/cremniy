@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@boundary/tools/BinaryToolPanel', () => ({
+// The rail tools are a plugin contribution now; stub the binary panel so this
+// layout test stays about rail→dock wiring, not the panel's internals.
+vi.mock('@plugins/tools/BinaryToolPanel', () => ({
   BinaryToolPanel: () => <h2>Binary / hex</h2>,
 }));
 
@@ -19,6 +21,16 @@ vi.mock('@boundary/workspace/WorkspaceContext', () => ({
 import { IdeToolDock } from '@boundary/layout/IdeToolDock';
 import { ToolRail } from '@boundary/layout/ToolRail';
 import { ToolDockProvider, useToolDock } from '@boundary/workspace/ToolDockContext';
+import toolsPlugin from '@plugins/tools';
+import { registerPlugin } from '@shared/plugins/registry';
+
+// ToolRail / IdeToolDock read the plugin registry; the app populates it at
+// startup (loadPlugins). Tests don't boot main.tsx, so register the Binary
+// Tools plugin here so its rail tools are present (registerPlugin is idempotent
+// per id).
+beforeAll(() => {
+  registerPlugin(toolsPlugin);
+});
 
 function Probe() {
   const { activeToolTab } = useToolDock();

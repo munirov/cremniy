@@ -8,7 +8,7 @@ import type {
   DisassemblyCommandResult,
 } from '@domain/disassembly/disassembly';
 
-import { DisassemblerToolPanel } from './DisassemblerToolPanel';
+import { DisassemblerToolPanel } from '@plugins/tools/DisassemblerToolPanel';
 
 const { mockUseIdeSession, mockUseWorkspaceRoot } = vi.hoisted(() => ({
   mockUseIdeSession: vi.fn(),

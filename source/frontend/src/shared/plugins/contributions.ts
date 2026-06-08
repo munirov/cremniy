@@ -19,6 +19,19 @@ export type CenterPanelContribution = {
   render: () => ReactNode;
 };
 
+/**
+ * A tool a plugin adds to the right-edge ToolRail (and the tool dock it opens).
+ * The rail draws `railIconPath` as a 24×24 stroke icon; selecting the tool shows
+ * `render()` in the dock. `id` is the dock's active-tool key (also the agent
+ * `tool.select` id), so it must be unique across all plugins.
+ */
+export type ToolTabContribution = {
+  id: string;
+  label: string;
+  railIconPath: string;
+  render: () => ReactNode;
+};
+
 /** Which host menu a contributed item is placed under. */
 export type MenuId = 'terminal' | 'tools';
 
@@ -45,6 +58,7 @@ export type PluginManifest = {
   /** Human-readable name (shown in a future plugins manager). */
   name: string;
   centerPanels?: CenterPanelContribution[];
+  toolTabs?: ToolTabContribution[];
   menuItems?: MenuItemContribution[];
   commands?: CommandContribution[];
 };

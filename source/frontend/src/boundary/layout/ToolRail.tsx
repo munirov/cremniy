@@ -1,5 +1,5 @@
-import { TOOL_TAB_CATALOG } from '@domain/toolTabs/toolTabCatalog';
 import { useToolDock } from '@boundary/workspace/ToolDockContext';
+import { pluginToolTabs } from '@shared/plugins/registry';
 
 import styles from './ToolRail.module.css';
 
@@ -16,7 +16,7 @@ export function ToolRail() {
   const { activeToolTab, selectToolTab } = useToolDock();
   return (
     <aside className={styles.rail} aria-label="Tool selector" role="tablist" aria-orientation="vertical">
-      {TOOL_TAB_CATALOG.map((tab) => {
+      {pluginToolTabs().map((tab) => {
         const active = activeToolTab === tab.id;
         return (
           <button

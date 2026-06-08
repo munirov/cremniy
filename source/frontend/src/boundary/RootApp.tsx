@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { registerAgentCommands, registerAgentState } from '@shared/agent/agentBridge';
-import { pluginCommands } from '@shared/plugins/registry';
+import { pluginCommands, pluginToolTabs } from '@shared/plugins/registry';
 import { setPluginHost } from '@shared/plugins/host';
 import type { ToolTabId } from '@domain/toolTabs/toolTabId';
 import { AgentWorkspaceCommands } from '@boundary/agent/AgentWorkspaceCommands';
@@ -350,12 +350,13 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
   });
 
   useEffect(() => {
-    const VALID_TOOL_TABS: readonly ToolTabId[] = ['binary', 'codeEditor', 'disassembler'];
+    // Rail tools are plugin contributions — validate against the registered set.
     const toToolTabId = (value: unknown): ToolTabId => {
-      if (typeof value === 'string' && (VALID_TOOL_TABS as readonly string[]).includes(value)) {
-        return value as ToolTabId;
+      const validIds = pluginToolTabs().map((t) => t.id);
+      if (typeof value === 'string' && validIds.includes(value)) {
+        return value;
       }
-      throw new Error(`Invalid tool tab id. Expected one of: ${VALID_TOOL_TABS.join(', ')}.`);
+      throw new Error(`Invalid tool tab id. Expected one of: ${validIds.join(', ')}.`);
     };
 
     const unregisterState = registerAgentState('ui', () => {
@@ -389,7 +390,8 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       },
       {
         name: 'tool.select',
-        description: 'Select a tool panel { id: binary | codeEditor | disassembler }.',
+        description:
+          'Select a tool panel on the rail { id: binary | disassembler | strings | symbols | memoryMap | functions | patches | resources }.',
         run: (args) => agentUiRef.current.toolDock.setActiveToolTab(toToolTabId(args.id)),
       },
       {

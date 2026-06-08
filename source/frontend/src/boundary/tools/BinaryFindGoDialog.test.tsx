@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { BinaryFindGoDialog } from './BinaryFindGoDialog';
+import { BinaryFindGoDialog } from '@plugins/tools/BinaryFindGoDialog';
 
 function statusRegion() {
   return screen.getByRole('status');
