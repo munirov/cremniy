@@ -404,11 +404,8 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         description: 'Open the Preferences dialog (Edit → Settings).',
         run: () => agentUiRef.current.setSettingsOpen(true),
       },
-      {
-        name: 'dialog.openAdvancedGit',
-        description: 'Open the Advanced Git panel (branches, merge, rebase, stash, history, remotes) as a center tab.',
-        run: () => agentUiRef.current.openPanel('advancedGit'),
-      },
+      // dialog.openAdvancedGit is contributed by the Git plugin (registered via
+      // ...pluginCommands() below), not hardcoded here.
       {
         name: 'dialog.openReverseCalculator',
         description: 'Open the Reverse Calculator dialog (Tools).',

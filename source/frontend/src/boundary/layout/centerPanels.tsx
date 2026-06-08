@@ -3,7 +3,6 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { AppPreferences } from '@domain/preferences/appPreferences';
 import { settingsService } from '@infrastructure/settings/settingsService';
 import { SettingsDialog } from '@boundary/settings/SettingsDialog';
-import { AdvancedGitDialog } from '@boundary/workspace/AdvancedGitDialog';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { pluginCenterPanels } from '@shared/plugins/registry';
@@ -40,25 +39,13 @@ function SettingsTab() {
   );
 }
 
-function AdvancedGitTab() {
-  const workspaceRoot = useWorkspaceRoot();
-  const { closePanel } = useIdeSession();
-  return (
-    <AdvancedGitDialog
-      embedded
-      workspaceRoot={workspaceRoot?.path ?? null}
-      onClose={() => closePanel('advancedGit')}
-    />
-  );
-}
-
 type CenterPanelDef = { label: string; render: () => ReactNode };
 
 /** Core (first-party) non-file center panels. Plugins add more via contributions
- *  — resolve any panel (core or plugin) through {@link resolveCenterPanel}. */
+ *  (e.g. the Git plugin's Advanced Git tab) — resolve any panel (core or plugin)
+ *  through {@link resolveCenterPanel}. */
 export const CENTER_PANELS: Record<string, CenterPanelDef> = {
   settings: { label: 'Settings', render: () => <SettingsTab /> },
-  advancedGit: { label: 'Git', render: () => <AdvancedGitTab /> },
 };
 
 /** Look up a center panel by id: core panels first, then plugin contributions.

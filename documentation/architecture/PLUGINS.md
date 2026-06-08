@@ -15,13 +15,18 @@
 перспективе **STM32-паки взамен тулчейна ST**) — цель; пока плагины локальны и
 бандлятся на сборке. Не выдумывай удалённый загрузчик — регистрируйся в реестр.
 
-Эталонный пример — пак **Source Control (git)**. По нему и идёт разбор; файлы:
+Эталонный пример — пак **Source Control (git)**. UI-панели вынесены в плагин
+`plugins/git/` (вклады `views` + `centerPanels` + `commands`); декорации файлового
+дерева и backend пока остаются в ядре. Файлы:
 
-- `source/backend/src/git.rs` — backend-команда `git_status`
-- `source/frontend/src/infrastructure/tauri/bridge.ts` — мост `gitStatus`
-- `source/frontend/src/boundary/workspace/GitPanel.tsx` (+ `.module.css`) — UI
-- `source/frontend/src/boundary/workspace/SidePanel.tsx` — регистрация в реестре
-- `source/frontend/src/boundary/workspace/activityBarIcons.tsx` — иконка
+- `source/backend/src/git.rs` — backend-команда `git_status` (ядро)
+- `source/frontend/src/infrastructure/tauri/bridge.ts` — мост `gitStatus` (ядро)
+- `source/frontend/src/boundary/workspace/gitDecorations.ts` — точки в дереве (ядро)
+- `plugins/git/GitPanel.tsx` (+ `.module.css`) — Source Control view (плагин)
+- `plugins/git/AdvancedGitDialog.tsx` (+ `.module.css`) — Advanced Git center-tab
+- `plugins/git/index.tsx` — манифест: `views` (рейл-иконка git-branch) + `centerPanels`
+- `source/frontend/src/boundary/workspace/SidePanel.tsx` — рендерит core-вью
+  (Explorer/Search) + `pluginViews()` (git приходит отсюда)
 
 ---
 

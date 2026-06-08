@@ -5,6 +5,7 @@ import type {
   MenuItemContribution,
   PluginManifest,
   ToolTabContribution,
+  ViewContribution,
 } from './contributions';
 
 /**
@@ -33,6 +34,10 @@ export function pluginCenterPanels(): CenterPanelContribution[] {
 
 export function pluginToolTabs(): ToolTabContribution[] {
   return registered.flatMap((p) => p.toolTabs ?? []);
+}
+
+export function pluginViews(): ViewContribution[] {
+  return registered.flatMap((p) => p.views ?? []);
 }
 
 export function pluginMenuItems(menu: MenuId): MenuItemContribution[] {

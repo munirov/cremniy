@@ -11,15 +11,16 @@ import {
 
 import { runAgentCommand } from '@shared/agent/agentBridge';
 
-import { useIdeSession } from './IdeSessionContext';
-import { ChevronIcon } from './fileIcons';
+import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
+import { ChevronIcon } from '@boundary/workspace/fileIcons';
+
 import { GitRepoSection } from './GitRepoSection';
 
 import styles from './GitPanel.module.css';
 
 /**
- * Source Control view — the first real "pack" on the side-panel seam (see
- * documentation/architecture/PLUGINS.md). Discovers the git repos under the
+ * Source Control view — contributed by the Git plugin as a side-panel `view`
+ * (see documentation/architecture/PLUGINS.md). Discovers the git repos under the
  * workspace. One repo → its changes directly; multiple → two collapsible
  * sections like VS Code: REPOSITORIES (compact overview) and CHANGES (each repo
  * expands to its own commit box + groups + files), so commit is always per-repo.

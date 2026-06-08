@@ -16,8 +16,8 @@ import {
   type GitStatus,
 } from '@infrastructure/tauri/bridge';
 
-import { useIdeSession } from './IdeSessionContext';
-import { ChevronIcon, FileIcon, FolderIcon } from './fileIcons';
+import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
+import { ChevronIcon, FileIcon, FolderIcon } from '@boundary/workspace/fileIcons';
 
 import styles from './GitPanel.module.css';
 

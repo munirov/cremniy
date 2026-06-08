@@ -1,7 +1,18 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import gitPlugin from '@plugins/git';
+import { registerPlugin } from '@shared/plugins/registry';
 
 import { IdeEditorTabStrip } from './IdeEditorTabStrip';
+
+// The Advanced Git center panel ('advancedGit', label "Git") is a Git-plugin
+// contribution now; the tab strip resolves it via resolveCenterPanel → the
+// plugin registry, which the app fills at startup (loadPlugins). Tests don't
+// boot main.tsx, so register the Git plugin here (registerPlugin is idempotent).
+beforeAll(() => {
+  registerPlugin(gitPlugin);
+});
 
 const ideSessionMocks = vi.hoisted(() => ({
   openFilePaths: [] as string[],

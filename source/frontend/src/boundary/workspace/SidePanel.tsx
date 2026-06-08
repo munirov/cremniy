@@ -2,49 +2,86 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
+import { pluginViews } from '@shared/plugins/registry';
 
 import { WorkspaceFileTree } from './WorkspaceFileTree';
 import { SearchPanel } from './SearchPanel';
-import { GitPanel } from './GitPanel';
-import { ExplorerIcon, SearchIcon, GitIcon, ChevronDownIcon } from './activityBarIcons';
+import { ExplorerIcon, SearchIcon, ChevronDownIcon } from './activityBarIcons';
 import { ViewsMenu } from './ViewsMenu';
 
 import styles from './SidePanel.module.css';
 
-type ViewId = 'explorer' | 'search' | 'git';
+/**
+ * Draws a plugin view's `railIconPath` (a single 24×24 stroke `d`) the same way
+ * the core glyphs render — so a contributed view (e.g. Git) sits in the activity
+ * bar indistinguishably from Explorer / Search.
+ */
+function PluginViewIcon({ path, size = 17 }: { path: string; size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      style={{ flexShrink: 0 }}
+    >
+      <path d={path} />
+    </svg>
+  );
+}
+
+type ViewEntry = { id: string; label: string; icon: ReactNode; render?: () => ReactNode };
 
 /**
- * The registry of side-panel views. Today: Explorer + Search. This is the seam
- * the future plugin views (git, docker, the RE tools) register into — add an
- * entry here and a branch in the body, and it shows up in the activity bar /
- * chevron menu with a pin toggle.
+ * The side-panel views. Explorer + Search are CORE; everything else (Source
+ * Control, and future docker / RE packs) arrives through plugin `views`
+ * contributions — see documentation/architecture/PLUGINS.md. A plugin view
+ * carries its own `render()`; core views render a hardcoded body branch below.
+ * Computed per render so a freshly-loaded plugin shows up without extra wiring.
  */
-const VIEWS: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
-  { id: 'explorer', label: 'Explorer', icon: <ExplorerIcon size={17} /> },
-  { id: 'search', label: 'Search', icon: <SearchIcon size={17} /> },
-  { id: 'git', label: 'Source Control', icon: <GitIcon size={17} /> },
-];
+function buildViews(): ViewEntry[] {
+  const core: ViewEntry[] = [
+    { id: 'explorer', label: 'Explorer', icon: <ExplorerIcon size={17} /> },
+    { id: 'search', label: 'Search', icon: <SearchIcon size={17} /> },
+  ];
+  const plugin: ViewEntry[] = pluginViews().map((v) => ({
+    id: v.id,
+    label: v.label,
+    icon: <PluginViewIcon path={v.railIconPath} />,
+    render: v.render,
+  }));
+  return [...core, ...plugin];
+}
 
 const PIN_STORAGE_KEY = 'cremniy.pinnedViews';
 
-function loadPinned(): Set<ViewId> {
+function loadPinned(viewIds: string[]): Set<string> {
   try {
     const raw = localStorage.getItem(PIN_STORAGE_KEY);
     if (raw != null) {
       const arr: unknown = JSON.parse(raw);
       if (Array.isArray(arr)) {
-        return new Set(arr.filter((x): x is ViewId => VIEWS.some((v) => v.id === x)));
+        return new Set(arr.filter((x): x is string => viewIds.includes(x)));
       }
     }
   } catch {
     // ignore — fall back to all pinned
   }
-  return new Set(VIEWS.map((v) => v.id));
+  return new Set(viewIds);
 }
 
 export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | null }) {
-  const [active, setActive] = useState<ViewId>('explorer');
-  const [pinned, setPinned] = useState<Set<ViewId>>(loadPinned);
+  // Views are stable across a session (plugins load once at startup, before any
+  // UI), so building them once on mount is enough — and keeps pin state keyed to
+  // a fixed id set.
+  const [views] = useState<ViewEntry[]>(buildViews);
+  const [active, setActive] = useState<string>('explorer');
+  const [pinned, setPinned] = useState<Set<string>>(() => loadPinned(views.map((v) => v.id)));
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -55,7 +92,7 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
     }
   }, [pinned]);
 
-  const togglePin = (id: ViewId) =>
+  const togglePin = (id: string) =>
     setPinned((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -63,7 +100,8 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
       return next;
     });
 
-  const pinnedViews = VIEWS.filter((v) => pinned.has(v.id));
+  const pinnedViews = views.filter((v) => pinned.has(v.id));
+  const activeView = views.find((v) => v.id === active);
 
   return (
     <div className={styles.sidePanel}>
@@ -100,14 +138,14 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
             <WorkspaceFileTree workspaceRoot={workspaceRoot} />
           ) : active === 'search' ? (
             <SearchPanel workspaceRoot={workspaceRoot} />
-          ) : (
-            <GitPanel workspaceRoot={workspaceRoot} />
-          )}
+          ) : activeView?.render != null ? (
+            activeView.render()
+          ) : null}
         </div>
         {menuAnchor != null ? (
           <ViewsMenu
             anchor={menuAnchor}
-            rows={VIEWS.map((v) => ({
+            rows={views.map((v) => ({
               id: v.id,
               label: v.label,
               icon: v.icon,
@@ -115,10 +153,10 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
               active: active === v.id,
             }))}
             onSelect={(id) => {
-              setActive(id as ViewId);
+              setActive(id);
               setMenuAnchor(null);
             }}
-            onTogglePin={(id) => togglePin(id as ViewId)}
+            onTogglePin={(id) => togglePin(id)}
             onClose={() => setMenuAnchor(null)}
           />
         ) : null}

@@ -32,6 +32,21 @@ export type ToolTabContribution = {
   render: () => ReactNode;
 };
 
+/**
+ * A view a plugin adds to the left-edge activity bar / side panel (alongside the
+ * core Explorer + Search). The bar draws `railIconPath` as a 24×24 stroke icon;
+ * selecting the view shows `render()` in the panel body. `id` is the active-view
+ * key (and the pinned-views storage key), so it must be unique across all
+ * plugins. `render` takes no args — a view needing the workspace root reads it
+ * via useWorkspaceRoot() in a small wrapper component.
+ */
+export type ViewContribution = {
+  id: string;
+  label: string;
+  railIconPath: string;
+  render: () => ReactNode;
+};
+
 /** Which host menu a contributed item is placed under. */
 export type MenuId = 'terminal' | 'tools';
 
@@ -59,6 +74,8 @@ export type PluginManifest = {
   name: string;
   centerPanels?: CenterPanelContribution[];
   toolTabs?: ToolTabContribution[];
+  /** Side-panel views (activity bar) this plugin adds — e.g. Source Control. */
+  views?: ViewContribution[];
   menuItems?: MenuItemContribution[];
   commands?: CommandContribution[];
 };
