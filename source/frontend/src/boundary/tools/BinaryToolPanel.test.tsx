@@ -17,10 +17,18 @@ const { mockUseIdeSession, mockUseWorkspaceRoot, mockLoadPreferences, mockSavePr
     mockSavePreferences: vi.fn(),
   }));
 
-vi.mock('@infrastructure/tauri/bridge', () => ({
-  readWorkspaceFileBytes: vi.fn(),
-  writeWorkspaceFileBytes: vi.fn(),
-}));
+vi.mock('@infrastructure/tauri/bridge', () => {
+  const readWorkspaceFileBytes = vi.fn();
+  return {
+    readWorkspaceFileBytes,
+    // The panel loads through the size-guarded variant; delegate to the same
+    // mock so existing per-test `readWorkspaceFileBytes` setups still drive it.
+    readWorkspaceFileBytesForAnalysis: (root: string, path: string) =>
+      readWorkspaceFileBytes(root, path),
+    writeWorkspaceFileBytes: vi.fn(),
+    getWorkspaceFileSize: vi.fn().mockResolvedValue(0),
+  };
+});
 
 // BinaryToolPanel reads hex layout prefs on mount; stub the bridge so it doesn't
 // hit the (unavailable) Tauri invoke and reject in the background.

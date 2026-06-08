@@ -77,6 +77,37 @@ export async function readWorkspaceFileBytes(
   return new Uint8Array(bytes);
 }
 
+/** Hard cap for tools that load a whole file for inline analysis (hex, strings,
+ *  disassembly string-overlay). The byte tools read the entire file as a
+ *  `number[]` across the IPC bridge — for a multi-hundred-MB file that balloons
+ *  webview memory into the gigabytes and can hang it. Large files need windowed
+ *  reads (`readWorkspaceFileChunk`); until that lands, refuse to load past this. */
+export const MAX_INLINE_ANALYSIS_BYTES = 16 * 1024 * 1024; // 16 MiB
+
+function formatMiB(n: number): string {
+  const mib = n / (1024 * 1024);
+  return `${mib < 10 ? mib.toFixed(1) : Math.round(mib)} MiB`;
+}
+
+/**
+ * Read a whole workspace file for inline analysis, but refuse files past
+ * {@link MAX_INLINE_ANALYSIS_BYTES}. Throws a user-readable error the tool panels
+ * surface as-is, instead of letting a huge read spike memory / freeze the UI.
+ */
+export async function readWorkspaceFileBytesForAnalysis(
+  workspaceRoot: string,
+  path: string,
+  maxBytes: number = MAX_INLINE_ANALYSIS_BYTES,
+): Promise<Uint8Array> {
+  const size = await getWorkspaceFileSize(workspaceRoot, path);
+  if (size > maxBytes) {
+    throw new Error(
+      `File is ${formatMiB(size)} — too large to analyse inline (limit ${formatMiB(maxBytes)}). Large-file support is on the way.`,
+    );
+  }
+  return readWorkspaceFileBytes(workspaceRoot, path);
+}
+
 export async function writeWorkspaceFileBytes(
   workspaceRoot: string,
   path: string,

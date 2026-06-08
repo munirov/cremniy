@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { fileNameFromPath } from '@domain/workspace/paths';
 import { extractAsciiStrings, filterStrings, type ExtractedString } from '@domain/strings/stringExtraction';
-import { readWorkspaceFileBytes } from '@infrastructure/tauri/bridge';
+import { readWorkspaceFileBytesForAnalysis } from '@infrastructure/tauri/bridge';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useToolDock } from '@boundary/workspace/ToolDockContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
@@ -32,7 +32,7 @@ export function StringsToolPanel() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    void readWorkspaceFileBytes(workspacePath, activeFilePath)
+    void readWorkspaceFileBytesForAnalysis(workspacePath, activeFilePath)
       .then((bytes) => {
         if (cancelled) return;
         const extracted = extractAsciiStrings(bytes, minLength);

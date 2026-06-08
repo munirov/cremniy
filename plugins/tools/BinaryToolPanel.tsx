@@ -35,7 +35,7 @@ import { computeVisibleHexRows, type HexRow } from '@domain/hexView/hexViewModel
 import { DEFAULT_HEX_OPTIONS, type HexOptions } from '@domain/preferences/appPreferences';
 import { fileNameFromPath } from '@domain/workspace/paths';
 import { loadPreferences } from '@infrastructure/preferences/preferencesBridge';
-import { readWorkspaceFileBytes, writeWorkspaceFileBytes } from '@infrastructure/tauri/bridge';
+import { readWorkspaceFileBytesForAnalysis, writeWorkspaceFileBytes } from '@infrastructure/tauri/bridge';
 import { useBinarySelection, useSetBinarySelection } from '@boundary/workspace/BinarySelectionContext';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
@@ -336,8 +336,9 @@ export function BinaryToolPanel() {
     let cancelled = false;
     setLoadState({ status: 'loading' });
 
-    // Bytes loaded via Tauri, like WorkspaceFileTree.
-    void readWorkspaceFileBytes(workspacePath, activeFilePath).then(
+    // Bytes loaded via Tauri, like WorkspaceFileTree. Guarded by a size cap so a
+    // huge file can't balloon webview memory loading the whole thing as a number[].
+    void readWorkspaceFileBytesForAnalysis(workspacePath, activeFilePath).then(
       (data) => {
         if (!cancelled) {
           setLoadState({ status: 'ready', buffer: createBinaryBufferState(data) });

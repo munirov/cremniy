@@ -27,7 +27,11 @@ import {
 } from '@domain/disassembly/stringRefs';
 import { parseHexByteSequence } from '@domain/hexView/hexBufferSearch';
 import { fileNameFromPath } from '@domain/workspace/paths';
-import { readWorkspaceFileBytes, writeWorkspaceFileBytes } from '@infrastructure/tauri/bridge';
+import {
+  readWorkspaceFileBytes,
+  readWorkspaceFileBytesForAnalysis,
+  writeWorkspaceFileBytes,
+} from '@infrastructure/tauri/bridge';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 
@@ -239,7 +243,7 @@ export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanel
       return;
     }
     let cancelled = false;
-    void readWorkspaceFileBytes(workspacePath, activeFilePath).then(
+    void readWorkspaceFileBytesForAnalysis(workspacePath, activeFilePath).then(
       (bytes) => {
         if (!cancelled) {
           setStringIndex(indexStringsByFileOffset(extractAsciiStrings(bytes)));
