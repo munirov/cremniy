@@ -131,7 +131,7 @@ You constantly **switch** between different windows, and the tools are **not lin
 |  |  |
 |---|---|
 | **One window, every tool**<br>![Overview](screenshots/01-overview.png) | **Hex / binary editor**<br>![Hex editor](screenshots/02-hex.png) |
-| **Source control, built in**<br>![Git](screenshots/03-git.png) | **Everything is a plugin**<br>![Extensions](screenshots/04-extensions.png) |
+| **Disassembler**<br>![Disassembler](screenshots/03-disasm.png) | **Everything is a plugin**<br>![Extensions](screenshots/05-extensions.png) |
 
 → **[Full screenshot gallery](screenshots/README.md)** — every tool with descriptions.
 
@@ -263,7 +263,7 @@ npm run tauri:build
 |  |  |
 |---|---|
 | **Все инструменты в одном окне**<br>![Обзор](screenshots/01-overview.png) | **HEX / бинарный редактор**<br>![HEX](screenshots/02-hex.png) |
-| **Встроенный контроль версий**<br>![Git](screenshots/03-git.png) | **Всё — плагин**<br>![Extensions](screenshots/04-extensions.png) |
+| **Дизассемблер**<br>![Disassembler](screenshots/03-disasm.png) | **Всё — плагин**<br>![Extensions](screenshots/05-extensions.png) |
 
 → **[Полная галерея скриншотов](screenshots/README.md)** — все инструменты с описанием.
 

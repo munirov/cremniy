@@ -1,8 +1,9 @@
 # Screenshots
 
 A visual tour of Cremniy — an integrated environment for low-level and
-reverse-engineering work. Every tool lives in one window and the feature set is
-built from plugins. · Визуальный тур по Cremniy.
+reverse-engineering work. Every tool lives in one window, binaries open straight
+from the file tree, and the feature set is built from plugins. · Визуальный тур
+по Cremniy.
 
 ---
 
@@ -22,17 +23,32 @@ window — the whole low-level workflow without switching between separate apps.
 
 ![Hex editor](02-hex.png)
 
-Byte-level editing with side-by-side hex and ASCII panes, undo/redo and patch
-export. Recognises common container formats (ELF, PE, MBR and friends).
+Open any file as bytes — side-by-side hex and ASCII panes, undo/redo and patch
+export. The format panel recognises common containers (ELF, PE, MBR) or falls
+back to a raw byte stream.
 
-> Правка на уровне байтов: hex- и ASCII-панели рядом, undo/redo и экспорт
-> патчей. Распознаёт распространённые форматы (ELF, PE, MBR и другие).
+> Откройте любой файл как байты — hex- и ASCII-панели рядом, undo/redo и экспорт
+> патчей. Панель формата распознаёт ELF, PE, MBR или показывает сырой поток.
 
 ---
 
-### 3. Source control, built in · Встроенный контроль версий
+### 3. Disassembler · Дизассемблер
 
-![Git](03-git.png)
+![Disassembler](03-disasm.png)
+
+Disassemble an executable into annotated x86 / x64 — sections, function labels,
+string references and inline byte patching. Runs on an embedded `iced-x86`
+engine, so no external toolchain is required.
+
+> Дизассемблирование исполняемого файла в x86 / x64 — секции, метки функций,
+> строковые ссылки и патчинг байтов. Работает на встроенном движке `iced-x86`,
+> внешний тулчейн не нужен.
+
+---
+
+### 4. Source control, built in · Встроенный контроль версий
+
+![Git](04-git.png)
 
 The Git plugin opens as a center tab — local and remote branches, stash,
 history and merge/rebase, working against a real repository.
@@ -42,9 +58,9 @@ history and merge/rebase, working against a real repository.
 
 ---
 
-### 4. Everything is a plugin · Всё — плагин
+### 5. Everything is a plugin · Всё — плагин
 
-![Extensions](04-extensions.png)
+![Extensions](05-extensions.png)
 
 Connections, Source Control and Binary Tools are plugins. Enable or disable any
 of them from the Extensions panel — the UI appears or disappears live, with no
@@ -56,9 +72,9 @@ reload.
 
 ---
 
-### 5. A page for every plugin · Страница у каждого плагина
+### 6. A page for every plugin · Страница у каждого плагина
 
-![Plugin details](05-plugin-details.png)
+![Plugin details](06-plugin-details.png)
 
 Each plugin has its own details tab — description, the panels and commands it
 contributes, version, author and links — rendered from the plugin's manifest.
@@ -68,9 +84,9 @@ contributes, version, author and links — rendered from the plugin's manifest.
 
 ---
 
-### 6. Connections · Подключения
+### 7. Connections · Подключения
 
-![Connections](06-connections.png)
+![Connections](07-connections.png)
 
 Save serial, SSH and SFTP hosts and open them as terminal tabs — part of the
 Connections plugin.
@@ -80,9 +96,9 @@ Connections plugin.
 
 ---
 
-### 7. SFTP file transfer · Передача файлов по SFTP
+### 8. SFTP file transfer · Передача файлов по SFTP
 
-![SFTP](07-sftp.png)
+![SFTP](08-sftp.png)
 
 A dual-pane local ↔ remote file browser over SSH — upload and download without
 leaving the IDE.
