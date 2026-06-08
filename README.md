@@ -26,6 +26,24 @@
 
 <br>
 
+## Download
+
+Pre-built installers for the latest release:
+
+| OS | Installer | |
+|----|-----------|---|
+| **Windows** | `.exe` (NSIS) or `.msi` | [⬇ Latest release](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
+| **macOS** | `.dmg` | [⬇ Latest release](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
+| **Linux** | `.AppImage` or `.deb` | [⬇ Latest release](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
+
+Builds are currently **unsigned**, so the OS may warn on first launch:
+
+- **Windows** — SmartScreen: *More info* → *Run anyway*.
+- **macOS** — right-click the app → *Open* (or run `xattr -dr com.apple.quarantine /Applications/Cremniy.app`).
+- **Linux** — `chmod +x Cremniy_*.AppImage`, then run it. The `.deb` installs with `sudo apt install ./Cremniy_*.deb`.
+
+> If no installers are attached to the latest release yet, the first release hasn't been published — a maintainer publishes one by pushing a `vX.Y.Z` tag, which runs the [release workflow](.github/workflows/release.yml) to build all three OSes. Until then, build from source ([Development](#desktop-app-tauri--react) below).
+
 ## Desktop app (Tauri + React)
 
 The in-repo desktop product is **Tauri 2 + React + TypeScript** under [`source/frontend/`](source/frontend/). Architecture: [BMAP](documentation/architecture/BMAP.md).
@@ -125,6 +143,24 @@ Distributed under the terms described in [LICENSE](LICENSE).
 <h6 align="center">Все инструменты для низкоуровневой разработки объединены и связаны в одном приложении — пишите код, редактируйте байты и анализируйте бинарники без лишних окон</h6>
 
 <br>
+
+## Скачать
+
+Готовые установщики последнего релиза:
+
+| ОС | Установщик | |
+|----|-----------|---|
+| **Windows** | `.exe` (NSIS) или `.msi` | [⬇ Последний релиз](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
+| **macOS** | `.dmg` | [⬇ Последний релиз](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
+| **Linux** | `.AppImage` или `.deb` | [⬇ Последний релиз](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
+
+Сборки пока **без подписи**, поэтому ОС может предупредить при первом запуске:
+
+- **Windows** — SmartScreen: *Подробнее* → *Выполнить в любом случае*.
+- **macOS** — ПКМ по приложению → *Открыть* (или `xattr -dr com.apple.quarantine /Applications/Cremniy.app`).
+- **Linux** — `chmod +x Cremniy_*.AppImage`, затем запустить. `.deb` ставится через `sudo apt install ./Cremniy_*.deb`.
+
+> Если к последнему релизу ещё не приложены установщики — первый релиз не опубликован. Мейнтейнер публикует его пушем тега `vX.Y.Z`, который запускает [workflow релиза](.github/workflows/release.yml) и собирает все три ОС. Пока — сборка из исходников ([Разработка](#десктопное-приложение-tauri--react) ниже).
 
 ## Десктопное приложение (Tauri + React)
 
