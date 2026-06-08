@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { ExtensionDetailsPanel } from './ExtensionDetailsPanel';
@@ -33,5 +33,17 @@ describe('ExtensionDetailsPanel', () => {
     setSelectedExtension('does-not-exist');
     render(<ExtensionDetailsPanel />);
     expect(screen.getByText(/select an extension/i)).toBeInTheDocument();
+  });
+
+  it('switches to a different plugin live when the store changes (no remount)', () => {
+    setSelectedExtension('git');
+    render(<ExtensionDetailsPanel />);
+    expect(screen.getByLabelText('Extension: Git')).toBeInTheDocument();
+
+    // Re-pointing the store (what clicking another row does) must update the same
+    // mounted panel — the regression: it used to keep showing the old plugin.
+    act(() => setSelectedExtension('tools'));
+    expect(screen.getByLabelText('Extension: Binary Tools')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Extension: Git')).not.toBeInTheDocument();
   });
 });

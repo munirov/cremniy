@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from 'react';
+
 import { PLUGINS } from '@plugins/index';
 import type { PluginManifest } from '@shared/plugins/contributions';
 import { isPluginDisabled } from '@shared/plugins/pluginState';
@@ -6,7 +8,7 @@ import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
 import { Markdown } from './Markdown';
 import { PluginGlyph } from './PluginGlyph';
-import { getSelectedExtension } from './extensionDetailsStore';
+import { getSelectedExtension, subscribeSelectedExtension } from './extensionDetailsStore';
 
 import styles from './ExtensionDetailsPanel.module.css';
 
@@ -45,8 +47,13 @@ function contributes(p: PluginManifest): ContribRow[] {
 export function ExtensionDetailsPanel() {
   // Re-render live when the plugin is toggled (here or in the Extensions list).
   useRegistryVersion();
-
-  const id = getSelectedExtension();
+  // …and when the Extensions list points the tab at a different plugin (opening
+  // an already-active tab is a no-op at the session level, so observe the store).
+  const id = useSyncExternalStore(
+    subscribeSelectedExtension,
+    getSelectedExtension,
+    getSelectedExtension,
+  );
   const plugin = id != null ? PLUGINS.find((p) => p.id === id) : undefined;
 
   if (plugin == null) {
