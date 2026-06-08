@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor/IdeMonacoEditor';
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
 import { BinaryFilePlaceholder } from '@boundary/editor/BinaryFilePlaceholder';
+import { ImageTab } from '@boundary/editor/ImageTab';
 import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
 import { resolveCenterPanel } from '@boundary/layout/centerPanels';
@@ -263,6 +264,16 @@ export function IdeDockview({
         ) : null}
         {ide.activePanel != null ? (
           <div className={styles.editorBody}>{resolveCenterPanel(ide.activePanel)?.render() ?? null}</div>
+        ) : ide.activeFileIsBinary && isImagePath(ide.activeFilePath) ? (
+          <>
+            <IdeBreadcrumb
+              filePath={ide.activeFilePath}
+              workspaceRoot={workspaceRoot?.path ?? null}
+            />
+            <div className={styles.editorBody}>
+              <ImageTab filePath={ide.activeFilePath} />
+            </div>
+          </>
         ) : ide.activeFileIsBinary ? (
           <>
             <IdeBreadcrumb
@@ -452,6 +463,29 @@ export function IdeDockview({
       ) : null}
     </div>
   );
+}
+
+/** Raster image extensions we render in an ImageTab instead of the byte placeholder. */
+const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'webp',
+  'bmp',
+  'ico',
+]);
+
+/** True when the path's (lowercased) extension is a raster image we can preview. */
+function isImagePath(path: string | null): boolean {
+  if (path == null) {
+    return false;
+  }
+  const dot = path.lastIndexOf('.');
+  if (dot < 0) {
+    return false;
+  }
+  return IMAGE_EXTENSIONS.has(path.slice(dot + 1).toLowerCase());
 }
 
 function parseLayout(raw: unknown): IdeLayoutSizes {
