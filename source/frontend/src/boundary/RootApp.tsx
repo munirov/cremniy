@@ -4,6 +4,9 @@ import { registerAgentCommands, registerAgentState } from '@shared/agent/agentBr
 import { pluginCommands, pluginToolTabs } from '@shared/plugins/registry';
 import { useRegistryVersion } from '@shared/plugins/useRegistry';
 import { setPluginHost } from '@shared/plugins/host';
+import { isPluginDisabled } from '@shared/plugins/pluginState';
+import { setPluginActive } from '@shared/plugins/pluginToggle';
+import { PLUGINS } from '@plugins/index';
 import type { ToolTabId } from '@domain/toolTabs/toolTabId';
 import { AgentWorkspaceCommands } from '@boundary/agent/AgentWorkspaceCommands';
 
@@ -434,6 +437,31 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
           (u.openPanels ?? []).forEach((id) => u.closePanel(id));
           u.setCalcOpen(false);
           u.setRefsOpen(null);
+        },
+      },
+      {
+        name: 'plugin.list',
+        description:
+          'List all plugins { } — id, name, delivery (bundled/recommended) and whether enabled.',
+        run: () =>
+          PLUGINS.map((p) => ({
+            id: p.id,
+            name: p.name,
+            delivery: p.delivery ?? 'recommended',
+            enabled: !isPluginDisabled(p.id),
+          })),
+      },
+      {
+        name: 'plugin.setEnabled',
+        description:
+          'Enable or disable a plugin live { id, enabled: boolean } — its UI appears/disappears immediately.',
+        run: (args) => {
+          const id = String(args.id ?? '');
+          if (!PLUGINS.some((p) => p.id === id)) {
+            throw new Error(`Unknown plugin: ${id}`);
+          }
+          setPluginActive(id, args.enabled !== false);
+          return { id, enabled: args.enabled !== false };
         },
       },
       // Plugin-contributed agent commands (e.g. dialog.openConnections).
