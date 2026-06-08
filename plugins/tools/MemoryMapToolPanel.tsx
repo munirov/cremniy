@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 
 import { fileNameFromPath } from '@domain/workspace/paths';
 import { analyzeBinary, type BinaryAnalysisDto, type BinarySectionDto } from '@infrastructure/tauri/bridge';
@@ -6,6 +6,9 @@ import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 
 import styles from './BinaryToolPanel.module.css';
+
+const ROW_PX = 30;
+const ROW_BUFFER = 6;
 
 export function MemoryMapToolPanel() {
   const { activeFilePath, fileContentRevision } = useIdeSession();
@@ -15,6 +18,10 @@ export function MemoryMapToolPanel() {
   const [analysis, setAnalysis] = useState<BinaryAnalysisDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
 
   useEffect(() => {
     if (activeFilePath == null || activeFilePath === '' || workspacePath === '') {
@@ -45,6 +52,22 @@ export function MemoryMapToolPanel() {
     return analysis.sections.reduce((m, s) => Math.max(m, s.size), 1);
   }, [analysis]);
 
+  // Virtualize: render only the visible window of rows (mirrors StringsToolPanel).
+  // Section counts are usually small, but a synthetic/odd binary can carry many.
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (el == null) return;
+    const ro = new ResizeObserver(() => setViewportHeight(el.clientHeight));
+    ro.observe(el);
+    setViewportHeight(el.clientHeight);
+    return () => ro.disconnect();
+  }, [activeFilePath]);
+
+  useEffect(() => {
+    setScrollTop(0);
+    if (scrollRef.current != null) scrollRef.current.scrollTop = 0;
+  }, [activeFilePath]);
+
   if (activeFilePath == null || activeFilePath === '') {
     return (
       <section className={styles.root}>
@@ -52,6 +75,13 @@ export function MemoryMapToolPanel() {
       </section>
     );
   }
+
+  const sections = analysis?.sections ?? [];
+  const firstVisibleRow = Math.max(0, Math.floor(scrollTop / ROW_PX) - ROW_BUFFER);
+  const visibleRowCount = Math.ceil((viewportHeight || ROW_PX) / ROW_PX) + ROW_BUFFER * 2;
+  const lastVisibleRow = Math.min(sections.length, firstVisibleRow + visibleRowCount);
+  const visibleSections = sections.slice(firstVisibleRow, lastVisibleRow);
+  const capped = analysis != null && analysis.sectionsTotal > analysis.sections.length;
 
   return (
     <section className={styles.root} aria-label="Memory map">
@@ -65,10 +95,18 @@ export function MemoryMapToolPanel() {
           {error}
         </p>
       ) : null}
+      {capped ? (
+        <p className={styles.message} style={{ opacity: 0.55, fontSize: 11 }}>
+          Showing first {analysis!.sections.length.toLocaleString()} of{' '}
+          {analysis!.sectionsTotal.toLocaleString()} sections.
+        </p>
+      ) : null}
       {analysis != null && analysis.sections.length === 0 ? (
         <p className={styles.message}>No sections (raw or stripped binary).</p>
       ) : null}
       <div
+        ref={scrollRef}
+        onScroll={(e: UIEvent<HTMLDivElement>) => setScrollTop(e.currentTarget.scrollTop)}
         style={{
           flex: 1,
           minHeight: 0,
@@ -78,9 +116,13 @@ export function MemoryMapToolPanel() {
           fontSize: 13,
         }}
       >
-        {analysis?.sections.map((sec, i) => (
-          <SectionRow key={`${sec.name}-${sec.vma}-${i}`} sec={sec} maxSize={maxSize} />
-        ))}
+        <div style={{ height: sections.length * ROW_PX, position: 'relative' }}>
+          <div style={{ position: 'absolute', top: firstVisibleRow * ROW_PX, left: 0, right: 0 }}>
+            {visibleSections.map((sec, i) => (
+              <SectionRow key={`${sec.name}-${sec.vma}-${firstVisibleRow + i}`} sec={sec} maxSize={maxSize} />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -103,7 +145,9 @@ function SectionRow({ sec, maxSize }: { sec: BinarySectionDto; maxSize: number }
         gridTemplateColumns: '12rem 12rem 4rem 1fr',
         gap: '0.5rem',
         alignItems: 'center',
-        padding: '4px 0.5rem',
+        height: ROW_PX,
+        boxSizing: 'border-box',
+        padding: '0 0.5rem',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
         whiteSpace: 'nowrap',
       }}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 
 import { fileNameFromPath } from '@domain/workspace/paths';
 import { analyzeBinary, type BinaryAnalysisDto, type BinarySymbolDto } from '@infrastructure/tauri/bridge';
@@ -7,6 +7,9 @@ import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 
 import styles from './BinaryToolPanel.module.css';
+
+const ROW_PX = 22;
+const ROW_BUFFER = 6;
 
 export function SymbolTableToolPanel() {
   const { activeFilePath, fileContentRevision, openPanel } = useIdeSession();
@@ -19,6 +22,10 @@ export function SymbolTableToolPanel() {
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [source, setSource] = useState<'all' | 'import' | 'export' | '.dynsym' | '.symtab'>('all');
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
 
   useEffect(() => {
     if (activeFilePath == null || activeFilePath === '' || workspacePath === '') {
@@ -62,6 +69,22 @@ export function SymbolTableToolPanel() {
     });
   }, [analysis, query, source]);
 
+  // Virtualize: render only the visible window of rows so a 5000-symbol result
+  // stays a few dozen DOM nodes (mirrors StringsToolPanel).
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (el == null) return;
+    const ro = new ResizeObserver(() => setViewportHeight(el.clientHeight));
+    ro.observe(el);
+    setViewportHeight(el.clientHeight);
+    return () => ro.disconnect();
+  }, [activeFilePath]);
+
+  useEffect(() => {
+    setScrollTop(0);
+    if (scrollRef.current != null) scrollRef.current.scrollTop = 0;
+  }, [activeFilePath, query, source]);
+
   if (activeFilePath == null || activeFilePath === '') {
     return (
       <section className={styles.root}>
@@ -69,6 +92,12 @@ export function SymbolTableToolPanel() {
       </section>
     );
   }
+
+  const firstVisibleRow = Math.max(0, Math.floor(scrollTop / ROW_PX) - ROW_BUFFER);
+  const visibleRowCount = Math.ceil((viewportHeight || ROW_PX) / ROW_PX) + ROW_BUFFER * 2;
+  const lastVisibleRow = Math.min(filtered.length, firstVisibleRow + visibleRowCount);
+  const visibleSymbols = filtered.slice(firstVisibleRow, lastVisibleRow);
+  const capped = analysis != null && analysis.symbolsTotal > analysis.symbols.length;
 
   return (
     <section className={styles.root} aria-label="Symbol table">
@@ -109,12 +138,20 @@ export function SymbolTableToolPanel() {
           {error}
         </p>
       ) : null}
+      {capped ? (
+        <p className={styles.message} style={{ opacity: 0.55, fontSize: 11 }}>
+          Showing first {analysis!.symbols.length.toLocaleString()} of{' '}
+          {analysis!.symbolsTotal.toLocaleString()} symbols.
+        </p>
+      ) : null}
       {analysis != null && analysis.symbols.length === 0 ? (
         <p className={styles.message}>
           No symbols. (Raw / stripped binary, or format not supported yet.)
         </p>
       ) : null}
       <div
+        ref={scrollRef}
+        onScroll={(e: UIEvent<HTMLDivElement>) => setScrollTop(e.currentTarget.scrollTop)}
         style={{
           flex: 1,
           minHeight: 0,
@@ -123,19 +160,23 @@ export function SymbolTableToolPanel() {
           fontSize: 13,
         }}
       >
-        {filtered.map((sym, i) => (
-          <SymbolRow
-            key={`${sym.source}-${sym.address}-${sym.name}-${i}`}
-            sym={sym}
-            onJump={() => {
-              const addr = Number.parseInt(sym.address, 16);
-              if (Number.isFinite(addr)) {
-                setSelection({ offset: addr, length: sym.size ?? 1, source: 'symbols' });
-                openPanel('binary');
-              }
-            }}
-          />
-        ))}
+        <div style={{ height: filtered.length * ROW_PX, position: 'relative' }}>
+          <div style={{ position: 'absolute', top: firstVisibleRow * ROW_PX, left: 0, right: 0 }}>
+            {visibleSymbols.map((sym, i) => (
+              <SymbolRow
+                key={`${sym.source}-${sym.address}-${sym.name}-${firstVisibleRow + i}`}
+                sym={sym}
+                onJump={() => {
+                  const addr = Number.parseInt(sym.address, 16);
+                  if (Number.isFinite(addr)) {
+                    setSelection({ offset: addr, length: sym.size ?? 1, source: 'symbols' });
+                    openPanel('binary');
+                  }
+                }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -163,7 +204,10 @@ function SymbolRow({ sym, onJump }: { sym: BinarySymbolDto; onJump: () => void }
         display: 'grid',
         gridTemplateColumns: '14rem 4rem 7rem 1fr 14rem',
         gap: '0.5rem',
-        padding: '2px 0.5rem',
+        alignItems: 'center',
+        height: ROW_PX,
+        boxSizing: 'border-box',
+        padding: '0 0.5rem',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
         whiteSpace: 'nowrap',
         cursor: 'pointer',

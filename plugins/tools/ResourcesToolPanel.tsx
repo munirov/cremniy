@@ -65,6 +65,10 @@ export function ResourcesToolPanel() {
 
   const resourceSections =
     analysis?.sections.filter((s) => RESOURCE_LIKE_SECTIONS.has(s.name)) ?? [];
+  // This list is the handful of named resource sections, never long, so it is
+  // not virtualized. But if the backend capped the section list, a resource
+  // section could be missing — surface that so the empty/short list is honest.
+  const capped = analysis != null && analysis.sectionsTotal > analysis.sections.length;
 
   return (
     <section className={styles.root} aria-label="Resources">
@@ -83,6 +87,12 @@ export function ResourcesToolPanel() {
       ) : null}
       {analysis != null && analysis.format === 'PE' && resourceSections.length === 0 ? (
         <p className={styles.message}>No resource sections found.</p>
+      ) : null}
+      {capped ? (
+        <p className={styles.message} style={{ opacity: 0.55, fontSize: 11 }}>
+          Section list capped at {analysis!.sections.length.toLocaleString()} of{' '}
+          {analysis!.sectionsTotal.toLocaleString()} — some resource sections may be missing.
+        </p>
       ) : null}
       <div
         style={{

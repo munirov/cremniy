@@ -715,21 +715,20 @@ export type BinaryAnalysisDto = {
   bitness: number;
   sections: BinarySectionDto[];
   symbols: BinarySymbolDto[];
+  /** True counts before capping — the backend bounds `sections` / `symbols` to
+   *  a fixed max so a huge binary can't OOM the webview, and these carry the
+   *  real totals so the UI can show "showing N of M". */
+  sectionsTotal: number;
+  symbolsTotal: number;
 };
 
 export async function analyzeBinary(
   workspaceRoot: string,
   filePath: string,
 ): Promise<BinaryAnalysisDto> {
-  // Same size cap as the other inline analysers. A large binary (e.g. a debug
-  // build) yields a symbol / section / function set huge enough to balloon
-  // webview memory into the gigabytes once serialised across the IPC bridge.
-  const size = await getWorkspaceFileSize(workspaceRoot, filePath);
-  if (size > MAX_INLINE_ANALYSIS_BYTES) {
-    throw new Error(
-      `File is ${formatMiB(size)} — too large to analyse inline (limit ${formatMiB(MAX_INLINE_ANALYSIS_BYTES)}). Large-file support is on the way.`,
-    );
-  }
+  // No inline size guard here: the backend now bounds each list (sections /
+  // symbols / imports / exports / functions) to a fixed max and reports the
+  // true totals, so the returned DTO stays small regardless of binary size.
   return invoke<BinaryAnalysisDto>("analyze_binary", { workspaceRoot, filePath });
 }
 

@@ -38,6 +38,27 @@ pub struct BinaryAnalysisDto {
     bitness: u32,
     sections: Vec<SectionDto>,
     symbols: Vec<SymbolDto>,
+    /// True count before capping, so the UI can show "showing N of M". A debug
+    /// build can hold millions of symbols; the returned `symbols` is bounded to
+    /// `MAX_LIST` but this is the real total.
+    sections_total: usize,
+    symbols_total: usize,
+}
+
+/// Hard cap on each returned list. A large binary (e.g. a debug exe) can carry
+/// millions of symbols; serialising them all across the IPC bridge OOMs the
+/// webview. Bound the DTO here and let the UI window the bounded slice — the
+/// `*_total` fields carry the true counts. Mirrors the Strings tool's count cap.
+const MAX_LIST: usize = 5000;
+
+/// Truncate `list` to `MAX_LIST` and return its original length. Keeps the
+/// first N entries, matching the Strings tool (first N strings of the file).
+fn cap_list<T>(list: &mut Vec<T>) -> usize {
+    let total = list.len();
+    if total > MAX_LIST {
+        list.truncate(MAX_LIST);
+    }
+    total
 }
 
 #[tauri::command]
@@ -59,12 +80,16 @@ pub fn analyze_binary(workspace_root: String, file_path: String) -> Result<Binar
             bitness: 64,
             sections: vec![],
             symbols: vec![],
+            sections_total: 0,
+            symbols_total: 0,
         }),
         _ => Ok(BinaryAnalysisDto {
             format: "Raw".to_string(),
             bitness: 0,
             sections: vec![],
             symbols: vec![],
+            sections_total: 0,
+            symbols_total: 0,
         }),
     }
 }
@@ -128,11 +153,15 @@ fn analyze_elf(elf: &goblin::elf::Elf) -> Result<BinaryAnalysisDto, String> {
         });
     }
 
+    let sections_total = cap_list(&mut sections);
+    let symbols_total = cap_list(&mut symbols);
     Ok(BinaryAnalysisDto {
         format: "ELF".to_string(),
         bitness,
         sections,
         symbols,
+        sections_total,
+        symbols_total,
     })
 }
 
@@ -205,11 +234,15 @@ fn analyze_pe(pe: &goblin::pe::PE) -> Result<BinaryAnalysisDto, String> {
         });
     }
 
+    let sections_total = cap_list(&mut sections);
+    let symbols_total = cap_list(&mut symbols);
     Ok(BinaryAnalysisDto {
         format: "PE".to_string(),
         bitness,
         sections,
         symbols,
+        sections_total,
+        symbols_total,
     })
 }
 
