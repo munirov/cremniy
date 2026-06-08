@@ -1,8 +1,8 @@
-import { useState } from 'react';
-
 import { PLUGINS } from '@plugins/index';
 import type { PluginManifest } from '@shared/plugins/contributions';
-import { isPluginDisabled, setPluginEnabled } from '@shared/plugins/pluginState';
+import { isPluginDisabled } from '@shared/plugins/pluginState';
+import { setPluginActive } from '@shared/plugins/pluginToggle';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 import { useIdeSessionOptional } from '@boundary/workspace/IdeSessionContext';
 
 import { PluginGlyph } from './PluginGlyph';
@@ -18,38 +18,28 @@ function isBundled(p: PluginManifest): boolean {
 
 /**
  * Extensions — the plugin manager (a core side-panel view, like VS Code's). It
- * lists every plugin from the catalog (plugins/index.ts): `bundled` ones ship
- * with the IDE and are always on; `recommended` ones are official add-ons the
- * user enables here so the base package stays small. Toggling persists and takes
- * effect on reload (contributions are read across the render tree, so re-running
- * loadPlugins() on reload is cleaner than hot-swapping). A server-backed
- * marketplace for third-party plugins is a later step.
+ * lists every plugin from the catalog (plugins/index.ts) and lets you turn each
+ * one on or off. Toggling is LIVE: enabling/disabling adds/removes the plugin
+ * from the active registry, so its UI — side-panel view, tool-rail tools, center
+ * panels, menu items, commands — appears or disappears immediately (no reload),
+ * via useRegistryVersion. The choice persists across restarts (pluginState).
  *
- * Each row is a VS Code-style entry (icon + name + author + delivery badge +
- * truncated description). The whole row is clickable: it points the shared
- * details store at the plugin and opens the `extensionDetails` center tab.
+ * Uninstall / download-from-server isn't available yet (everything ships in the
+ * local build); the `bundled` / `recommended` badge only marks where a plugin
+ * came from. Each row opens the plugin's details center-tab on click.
  */
 export function ExtensionsPanel() {
-  const [, force] = useState(0);
-  const [dirty, setDirty] = useState(false);
-  // Optional: the panel also renders in unit tests without the IDE provider, so
-  // opening the details tab is simply inert there rather than throwing.
+  // Re-render whenever any plugin is enabled/disabled (here or elsewhere).
+  useRegistryVersion();
   const ide = useIdeSessionOptional();
-
-  const toggle = (id: string, enabled: boolean) => {
-    setPluginEnabled(id, enabled);
-    setDirty(true);
-    force((x) => x + 1);
-  };
 
   const openDetails = (id: string) => {
     setSelectedExtension(id);
     ide?.openPanel(DETAILS_PANEL_ID);
   };
 
-  // "Active" = would load on next start (bundled, or recommended-and-not-disabled).
-  const active = PLUGINS.filter((p) => isBundled(p) || !isPluginDisabled(p.id));
-  const available = PLUGINS.filter((p) => !isBundled(p) && isPluginDisabled(p.id));
+  const enabled = PLUGINS.filter((p) => !isPluginDisabled(p.id));
+  const disabled = PLUGINS.filter((p) => isPluginDisabled(p.id));
 
   const renderRow = (p: PluginManifest, off: boolean) => (
     <li key={p.id}>
@@ -80,16 +70,16 @@ export function ExtensionsPanel() {
           {p.author != null ? <div className={styles.author}>{p.author}</div> : null}
           {p.description != null ? <div className={styles.desc}>{p.description}</div> : null}
           <div className={styles.actions}>
-            {isBundled(p) ? null : off ? (
+            {off ? (
               <button
                 type="button"
                 className={styles.btnPrimary}
                 onClick={(e) => {
                   e.stopPropagation();
-                  toggle(p.id, true);
+                  setPluginActive(p.id, true);
                 }}
               >
-                Install
+                Enable
               </button>
             ) : (
               <button
@@ -97,7 +87,7 @@ export function ExtensionsPanel() {
                 className={styles.btn}
                 onClick={(e) => {
                   e.stopPropagation();
-                  toggle(p.id, false);
+                  setPluginActive(p.id, false);
                 }}
               >
                 Disable
@@ -113,29 +103,21 @@ export function ExtensionsPanel() {
     <div className={styles.panel} aria-label="Extensions">
       <div className={styles.header}>Extensions</div>
 
-      {dirty ? (
-        <div className={styles.reloadBar} role="status">
-          <span>Reload to apply.</span>
-          <button type="button" className={styles.reloadBtn} onClick={() => window.location.reload()}>
-            Reload
-          </button>
-        </div>
-      ) : null}
-
       <div className={styles.scroll}>
-        <div className={styles.section}>Installed — {active.length}</div>
-        <ul className={styles.list}>{active.map((p) => renderRow(p, false))}</ul>
+        <div className={styles.section}>Enabled — {enabled.length}</div>
+        <ul className={styles.list}>{enabled.map((p) => renderRow(p, false))}</ul>
 
-        {available.length > 0 ? (
+        {disabled.length > 0 ? (
           <>
-            <div className={styles.section}>Recommended — {available.length}</div>
-            <ul className={styles.list}>{available.map((p) => renderRow(p, true))}</ul>
+            <div className={styles.section}>Disabled — {disabled.length}</div>
+            <ul className={styles.list}>{disabled.map((p) => renderRow(p, true))}</ul>
           </>
         ) : null}
 
         <p className={styles.note}>
-          Bundled plugins ship with Cremniy. Recommended ones are official add-ons. Installing
-          third-party plugins from a server is planned.
+          Turn any plugin off and its UI disappears live; turn it back on and it returns. Bundled
+          plugins ship with Cremniy; recommended ones are official add-ons. Installing third-party
+          plugins from a server is planned.
         </p>
       </div>
     </div>

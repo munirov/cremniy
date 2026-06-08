@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import type { WorkspaceRoot } from '@domain/workspace/types';
 import { pluginViews } from '@shared/plugins/registry';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
 import { ExtensionsPanel } from '@boundary/extensions/ExtensionsPanel';
 
@@ -85,12 +86,13 @@ function loadPinned(viewIds: string[]): Set<string> {
 }
 
 export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | null }) {
-  // Views are stable across a session (plugins load once at startup, before any
-  // UI), so building them once on mount is enough — and keeps pin state keyed to
-  // a fixed id set.
-  const [views] = useState<ViewEntry[]>(buildViews);
+  // Rebuild views whenever the active plugin set changes (Extensions toggle), so
+  // a plugin's side-panel view appears / disappears live.
+  const registryVersion = useRegistryVersion();
+  const views = useMemo(() => buildViews(), [registryVersion]);
   const [active, setActive] = useState<string>('explorer');
   const [pinned, setPinned] = useState<Set<string>>(() => loadPinned(views.map((v) => v.id)));
+  const seenViewsRef = useRef<Set<string>>(new Set(views.map((v) => v.id)));
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -100,6 +102,28 @@ export function SidePanel({ workspaceRoot }: { workspaceRoot: WorkspaceRoot | nu
       // ignore
     }
   }, [pinned]);
+
+  // A newly-enabled plugin's view should show in the activity bar → auto-pin any
+  // view id we haven't seen before (disabling just drops it from `views`).
+  useEffect(() => {
+    setPinned((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      for (const v of views) {
+        if (!seenViewsRef.current.has(v.id)) {
+          seenViewsRef.current.add(v.id);
+          next.add(v.id);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [views]);
+
+  // If the active view's plugin was just disabled, fall back to Explorer.
+  useEffect(() => {
+    if (!views.some((v) => v.id === active)) setActive('explorer');
+  }, [views, active]);
 
   const togglePin = (id: string) =>
     setPinned((prev) => {

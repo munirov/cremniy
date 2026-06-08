@@ -1,8 +1,8 @@
-import { useState } from 'react';
-
 import { PLUGINS } from '@plugins/index';
 import type { PluginManifest } from '@shared/plugins/contributions';
-import { isPluginDisabled, setPluginEnabled } from '@shared/plugins/pluginState';
+import { isPluginDisabled } from '@shared/plugins/pluginState';
+import { setPluginActive } from '@shared/plugins/pluginToggle';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
 import { Markdown } from './Markdown';
 import { PluginGlyph } from './PluginGlyph';
@@ -43,8 +43,8 @@ function contributes(p: PluginManifest): ContribRow[] {
  * before calling openPanel('extensionDetails'); this reads it on render.
  */
 export function ExtensionDetailsPanel() {
-  const [, force] = useState(0);
-  const [dirty, setDirty] = useState(false);
+  // Re-render live when the plugin is toggled (here or in the Extensions list).
+  useRegistryVersion();
 
   const id = getSelectedExtension();
   const plugin = id != null ? PLUGINS.find((p) => p.id === id) : undefined;
@@ -58,13 +58,9 @@ export function ExtensionDetailsPanel() {
   }
 
   const bundled = isBundled(plugin);
-  const disabled = !bundled && isPluginDisabled(plugin.id);
+  const disabled = isPluginDisabled(plugin.id);
 
-  const toggle = (enabled: boolean) => {
-    setPluginEnabled(plugin.id, enabled);
-    setDirty(true);
-    force((x) => x + 1);
-  };
+  const toggle = (active: boolean) => setPluginActive(plugin.id, active);
 
   const rows = contributes(plugin);
   const body = plugin.readme ?? plugin.description ?? '';
@@ -88,29 +84,15 @@ export function ExtensionDetailsPanel() {
             {plugin.description != null ? <span>· {plugin.description}</span> : null}
           </div>
           <div className={styles.headActions}>
-            {!bundled ? (
-              disabled ? (
-                <button type="button" className={styles.btnPrimary} onClick={() => toggle(true)}>
-                  Install
-                </button>
-              ) : (
-                <button type="button" className={styles.btn} onClick={() => toggle(false)}>
-                  Disable
-                </button>
-              )
-            ) : null}
-            {dirty ? (
-              <span className={styles.reloadNote}>
-                Reload to apply.
-                <button
-                  type="button"
-                  className={styles.reloadLink}
-                  onClick={() => window.location.reload()}
-                >
-                  Reload
-                </button>
-              </span>
-            ) : null}
+            {disabled ? (
+              <button type="button" className={styles.btnPrimary} onClick={() => toggle(true)}>
+                Enable
+              </button>
+            ) : (
+              <button type="button" className={styles.btn} onClick={() => toggle(false)}>
+                Disable
+              </button>
+            )}
           </div>
         </div>
       </div>

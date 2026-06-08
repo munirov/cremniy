@@ -6,6 +6,7 @@ import { useToolDock } from '@boundary/workspace/ToolDockContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 import { fileNameFromPath } from '@domain/workspace/paths';
 import { pluginToolTabs } from '@shared/plugins/registry';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
 import styles from './IdeToolDock.module.css';
 
@@ -26,6 +27,7 @@ export function IdeToolDock({ onToggleSplit }: IdeToolDockProps = {}) {
   const { activeToolTab } = useToolDock();
   const { activeFilePath } = useIdeSession();
   const workspaceRoot = useWorkspaceRoot();
+  useRegistryVersion(); // re-render when a tool plugin is enabled/disabled
   if (activeToolTab == null) {
     return null;
   }
@@ -33,6 +35,10 @@ export function IdeToolDock({ onToggleSplit }: IdeToolDockProps = {}) {
   // Every other tool is a plugin contribution looked up by id from the registry.
   const isCodeEditor = activeToolTab === 'codeEditor';
   const tool = isCodeEditor ? null : pluginToolTabs().find((t) => t.id === activeToolTab);
+  // The active tool's plugin was disabled — close the dock instead of an empty pane.
+  if (!isCodeEditor && tool == null) {
+    return null;
+  }
   // The split's second pane mirrors the active file — label it with the file
   // name so it reads like a second editor, not a generic "Tool".
   const headerLabel = isCodeEditor

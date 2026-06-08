@@ -5,6 +5,7 @@ import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
 import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
 import { resolveCenterPanel } from '@boundary/layout/centerPanels';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 import { IdeStatusStrip } from '@boundary/layout/IdeStatusStrip';
 import { IdeToolDock } from '@boundary/layout/IdeToolDock';
 import { Pane } from '@boundary/layout/Pane';
@@ -102,6 +103,7 @@ export function IdeDockview({
   onTogglePane,
   paneVisibility: paneVisibilityProp,
 }: IdeDockviewProps & { paneVisibility?: Partial<Record<BuiltinPaneId, boolean>> }) {
+  useRegistryVersion(); // re-render the center-panel body when a plugin is toggled
   const [dockMenu, setDockMenu] = useState<{ x: number; y: number } | null>(null);
   // Terminal minimised to its tab strip (sessions stay alive). Local layout
   // state — not persisted.

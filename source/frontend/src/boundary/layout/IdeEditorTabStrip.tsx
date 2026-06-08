@@ -12,6 +12,7 @@ import {
 import { fileNameFromPath } from '@domain/workspace/paths';
 
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
 import { resolveCenterPanel } from './centerPanels';
 import styles from './IdeEditorTabStrip.module.css';
@@ -36,6 +37,7 @@ export function IdeEditorTabStrip() {
     activatePanel,
     closePanel,
   } = useIdeSession();
+  useRegistryVersion(); // re-render so a disabled plugin's center-panel tab vanishes
   const dirtyFiles = new Set(dirtyFilePaths);
   const navigatedFromKeyboardRef = useRef(false);
   const tabSelectRefs = useRef(new Map<string, HTMLButtonElement>());

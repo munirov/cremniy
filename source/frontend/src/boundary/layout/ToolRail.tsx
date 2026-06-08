@@ -1,5 +1,6 @@
 import { useToolDock } from '@boundary/workspace/ToolDockContext';
 import { pluginToolTabs } from '@shared/plugins/registry';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
 import styles from './ToolRail.module.css';
 
@@ -14,6 +15,7 @@ import styles from './ToolRail.module.css';
  */
 export function ToolRail() {
   const { activeToolTab, selectToolTab } = useToolDock();
+  useRegistryVersion(); // re-render when a tool plugin is enabled/disabled
   return (
     <aside className={styles.rail} aria-label="Tool selector" role="tablist" aria-orientation="vertical">
       {pluginToolTabs().map((tab) => {

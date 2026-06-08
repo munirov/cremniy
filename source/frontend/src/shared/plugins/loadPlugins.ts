@@ -14,10 +14,9 @@ import { isPluginDisabled } from './pluginState';
  */
 export function loadPlugins(): void {
   for (const plugin of PLUGINS) {
-    // Bundled plugins always load; a recommended plugin loads unless the user
-    // turned it off in the Extensions panel.
-    const bundled = (plugin.delivery ?? 'recommended') === 'bundled';
-    if (!bundled && isPluginDisabled(plugin.id)) continue;
+    // Any plugin the user turned off in the Extensions panel stays off across
+    // restarts — bundled ones too (the badge only marks where it came from).
+    if (isPluginDisabled(plugin.id)) continue;
     registerPlugin(plugin);
   }
 }

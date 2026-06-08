@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { registerAgentCommands, registerAgentState } from '@shared/agent/agentBridge';
 import { pluginCommands, pluginToolTabs } from '@shared/plugins/registry';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 import { setPluginHost } from '@shared/plugins/host';
 import type { ToolTabId } from '@domain/toolTabs/toolTabId';
 import { AgentWorkspaceCommands } from '@boundary/agent/AgentWorkspaceCommands';
@@ -42,6 +43,8 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
   const workspaceRoot = useWorkspaceRoot();
   const ide = useIdeSession();
   const toolDock = useToolDock();
+  // Bumps when a plugin is enabled/disabled — re-registers agent commands below.
+  const registryVersion = useRegistryVersion();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
   const [dataConverterOpen, setDataConverterOpen] = useState(false);
@@ -441,7 +444,9 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
       unregisterState();
       unregisterCommands();
     };
-  }, []);
+    // registryVersion: re-run on plugin enable/disable so a toggled plugin's
+    // commands are added to / removed from window.cremniy live.
+  }, [registryVersion]);
 
   // Publish the IDE's MenuBar into the global TitleBar (which lives one level
   // above the routes in App.tsx — see MenuSlotContext for the rationale).

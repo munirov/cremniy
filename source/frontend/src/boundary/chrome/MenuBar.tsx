@@ -11,6 +11,7 @@ import { VIEW_MENU_ENTRIES, type ViewMenuActionId } from '@domain/menu/viewMenu'
 import { Menu } from '@boundary/common/Menu';
 import { useT } from '@boundary/i18n/LocaleContext';
 import { pluginMenuItems } from '@shared/plugins/registry';
+import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
 import styles from './MenuBar.module.css';
 
@@ -49,6 +50,7 @@ export function MenuBar({
   closeEditorAvailable = false,
 }: MenuBarProps) {
   const t = useT();
+  useRegistryVersion(); // re-render so plugin menu items appear/disappear on toggle
   const entries = useMemo(() => mainMenuEntries(), []);
   const [openMenuId, setOpenMenuId] = useState<MainMenuId | null>(null);
   // Trigger element for the widget-rendered Terminal menu (id '7').
