@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 
 import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor/IdeMonacoEditor';
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
+import { BinaryFilePlaceholder } from '@boundary/editor/BinaryFilePlaceholder';
 import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
 import { resolveCenterPanel } from '@boundary/layout/centerPanels';
@@ -261,6 +262,16 @@ export function IdeDockview({
         ) : null}
         {ide.activePanel != null ? (
           <div className={styles.editorBody}>{resolveCenterPanel(ide.activePanel)?.render() ?? null}</div>
+        ) : ide.activeFileIsBinary ? (
+          <>
+            <IdeBreadcrumb
+              filePath={ide.activeFilePath}
+              workspaceRoot={workspaceRoot?.path ?? null}
+            />
+            <div className={styles.editorBody}>
+              <BinaryFilePlaceholder filePath={ide.activeFilePath} />
+            </div>
+          </>
         ) : (
           <>
             <IdeBreadcrumb

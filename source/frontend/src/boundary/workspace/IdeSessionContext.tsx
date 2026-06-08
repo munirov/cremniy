@@ -19,6 +19,7 @@ import { normalizeFsPath, parentDirectoryPath, fileNameFromPath } from '@domain/
 import { loadPreferences, savePreferences } from '@infrastructure/preferences/preferencesBridge';
 import {
   createProjectFolder,
+  getWorkspaceFileSize,
   pickFile,
   pickFolder,
   pickSaveFile,
@@ -43,6 +44,9 @@ export type IdeSessionContextValue = {
   documentText: string;
   dirtyFilePaths: string[];
   activeDocumentDirty: boolean;
+  /** The active tab holds a non-text (binary) file — the code editor shows a
+   *  placeholder and the Hex / Disassembler / Binary Tools read it from disk. */
+  activeFileIsBinary: boolean;
   setDocumentText: (value: string) => void;
   openFileFromWorkspace: (filePath: string, opts?: { preview?: boolean }) => Promise<void>;
   /** Open a file (if needed) and reveal a 1-based line — used by Search. */
@@ -94,6 +98,9 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   const [pinnedFilePaths, setPinnedFilePaths] = useState<Set<string>>(() => new Set());
   const [buffers, setBuffers] = useState<Record<string, string>>({});
   const [savedBuffers, setSavedBuffers] = useState<Record<string, string>>({});
+  // Tabs whose file is binary (non-UTF-8, or text that carries NUL bytes). They
+  // have no text buffer — the byte tools read them straight from disk.
+  const [binaryTabs, setBinaryTabs] = useState<Set<string>>(() => new Set());
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
   const [documentText, setDocumentTextState] = useState('');
   const [fileTreeRevision, setFileTreeRevision] = useState(0);
@@ -299,6 +306,12 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       openTabsRef.current = nextTabs; // keep current for the MRU pick below
       setBuffers(nextBuffers);
       setSavedBuffers(nextSavedBuffers);
+      setBinaryTabs((prev) => {
+        if (!prev.has(path)) return prev;
+        const next = new Set(prev);
+        next.delete(path);
+        return next;
+      });
       setPinnedFilePaths((prev) => {
         if (!prev.has(path)) return prev;
         const next = new Set(prev);
@@ -489,6 +502,34 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   >(null);
   const revealNonceRef = useRef(0);
 
+  // Open a file as a binary tab: it gets a tab and becomes active (so the byte
+  // tools pick it up via `activeFilePath`), but carries no text buffer — the
+  // editor shows a placeholder instead of trying to render bytes as text.
+  const openAsBinaryTab = useCallback(
+    (filePath: string) => {
+      const path = filePath.trim();
+      if (path === '') {
+        return;
+      }
+      if (!openTabsRef.current.includes(path)) {
+        const nextTabs = [...openTabsRef.current, path];
+        openTabsRef.current = nextTabs;
+        setOpenTabs(nextTabs);
+      }
+      setBinaryTabs((prev) => {
+        if (prev.has(path)) return prev;
+        const next = new Set(prev);
+        next.add(path);
+        return next;
+      });
+      recordTabFocus(path);
+      setActivePanel(null);
+      setActiveFilePath(path);
+      setDocumentTextState('');
+    },
+    [recordTabFocus],
+  );
+
   const openFileFromWorkspace = useCallback(
     async (filePath: string, opts?: { preview?: boolean }) => {
       const trimmed = filePath.trim();
@@ -512,6 +553,12 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       }
       try {
         const raw = await readWorkspaceUserFile(rootPath, trimmed);
+        // A file that decodes but still carries NUL bytes (firmware dumps,
+        // UTF-16, …) is binary — route it to the byte tools, not the editor.
+        if (raw.includes(String.fromCharCode(0))) {
+          openAsBinaryTab(trimmed);
+          return;
+        }
         // Detect UTF-8 BOM (0xFEFF in JS string) so we can re-emit it on save.
         const hasBom = raw.charCodeAt(0) === 0xfeff;
         const text = hasBom ? raw.slice(1) : raw;
@@ -555,15 +602,32 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         if (preview) {
           setPreviewFilePath(trimmed);
         }
+        // Opened as text — make sure it isn't still flagged binary (a file can
+        // flip across reopens).
+        setBinaryTabs((prev) => {
+          if (!prev.has(trimmed)) return prev;
+          const next = new Set(prev);
+          next.delete(trimmed);
+          return next;
+        });
         recordTabFocus(trimmed);
         setActivePanel(null);
         setActiveFilePath(trimmed);
         setDocumentTextState(text);
       } catch (e) {
-        notify.error('Could not open file', formatUserMessage(e));
+        // The text decode failed — most often invalid UTF-8, i.e. an
+        // executable. If the file is readable at all, open it as a binary tab
+        // so the Hex / Disassembler / Binary Tools can analyse it; only a
+        // genuinely unreadable file (missing, no permission) is an error.
+        try {
+          await getWorkspaceFileSize(rootPath, trimmed);
+          openAsBinaryTab(trimmed);
+        } catch {
+          notify.error('Could not open file', formatUserMessage(e));
+        }
       }
     },
-    [notify, workspaceRoot?.path, activateOpenFile, forgetTabFocus, recordTabFocus],
+    [notify, workspaceRoot?.path, activateOpenFile, forgetTabFocus, recordTabFocus, openAsBinaryTab],
   );
 
   const openFileAtLine = useCallback(
@@ -732,6 +796,9 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       ? (buffers[activeFilePath] ?? '') !== (savedBuffers[activeFilePath] ?? '')
       : documentText !== '';
 
+  const activeFileIsBinary =
+    activeFilePath != null && activeFilePath !== '' && binaryTabs.has(activeFilePath);
+
   const value = useMemo<IdeSessionContextValue>(
     () => ({
       activeFilePath,
@@ -742,6 +809,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       documentText,
       dirtyFilePaths,
       activeDocumentDirty,
+      activeFileIsBinary,
       setDocumentText,
       openFileFromWorkspace,
       openFileAtLine,
@@ -765,6 +833,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     }),
     [
       activeDocumentDirty,
+      activeFileIsBinary,
       activeFilePath,
       pinnedFilePaths,
       togglePinFilePath,
@@ -810,6 +879,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         openFilePaths: v.openFilePaths,
         dirtyFilePaths: v.dirtyFilePaths,
         activeDocumentDirty: v.activeDocumentDirty,
+        activeFileIsBinary: v.activeFileIsBinary,
         documentText: v.documentText,
       };
     });

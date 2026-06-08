@@ -43,6 +43,7 @@ function stubSession(documentText: string): IdeSessionContextValue {
     documentText,
     dirtyFilePaths: [],
     activeDocumentDirty: false,
+    activeFileIsBinary: false,
     setDocumentText: vi.fn(),
     openFileFromWorkspace: vi.fn(),
     openFileAtLine: vi.fn(),

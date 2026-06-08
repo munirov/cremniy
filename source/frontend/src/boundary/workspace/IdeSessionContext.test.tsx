@@ -7,6 +7,7 @@ import { DEFAULT_APP_PREFERENCES } from '@domain/preferences/appPreferences';
 
 import { loadPreferences, savePreferences } from '@infrastructure/preferences/preferencesBridge';
 import {
+  getWorkspaceFileSize,
   pickFile,
   pickFolder,
   pickSaveFile,
@@ -27,6 +28,7 @@ vi.mock('@infrastructure/tauri/bridge', () => ({
   readUserFile: vi.fn(),
   readWorkspaceUserFile: vi.fn(),
   writeUserFile: vi.fn(),
+  getWorkspaceFileSize: vi.fn(),
 }));
 
 vi.mock('@infrastructure/preferences/preferencesBridge', () => ({
@@ -63,6 +65,7 @@ describe('IdeSessionContext runFileMenuAction', () => {
     vi.mocked(readUserFile).mockReset();
     vi.mocked(readWorkspaceUserFile).mockReset();
     vi.mocked(writeUserFile).mockReset();
+    vi.mocked(getWorkspaceFileSize).mockReset();
     vi.mocked(loadPreferences).mockReset();
     vi.mocked(savePreferences).mockReset();
     vi.mocked(pickFolder).mockResolvedValue(null);
@@ -71,6 +74,7 @@ describe('IdeSessionContext runFileMenuAction', () => {
     vi.mocked(readUserFile).mockResolvedValue('');
     vi.mocked(readWorkspaceUserFile).mockResolvedValue('');
     vi.mocked(writeUserFile).mockResolvedValue(undefined);
+    vi.mocked(getWorkspaceFileSize).mockResolvedValue(1024);
     vi.mocked(loadPreferences).mockResolvedValue(DEFAULT_APP_PREFERENCES);
     vi.mocked(savePreferences).mockResolvedValue(undefined);
   });
@@ -344,18 +348,55 @@ describe('IdeSessionContext runFileMenuAction', () => {
     expect(result.current.documentText).toBe('body');
   });
 
-  it('openFileFromWorkspace alerts when read fails', async () => {
+  it('openFileFromWorkspace opens a non-UTF-8 file as a binary tab', async () => {
     vi.mocked(readWorkspaceUserFile).mockRejectedValueOnce(new Error('not utf-8'));
+    vi.mocked(getWorkspaceFileSize).mockResolvedValueOnce(4096);
 
     const { result } = renderHook(() => useIdeSession(), {
       wrapper: createWrapper('/ide?root=/proj'),
     });
 
     await act(async () => {
-      await result.current.openFileFromWorkspace('/proj/bin.dat');
+      await result.current.openFileFromWorkspace('/proj/app.exe');
     });
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('not utf-8');
+    expect(result.current.activeFilePath).toBe('/proj/app.exe');
+    expect(result.current.activeFileIsBinary).toBe(true);
+    expect(result.current.openFilePaths).toContain('/proj/app.exe');
+    expect(result.current.documentText).toBe('');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('openFileFromWorkspace opens a NUL-carrying file as a binary tab', async () => {
+    // Decodes as UTF-8 but holds NUL bytes (firmware dump, UTF-16, …) → binary.
+    const withNul = 'MZ' + String.fromCharCode(0) + 'PE' + String.fromCharCode(0) + 'data';
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce(withNul);
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/firmware.bin');
+    });
+
+    expect(result.current.activeFileIsBinary).toBe(true);
+    expect(result.current.documentText).toBe('');
+  });
+
+  it('openFileFromWorkspace alerts when the file is unreadable', async () => {
+    vi.mocked(readWorkspaceUserFile).mockRejectedValueOnce(new Error('permission denied'));
+    vi.mocked(getWorkspaceFileSize).mockRejectedValueOnce(new Error('permission denied'));
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/secret');
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('permission denied');
   });
 
   it('openFileFromWorkspace alerts when no workspace root in URL', async () => {

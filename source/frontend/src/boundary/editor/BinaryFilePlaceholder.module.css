@@ -1,0 +1,60 @@
+.root {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 1.5rem;
+  overflow: auto;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 26rem;
+  text-align: center;
+}
+
+.glyph {
+  margin-bottom: 0.2rem;
+  opacity: 0.55;
+}
+
+.name {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-mono);
+  word-break: break-all;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.85em;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--color-border-subtle, rgba(127, 127, 127, 0.35));
+  border-radius: 4px;
+  font: inherit;
+  font-family: var(--font-family-mono);
+  color: inherit;
+  background: var(--color-surface-elevated, rgba(255, 255, 255, 0.04));
+  cursor: pointer;
+}
+
+.button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
