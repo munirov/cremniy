@@ -809,3 +809,59 @@ export async function listenSshExit(
     onExit(event.payload);
   });
 }
+
+// Connections pack — SFTP (file transfer over SSH). Mirrors the ssh* arg
+// convention (sessionId, address, port, username, password) but is
+// request/response (no streaming events): open the subsystem, then list / read
+// / write paths. Bytes cross as number[] (same convention as readWorkspaceFileChunk).
+
+export type SftpEntry = {
+  name: string;
+  /** Full remote path (dir joined with name, "/"-separated). */
+  path: string;
+  isDir: boolean;
+  size: number;
+};
+
+/** Open an SFTP session on `sessionId` (connect + auth + sftp subsystem).
+ *  Password is optional (null/undefined → tries `none` auth). */
+export async function sftpOpen(
+  sessionId: string,
+  address: string,
+  port: number,
+  username: string,
+  password?: string | null,
+): Promise<void> {
+  return invoke<void>("sftp_open", {
+    sessionId,
+    address,
+    port,
+    username,
+    password: password == null || password === "" ? null : password,
+  });
+}
+
+/** List a remote directory ("" or "." → the session's start dir, usually $HOME). */
+export async function sftpList(sessionId: string, path: string): Promise<SftpEntry[]> {
+  return invoke<SftpEntry[]>("sftp_list", { sessionId, path });
+}
+
+/** Download a remote file's bytes into memory. */
+export async function sftpRead(sessionId: string, path: string): Promise<Uint8Array> {
+  const bytes = await invoke<number[]>("sftp_read", { sessionId, path });
+  return new Uint8Array(bytes);
+}
+
+/** Upload bytes to a remote path (creates / truncates the file). */
+export async function sftpWrite(
+  sessionId: string,
+  path: string,
+  data: Uint8Array,
+): Promise<void> {
+  return invoke<void>("sftp_write", { sessionId, path, data: Array.from(data) });
+}
+
+/** Close the SFTP session (drops its channel + SSH connection). */
+export async function sftpClose(sessionId: string): Promise<void> {
+  return invoke<void>("sftp_close", { sessionId });
+}

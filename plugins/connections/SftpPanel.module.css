@@ -1,0 +1,312 @@
+/* SFTP — dual-pane file browser (center panel; Connections-pack density). No
+   blue; hover / selected states use rgba(255,255,255,N) per the design canon. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  padding: 0.7rem 1.1rem;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0.8rem 1.1rem 1rem;
+}
+
+/* ── dual panes ──────────────────────────────────────────────────── */
+.panes {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+  min-height: 0;
+}
+
+.pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 6px;
+  background: var(--color-bg-base);
+  overflow: hidden;
+}
+
+.paneHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.paneLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.pathBar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.upBtn {
+  flex-shrink: 0;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-muted);
+  background: var(--color-bg-panel);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.upBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.upBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pathText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.paneBody {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ── file list ───────────────────────────────────────────────────── */
+.list {
+  margin: 0;
+  padding: 0.2rem;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.22rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.rowSelected,
+.rowSelected:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rowIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.rowName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-family-mono);
+  font-size: 0.76rem;
+}
+
+.rowSize {
+  flex-shrink: 0;
+  font-family: var(--font-family-mono);
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+}
+
+.rowEmpty {
+  padding: 0.5rem 0.5rem;
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  list-style: none;
+}
+
+/* ── transfer column ─────────────────────────────────────────────── */
+.transfer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  width: 4rem;
+}
+
+.transferHint {
+  font-family: var(--font-family-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.transfer .btn {
+  width: 2.4rem;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0.3rem 0;
+}
+
+.transfer .transferHint:first-of-type {
+  margin-bottom: 0.5rem;
+}
+
+/* ── empty states ────────────────────────────────────────────────── */
+.empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+.emptyHint {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+/* ── controls ────────────────────────────────────────────────────── */
+.select {
+  box-sizing: border-box;
+  padding: 0.24rem 0.5rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 4px;
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: 0.76rem;
+  max-width: 14rem;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-border-pane);
+}
+
+.btn {
+  padding: 0.24rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-muted);
+  background: var(--color-bg-base);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnGhost {
+  margin-left: auto;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-family-mono);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.btnGhost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+}
+
+.btnPrimary {
+  padding: 0.24rem 0.7rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-pane);
+  background: var(--color-menubar-item-selected);
+  color: inherit;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── status / error ──────────────────────────────────────────────── */
+.status {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-family-mono);
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+.error {
+  margin: 0.6rem 0 0;
+  font-size: 0.76rem;
+  color: #ef4444;
+}
