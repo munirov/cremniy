@@ -5,7 +5,7 @@
 <br>
 <h3>Cremniy</h3>
 
-[![License](https://img.shields.io/github/license/igmunv/cremniy?color=orange&style=flat-square)](LICENSE)
+[![License](https://img.shields.io/github/license/munirov/cremniy?color=orange&style=flat-square)](LICENSE)
 [![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
 [![Community](https://img.shields.io/badge/Community-Telegram-blue?logo=telegram&style=flat-square)](https://t.me/cremniy_com)
 <br>
@@ -32,9 +32,9 @@ Pre-built installers for the latest release:
 
 | OS | Installer | |
 |----|-----------|---|
-| **Windows** | `.exe` (NSIS) or `.msi` | [⬇ Latest release](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
-| **macOS** | `.dmg` | [⬇ Latest release](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
-| **Linux** | `.AppImage` or `.deb` | [⬇ Latest release](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
+| **Windows** | `.exe` (NSIS) or `.msi` | [⬇ Latest release](https://github.com/munirov/cremniy/releases/latest) |
+| **macOS** | `.dmg` | [⬇ Latest release](https://github.com/munirov/cremniy/releases/latest) |
+| **Linux** | `.AppImage` or `.deb` | [⬇ Latest release](https://github.com/munirov/cremniy/releases/latest) |
 
 Builds are currently **unsigned**, so the OS may warn on first launch:
 
@@ -164,9 +164,9 @@ Distributed under the terms described in [LICENSE](LICENSE).
 
 | ОС | Установщик | |
 |----|-----------|---|
-| **Windows** | `.exe` (NSIS) или `.msi` | [⬇ Последний релиз](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
-| **macOS** | `.dmg` | [⬇ Последний релиз](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
-| **Linux** | `.AppImage` или `.deb` | [⬇ Последний релиз](https://github.com/Ramazanov-Ruslan-IT/cremniy/releases/latest) |
+| **Windows** | `.exe` (NSIS) или `.msi` | [⬇ Последний релиз](https://github.com/munirov/cremniy/releases/latest) |
+| **macOS** | `.dmg` | [⬇ Последний релиз](https://github.com/munirov/cremniy/releases/latest) |
+| **Linux** | `.AppImage` или `.deb` | [⬇ Последний релиз](https://github.com/munirov/cremniy/releases/latest) |
 
 Сборки пока **без подписи**, поэтому ОС может предупредить при первом запуске:
 

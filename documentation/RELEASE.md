@@ -32,7 +32,7 @@
 
 5. **Проверьте релиз**
    
-   Перейдите на страницу [Releases](https://github.com/igmunv/cremniy/releases) и убедитесь, что релиз создан успешно.
+   Перейдите на страницу [Releases](https://github.com/munirov/cremniy/releases) и убедитесь, что релиз создан успешно.
 
 ### Структура артефактов
 
@@ -48,7 +48,7 @@
 
 Вы также можете запустить сборку вручную без создания релиза:
 
-1. Перейдите на вкладку [Actions](https://github.com/igmunv/cremniy/actions)
+1. Перейдите на вкладку [Actions](https://github.com/munirov/cremniy/actions)
 2. Выберите workflow "Build and Release"
 3. Нажмите "Run workflow"
 4. Выберите ветку и нажмите "Run workflow"
@@ -94,7 +94,7 @@ Workflow file: [`.github/workflows/release.yml`](../.github/workflows/release.ym
 
 5. **Check the release**
    
-   Go to the [Releases](https://github.com/igmunv/cremniy/releases) page and verify the release was created successfully.
+   Go to the [Releases](https://github.com/munirov/cremniy/releases) page and verify the release was created successfully.
 
 ### Artifact structure
 
@@ -110,7 +110,7 @@ Build outputs from `source/backend/target/release/bundle/`:
 
 You can also run the build manually without creating a release:
 
-1. Go to the [Actions](https://github.com/igmunv/cremniy/actions) tab
+1. Go to the [Actions](https://github.com/munirov/cremniy/actions) tab
 2. Select the "Build and Release" workflow
 3. Click "Run workflow"
 4. Select a branch and click "Run workflow"
