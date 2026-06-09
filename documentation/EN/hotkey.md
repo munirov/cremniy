@@ -28,12 +28,19 @@ On macOS, use `Cmd` instead of `Ctrl` for standard sequences!
 | Ctrl+Scroll | Zoom with mouse wheel |
 | Ctrl+Space | Trigger completion |
 | ALT+MWheel UP/DOWN | Switch between tabs |
-| ALT+Arrow LEFT/RIGHT | Switch between tabs |
+| Arrow Left / Right | Switch tabs (when the tab bar is focused) |
 | Ctrl+W | Close current tab |
 | Mouse Middle Button | Close current tab |
 | Tab | Insert spaces (or tab, see Preferences) |
 | Shift+Tab | Decrease indent |
 | Enter | Auto-indent (including `{}`) |
+| Ctrl+Shift+D | Duplicate line |
+| Alt+Up / Alt+Down | Move line up / down |
+| Ctrl+Shift+K | Delete line |
+| Ctrl+/ | Toggle line comment |
+| Ctrl+Shift+/ | Toggle block comment |
+| Ctrl+Enter | Insert line below |
+| Ctrl+Shift+Enter | Insert line above |
 
 ## Terminal
 
@@ -51,21 +58,9 @@ On macOS, use `Cmd` instead of `Ctrl` for standard sequences!
 | Hotkey | Action |
 |---|---|
 | Left / Right | Move cursor |
-| Shift+Left / Shift+Right | Select by character |
 | Up / Down | Move by line |
-| Shift+Up / Shift+Down | Select by line |
 | PageUp / PageDown | Page up / down |
-| Shift+PageUp / Shift+PageDown | Select by page |
 | Home / End | Line start / end |
-| Shift+Home / Shift+End | Select to line start / end |
-| Ctrl+Home / Ctrl+End | Document start / end |
-| Ctrl+Shift+Home / Ctrl+Shift+End | Select to document start / end |
-| Ctrl+A | Select all |
+| Insert | Toggle insert / overwrite mode |
 | Ctrl+Z | Undo |
 | Ctrl+Y / Ctrl+Shift+Z | Redo |
-| Ctrl+X | Cut |
-| Ctrl+C | Copy |
-| Ctrl+V | Paste |
-| Insert | Toggle insert / overwrite mode |
-| Backspace | Delete previous byte |
-| Delete | Delete current byte |
