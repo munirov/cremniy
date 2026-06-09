@@ -341,6 +341,10 @@ export function IdeDockview({
             />
             <div className={styles.editorBody}>
               <IdeMonacoEditor
+                value={ide.documentText}
+                onChange={ide.setDocumentText}
+                filePath={ide.activeFilePath}
+                revealTarget={ide.revealTarget}
                 onCursorPositionChange={onCursorPositionChange}
                 wordWrapEnabled={wordWrapEnabled}
                 insertSpaces={editorInsertSpaces}

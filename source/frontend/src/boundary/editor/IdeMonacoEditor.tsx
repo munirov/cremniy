@@ -3,7 +3,6 @@ import Editor from '@monaco-editor/react';
 import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject } from 'react';
 
 import { monacoLanguageForPath } from '@domain/editor/editorLanguage';
-import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useToolDock } from '@boundary/workspace/ToolDockContext';
 
 import { IDE_MONACO_BASE_OPTIONS } from './ideMonacoSharedOptions';
@@ -79,6 +78,14 @@ export type IdeEditorCursorPosition = {
 };
 
 export type IdeMonacoEditorProps = {
+  /** The document text to show/edit (the active group's active-file buffer). */
+  value: string;
+  /** Called on edit with the new text. */
+  onChange: (value: string) => void;
+  /** Path of the file shown — drives language, binary reset, reveal targeting. */
+  filePath: string | null;
+  /** Reveal-a-line request (from Search); nonce-guarded so it fires once. */
+  revealTarget: { path: string; line: number; nonce: number } | null;
   onCursorPositionChange?: (position: IdeEditorCursorPosition | null) => void;
   wordWrapEnabled?: boolean;
   insertSpaces?: boolean;
@@ -131,17 +138,20 @@ export function IdeMonacoEditor({
   command = null,
   fontSize = 14,
   onFontSizeChange,
+  value,
+  onChange,
+  filePath,
+  revealTarget,
 }: IdeMonacoEditorProps) {
-  const { documentText, setDocumentText, activeFilePath, revealTarget } = useIdeSession();
   const { selectToolTab } = useToolDock();
-  const language = monacoLanguageForPath(activeFilePath);
+  const language = monacoLanguageForPath(filePath);
   const [forceTextMode, setForceTextMode] = useState(false);
-  const isBinary = !forceTextMode && detectBinary(documentText);
+  const isBinary = !forceTextMode && detectBinary(value);
 
   // Reset force-text whenever the active file changes.
   useEffect(() => {
     setForceTextMode(false);
-  }, [activeFilePath]);
+  }, [filePath]);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const disposeCursorReportingRef = useRef<(() => void) | null>(null);
   const onCursorPositionChangeRef = useRef(onCursorPositionChange);
@@ -169,7 +179,7 @@ export function IdeMonacoEditor({
     const ed = editorRef.current;
     if (ed == null) return;
     ed.getModel()?.updateOptions({ insertSpaces, tabSize: tabWidth });
-  }, [insertSpaces, tabWidth, activeFilePath]);
+  }, [insertSpaces, tabWidth, filePath]);
 
   useEffect(() => {
     if (command?.kind !== 'findInEditor') {
@@ -191,22 +201,22 @@ export function IdeMonacoEditor({
       return;
     }
     const ed = editorRef.current;
-    if (ed == null || activeFilePath !== revealTarget.path) {
+    if (ed == null || filePath !== revealTarget.path) {
       return;
     }
     lastRevealNonceRef.current = revealTarget.nonce;
     ed.revealLineInCenter(revealTarget.line);
     ed.setPosition({ lineNumber: revealTarget.line, column: 1 });
     ed.focus();
-  }, [revealTarget, activeFilePath, documentText]);
+  }, [revealTarget, filePath, value]);
 
   // No file open AND scratch buffer is empty → show a clean welcome card
   // instead of an empty Monaco. Cursor / VS Code idle pattern: muted product
   // logo centered above a two-column grid where action names align right and
   // keyboard shortcuts align left — so every `+` and every glyph sits in the
   // same column across rows.
-  const noActiveFile = activeFilePath == null || activeFilePath === '';
-  if (noActiveFile && documentText === '') {
+  const noActiveFile = filePath == null || filePath === '';
+  if (noActiveFile && value === '') {
     const rows: Array<{ label: string; keys: string[] }> = [
       { label: 'Open file', keys: ['Ctrl', 'O'] },
       { label: 'Open folder', keys: ['Ctrl', 'Shift', 'O'] },
@@ -329,7 +339,7 @@ export function IdeMonacoEditor({
       <Editor
         height="100%"
         language={language}
-        path={activeFilePath ?? undefined}
+        path={filePath ?? undefined}
         theme="cremniy-dark"
         beforeMount={(monaco) => {
           // vs-dark marks the active line with an outline; we want a fill.
@@ -343,8 +353,8 @@ export function IdeMonacoEditor({
             },
           });
         }}
-        value={documentText}
-        onChange={(value) => setDocumentText(value ?? '')}
+        value={value}
+        onChange={(v) => onChange(v ?? '')}
         onMount={(editorInstance) => {
           editorRef.current = editorInstance;
           editorInstance.updateOptions({

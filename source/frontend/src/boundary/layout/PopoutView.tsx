@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
 import { IdeToolDock } from '@boundary/layout/IdeToolDock';
 import { TerminalFooterPanel } from '@boundary/terminal/TerminalFooterPanel';
-import { IdeSessionProvider } from '@boundary/workspace/IdeSessionContext';
+import { IdeSessionProvider, useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { ToolDockProvider } from '@boundary/workspace/ToolDockContext';
 import { useWorkspaceRoot } from '@boundary/workspace/WorkspaceContext';
 import { WorkspaceFileTree } from '@boundary/workspace/WorkspaceFileTree';
@@ -60,7 +60,7 @@ function PopoutPaneRenderer({ paneId }: { paneId: string }) {
     case 'fileTree':
       return <WorkspaceFileTree workspaceRoot={workspaceRoot} />;
     case 'editor':
-      return <IdeMonacoEditor />;
+      return <PopoutEditor />;
     case 'toolDock':
       return <IdeToolDock />;
     case 'terminal':
@@ -72,4 +72,17 @@ function PopoutPaneRenderer({ paneId }: { paneId: string }) {
         </div>
       );
   }
+}
+
+/** The editor pane in a popped-out window — binds Monaco to the local session. */
+function PopoutEditor() {
+  const ide = useIdeSession();
+  return (
+    <IdeMonacoEditor
+      value={ide.documentText}
+      onChange={ide.setDocumentText}
+      filePath={ide.activeFilePath}
+      revealTarget={ide.revealTarget}
+    />
+  );
 }
