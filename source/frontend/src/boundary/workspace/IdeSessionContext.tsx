@@ -14,6 +14,20 @@ import {
   DEFAULT_APP_PREFERENCES,
   withOpenedWorkspacePinned,
 } from '@domain/preferences/appPreferences';
+import {
+  initialGroupsState,
+  getActiveGroup,
+  isPathOpenAnywhere,
+  openInGroup,
+  activateInGroup,
+  openPanelInGroup,
+  activatePanelInGroup,
+  closeInGroup,
+  closePanelInGroup,
+  reorderInGroup,
+  renamePathInGroups,
+  type GroupsState,
+} from '@domain/editor/editorGroups';
 import type { FileMenuActionId } from '@domain/menu/fileMenu';
 import { normalizeFsPath, parentDirectoryPath, fileNameFromPath } from '@domain/workspace/paths';
 import { loadPreferences, savePreferences } from '@infrastructure/preferences/preferencesBridge';
@@ -83,6 +97,9 @@ export type IdeSessionContextValue = {
 
 const IdeSessionContext = createContext<IdeSessionContextValue | null>(null);
 
+/** The single editor group all view state lives in (step-1: no splits yet). */
+const GROUP_ID = 'g0';
+
 function formatUserMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -94,44 +111,37 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const workspaceRoot = useWorkspaceRoot();
   const notify = useNotify();
-  const [openTabs, setOpenTabs] = useState<string[]>([]);
+  // The editor *view* state — open tabs, active file, preview tab, center
+  // panels, and the focus-order MRU — lives in one pure GroupsState with a
+  // single group. The public fields below are derived from its active group;
+  // mutators drive it through the pure functions in `domain/editor/editorGroups`.
+  const [groups, setGroups] = useState<GroupsState>(() => initialGroupsState(GROUP_ID));
   const [pinnedFilePaths, setPinnedFilePaths] = useState<Set<string>>(() => new Set());
   const [buffers, setBuffers] = useState<Record<string, string>>({});
   const [savedBuffers, setSavedBuffers] = useState<Record<string, string>>({});
   // Tabs whose file is binary (non-UTF-8, or text that carries NUL bytes). They
   // have no text buffer — the byte tools read them straight from disk.
   const [binaryTabs, setBinaryTabs] = useState<Set<string>>(() => new Set());
-  const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
+  // documentText mirrors the active file's buffer; kept as its own state (not
+  // derived) and refreshed whenever the active file changes — minimal-risk and
+  // matches the legacy single source of truth the editor binds to.
   const [documentText, setDocumentTextState] = useState('');
   const [fileTreeRevision, setFileTreeRevision] = useState(0);
   const [fileContentRevision, setFileContentRevision] = useState(0);
-  // Non-file center tabs (e.g. settings) opened in the editor "tab space".
-  // activePanel non-null means the center shows that panel instead of the file.
-  const [openPanels, setOpenPanels] = useState<string[]>([]);
-  const [activePanel, setActivePanel] = useState<string | null>(null);
-  // The one file tab in "preview" mode (single-click open): italic, and the
-  // next single-click preview replaces it. Double-click / edit promotes it.
-  const [previewFilePath, setPreviewFilePath] = useState<string | null>(null);
 
-  const openTabsRef = useRef<string[]>([]);
+  // Synchronous mirror of `groups` so callbacks read the current view state
+  // without stale closures (the pure functions take the current state in and
+  // return the next, which we both commit and store here).
+  const groupsRef = useRef<GroupsState>(groups);
   const buffersRef = useRef<Record<string, string>>({});
   const savedBuffersRef = useRef<Record<string, string>>({});
   // UTF-8 BOM preservation: each open path remembers whether its on-disk
   // bytes started with EF BB BF, so save() can re-emit the BOM.
   const bomFlagsRef = useRef<Record<string, boolean>>({});
-  // Mirrors for the MRU close logic (read current open/active without stale
-  // closures). Center-tab focus order: closing the visible tab falls back to
-  // the most recently used remaining tab (file OR panel), never an empty pane.
-  const openPanelsRef = useRef<string[]>([]);
-  const activeFilePathRef = useRef<string | null>(null);
-  const activePanelRef = useRef<string | null>(null);
-  const previewFilePathRef = useRef<string | null>(null);
-  // MRU stack of tab keys — file path, or `panel:<id>` for a center panel.
-  const tabMruRef = useRef<string[]>([]);
 
   useEffect(() => {
-    openTabsRef.current = openTabs;
-  }, [openTabs]);
+    groupsRef.current = groups;
+  }, [groups]);
 
   useEffect(() => {
     buffersRef.current = buffers;
@@ -141,56 +151,42 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     savedBuffersRef.current = savedBuffers;
   }, [savedBuffers]);
 
-  useEffect(() => {
-    openPanelsRef.current = openPanels;
-  }, [openPanels]);
-  useEffect(() => {
-    activeFilePathRef.current = activeFilePath;
-  }, [activeFilePath]);
-  useEffect(() => {
-    activePanelRef.current = activePanel;
-  }, [activePanel]);
-  useEffect(() => {
-    previewFilePathRef.current = previewFilePath;
-  }, [previewFilePath]);
+  // Commit a new GroupsState to both the ref (for synchronous reads in the same
+  // callback) and React state. Returns the committed state for chaining.
+  const commitGroups = useCallback((next: GroupsState): GroupsState => {
+    groupsRef.current = next;
+    setGroups(next);
+    return next;
+  }, []);
 
-  // ── Center-tab MRU (focus order across files + panels) ──────────────────
-  const recordTabFocus = useCallback((key: string) => {
-    tabMruRef.current = [...tabMruRef.current.filter((k) => k !== key), key];
-  }, []);
-  const forgetTabFocus = useCallback((key: string) => {
-    tabMruRef.current = tabMruRef.current.filter((k) => k !== key);
-  }, []);
-  const showFileTab = useCallback((p: string) => {
-    setActivePanel(null);
-    setActiveFilePath(p);
-    setDocumentTextState(buffersRef.current[p] ?? '');
-  }, []);
-  // Activate the most-recently-used tab still open (excluding `excludeKey`),
-  // given the post-close open files/panels. Falls back to last tab, then clear.
-  const activateMostRecentTab = useCallback(
-    (excludeKey: string, openFiles: string[], openPanelIds: string[]) => {
-      const isOpen = (k: string) =>
-        k.startsWith('panel:') ? openPanelIds.includes(k.slice(6)) : openFiles.includes(k);
-      for (let i = tabMruRef.current.length - 1; i >= 0; i--) {
-        const k = tabMruRef.current[i]!;
-        if (k === excludeKey || !isOpen(k)) continue;
-        if (k.startsWith('panel:')) setActivePanel(k.slice(6));
-        else showFileTab(k);
-        return;
-      }
-      if (openFiles.length > 0) {
-        showFileTab(openFiles[openFiles.length - 1]!);
-      } else if (openPanelIds.length > 0) {
-        setActivePanel(openPanelIds[openPanelIds.length - 1]!);
-      } else {
-        setActiveFilePath(null);
-        setActivePanel(null);
-        setDocumentTextState('');
-      }
-    },
-    [showFileTab],
-  );
+  // ── derived view state (always reflects the active group) ────────────────
+  const activeGroup = getActiveGroup(groups);
+  const activeFilePath = activeGroup.activeFilePath;
+  const openTabs = activeGroup.openTabs;
+  const previewFilePath = activeGroup.previewFilePath;
+  const openPanels = activeGroup.openPanels;
+  const activePanel = activeGroup.activePanel;
+
+  // Reflect the active file's buffer into documentText whenever the model says
+  // a (different) file is active — drives the editor binding the way the legacy
+  // setActiveFilePath + setDocumentTextState pair did, but for any state change
+  // (close re-pick, save-as rename, split, …) routed through the model.
+  const showActiveBuffer = useCallback((state: GroupsState): void => {
+    const g = getActiveGroup(state);
+    if (g.activePanel != null) {
+      return;
+    }
+    const path = g.activeFilePath;
+    if (path == null || path === '') {
+      setDocumentTextState('');
+      return;
+    }
+    if (binaryTabs.has(path)) {
+      setDocumentTextState('');
+      return;
+    }
+    setDocumentTextState(buffersRef.current[path] ?? '');
+  }, [binaryTabs]);
 
   const bumpFileTreeRevision = useCallback(() => {
     setFileTreeRevision((n) => n + 1);
@@ -227,23 +223,12 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
 
   // Swap two tabs. Caller must ensure both indices live in the same zone
   // (both pinned or both unpinned) — the strip enforces that.
-  const reorderOpenFiles = useCallback((fromIndex: number, toIndex: number) => {
-    setOpenTabs((tabs) => {
-      if (
-        fromIndex < 0 ||
-        toIndex < 0 ||
-        fromIndex >= tabs.length ||
-        toIndex >= tabs.length ||
-        fromIndex === toIndex
-      ) {
-        return tabs;
-      }
-      const next = tabs.slice();
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved!);
-      return next;
-    });
-  }, []);
+  const reorderOpenFiles = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      commitGroups(reorderInGroup(groupsRef.current, GROUP_ID, fromIndex, toIndex));
+    },
+    [commitGroups],
+  );
 
   const navigateToWorkspace = useCallback(
     (rootPath: string) => {
@@ -268,15 +253,14 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       if (path === '') {
         return;
       }
-      if (!openTabsRef.current.includes(path)) {
-        return;
+      const next = activateInGroup(groupsRef.current, GROUP_ID, path);
+      if (next === groupsRef.current) {
+        return; // not open here — no-op (mirrors the old openTabs guard)
       }
-      recordTabFocus(path);
-      setActivePanel(null);
-      setActiveFilePath(path);
-      setDocumentTextState(buffersRef.current[path] ?? '');
+      commitGroups(next);
+      showActiveBuffer(next);
     },
-    [recordTabFocus],
+    [commitGroups, showActiveBuffer],
   );
 
   const closeOpenFile = useCallback(
@@ -295,48 +279,53 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const tabsBefore = openTabsRef.current;
-      const nextTabs = tabsBefore.filter((t) => t !== path);
-      const nextBuffers = { ...buffersRef.current };
-      const nextSavedBuffers = { ...savedBuffersRef.current };
-      delete nextBuffers[path];
-      delete nextSavedBuffers[path];
+      const next = closeInGroup(groupsRef.current, GROUP_ID, path);
+      commitGroups(next);
 
-      setOpenTabs(nextTabs);
-      openTabsRef.current = nextTabs; // keep current for the MRU pick below
-      setBuffers(nextBuffers);
-      setSavedBuffers(nextSavedBuffers);
-      setBinaryTabs((prev) => {
-        if (!prev.has(path)) return prev;
-        const next = new Set(prev);
-        next.delete(path);
-        return next;
-      });
+      // Buffer GC: only drop the global buffer/saved/binary/bom entries when the
+      // path is no longer open in ANY group (always true with one group, but
+      // coded correctly so splits in a later step stay safe).
+      if (!isPathOpenAnywhere(next, path)) {
+        setBuffers((prev) => {
+          if (!(path in prev)) return prev;
+          const n = { ...prev };
+          delete n[path];
+          return n;
+        });
+        setSavedBuffers((prev) => {
+          if (!(path in prev)) return prev;
+          const n = { ...prev };
+          delete n[path];
+          return n;
+        });
+        setBinaryTabs((prev) => {
+          if (!prev.has(path)) return prev;
+          const n = new Set(prev);
+          n.delete(path);
+          return n;
+        });
+        if (path in bomFlagsRef.current) {
+          const n = { ...bomFlagsRef.current };
+          delete n[path];
+          bomFlagsRef.current = n;
+        }
+      }
       setPinnedFilePaths((prev) => {
         if (!prev.has(path)) return prev;
-        const next = new Set(prev);
-        next.delete(path);
-        return next;
+        const n = new Set(prev);
+        n.delete(path);
+        return n;
       });
-      if (previewFilePathRef.current === path) {
-        setPreviewFilePath(null);
-      }
-      forgetTabFocus(path);
 
-      // Re-pick the visible tab only if the closed file was the one on screen;
-      // fall back to the most-recently-used remaining tab (file OR panel).
-      if (activePanelRef.current != null || activeFilePathRef.current !== path) {
-        return;
-      }
-      activateMostRecentTab(path, nextTabs, openPanelsRef.current);
+      showActiveBuffer(next);
     },
-    [forgetTabFocus, activateMostRecentTab],
+    [commitGroups, showActiveBuffer],
   );
 
   const closeOtherOpenFiles = useCallback(
     (keepFilePath: string) => {
       const keep = keepFilePath.trim();
-      const tabs = openTabsRef.current.slice();
+      const tabs = getActiveGroup(groupsRef.current).openTabs.slice();
       for (const t of tabs) {
         if (t !== keep && !pinnedFilePaths.has(t)) {
           closeOpenFile(t);
@@ -347,7 +336,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   );
 
   const closeAllOpenFiles = useCallback(() => {
-    const tabs = openTabsRef.current.slice();
+    const tabs = getActiveGroup(groupsRef.current).openTabs.slice();
     for (const t of tabs) {
       if (!pinnedFilePaths.has(t)) {
         closeOpenFile(t);
@@ -360,16 +349,19 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       setDocumentTextState(value);
       if (activeFilePath != null && activeFilePath !== '') {
         setBuffers((prev) => ({ ...prev, [activeFilePath]: value }));
-        // Editing the previewed file promotes it to a permanent tab.
+        // Editing the previewed file promotes it to a permanent tab — clear the
+        // group's preview flag when the active file's text diverges from saved.
+        const g = getActiveGroup(groupsRef.current);
         if (
-          previewFilePathRef.current === activeFilePath &&
+          g.previewFilePath === activeFilePath &&
           value !== (savedBuffersRef.current[activeFilePath] ?? '')
         ) {
-          setPreviewFilePath(null);
+          // Re-opening the current preview "for keeps" promotes it in place.
+          commitGroups(openInGroup(groupsRef.current, GROUP_ID, activeFilePath));
         }
       }
     },
-    [activeFilePath],
+    [activeFilePath, commitGroups],
   );
 
   const openWorkspaceFolderFlow = useCallback(async () => {
@@ -377,13 +369,12 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     if (path == null || path === '') {
       return;
     }
-    setOpenTabs([]);
+    commitGroups(initialGroupsState(GROUP_ID));
     setBuffers({});
     setSavedBuffers({});
-    setActiveFilePath(null);
     setDocumentTextState('');
     await persistRecentAndNavigate(path);
-  }, [persistRecentAndNavigate]);
+  }, [commitGroups, persistRecentAndNavigate]);
 
   const newProjectFlow = useCallback(async () => {
     // Two-step prompt — pick parent folder, then ask for the new project name.
@@ -398,16 +389,15 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     }
     try {
       const created = await createProjectFolder(parent, name.trim());
-      setOpenTabs([]);
+      commitGroups(initialGroupsState(GROUP_ID));
       setBuffers({});
       setSavedBuffers({});
-      setActiveFilePath(null);
       setDocumentTextState('');
       await persistRecentAndNavigate(created);
     } catch (e) {
       notify.error('Could not create project', formatUserMessage(e));
     }
-  }, [notify, persistRecentAndNavigate]);
+  }, [commitGroups, notify, persistRecentAndNavigate]);
 
   const openFileFlow = useCallback(async () => {
     const path = await pickFile();
@@ -422,23 +412,22 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     const text = await readUserFile(path);
     const currentRoot = workspaceRoot?.path ?? '';
     if (normalizeFsPath(parent) !== normalizeFsPath(currentRoot)) {
-      setOpenTabs([]);
+      commitGroups(initialGroupsState(GROUP_ID));
       setBuffers({});
       setSavedBuffers({});
-      setActiveFilePath(null);
       setDocumentTextState('');
     }
     await persistRecentAndNavigate(parent);
-    if (openTabsRef.current.includes(path)) {
+    if (getActiveGroup(groupsRef.current).openTabs.includes(path)) {
       activateOpenFile(path);
       return;
     }
-    setOpenTabs((t) => [...t, path]);
+    const next = openInGroup(groupsRef.current, GROUP_ID, path);
+    commitGroups(next);
     setBuffers((b) => ({ ...b, [path]: text }));
     setSavedBuffers((b) => ({ ...b, [path]: text }));
-    setActiveFilePath(path);
     setDocumentTextState(text);
-  }, [activateOpenFile, persistRecentAndNavigate, workspaceRoot?.path]);
+  }, [activateOpenFile, commitGroups, notify, persistRecentAndNavigate, workspaceRoot?.path]);
 
   const saveDocumentAsFlow = useCallback(async () => {
     const chosen = await pickSaveFile(activeFilePath ?? null);
@@ -456,35 +445,32 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       bomFlagsRef.current = { ...bomFlagsRef.current, [chosen]: true };
     }
     if (oldPath != null && oldPath !== '') {
-      setOpenTabs((tabs) => {
-        const mergeWithExistingChosenTab =
-          chosen !== oldPath && tabs.includes(chosen);
-        if (mergeWithExistingChosenTab) {
-          return tabs.filter((t) => t !== oldPath);
-        }
-        return tabs.map((t) => (t === oldPath ? chosen : t));
-      });
+      // Rename the tab in every group (merges into an existing `chosen` tab if
+      // one is open — renamePathInGroups drops the old tab in that case).
+      const next = renamePathInGroups(groupsRef.current, oldPath, chosen);
+      commitGroups(next);
       setBuffers((prev) => {
-        const next = { ...prev };
-        delete next[oldPath];
-        next[chosen] = documentText;
-        return next;
+        const n = { ...prev };
+        delete n[oldPath];
+        n[chosen] = documentText;
+        return n;
       });
       setSavedBuffers((prev) => {
-        const next = { ...prev };
+        const n = { ...prev };
         if (chosen !== oldPath) {
-          delete next[oldPath];
+          delete n[oldPath];
         }
-        next[chosen] = documentText;
-        return next;
+        n[chosen] = documentText;
+        return n;
       });
     } else {
-      setOpenTabs((tabs) => (tabs.includes(chosen) ? tabs : [...tabs, chosen]));
+      const next = openInGroup(groupsRef.current, GROUP_ID, chosen);
+      commitGroups(next);
       setBuffers((prev) => ({ ...prev, [chosen]: documentText }));
       setSavedBuffers((prev) => ({ ...prev, [chosen]: documentText }));
     }
-    setActiveFilePath(chosen);
-  }, [activeFilePath, documentText]);
+    setDocumentTextState(documentText);
+  }, [activeFilePath, commitGroups, documentText]);
 
   const saveDocumentFlow = useCallback(async () => {
     if (activeFilePath == null || activeFilePath === '') {
@@ -511,23 +497,17 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       if (path === '') {
         return;
       }
-      if (!openTabsRef.current.includes(path)) {
-        const nextTabs = [...openTabsRef.current, path];
-        openTabsRef.current = nextTabs;
-        setOpenTabs(nextTabs);
-      }
+      const next = openInGroup(groupsRef.current, GROUP_ID, path);
+      commitGroups(next);
       setBinaryTabs((prev) => {
         if (prev.has(path)) return prev;
-        const next = new Set(prev);
-        next.add(path);
-        return next;
+        const n = new Set(prev);
+        n.add(path);
+        return n;
       });
-      recordTabFocus(path);
-      setActivePanel(null);
-      setActiveFilePath(path);
       setDocumentTextState('');
     },
-    [recordTabFocus],
+    [commitGroups],
   );
 
   const openFileFromWorkspace = useCallback(
@@ -544,11 +524,14 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       // Single-click opens a preview tab; double-click / other callers open it
       // for keeps (default). Opening the current preview "for keeps" promotes it.
       const preview = opts?.preview ?? false;
-      if (openTabsRef.current.includes(trimmed)) {
-        activateOpenFile(trimmed);
-        if (!preview && previewFilePathRef.current === trimmed) {
-          setPreviewFilePath(null);
-        }
+      if (getActiveGroup(groupsRef.current).openTabs.includes(trimmed)) {
+        // Re-open: activate, and (for-keeps) promote it if it was the preview.
+        // openInGroup with preview=false handles both activation and promotion.
+        const next = preview
+          ? activateInGroup(groupsRef.current, GROUP_ID, trimmed)
+          : openInGroup(groupsRef.current, GROUP_ID, trimmed);
+        commitGroups(next);
+        showActiveBuffer(next);
         return;
       }
       try {
@@ -565,19 +548,23 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         bomFlagsRef.current = { ...bomFlagsRef.current, [trimmed]: hasBom };
 
         // A single-click preview reuses the current preview tab in place (when
-        // it's clean), instead of piling up tabs. Dirty preview is kept.
-        const old = previewFilePathRef.current;
-        const canReplace =
-          preview &&
-          old != null &&
-          old !== trimmed &&
-          openTabsRef.current.includes(old) &&
-          (buffersRef.current[old] ?? '') === (savedBuffersRef.current[old] ?? '');
+        // it's clean), instead of piling up tabs. Dirty preview is kept — the
+        // model only replaces a clean preview when we pass cleanPreview.
+        const old = getActiveGroup(groupsRef.current).previewFilePath;
+        const previewClean =
+          old != null && (buffersRef.current[old] ?? '') === (savedBuffersRef.current[old] ?? '');
+        const replacedOld =
+          preview && old != null && old !== trimmed && previewClean;
 
-        if (canReplace && old != null) {
-          const nextTabs = openTabsRef.current.map((p) => (p === old ? trimmed : p));
-          openTabsRef.current = nextTabs;
-          setOpenTabs(nextTabs);
+        const next = openInGroup(groupsRef.current, GROUP_ID, trimmed, {
+          preview,
+          cleanPreview: previewClean,
+        });
+        commitGroups(next);
+
+        // When a clean preview tab was replaced in place, GC its buffers (the
+        // tab is gone). Safe-guarded by isPathOpenAnywhere for future splits.
+        if (replacedOld && old != null && !isPathOpenAnywhere(next, old)) {
           setBuffers((b) => {
             const n = { ...b, [trimmed]: text };
             delete n[old];
@@ -588,31 +575,19 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
             delete n[old];
             return n;
           });
-          forgetTabFocus(old);
         } else {
-          const nextTabs = [...openTabsRef.current, trimmed];
-          openTabsRef.current = nextTabs;
-          setOpenTabs(nextTabs);
           setBuffers((b) => ({ ...b, [trimmed]: text }));
           setSavedBuffers((b) => ({ ...b, [trimmed]: text }));
         }
 
-        // Only mark a preview when previewing; opening for keeps leaves any
-        // existing preview untouched.
-        if (preview) {
-          setPreviewFilePath(trimmed);
-        }
         // Opened as text — make sure it isn't still flagged binary (a file can
         // flip across reopens).
         setBinaryTabs((prev) => {
           if (!prev.has(trimmed)) return prev;
-          const next = new Set(prev);
-          next.delete(trimmed);
-          return next;
+          const n = new Set(prev);
+          n.delete(trimmed);
+          return n;
         });
-        recordTabFocus(trimmed);
-        setActivePanel(null);
-        setActiveFilePath(trimmed);
         setDocumentTextState(text);
       } catch (e) {
         // The text decode failed — most often invalid UTF-8, i.e. an
@@ -627,7 +602,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [notify, workspaceRoot?.path, activateOpenFile, forgetTabFocus, recordTabFocus, openAsBinaryTab],
+    [notify, workspaceRoot?.path, commitGroups, showActiveBuffer, openAsBinaryTab],
   );
 
   const openFileAtLine = useCallback(
@@ -645,7 +620,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     // Only files with no unsaved edits — never overwrite the user's buffer.
-    const clean = openTabsRef.current.filter(
+    const clean = getActiveGroup(groupsRef.current).openTabs.filter(
       (p) => (buffersRef.current[p] ?? '') === (savedBuffersRef.current[p] ?? ''),
     );
     for (const p of clean) {
@@ -656,7 +631,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         bomFlagsRef.current = { ...bomFlagsRef.current, [p]: hasBom };
         setBuffers((b) => ({ ...b, [p]: text }));
         setSavedBuffers((b) => ({ ...b, [p]: text }));
-        if (activeFilePath === p) {
+        if (getActiveGroup(groupsRef.current).activeFilePath === p) {
           setDocumentTextState(text);
         }
       } catch {
@@ -664,56 +639,44 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       }
     }
     bumpFileContentRevision();
-  }, [workspaceRoot?.path, activeFilePath, bumpFileContentRevision]);
+  }, [workspaceRoot?.path, bumpFileContentRevision]);
 
   const openPanel = useCallback(
     (id: string) => {
-      if (!openPanelsRef.current.includes(id)) {
-        openPanelsRef.current = [...openPanelsRef.current, id];
-      }
-      setOpenPanels(openPanelsRef.current);
-      recordTabFocus(`panel:${id}`);
-      setActivePanel(id);
+      commitGroups(openPanelInGroup(groupsRef.current, GROUP_ID, id));
     },
-    [recordTabFocus],
+    [commitGroups],
   );
 
   const activatePanel = useCallback(
     (id: string) => {
-      recordTabFocus(`panel:${id}`);
-      setActivePanel(id);
+      commitGroups(activatePanelInGroup(groupsRef.current, GROUP_ID, id));
     },
-    [recordTabFocus],
+    [commitGroups],
   );
 
   const closePanel = useCallback(
     (id: string) => {
-      const nextPanels = openPanelsRef.current.filter((p) => p !== id);
-      setOpenPanels(nextPanels);
-      openPanelsRef.current = nextPanels;
-      forgetTabFocus(`panel:${id}`);
-      // Re-pick the visible tab only if this panel was on screen; fall back to
-      // the most-recently-used remaining tab (file OR panel) — never empty.
-      if (activePanelRef.current !== id) {
-        return;
-      }
-      activateMostRecentTab(`panel:${id}`, openTabsRef.current, nextPanels);
+      const next = closePanelInGroup(groupsRef.current, GROUP_ID, id);
+      commitGroups(next);
+      // Closing the visible panel re-picks a file/panel — refresh documentText.
+      showActiveBuffer(next);
     },
-    [forgetTabFocus, activateMostRecentTab],
+    [commitGroups, showActiveBuffer],
   );
 
   const closeWorkspaceFlow = useCallback(() => {
-    setOpenTabs([]);
+    commitGroups(initialGroupsState(GROUP_ID));
     setBuffers({});
     setSavedBuffers({});
-    setActiveFilePath(null);
     setDocumentTextState('');
     navigate('/', { replace: true });
-  }, [navigate]);
+  }, [commitGroups, navigate]);
 
   const closeEditorTabFlow = useCallback(() => {
-    const tabs = openTabsRef.current;
-    const path = activeFilePath?.trim() ?? '';
+    const g = getActiveGroup(groupsRef.current);
+    const tabs = g.openTabs;
+    const path = g.activeFilePath?.trim() ?? '';
 
     const closeScratch = (): void => {
       const text = documentText ?? '';
@@ -736,7 +699,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     }
 
     closeScratch();
-  }, [activeFilePath, closeOpenFile, documentText]);
+  }, [closeOpenFile, documentText]);
 
   const runFileMenuAction = useCallback(
     async (id: FileMenuActionId) => {
