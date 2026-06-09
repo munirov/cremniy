@@ -93,9 +93,9 @@ const git: PluginManifest = {
   links: [
     {
       label: 'Documentation',
-      url: 'https://github.com/Ramazanov-Ruslan-IT/cremniy/blob/contrib/tauri-only-desktop/documentation/architecture/PLUGINS.md',
+      url: 'https://github.com/munirov/cremniy/blob/HEAD/documentation/architecture/PLUGINS.md',
     },
-    { label: 'Repository', url: 'https://github.com/Ramazanov-Ruslan-IT/cremniy' },
+    { label: 'Repository', url: 'https://github.com/munirov/cremniy' },
   ],
   readme: GIT_README,
   views: [
