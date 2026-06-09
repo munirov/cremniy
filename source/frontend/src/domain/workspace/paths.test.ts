@@ -1,6 +1,36 @@
 import { describe, expect, it } from 'vitest';
 
-import { fileNameFromPath, joinFilePath, normalizeFsPath, parentDirectoryPath } from './paths';
+import {
+  fileNameFromPath,
+  joinFilePath,
+  normalizeFsPath,
+  parentDirectoryPath,
+  resolveRelativePath,
+} from './paths';
+
+describe('resolveRelativePath', () => {
+  it('resolves a subdir reference against a Windows base dir', () => {
+    expect(resolveRelativePath('P:\\proj\\repo', 'documentation/logo.svg')).toBe(
+      'P:\\proj\\repo\\documentation\\logo.svg',
+    );
+  });
+
+  it('honours ./ and ../ segments', () => {
+    expect(resolveRelativePath('P:\\proj\\repo\\docs', '../assets/x.png')).toBe(
+      'P:\\proj\\repo\\assets\\x.png',
+    );
+    expect(resolveRelativePath('/home/u/repo', './img/y.png')).toBe('/home/u/repo/img/y.png');
+  });
+
+  it('does not climb past the root and tolerates a trailing separator', () => {
+    expect(resolveRelativePath('P:\\repo\\', '../../../x')).toBe('P:\\x');
+  });
+
+  it('returns the ref unchanged when either side is empty', () => {
+    expect(resolveRelativePath('', 'a/b')).toBe('a/b');
+    expect(resolveRelativePath('P:\\repo', '')).toBe('');
+  });
+});
 
 describe('fileNameFromPath', () => {
   it('returns filename for backslash path', () => {

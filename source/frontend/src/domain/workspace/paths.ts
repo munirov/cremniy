@@ -77,3 +77,33 @@ export function joinFilePath(dirPath: string, fileName: string): string {
   const sep = d.includes('\\') && !d.includes('/') ? '\\' : '/';
   return `${d}${sep}${name}`;
 }
+
+/**
+ * Resolve a relative reference (Markdown/href style — `/`-separated, may use
+ * `./` and `../`) against a base directory, producing an absolute path in the
+ * base's separator style. Used to turn a `.md` file's relative image/link
+ * targets into real workspace paths. Returns the ref unchanged if either side is
+ * empty.
+ */
+export function resolveRelativePath(baseDir: string, ref: string): string {
+  const r = ref.trim();
+  const base = baseDir.trim().replace(/[/\\]+$/, '');
+  if (r === '' || base === '') {
+    return r;
+  }
+  const sep = base.includes('\\') && !base.includes('/') ? '\\' : '/';
+  const parts = base.split(/[/\\]+/);
+  for (const seg of r.split(/[/\\]+/)) {
+    if (seg === '' || seg === '.') {
+      continue;
+    }
+    if (seg === '..') {
+      if (parts.length > 1) {
+        parts.pop();
+      }
+    } else {
+      parts.push(seg);
+    }
+  }
+  return parts.join(sep);
+}

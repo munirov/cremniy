@@ -1,5 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { MarkdownView } from './MarkdownView';
 
@@ -48,5 +48,27 @@ describe('MarkdownView', () => {
     render(<MarkdownView source={'<details><summary>More</summary>hidden body</details>'} />);
     expect(screen.getByText('More').tagName).toBe('SUMMARY');
     expect(screen.getByText('hidden body')).toBeInTheDocument();
+  });
+
+  it('maps image sources through transformImageUrl (markdown + inline HTML)', () => {
+    render(
+      <MarkdownView
+        source={'![logo](img/logo.png)\n\n<img src="logos/x.svg" alt="x">'}
+        transformImageUrl={(s) => `asset://r/${s}`}
+      />,
+    );
+    expect(screen.getByRole('img', { name: 'logo' })).toHaveAttribute(
+      'src',
+      'asset://r/img/logo.png',
+    );
+    expect(screen.getByRole('img', { name: 'x' })).toHaveAttribute('src', 'asset://r/logos/x.svg');
+  });
+
+  it('calls onLinkClick with the href when a link is clicked', () => {
+    const onLinkClick = vi.fn();
+    render(<MarkdownView source={'see [the file](docs/readme.md)'} onLinkClick={onLinkClick} />);
+    fireEvent.click(screen.getByRole('link', { name: 'the file' }));
+    expect(onLinkClick).toHaveBeenCalledTimes(1);
+    expect(onLinkClick.mock.calls[0]?.[0]).toBe('docs/readme.md');
   });
 });
