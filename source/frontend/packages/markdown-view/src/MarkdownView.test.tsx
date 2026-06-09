@@ -71,4 +71,32 @@ describe('MarkdownView', () => {
     expect(onLinkClick).toHaveBeenCalledTimes(1);
     expect(onLinkClick.mock.calls[0]?.[0]).toBe('docs/readme.md');
   });
+
+  it('gives headings GitHub-style slug ids (rehype-slug)', () => {
+    render(<MarkdownView source={'## Install Guide\n\n### Pull Requests'} />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Install Guide' })).toHaveAttribute(
+      'id',
+      'install-guide',
+    );
+    expect(screen.getByRole('heading', { level: 3, name: 'Pull Requests' })).toHaveAttribute(
+      'id',
+      'pull-requests',
+    );
+  });
+
+  it('scrolls to the heading for an in-page anchor instead of opening a tab', () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    const onLinkClick = vi.fn();
+    render(
+      <MarkdownView source={'[jump](#install-guide)\n\n## Install Guide'} onLinkClick={onLinkClick} />,
+    );
+    const link = screen.getByRole('link', { name: 'jump' });
+    // Anchor links are in-page: no new-tab target, and the host is NOT asked to
+    // navigate — the view handles the scroll itself.
+    expect(link).not.toHaveAttribute('target', '_blank');
+    fireEvent.click(link);
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(onLinkClick).not.toHaveBeenCalled();
+  });
 });

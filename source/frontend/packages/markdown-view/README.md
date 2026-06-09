@@ -1,12 +1,13 @@
 # @cremniy/markdown-view
 
 A small, **reusable** React Markdown view. Full CommonMark + GitHub-Flavored
-Markdown (tables, task lists, strikethrough, autolinks) plus inline HTML, themed
-for a dark surface. Built on `react-markdown` + `remark-gfm` + `rehype-raw` — a
-spec-grade pipeline, not a hand-rolled subset.
+Markdown (tables, task lists, strikethrough, autolinks), inline HTML, and
+GitHub-style heading slugs with working in-page anchor links — themed for a dark
+surface. Built on `react-markdown` + `remark-gfm` + `rehype-raw` + `rehype-slug`
+— a spec-grade pipeline, not a hand-rolled subset.
 
 It's a self-contained package: copy the folder into any React project, install
-the three runtime deps, import the stylesheet once, and render.
+the runtime deps, import the stylesheet once, and render.
 
 ## Use
 
@@ -18,14 +19,23 @@ import '@cremniy/markdown-view/style.css';
 ```
 
 Peer deps: `react`, `react-dom` (≥ 18). Runtime deps: `react-markdown`,
-`remark-gfm`, `rehype-raw`.
+`remark-gfm`, `rehype-raw`, `rehype-slug`.
 
 ## Props
 
-| Prop        | Type     | Notes                                            |
-|-------------|----------|--------------------------------------------------|
-| `source`    | `string` | Markdown to render.                              |
-| `className` | `string` | Extra class on the root, composed with the theme.|
+| Prop                | Type                                         | Notes                                                                                                   |
+|---------------------|----------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| `source`            | `string`                                     | Markdown to render.                                                                                     |
+| `className`         | `string`                                     | Extra class on the root, composed with the theme.                                                      |
+| `transformImageUrl` | `(src: string) => string`                    | Map an image `src` to a loadable URL — e.g. resolve a relative path to a file/asset URL. Absolute/remote URLs pass through. |
+| `onLinkClick`       | `(href, event) => void`                      | Intercept link clicks — `event.preventDefault()` to take over (e.g. open a relative file in your app). In-page `#anchor` links are handled internally (scroll) and never reach this. |
+
+## Links, images & anchors
+
+External links open in a new tab. Relative links/images are yours to resolve via
+`onLinkClick` / `transformImageUrl`. In-page anchor links (`[Top](#heading)`)
+scroll to the matching heading — headings are auto-slugged with `rehype-slug`
+(GitHub's algorithm, Unicode-aware), so a README's table of contents just works.
 
 ## Theming
 
