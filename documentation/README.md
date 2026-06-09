@@ -11,6 +11,8 @@
 
 **[Overview](EN/overview.md)** — what Cremniy is, vision, principles, built-in tools
 
+**[Install & uninstall](INSTALL.md)** — installers, where your data lives, removal
+
 **[Hotkeys](EN/hotkey.md)**
 
 **[Developer guide](EN/developer_guide.md)** — run, build, add a feature
@@ -32,6 +34,8 @@
 <summary><strong>Русский</strong></summary>
 
 **[Обзор](RU/overview.md)** — что такое Cremniy, видение, принципы, встроенные инструменты
+
+**[Установка и удаление](INSTALL.md)** — установщики, где данные, удаление
 
 **[Горячие клавиши](RU/hotkey.md)**
 

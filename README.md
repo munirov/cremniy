@@ -42,6 +42,8 @@ Builds are currently **unsigned**, so the OS may warn on first launch:
 - **macOS** — right-click the app → *Open* (or run `xattr -dr com.apple.quarantine /Applications/Cremniy.app`).
 - **Linux** — `chmod +x Cremniy_*.AppImage`, then run it. The `.deb` installs with `sudo apt install ./Cremniy_*.deb`.
 
+**[Where Cremniy stores your data and how to uninstall →](documentation/INSTALL.md)**
+
 > If no installers are attached to the latest release yet, the first release hasn't been published — a maintainer publishes one by pushing a `vX.Y.Z` tag, which runs the [release workflow](.github/workflows/release.yml) to build all three OSes. Until then, build from source ([Development](#desktop-app-tauri--react) below).
 
 ## Desktop app (Tauri + React)
@@ -173,6 +175,8 @@ Distributed under the terms described in [LICENSE](LICENSE).
 - **Windows** — SmartScreen: *Подробнее* → *Выполнить в любом случае*.
 - **macOS** — ПКМ по приложению → *Открыть* (или `xattr -dr com.apple.quarantine /Applications/Cremniy.app`).
 - **Linux** — `chmod +x Cremniy_*.AppImage`, затем запустить. `.deb` ставится через `sudo apt install ./Cremniy_*.deb`.
+
+**[Где Cremniy хранит данные и как удалить →](documentation/INSTALL.md)**
 
 > Если к последнему релизу ещё не приложены установщики — первый релиз не опубликован. Мейнтейнер публикует его пушем тега `vX.Y.Z`, который запускает [workflow релиза](.github/workflows/release.yml) и собирает все три ОС. Пока — сборка из исходников ([Разработка](#десктопное-приложение-tauri--react) ниже).
 
