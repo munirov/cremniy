@@ -113,9 +113,9 @@ export type PluginManifest = {
   links?: PluginLink[];
   /**
    * Long description in Markdown — the body of the plugin's details page,
-   * rendered by boundary/extensions/Markdown.tsx. This is where a contributor
-   * describes what the plugin does and how to use it. Falls back to
-   * `description` when absent.
+   * rendered by the `@cremniy/markdown-view` package (full CommonMark + GFM).
+   * This is where a contributor describes what the plugin does and how to use
+   * it. Falls back to `description` when absent.
    */
   readme?: string;
 
