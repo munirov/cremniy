@@ -17,6 +17,9 @@ boundary → domain → infrastructure → shared
 | `infrastructure` | клиенты протоколов, хранилища (stores) | `shared` |
 | `shared` | утилиты, конфиги, интеграции, общие типы | ничего |
 
+В Cremniy слоя `arch` нет: нет роутинга и микрофронтендов, точка входа — плоские `src/main.tsx` +
+`src/App.tsx`. Подробности — в разделе [«Применение в Cremniy»](#применение-в-cremniy).
+
 Правила:
 - `boundary` не вызывает клиенты напрямую и не дёргает stores — только через хуки `_hooks/`. За
   данными ходит в `domain`-сервисы.
@@ -25,6 +28,10 @@ boundary → domain → infrastructure → shared
 - `shared` ни от кого не зависит.
 
 ## Структура каталога
+
+Блок ниже — **референсный шаблон** обобщённой раскладки (роль → подпапка). Cremniy режет по
+**фиче, а не по роли** и не использует обёртку `app/`/слой `arch/`; конкретная раскладка — в
+разделе [«Применение в Cremniy»](#применение-в-cremniy).
 
 ```
 app/
@@ -57,8 +64,10 @@ app/
     └── types/
 ```
 
-Алиасы импортов `@arch`, `@boundary`, `@domain`, `@infrastructure`, `@shared` в конфиге сборки и
-типов закрепляют границы слоёв.
+Алиасы импортов `@boundary`, `@domain`, `@infrastructure`, `@shared` в конфиге сборки и
+типов закрепляют границы слоёв. (В Cremniy полный набор — `@boundary`, `@domain`, `@shared`,
+`@infrastructure`, `@plugins`, `@cremniy/markdown-view`; алиаса `@arch` нет, см.
+[«Применение в Cremniy»](#применение-в-cremniy).)
 
 Пакет фронта целиком, поверх `app/`:
 
@@ -85,6 +94,10 @@ root = найти корневой узел разметки
 `AppRoot` — boot + маршруты из `arch/routers/`. Для микрофронтенда — отдельная точка
 `arch/mfe-entry` и отдельная сборка. Выбор платформы и аутентификация — в `boot` или
 `domain`-сервисе.
+
+В Cremniy всего этого нет: нет роутера, микрофронтендов и `boot`. Точка входа плоская —
+`src/main.tsx` монтирует `src/App.tsx` напрямую в корневой узел. Слоя `arch/` (и подпапок
+`routers/`, `mfe-entry`, `boot/`) в проекте не существует.
 
 ## Слои
 
@@ -143,6 +156,12 @@ Store управляет жизненным циклом экземпляров 
 в бэк, разворачивает конверт, валидирует по схеме → сервис кладёт DTO в хранилище → компонент
 перерисовывается.
 
+В Cremniy всё это к месту не приходится: HTTP-клиента, бэкенда, токена и конверта `{status, data,
+error_code}` нет. Роль `infrastructure/clients/http/` играет `infrastructure/tauri/bridge.ts` —
+тонкая обёртка над Tauri `invoke`, через которую данные уходят в нативную сторону. Слоя
+аутентификации/токенов и разворачивания конверта в проекте нет. См.
+[«Применение в Cremniy»](#применение-в-cremniy).
+
 ## Базовый клиент
 
 Над сетевым вызовом стоит один базовый клиент, который снимает с прикладного кода:
@@ -200,3 +219,27 @@ UI показывает их единообразно.
 4. Сервис в `domain/services/<feature>.service` — оркестрация клиент + хранилище.
 5. UI в `boundary/pages/<feature>/` + маршрут в `arch/routers/`; компоненты читают через хук, действия зовут сервис.
 6. Утилиты — в `shared`, тесты рядом с кодом.
+
+## Применение в Cremniy
+
+Cremniy следует слоям BMFP (`boundary → domain → infrastructure → shared`), но обобщённый шаблон
+выше — **референс**, а не точная карта проекта. Фронт лежит в `source/frontend/src/`, расхождения:
+
+- **Слои — прямо под `src/`.** Обёртки `app/` нет: `src/boundary/`, `src/domain/`,
+  `src/infrastructure/`, `src/shared/`.
+- **Точка входа плоская.** `src/main.tsx` + `src/App.tsx`. Слоя `arch/`, роутера (нет React
+  Router), микрофронтендов и `boot/` нет.
+- **Нарезка по фиче, а не по роли.** Внутри слоёв подпапки именуются по фиче, а не по роли
+  (`pages`/`widgets`/`services`/`states`/`clients`…):
+  - `boundary/{editor, terminal, workspace, welcome, settings, extensions, layout, menu, …}`
+  - `domain/{hexView, disassembly, strings, math, process, terminal, …}`
+  - `infrastructure/{tauri, preferences, settings, disassembly, terminal}`
+  - `shared/{agent, connections, plugins, theme}`
+- **Алиасы.** `@boundary`, `@domain`, `@shared`, `@infrastructure`, `@plugins`,
+  `@cremniy/markdown-view` (см. `vite.config.ts` + `tsconfig.json`). Алиаса `@arch` нет.
+  `@plugins` указывает на папку плагинов рядом с `source/`, `@cremniy/markdown-view` — на
+  внутренний переиспользуемый пакет в `packages/`.
+- **Транспорта/бэкенда нет.** HTTP-клиента, токена, аутентификации и конверта `{status, data,
+  error_code}` нет. Роль `infrastructure/clients/http/` играет `infrastructure/tauri/bridge.ts` —
+  обёртка над Tauri `invoke`: данные уходят в нативную (Rust) сторону по IPC. Привязку к нативной
+  оболочке см. в [BMAP](./BMAP.md).
