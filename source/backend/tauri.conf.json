@@ -1,8 +1,8 @@
 {
   "$schema": "../frontend/node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "cremniy-frontend",
+  "productName": "Cremniy",
   "version": "0.0.0",
-  "identifier": "com.cremniy.frontend",
+  "identifier": "com.cremniy.app",
   "build": {
     "frontendDist": "../frontend/dist",
     "devUrl": "http://localhost:5173",

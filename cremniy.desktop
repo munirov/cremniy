@@ -6,8 +6,8 @@ GenericName[ru]=Среда низкоуровневой разработки
 Comment=Integrated environment for low-level programming with hex editor, disassembler, and code editor
 Comment[ru]=Интегрированная среда для низкоуровневого программирования с hex-редактором, дизассемблером и редактором кода
 # Binary name follows Tauri productName (see frontend/src-tauri/tauri.conf.json)
-Exec=cremniy-frontend %F
-Icon=cremniy-frontend
+Exec=Cremniy %F
+Icon=Cremniy
 Terminal=false
 Categories=Development;IDE;
 Keywords=hex;disassembler;reverse;engineering;
