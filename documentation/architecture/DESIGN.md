@@ -9,7 +9,7 @@
 3. **Минимум линий.** Бордеры — тонкие, полупрозрачные (`rgba(255,255,255,0.06–0.14)`). Никаких сплошных серых разделителей на тёмном фоне.
 4. **Скругления — не «корпоративные».** 4–10px. Жирные радиусы (>12px) только у больших overlay карточек.
 5. **Motion — короткий и стандартный.** 120/180 мс с `cubic-bezier(0.4,0,0.2,1)`. Никаких 400+мс ease-out перепрыгиваний.
-6. **Типографика двухслойная.** UI — sans (Inter/Segoe UI Variable). Код / HEX / disasm / paths в Recent — mono (JetBrains Mono).
+6. **Типографика моно-only.** Весь UI — моноширинный шрифт. `index.css` ставит `body { font-family: var(--font-family-mono) }`, отдельного sans-стека нет. Меню, кнопки, заголовки, код, HEX, disasm, paths в Recent — всё на JetBrains Mono.
 
 ## Палитра
 
@@ -19,62 +19,91 @@
 
 | Token | Значение | Где |
 |---|---|---|
-| `--color-bg-base` | `#0e0f12` | Корневой фон окна, editor body |
-| `--color-bg-panel` | `#13141a` | Sidebar, TitleBar, ToolPane, menu surface |
-| `--color-bg-panel-alt` | `#191b22` | Чередующиеся строки (file tree alt rows), небольшие elevated блоки |
-| `--color-bg-elevated` | `#1d1f27` | Popover, dropdown, Settings dialog |
-| `--color-bg-overlay` | `rgba(20,22,28,0.92)` | Полупрозрачные оверлеи (Find dialog, Welcome backdrop) |
+| `--color-bg-base` | `#262626` | Корневой фон окна (body) |
+| `--color-bg-panel` | `#1f1f1f` | Sidebar, TitleBar, ToolPane, menu surface |
+| `--color-bg-panel-alt` | `#2b2b2b` | Чередующиеся строки (file tree alt rows), небольшие elevated блоки |
+| `--color-bg-editor` | `#1e1e1e` | Фон редактора кода (под Monaco vs-dark), breadcrumb / status chrome |
+| `--color-list-alternate` | `#0a0f18` | Альтернативная строка в плотных списках |
 
-Правило: чем элемент «выше», тем светлее фон. base → panel → panel-alt → elevated. Никогда не используем фон темнее base.
+Правило: чем элемент «выше», тем светлее фон. base → panel-alt. Никогда не используем фон темнее base.
 
 ### Текст
 
 | Token | Значение | Где |
 |---|---|---|
-| `--color-text-primary` | `rgba(255,255,255,0.94)` | Основной текст: код, заголовки, имена файлов |
-| `--color-text-secondary` | `rgba(255,255,255,0.66)` | Лейблы инпутов, подписи в карточках |
-| `--color-text-tertiary` | `rgba(255,255,255,0.42)` | Пути в Recent, placeholder, секционные заголовки ("Recent projects") |
-| `--color-text-on-accent` | `#ffffff` | Только на семантическом ярком фоне (toast error) |
+| `--color-text-primary` | `#ffffff` | Основной текст: код, заголовки, имена файлов |
+| `--color-text-on-accent` | `#ffffff` | Текст поверх семантического / CTA фона |
 
-Правило: вес текста контролируется **opacity**, а не другим тоном. Если тусклее — берёшь следующий уровень, не разводишь палитру.
+Правило: приглушённый текст делается **opacity** на самом элементе, а не отдельным токеном тона — в `tokens.css` только эти два цвета текста. Токенов `--color-text-secondary` / `--color-text-tertiary` нет; компоненты, которым нужен тусклый текст, задают `opacity` локально (или используют `var(--color-text-tertiary, …)` с хардкодным фолбэком).
 
 ### Бордеры
 
 | Token | Значение | Где |
 |---|---|---|
-| `--color-border-muted` | `rgba(255,255,255,0.04)` | Едва заметные разделители (между rows в списке) |
-| `--color-border-default` | `rgba(255,255,255,0.06)` | Карточки Welcome, тонкие линии в empty-state |
-| `--color-border-pane` | `rgba(255,255,255,0.08)` | Pane-headers, основные перегородки |
-| `--color-border-strong` | `rgba(255,255,255,0.14)` | Hover карточек, акцентируемые границы |
-| `--color-border-menu` | `rgba(255,255,255,0.1)` | Popover / dropdown / dialog бордеры |
+| `--color-border-default` | `#1f1f1f` | Тонкие линии, разделители, бордеры по умолчанию |
+| `--color-border-pane` | `#262626` | Pane-headers, основные перегородки |
+| `--color-border-muted` | `#333333` | Чуть более заметная граница (читается на тёмном фоне) |
+| `--color-border-menu` | `#111111` | Popover / dropdown / dialog / menu бордеры (тёмный кант) |
+| `--color-border-accent` | `rgba(255,255,255,0.28)` | Акцентируемая граница (hover/active карточек) |
 
-Правило: чем глубже фон, тем светлее бордер (чтобы оставался видимым).
+Бордеры — непрозрачный hex (`--color-border-*`), сливающийся с фоном; акцентируемая граница — `--color-border-accent` через белый opacity.
 
 ### Семантика (используется редко, точечно)
 
 | Token | Значение | Где |
 |---|---|---|
-| `--color-success` | `#21c55d` | Toast success, "Saved" badge |
-| `--color-success-muted-bg` | `rgba(33,197,93,0.14)` | Подсветка успешной строки |
-| `--color-success-border` | `rgba(33,197,93,0.5)` | Бордер success-карточек |
-| `--color-warning` | `#d7ba7d` | Toast warning, нерешённое валидационное состояние |
-| `--color-warning-muted-bg` | `rgba(215,186,125,0.14)` | Фон warning блока |
-| `--color-warning-border` | `rgba(215,186,125,0.5)` | Бордер warning |
-| `--color-error` | `#ef4444` | Toast error, deleted lines, Close-button hover |
-| `--color-error-surface` | `rgba(239,68,68,0.14)` | Фон error блока |
-| `--color-error-border` | `rgba(239,68,68,0.5)` | Бордер error |
+| `--color-success` | `#2c7c32` | Toast success, "Saved" badge |
+| `--color-success-muted-bg` | `#163318` | Подсветка успешной строки / фон success блока |
+| `--color-error` | `#bf3131` | Toast error, deleted lines, Close-button hover |
+| `--color-error-surface` | `#4a2020` | Фон error блока |
+| `--color-error-border` | `#ff5555` | Бордер error |
 
-Правило: семантические цвета только для **смысла** (ошибка, успех, предупреждение). Никогда не для «выделить кнопку» или «акцентировать важное».
+Правило: семантические цвета только для **смысла** (ошибка, успех). Warning-токенов в `tokens.css` нет. Никогда не для «выделить кнопку» или «акцентировать важное».
 
-### Accent (синий)
+### Accent / selection (нейтральный)
+
+«Accent» — это **не** бренд-цвет, а чуть более яркий нейтрал. Состояния (hover / selected / акцент) делаются прозрачностью белого.
 
 | Token | Значение | Где |
 |---|---|---|
-| `--color-accent` | `#2626d5` | Резервируется под будущие brand-моменты. Сейчас НЕ используется в UI. |
-| `--color-accent-soft` | `rgba(86,156,214,0.18)` | Только селекция текста в editor, найденный match в Find |
-| `--color-focus-ring` | `rgba(86,156,214,0.55)` | `:focus-visible` outline по умолчанию — единственное место где синий допустим на ui-элементах |
+| `--color-accent` | `rgba(255,255,255,0.55)` | Нейтральный «акцент» (яркий нейтрал); сюда же `html { accent-color }` для native-контролов |
+| `--color-selection` | `rgba(255,255,255,0.18)` | Текстовая селекция (`::selection`), `<mark>` |
+| `--color-hover-surface` | `rgba(255,255,255,0.06)` | Hover-фон поверхности |
+| `--color-hover-tint` | `rgba(255,255,255,0.04)` | Лёгкий hover-tint |
 
-Правило: **не использовать синий для primary-кнопок, hover, selected**. Если хочется «выделить» — берём белый opacity. Синий = только ring и текстовая селекция в editor.
+Правило: **синий для primary-кнопок, hover, selected запрещён**. Хочешь «выделить» — белый opacity.
+
+### CTA (единственный санкционированный цветной акцент)
+
+Один цветной акцент на весь UI — светло-синий CTA, зарезервирован под самые важные действия (Commit, Initialize…). Везде остальное монохром; цвет тратится скупо, чтобы эти действия выделялись (см. комментарий в `tokens.css`).
+
+| Token | Значение | Где |
+|---|---|---|
+| `--color-cta` | `#8ab4e8` | Фон primary-CTA (Commit / Initialize) |
+| `--color-cta-hover` | `#9dc6f4` | Hover CTA |
+| `--color-cta-text` | `#0e1d2d` | Текст на CTA |
+
+### Git decorations (статус в Explorer)
+
+Семантические цвета git-статуса (палитра VS Code) — второй санкционированный цвет вне CTA, только для смысла.
+
+| Token | Значение | Где |
+|---|---|---|
+| `--git-untracked` | `#73c991` | Untracked файлы |
+| `--git-added` | `#81b88b` | Added (staged) |
+| `--git-modified` | `#e2c08d` | Modified |
+| `--git-deleted` | `#c74e39` | Deleted |
+| `--git-conflict` | `#e4676b` | Conflict |
+
+### Menu bar / Scrollbars
+
+| Token | Значение | Где |
+|---|---|---|
+| `--color-menubar-item-selected` | `#444444` | Выбранный пункт меню-бара |
+| `--color-menubar-item-hover` | `#262626` | Hover пункта меню-бара |
+| `--color-scrollbar-track` | `#1f1f1f` | Трек скроллбара |
+| `--color-scrollbar-thumb` | `#262626` | Ползунок скроллбара |
+| `--size-scrollbar` | `16px` | Толщина скроллбара |
 
 ## Состояния
 
@@ -83,11 +112,11 @@
 | **Default** | tokenизированный surface, без тени, бордер `--color-border-pane` |
 | **Hover** | фон + `rgba(255,255,255,0.04–0.05)`, бордер на один шаг сильнее |
 | **Active / pressed** | фон + `rgba(255,255,255,0.08)`, без перепрыгивания вниз |
-| **Selected** | фон + `rgba(255,255,255,0.06)` (в menu) или `--color-accent-soft` (в editor) |
-| **Focused (visible)** | `outline: 2px solid var(--color-focus-ring); outline-offset: 1px` |
+| **Selected** | фон + `rgba(255,255,255,0.06)` (= `--color-hover-surface` / `--color-selection` для текста) |
+| **Focused (visible)** | задаётся точечно в компоненте (`:focus-visible` → `outline` белым opacity); глобального focus-ring нет |
 | **Disabled** | `opacity: 0.4`, `cursor: not-allowed`, без изменения фона |
 | **Error** | бордер `--color-error-border`, фон `--color-error-surface`, текст ошибки `--color-error` |
-| **Success** | бордер `--color-success-border`, фон `--color-success-muted-bg` |
+| **Success** | фон `--color-success-muted-bg`, текст / акцент `--color-success` |
 
 ## Spacing
 
@@ -103,45 +132,46 @@
 
 ## Радиусы
 
-| Token | Значение | Где |
-|---|---|---|
-| `--radius-xs` | 3 | Иконки в rail, маленькие кнопки control |
-| `--radius-sm` | 4 | Inputs, плоские list items |
-| `--radius-md` | 6 | Стандартные кнопки, dropdown menu |
-| `--radius-lg` | 10 | Карточки Welcome, dialog |
-| `--radius-xl` | 14 | Большие overlay карточки (редко) |
-| `--radius-pill` | 999 | Badges (если будут) |
+> Токенов `--radius-*` в `tokens.css` нет — значения задаются числом прямо в компоненте. Ниже — соглашение по шкале.
+
+| Значение | Где |
+|---|---|
+| 3 | Иконки в rail, маленькие кнопки control |
+| 4 | Inputs, плоские list items |
+| 6 | Стандартные кнопки, dropdown menu |
+| 10 | Карточки Welcome, dialog |
+| 14 | Большие overlay карточки (редко) |
+| 999 | Badges (если будут) |
 
 ## Тени
 
-| Token | Где |
-|---|---|
-| `--shadow-sm` | Кнопки primary, поднятые элементы |
-| `--shadow-md` | Карточки на hover |
-| `--shadow-popover` | Dropdown, context menu, Select popup |
-| `--shadow-overlay` | Modal dialog, Settings |
+> Токенов `--shadow-*` в `tokens.css` нет — `box-shadow` задаётся в компоненте. Соглашение: subtle тень только на elevated-элементах (popover, dropdown, Select popup, modal dialog / Settings), большой offset / мягкие brand-тени запрещены.
 
 ## Motion
 
-| Token | Где |
-|---|---|
-| `--transition-fast` | 120ms — hover-tint, focus, мелкие иконки |
-| `--transition-base` | 180ms — кнопки, инпуты, popover open |
-| `--transition-slow` | 260ms — dialog enter/exit, slide-in toast |
+> Токенов `--transition-*` / `--easing-standard` в `tokens.css` нет — длительность и кривая пишутся в компоненте. Соглашение по шкале:
 
-Кривая по умолчанию — `--easing-standard: cubic-bezier(0.4,0,0.2,1)`. Никаких bounce / overshoot.
+| Длительность | Где |
+|---|---|
+| 120ms | hover-tint, focus, мелкие иконки |
+| 180ms | кнопки, инпуты, popover open |
+| 260ms | dialog enter/exit, slide-in toast |
+
+Кривая по умолчанию — `cubic-bezier(0.4,0,0.2,1)`. Никаких bounce / overshoot. Единственные keyframes в `index.css` — `cremniyNotifSlideIn` (slide-in toast) и `disasmProgress` (индикатор прогресса дизассемблера).
 
 ## Типографика
 
+UI **моно-only**: `index.css` ставит `body { font-family: var(--font-family-mono) }`, отдельного `--font-family-sans` нет. Весь интерфейс (меню, кнопки, заголовки, label, имена в Recent) и весь код/HEX/disasm/terminal — на одном моношрифте.
+
 | Token | Стек | Где |
 |---|---|---|
-| `--font-family-sans` | Inter, Segoe UI Variable, Segoe UI, system-ui | Меню, кнопки, заголовки, label, recent имена |
-| `--font-family-mono` | JetBrains Mono, Cascadia Code, Consolas | Код в editor, HEX viewer, disasm, terminal, paths в Recent |
+| `--font-family-mono` | `'JetBrains Mono', 'Consolas', monospace` | Весь UI и весь код |
+| `--font-weight-emphasis` | `700` | Жирное выделение (акцент в тексте) |
 
 | Размер | Где |
 |---|---|
-| 11–12px | Подписи под крупными элементами, статус-бар |
-| 13px (`--font-size-base`) | Основной UI текст |
+| 11px | Минимум; подписи, статус-бар |
+| 12px (`--font-size-base`) | Основной UI текст |
 | 14px | Заголовки секций |
 | 16–18px | Hero / большие заголовки |
 
@@ -177,8 +207,8 @@ background: rgba(255,255,255,0.03)
 border: 1px solid rgba(255,255,255,0.1)
 border-radius: 4
 padding: 0.4rem 0.6rem
-focus → border: rgba(255,255,255,0.22) + focus-ring
-placeholder → opacity 0.4 (через --color-text-tertiary)
+focus → border: rgba(255,255,255,0.22) (focus-ring задаётся в компоненте, не глобально)
+placeholder → opacity 0.4 (локально; токена --color-text-tertiary нет)
 ```
 
 ### Card (Welcome action card)
@@ -197,10 +227,10 @@ hover → background: rgba(255,255,255,0.04); border: rgba(255,255,255,0.12)
 
 См. `boundary/common/Select.tsx`. Trigger = Input. Popup:
 ```
-background: #1d1f27 (= elevated)
-border: 1px solid rgba(255,255,255,0.1)
+background: --color-bg-panel-alt (#2b2b2b)
+border: 1px solid --color-border-menu (#111111)
 border-radius: 5
-shadow: --shadow-popover
+shadow: subtle box-shadow (задаётся в компоненте, токена нет)
 option default: padding 0.32rem 0.7rem
 option hover: rgba(255,255,255,0.06)
 option selected: rgba(255,255,255,0.04) + текст primary (НЕ цветной)
@@ -224,22 +254,22 @@ border-radius: 4
 hover → background: rgba(255,255,255,0.035)
 selected → background: rgba(255,255,255,0.06) (НЕ синий)
 ```
-Имя слева — sans, size 0.82rem. Путь / sublabel справа — mono, size 0.72rem, `--color-text-tertiary`.
+Имя слева, size 0.82rem. Путь / sublabel справа — size 0.72rem, приглушённый opacity (всё mono, см. «Типографика»).
 
 ### Toast (NotificationOverlay)
 
-См. `boundary/notifications/NotificationContext.tsx`. Левый бордер — семантический (success/warn/error border-токен). Фон — `--color-bg-elevated` + лёгкий tint цвета уровня. Auto-dismiss 3–8 сек по уровню.
+См. `boundary/notifications/NotificationContext.tsx`. Левый бордер — семантический (success/error border-токен; warning-токена нет). Фон — `--color-bg-panel-alt` + лёгкий tint цвета уровня. Анимация входа — `cremniyNotifSlideIn`. Auto-dismiss 3–8 сек по уровню.
 
 ### Dialog
 
 ```
-background: --color-bg-elevated
+background: --color-bg-panel-alt
 border: 1px solid --color-border-pane
-border-radius: --radius-lg
-shadow: --shadow-overlay
+border-radius: 10 (число; токена --radius-lg нет)
+shadow: subtle box-shadow (в компоненте; токена нет)
 padding: 1rem 1.25rem
 backdrop: rgba(0,0,0,0.4) + blur(4px)
-enter animation: cremniyFadeIn 0.18s
+enter animation: задаётся в компоненте (keyframes cremniyFadeIn не существует)
 ```
 
 ### Center panel (вкладка Рабочего поля)
@@ -293,14 +323,14 @@ embedded-режим (в табе): без backdrop/Esc, width/height 100%
 
 > Нужен hover на карточке → фон с +`rgba(255,255,255,0.02)` от текущего + бордер на один шаг сильнее.
 
-> Нужен «акцент» который не семантика → нет такого понятия. Если действительно надо — белый opacity primary-кнопка (`actionBtnPrimary` паттерн).
+> Нужен «акцент» который не семантика → белый opacity primary-кнопка (`actionBtnPrimary` паттерн). Цветной акцент только для главного CTA (Commit/Initialize) — `--color-cta`.
 
-> Нужен focus ring → ничего не делать, есть глобальный `:focus-visible` в `index.css`.
+> Нужен focus ring → задать `:focus-visible` outline (белый opacity) в самом компоненте. Глобального focus-ring в `index.css` нет — там только `html { accent-color: rgba(255,255,255,0.55) }`, а компоненты по умолчанию ставят `outline: none`.
 
 ## Связанные файлы
 
 - Токены: `frontend/src/shared/theme/tokens.css`
-- Глобалки (scroll, focus, body): `frontend/src/index.css`
+- Глобалки (scroll, selection, body, system-color overrides): `frontend/src/index.css`
 - Notification (toast): `boundary/notifications/NotificationContext.tsx`
 - Custom Select: `boundary/common/Select.tsx`
 - TitleBar: `boundary/chrome/TitleBar.tsx`
