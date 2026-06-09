@@ -29,8 +29,8 @@ platform installer (`.msi`, `.dmg`, `.AppImage`).
 For a feature with data, UI, and IPC:
 
 1. **DTO** in `domain/<feature>/` — schema/types.
-2. **Tauri wrapper** in `infrastructure/tauri/<feature>.ts` — typed `invoke` calls.
-3. **Service** in `domain/<feature>/<feature>.service.ts` — orchestrates wrappers and storage.
+2. **Tauri wrapper** — add typed `invoke` calls to the shared `infrastructure/tauri/bridge.ts`.
+3. **Domain module** in `domain/<feature>/` — orchestrates the bridge wrapper and any local state.
 4. **UI** in `boundary/<feature>/` — components read via hooks, actions call the service.
 5. **Native command** in `source/backend/src/<feature>.rs` — implements the OS-level work;
    declare in `lib.rs`.

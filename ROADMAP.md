@@ -31,6 +31,7 @@ shipped and working:
   - Source Control plugin (Git status, staging, commit, advanced operations)
   - Binary Tools plugin (memory map, strings, patches, resources, symbol table, function list)
 - References panel (ASCII chart, keyboard scan codes)
+- Workspace search (content search across files — regex, word, glob include/exclude, replace-in-files)
 - Agent / MCP control surface (`window.cremniy` commands)
 - Cyrillic keyboard layout support throughout
 
@@ -38,7 +39,6 @@ shipped and working:
 
 - [ ] Debugger — step through execution, inspect registers and memory
 - [ ] Memory visualization — visual maps of memory layout and allocation
-- [ ] Full-text search across workspace files
 - [ ] Hover tooltips: numbers in all bases (hex / dec / oct / bin)
 - [ ] Improved terminal (PTY resize, color themes)
 
@@ -82,6 +82,7 @@ shipped and working:
   - Плагин Source Control (Git-статус, стейджинг, коммит, расширенные операции)
   - Плагин Binary Tools (карта памяти, строки, патчи, ресурсы, таблица символов, функции)
 - Панель References (таблица ASCII, скан-коды клавиш)
+- Поиск по рабочему пространству (контентный поиск по файлам — regex, слово, glob include/exclude, replace-in-files)
 - Командная поверхность для агентов/MCP (`window.cremniy`)
 - Поддержка кириллической раскладки клавиатуры
 
@@ -89,7 +90,6 @@ shipped and working:
 
 - [ ] Отладчик — пошаговое выполнение, просмотр регистров и памяти
 - [ ] Визуализация памяти — наглядные карты расположения памяти
-- [ ] Полнотекстовый поиск по файлам рабочего пространства
 - [ ] Всплывающие подсказки: числа во всех системах счисления (hex / dec / oct / bin)
 - [ ] Улучшенный терминал (ресайз PTY, цветовые темы)
 

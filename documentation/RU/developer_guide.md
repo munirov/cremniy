@@ -29,8 +29,8 @@ npm run tauri:build    # инсталлятор
 Фича с данными, UI и IPC:
 
 1. **DTO** в `domain/<feature>/` — схема и типы.
-2. **Обёртка Tauri** в `infrastructure/tauri/<feature>.ts` — типизированные `invoke`.
-3. **Сервис** в `domain/<feature>/<feature>.service.ts` — оркестрация обёрток и хранилища.
+2. **Обёртка Tauri** — типизированные `invoke` добавляются в общий `infrastructure/tauri/bridge.ts`.
+3. **Доменный модуль** в `domain/<feature>/` — оркестрирует обёртку из `bridge.ts` и локальное состояние.
 4. **UI** в `boundary/<feature>/` — компоненты читают через хуки, действия зовут сервис.
 5. **Нативная команда** в `source/backend/src/<feature>.rs` — реализует системную работу;
    объявляется в `lib.rs`.
