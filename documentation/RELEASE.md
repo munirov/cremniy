@@ -57,7 +57,7 @@
 
 ### Continuous Integration
 
-При каждом push в ветки `main`, `master` или `develop`, а также при создании Pull Request, автоматически запускается CI сборка для проверки, что код компилируется на всех платформах.
+При push и Pull Request в ветки `main` или `dev` автоматически запускается CI: тесты и сборка фронтенда плюс `cargo check` бэкенда (на Linux) — проверка, что код в порядке.
 
 ---
 
@@ -119,4 +119,4 @@ Artifacts will be available in the "Artifacts" section of the workflow run.
 
 ### Continuous Integration
 
-On every push to `main`, `master`, or `develop` branches, as well as on Pull Request creation, a CI build is automatically triggered to verify that the code compiles on all platforms.
+Pushes and pull requests to `main` or `dev` trigger CI: the frontend tests and build plus a backend `cargo check` (on Linux) to verify the code stays healthy.
