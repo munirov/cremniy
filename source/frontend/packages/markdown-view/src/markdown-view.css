@@ -1,0 +1,197 @@
+/*
+ * @cremniy/markdown-view — dark prose theme.
+ * Override any of the `--cmv-*` variables on `.cmv-root` (or an ancestor) to
+ * retheme. Defaults are a neutral monochrome dark, no blue.
+ */
+.cmv-root {
+  --cmv-fg: var(--color-fg, #d4d4d4);
+  --cmv-muted: var(--color-fg-muted, #8a8a8a);
+  --cmv-border: var(--color-border-subtle, rgba(255, 255, 255, 0.14));
+  --cmv-code-bg: rgba(255, 255, 255, 0.06);
+  --cmv-row-alt: rgba(255, 255, 255, 0.03);
+  --cmv-link: var(--cmv-fg);
+  --cmv-mono: var(--font-family-mono, ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, monospace);
+
+  color: var(--cmv-fg);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.cmv-root > :first-child {
+  margin-top: 0;
+}
+.cmv-root > :last-child {
+  margin-bottom: 0;
+}
+
+/* Headings */
+.cmv-root h1,
+.cmv-root h2,
+.cmv-root h3,
+.cmv-root h4,
+.cmv-root h5,
+.cmv-root h6 {
+  margin: 1.5em 0 0.6em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.cmv-root h1 {
+  font-size: 1.7em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--cmv-border);
+}
+.cmv-root h2 {
+  font-size: 1.4em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--cmv-border);
+}
+.cmv-root h3 {
+  font-size: 1.2em;
+}
+.cmv-root h4 {
+  font-size: 1.05em;
+}
+.cmv-root h5,
+.cmv-root h6 {
+  font-size: 0.95em;
+  color: var(--cmv-muted);
+}
+
+/* Text */
+.cmv-root p {
+  margin: 0 0 1em;
+}
+.cmv-root strong {
+  font-weight: 600;
+}
+.cmv-root em {
+  font-style: italic;
+}
+.cmv-root del {
+  opacity: 0.65;
+}
+.cmv-root a {
+  color: var(--cmv-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--cmv-border);
+}
+.cmv-root a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Code */
+.cmv-root code {
+  font-family: var(--cmv-mono);
+  font-size: 0.875em;
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  background: var(--cmv-code-bg);
+}
+.cmv-root pre {
+  margin: 0 0 1em;
+  padding: 0.75rem 0.85rem;
+  overflow: auto;
+  border: 1px solid var(--cmv-border);
+  border-radius: 6px;
+  background: var(--cmv-code-bg);
+  line-height: 1.45;
+}
+.cmv-root pre code {
+  padding: 0;
+  background: none;
+  font-size: 0.85em;
+}
+
+/* Lists */
+.cmv-root ul,
+.cmv-root ol {
+  margin: 0 0 1em;
+  padding-left: 1.5em;
+}
+.cmv-root li {
+  margin: 0.2em 0;
+}
+.cmv-root li > ul,
+.cmv-root li > ol {
+  margin: 0.2em 0;
+}
+/* GFM task lists */
+.cmv-root li.task-list-item {
+  list-style: none;
+  margin-left: -1.3em;
+}
+.cmv-root li.task-list-item input[type='checkbox'] {
+  margin: 0 0.5em 0 0;
+  vertical-align: middle;
+  accent-color: var(--cmv-muted);
+}
+
+/* Blockquote */
+.cmv-root blockquote {
+  margin: 0 0 1em;
+  padding: 0.1em 0 0.1em 1em;
+  border-left: 3px solid var(--cmv-border);
+  color: var(--cmv-muted);
+}
+.cmv-root blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Horizontal rule */
+.cmv-root hr {
+  height: 1px;
+  margin: 1.5em 0;
+  border: 0;
+  background: var(--cmv-border);
+}
+
+/* Tables (GFM) */
+.cmv-root table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: auto;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+.cmv-root th,
+.cmv-root td {
+  padding: 0.4em 0.75em;
+  border: 1px solid var(--cmv-border);
+}
+.cmv-root th {
+  font-weight: 600;
+  text-align: left;
+  background: var(--cmv-code-bg);
+}
+.cmv-root tbody tr:nth-child(2n) {
+  background: var(--cmv-row-alt);
+}
+
+/* Images */
+.cmv-root img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+/* Inline HTML niceties (readmes use <details>/<summary>) */
+.cmv-root details {
+  margin: 0 0 1em;
+}
+.cmv-root summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.cmv-root kbd {
+  font-family: var(--cmv-mono);
+  font-size: 0.8em;
+  padding: 0.1em 0.4em;
+  border: 1px solid var(--cmv-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--cmv-code-bg);
+}

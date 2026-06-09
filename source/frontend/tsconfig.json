@@ -23,10 +23,11 @@
       "@shared/*": ["src/shared/*"],
       "@infrastructure/*": ["src/infrastructure/*"],
       "@plugins/*": ["../../plugins/*"],
+      "@cremniy/markdown-view": ["packages/markdown-view/src/index.ts"],
       "react": ["node_modules/@types/react"],
       "react/jsx-runtime": ["node_modules/@types/react/jsx-runtime"],
       "react-dom": ["node_modules/@types/react-dom"]
     }
   },
-  "include": ["src", "../../plugins"]
+  "include": ["src", "packages", "../../plugins"]
 }

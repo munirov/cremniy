@@ -6,7 +6,8 @@ import { isPluginDisabled } from '@shared/plugins/pluginState';
 import { setPluginActive } from '@shared/plugins/pluginToggle';
 import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
-import { Markdown } from './Markdown';
+import { MarkdownView } from '@cremniy/markdown-view';
+
 import { PluginGlyph } from './PluginGlyph';
 import { getSelectedExtension, subscribeSelectedExtension } from './extensionDetailsStore';
 
@@ -108,7 +109,7 @@ export function ExtensionDetailsPanel() {
         <div className={styles.main}>
           <div className={styles.mainInner}>
             {body !== '' ? (
-              <Markdown source={body} />
+              <MarkdownView source={body} />
             ) : (
               <p className={styles.reloadNote}>No description provided.</p>
             )}

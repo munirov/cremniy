@@ -15,6 +15,8 @@ export default defineConfig({
       '@infrastructure': path.resolve(__dirname, 'src/infrastructure'),
       // Top-level plugins folder (sibling of source/) — see PLUGINS.md.
       '@plugins': path.resolve(repoRoot, 'plugins'),
+      // In-repo reusable packages (own package.json, extractable to other apps).
+      '@cremniy/markdown-view': path.resolve(__dirname, 'packages/markdown-view/src/index.ts'),
     },
     // Plugins live outside the frontend root, so resolve React (and its JSX
     // runtime) from the frontend's node_modules — and only once, to avoid a
@@ -29,6 +31,6 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'packages/**/*.{test,spec}.{ts,tsx}'],
   },
 });
