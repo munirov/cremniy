@@ -15,6 +15,7 @@ import {
   createProjectFolder,
   deleteUnderWorkspace,
   disassembleWorkspaceFile,
+  extractWorkspaceFileStrings,
   getAppConfigDir,
   getTerminalCapabilities,
   interruptTerminalSession,
@@ -115,6 +116,23 @@ describe("tauri bridge", () => {
       workspaceRoot: "/w",
       path: "/w/a.bin",
       bytes: [65, 66, 255],
+    });
+  });
+
+  it("extractWorkspaceFileStrings forwards min length and limit to the bounded command", async () => {
+    vi.mocked(invoke).mockResolvedValueOnce([
+      { offset: 0x1040, length: 5, text: "Hello" },
+    ]);
+
+    await expect(
+      extractWorkspaceFileStrings("/w", "/w/a.bin", 4, 20_000),
+    ).resolves.toEqual([{ offset: 0x1040, length: 5, text: "Hello" }]);
+
+    expect(invoke).toHaveBeenCalledWith("extract_workspace_file_strings", {
+      workspaceRoot: "/w",
+      path: "/w/a.bin",
+      minLength: 4,
+      limit: 20_000,
     });
   });
 

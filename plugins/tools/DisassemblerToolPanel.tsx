@@ -20,16 +20,12 @@ import {
 } from '@domain/disassembly/disassembly';
 import { instructionHelpForToken, type InstructionHelp } from '@domain/disassembly/instructionHelp';
 import { applyHexPatchToFile } from '@domain/disassembly/hexPatch';
-import {
-  extractAsciiStrings,
-  indexStringsByFileOffset,
-  resolveStringComment,
-} from '@domain/disassembly/stringRefs';
+import { resolveStringComment } from '@domain/disassembly/stringRefs';
 import { parseHexByteSequence } from '@domain/hexView/hexBufferSearch';
 import { fileNameFromPath } from '@domain/workspace/paths';
 import {
+  extractWorkspaceFileStrings,
   readWorkspaceFileBytes,
-  readWorkspaceFileBytesForAnalysis,
   writeWorkspaceFileBytes,
 } from '@infrastructure/tauri/bridge';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
@@ -39,6 +35,16 @@ import styles from './DisassemblerToolPanel.module.css';
 
 const ROW_PX = 22; // Listing row height; section-header rows use this too.
 const VIEWPORT_BUFFER_ROWS = 6;
+
+// String-overlay (auto-comment) extraction bounds. The overlay only needs short
+// C-strings the listing can reference, so we pull them through the backend's
+// streamed, bounded `extract_workspace_file_strings` — NOT a whole-file read.
+// That command windows the file in Rust and stops at the cap, so the webview
+// never holds the raw bytes (the old path shipped the entire file as a
+// `number[]` over IPC and walked it on the main thread, which hung / OOM'd the
+// app on large binaries).
+const STRING_OVERLAY_MIN_LENGTH = 4;
+const STRING_OVERLAY_LIMIT = 20_000;
 
 type LoadState =
   | { status: 'idle'; message?: string }
@@ -235,18 +241,31 @@ export function DisassemblerToolPanel({ disassembleFile }: DisassemblerToolPanel
   const canRun = hasActiveFile && workspacePath !== '' && loadState?.status !== 'loading';
 
   // After a successful disassembly, extract strings from the file so the listing
-  // can auto-comment references like Qt did (; "Hello"). Best-effort: a read
-  // failure just leaves comments objdump-only.
+  // can auto-comment references like Qt did (; "Hello"). The strings are pulled
+  // through the backend's streamed, bounded extractor — it windows the file in
+  // Rust and stops at the cap, so the webview never loads the raw bytes.
+  // Best-effort: a read failure just leaves comments objdump-only.
   useEffect(() => {
     if (document == null || activeFilePath == null || workspacePath === '') {
       setStringIndex(new Map());
       return;
     }
     let cancelled = false;
-    void readWorkspaceFileBytesForAnalysis(workspacePath, activeFilePath).then(
-      (bytes) => {
+    void extractWorkspaceFileStrings(
+      workspacePath,
+      activeFilePath,
+      STRING_OVERLAY_MIN_LENGTH,
+      STRING_OVERLAY_LIMIT,
+    ).then(
+      (strings) => {
         if (!cancelled) {
-          setStringIndex(indexStringsByFileOffset(extractAsciiStrings(bytes)));
+          const index = new Map<number, string>();
+          for (const s of strings) {
+            if (!index.has(s.offset)) {
+              index.set(s.offset, s.text);
+            }
+          }
+          setStringIndex(index);
         }
       },
       () => {

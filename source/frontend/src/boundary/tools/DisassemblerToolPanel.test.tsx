@@ -10,9 +10,20 @@ import type {
 
 import { DisassemblerToolPanel } from '@plugins/tools/DisassemblerToolPanel';
 
-const { mockUseIdeSession, mockUseWorkspaceRoot } = vi.hoisted(() => ({
+const {
+  mockUseIdeSession,
+  mockUseWorkspaceRoot,
+  mockExtractWorkspaceFileStrings,
+  mockReadWorkspaceFileBytes,
+  mockReadWorkspaceFileBytesForAnalysis,
+  mockWriteWorkspaceFileBytes,
+} = vi.hoisted(() => ({
   mockUseIdeSession: vi.fn(),
   mockUseWorkspaceRoot: vi.fn(),
+  mockExtractWorkspaceFileStrings: vi.fn(),
+  mockReadWorkspaceFileBytes: vi.fn(),
+  mockReadWorkspaceFileBytesForAnalysis: vi.fn(),
+  mockWriteWorkspaceFileBytes: vi.fn(),
 }));
 
 vi.mock('@boundary/workspace/IdeSessionContext', () => ({
@@ -21,6 +32,17 @@ vi.mock('@boundary/workspace/IdeSessionContext', () => ({
 
 vi.mock('@boundary/workspace/WorkspaceContext', () => ({
   useWorkspaceRoot: mockUseWorkspaceRoot,
+}));
+
+// The string-overlay (auto-comment) effect must pull strings through the
+// backend's bounded, streamed extractor — NOT a whole-file `number[]` read,
+// which is what hung / OOM'd the app on large binaries. Mock the bridge so we
+// can assert the panel never reaches for the whole-file read for the overlay.
+vi.mock('@infrastructure/tauri/bridge', () => ({
+  extractWorkspaceFileStrings: mockExtractWorkspaceFileStrings,
+  readWorkspaceFileBytes: mockReadWorkspaceFileBytes,
+  readWorkspaceFileBytesForAnalysis: mockReadWorkspaceFileBytesForAnalysis,
+  writeWorkspaceFileBytes: mockWriteWorkspaceFileBytes,
 }));
 
 function stubSession(activeFilePath: string | null): IdeSessionContextValue {
@@ -139,8 +161,14 @@ describe('DisassemblerToolPanel', () => {
     });
     mockUseIdeSession.mockReset();
     mockUseWorkspaceRoot.mockReset();
+    mockExtractWorkspaceFileStrings.mockReset();
+    mockReadWorkspaceFileBytes.mockReset();
+    mockReadWorkspaceFileBytesForAnalysis.mockReset();
+    mockWriteWorkspaceFileBytes.mockReset();
     mockUseIdeSession.mockImplementation(() => stubSession(null));
     mockUseWorkspaceRoot.mockReturnValue(null);
+    // Default: overlay extractor resolves to no strings (best-effort path).
+    mockExtractWorkspaceFileStrings.mockResolvedValue([]);
   });
 
   it('shows no active file message without invoking objdump', () => {
@@ -350,5 +378,59 @@ describe('DisassemblerToolPanel', () => {
 
     const details = await screen.findByLabelText('Instruction details');
     expect(within(details).getByLabelText('Hex patch')).toBeInTheDocument();
+  });
+
+  it('builds the string-overlay via the bounded backend extractor, never a whole-file read', async () => {
+    disassembleFile.mockResolvedValueOnce(disassemblyResult());
+    mockUseIdeSession.mockReturnValue(stubSession('/w/a.bin'));
+    mockUseWorkspaceRoot.mockReturnValue({ path: '/w' });
+
+    render(<DisassemblerToolPanel disassembleFile={disassembleFile} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('endbr64')).toBeInTheDocument();
+    });
+
+    // Overlay strings come from the streamed/bounded backend command. It must be
+    // called with a positive length cap so the result stays small on huge files.
+    await waitFor(() => {
+      expect(mockExtractWorkspaceFileStrings).toHaveBeenCalled();
+    });
+    const [root, path, minLength, limit] = mockExtractWorkspaceFileStrings.mock.calls[0]!;
+    expect(root).toBe('/w');
+    expect(path).toBe('/w/a.bin');
+    expect(minLength).toBeGreaterThan(0);
+    expect(limit).toBeGreaterThan(0);
+
+    // The whole-file reads (which marshal the entire file as a number[] over IPC
+    // and walk it on the main thread) must NOT run for the overlay.
+    expect(mockReadWorkspaceFileBytesForAnalysis).not.toHaveBeenCalled();
+    expect(mockReadWorkspaceFileBytes).not.toHaveBeenCalled();
+  });
+
+  it('renders auto-comments from the bounded extractor results', async () => {
+    // .text .vaddr=0x1040 maps to file offset 0x1040 (from the section header
+    // fixture), so a string at file offset 0x1040 is referenced by addr 0x1040.
+    disassembleFile.mockResolvedValueOnce(
+      disassemblyResult({
+        stdout: `
+Disassembly of section .text:
+
+0000000000001040 <_start>:
+    1040:\t48 8d 3d 00 00 00 00 \tlea    rdi,[rip+0x1040]
+`,
+      }),
+    );
+    mockExtractWorkspaceFileStrings.mockResolvedValueOnce([
+      { offset: 0x1040, length: 5, text: 'Hello' },
+    ]);
+    mockUseIdeSession.mockReturnValue(stubSession('/w/a.bin'));
+    mockUseWorkspaceRoot.mockReturnValue({ path: '/w' });
+
+    render(<DisassemblerToolPanel disassembleFile={disassembleFile} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('; "Hello"')).toBeInTheDocument();
+    });
   });
 });
