@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type DragEvent, type MouseEvent } from 'react';
 
 import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor/IdeMonacoEditor';
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
@@ -9,10 +9,26 @@ import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
 import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
 import { resolveCenterPanel } from '@boundary/layout/centerPanels';
 import { IdeStatusStrip } from '@boundary/layout/IdeStatusStrip';
+import { useTabDrag } from '@boundary/layout/TabDragContext';
 import { useIdeSession, type EditorGroupView } from '@boundary/workspace/IdeSessionContext';
+import { dropBand, type DropBand } from '@domain/editor/dropZone';
 import type { WorkspaceRoot } from '@domain/workspace/types';
 
 import styles from './GroupEditorPane.module.css';
+
+/** Drag payload a tab carries (mirrors IdeEditorTabStrip's DRAG_MIME shape). */
+const DRAG_MIME = 'application/x-cremniy-tab';
+function readTabDrag(dt: DataTransfer): { path: string; sourceGroupId: string } | null {
+  try {
+    const o = JSON.parse(dt.getData(DRAG_MIME)) as { path?: unknown; sourceGroupId?: unknown };
+    if (typeof o.path === 'string' && o.path !== '' && typeof o.sourceGroupId === 'string') {
+      return { path: o.path, sourceGroupId: o.sourceGroupId };
+    }
+  } catch {
+    // not our payload / not JSON
+  }
+  return null;
+}
 
 export type GroupEditorPaneProps = {
   /** The group this pane renders (its tabs, active file, preview, panel). */
@@ -51,6 +67,52 @@ export function GroupEditorPane({
 }: GroupEditorPaneProps) {
   const ide = useIdeSession();
   const { getBuffer, writeBuffer, isBinaryPath, focusEditorGroup, splitActiveFile, revealTarget } = ide;
+  const { isDraggingTab, endTabDrag } = useTabDrag();
+
+  // Edge drop-zone (split). While a tab is dragged, an overlay covers the body;
+  // the pointer's X picks a band (left/right → split into a NEW group on that
+  // side, center → move into this group). `dropBand` is the pure helper; the
+  // handlers below are thin dispatches into the tested context methods.
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [activeBand, setActiveBand] = useState<DropBand | null>(null);
+
+  const onBodyDragOver = useCallback((ev: DragEvent<HTMLDivElement>) => {
+    if (!ev.dataTransfer.types.includes(DRAG_MIME)) {
+      return;
+    }
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = 'move';
+    const rect = bodyRef.current?.getBoundingClientRect();
+    setActiveBand(rect == null ? 'center' : dropBand(ev.clientX, rect.left, rect.width));
+  }, []);
+
+  const onBodyDragLeave = useCallback((ev: DragEvent<HTMLDivElement>) => {
+    // Only clear when the pointer actually leaves the overlay (not on child
+    // crossings — the overlay has no children, but guard anyway).
+    if (ev.currentTarget === ev.target) {
+      setActiveBand(null);
+    }
+  }, []);
+
+  const onBodyDrop = useCallback(
+    (ev: DragEvent<HTMLDivElement>) => {
+      const payload = readTabDrag(ev.dataTransfer);
+      setActiveBand(null);
+      endTabDrag();
+      if (payload == null) {
+        return;
+      }
+      ev.preventDefault();
+      const rect = bodyRef.current?.getBoundingClientRect();
+      const band = rect == null ? 'center' : dropBand(ev.clientX, rect.left, rect.width);
+      if (band === 'left' || band === 'right') {
+        ide.splitFileToNewGroup(payload.sourceGroupId, payload.path, band);
+      } else {
+        ide.moveFileToGroup(payload.sourceGroupId, group.id, payload.path);
+      }
+    },
+    [endTabDrag, group.id, ide],
+  );
 
   const activeFilePath = group.activeFilePath;
   const activePanel = group.activePanel;
@@ -147,6 +209,7 @@ export function GroupEditorPane({
           </button>
         </div>
       ) : null}
+      <div className={styles.bodyWrap} ref={bodyRef}>
       {activePanel != null ? (
         <div className={styles.editorBody}>{resolveCenterPanel(activePanel)?.render() ?? null}</div>
       ) : activeIsBinary && isImagePath(activeFilePath) ? (
@@ -195,6 +258,27 @@ export function GroupEditorPane({
           />
         </>
       )}
+        {/* Edge drop-zone: only while a tab is being dragged. Covers the body
+            (not the tab strip), catches the drop, and shows the active band's
+            translucent insertion preview. */}
+        {isDraggingTab ? (
+          <div
+            className={styles.dropOverlay}
+            onDragOver={onBodyDragOver}
+            onDragLeave={onBodyDragLeave}
+            onDrop={onBodyDrop}
+            aria-hidden
+          >
+            {activeBand === 'left' ? (
+              <div className={`${styles.dropPreview} ${styles.dropPreviewLeft}`} />
+            ) : activeBand === 'right' ? (
+              <div className={`${styles.dropPreview} ${styles.dropPreviewRight}`} />
+            ) : activeBand === 'center' ? (
+              <div className={`${styles.dropPreview} ${styles.dropPreviewCenter}`} />
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

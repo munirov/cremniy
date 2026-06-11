@@ -15,9 +15,29 @@ import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useRegistryVersion } from '@shared/plugins/useRegistry';
 
 import { resolveCenterPanel } from './centerPanels';
+import { useTabDrag } from './TabDragContext';
 import styles from './IdeEditorTabStrip.module.css';
 
 const DRAG_MIME = 'application/x-cremniy-tab';
+
+/** The drag payload a tab carries on {@link DRAG_MIME}: which file, from where. */
+type TabDragPayload = { path: string; sourceGroupId: string };
+
+/** Parse a {@link DRAG_MIME} payload, tolerating the bare-path legacy form. */
+function parseTabDrag(raw: string): TabDragPayload | null {
+  if (raw === '') {
+    return null;
+  }
+  try {
+    const o = JSON.parse(raw) as Partial<TabDragPayload>;
+    if (typeof o?.path === 'string' && typeof o?.sourceGroupId === 'string' && o.path !== '') {
+      return { path: o.path, sourceGroupId: o.sourceGroupId };
+    }
+  } catch {
+    // Not JSON — fall through (older drag that carried just the path).
+  }
+  return null;
+}
 
 export type IdeEditorTabStripProps = {
   /**
@@ -38,6 +58,7 @@ export function IdeEditorTabStrip({ groupId }: IdeEditorTabStripProps = {}) {
     closeOtherOpenFiles,
     closeAllOpenFiles,
   } = session;
+  const { beginTabDrag, endTabDrag } = useTabDrag();
 
   // Resolve the group this strip renders. When `groupId` is given, scope to that
   // group's view + per-group mutators; otherwise fall back to the active-group
@@ -173,12 +194,23 @@ export function IdeEditorTabStrip({ groupId }: IdeEditorTabStripProps = {}) {
     [activateByIndexAndMarkKeyboard, activeFilePath, sortedPaths],
   );
 
-  // Drag-reorder. Pinned-zone protection: a pinned tab can't be dropped into
-  // the unpinned zone and vice versa — drop is silently ignored.
-  const onDragStart = useCallback((ev: DragEvent<HTMLDivElement>, path: string) => {
-    ev.dataTransfer.setData(DRAG_MIME, path);
-    ev.dataTransfer.effectAllowed = 'move';
-  }, []);
+  // Drag a tab. The payload carries the file path AND its source group so a drop
+  // on another group's strip can MOVE it (cross-group), while a drop on the same
+  // strip stays a reorder. A module-wide "dragging" flag (context) is raised so
+  // the per-group edge drop-zones mount only during a drag.
+  const onDragStart = useCallback(
+    (ev: DragEvent<HTMLDivElement>, path: string) => {
+      const payload: TabDragPayload = { path, sourceGroupId: targetGroupId };
+      ev.dataTransfer.setData(DRAG_MIME, JSON.stringify(payload));
+      ev.dataTransfer.effectAllowed = 'move';
+      beginTabDrag();
+    },
+    [beginTabDrag, targetGroupId],
+  );
+
+  const onDragEnd = useCallback(() => {
+    endTabDrag();
+  }, [endTabDrag]);
 
   const onDragOver = useCallback((ev: DragEvent<HTMLDivElement>) => {
     if (ev.dataTransfer.types.includes(DRAG_MIME)) {
@@ -189,17 +221,50 @@ export function IdeEditorTabStrip({ groupId }: IdeEditorTabStripProps = {}) {
 
   const onDrop = useCallback(
     (ev: DragEvent<HTMLDivElement>, targetPath: string) => {
-      const source = ev.dataTransfer.getData(DRAG_MIME);
-      if (source === '' || source === targetPath) return;
+      const payload = parseTabDrag(ev.dataTransfer.getData(DRAG_MIME));
+      if (payload == null) return;
+      ev.preventDefault();
+      ev.stopPropagation(); // handled here — don't also fire the strip-level drop.
+      endTabDrag();
+      const { path: source, sourceGroupId } = payload;
+
+      // Cross-group: MOVE the file into this strip at the dropped tab's slot.
+      // (The pure moveTabBetweenGroups de-dupes if it's already here, and
+      // collapses the source group if this was its last tab.)
+      if (sourceGroupId !== targetGroupId) {
+        const at = openFilePaths.indexOf(targetPath);
+        session.moveFileToGroup(sourceGroupId, targetGroupId, source, at < 0 ? undefined : at);
+        return;
+      }
+
+      // Same group → reorder. Pinned-zone protection: a pinned tab can't move
+      // into the unpinned zone and vice versa — that drop is silently ignored.
+      if (source === targetPath) return;
       const sourcePinned = pinnedFilePaths.has(source);
       const targetPinned = pinnedFilePaths.has(targetPath);
-      if (sourcePinned !== targetPinned) return; // cross-zone drop ignored.
-      ev.preventDefault();
+      if (sourcePinned !== targetPinned) return;
       const fromIdx = openFilePaths.indexOf(source);
       const toIdx = openFilePaths.indexOf(targetPath);
       reorderOpenFiles(fromIdx, toIdx);
     },
-    [openFilePaths, pinnedFilePaths, reorderOpenFiles],
+    [endTabDrag, openFilePaths, pinnedFilePaths, reorderOpenFiles, session, targetGroupId],
+  );
+
+  // Drop in the strip's empty gutter (past the last tab). A cross-group drop
+  // here MOVES the file into this group at the end; a same-group drop is a
+  // no-op (it's already here). Per-tab drops stopPropagation, so this only runs
+  // for the gutter.
+  const onStripDrop = useCallback(
+    (ev: DragEvent<HTMLDivElement>) => {
+      const payload = parseTabDrag(ev.dataTransfer.getData(DRAG_MIME));
+      if (payload == null) return;
+      ev.preventDefault();
+      endTabDrag();
+      if (payload.sourceGroupId !== targetGroupId) {
+        session.moveFileToGroup(payload.sourceGroupId, targetGroupId, payload.path);
+      }
+    },
+    [endTabDrag, session, targetGroupId],
   );
 
   if (sortedPaths.length === 0 && openPanels.length === 0) {
@@ -218,6 +283,8 @@ export function IdeEditorTabStrip({ groupId }: IdeEditorTabStripProps = {}) {
         role="tablist"
         onKeyDown={onTabStripKeyDown}
         onWheel={onTabStripWheel}
+        onDragOver={onDragOver}
+        onDrop={onStripDrop}
       >
         {sortedPaths.map((path) => {
           const label = fileNameFromPath(path) || path;
@@ -233,6 +300,7 @@ export function IdeEditorTabStrip({ groupId }: IdeEditorTabStripProps = {}) {
               role="presentation"
               draggable
               onDragStart={(e) => onDragStart(e, path)}
+              onDragEnd={onDragEnd}
               onDragOver={onDragOver}
               onDrop={(e) => onDrop(e, path)}
               onContextMenu={(e) => {

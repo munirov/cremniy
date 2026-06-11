@@ -110,3 +110,53 @@
   flex-direction: column;
   min-height: 0;
 }
+
+/* Wraps the body branches (breadcrumb + editor / preview / panel) so the tab
+   drag drop-zone overlay can position against the body area only — never over
+   the tab strip (which stays droppable for cross-group tab moves). */
+.bodyWrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Edge drop-zone overlay, mounted over the body only while a tab is being
+   dragged. Catches dragOver/drop; the active band paints a translucent
+   insertion preview. Monochrome per DESIGN.md — white-opacity, never a brand
+   colour. */
+.dropOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+}
+
+/* The translucent band preview. Left/right cover the outer quarter (a "new
+   group will open here" hint); center covers the whole body (a "move into this
+   group" hint). A subtle white fill + a brighter inner edge, no blue. */
+.dropPreview {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.dropPreviewLeft {
+  left: 0;
+  width: 25%;
+  border-right: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.dropPreviewRight {
+  right: 0;
+  width: 25%;
+  border-left: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.dropPreviewCenter {
+  left: 0;
+  right: 0;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}

@@ -8,6 +8,7 @@ import { IdeToolDock } from '@boundary/layout/IdeToolDock';
 import { Pane } from '@boundary/layout/Pane';
 import { SplitContainer } from '@boundary/layout/SplitContainer';
 import { ToolRail } from '@boundary/layout/ToolRail';
+import { TabDragProvider } from '@boundary/layout/TabDragContext';
 import { TerminalFooterPanel } from '@boundary/terminal/TerminalFooterPanel';
 import { useIdeSession } from '@boundary/workspace/IdeSessionContext';
 import { useToolDock } from '@boundary/workspace/ToolDockContext';
@@ -324,6 +325,7 @@ export function IdeDockview({
   });
 
   return (
+    <TabDragProvider>
     <div className={styles.dockHost} onContextMenu={handleHostContextMenu}>
       <div style={{ flex: 1, minWidth: 0, display: 'flex' }}>
         {outerEntries.length === 1 ? (
@@ -380,6 +382,7 @@ export function IdeDockview({
         </ul>
       ) : null}
     </div>
+    </TabDragProvider>
   );
 }
 
