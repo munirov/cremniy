@@ -162,7 +162,13 @@ export type IdeSessionContextValue = {
 
 const IdeSessionContext = createContext<IdeSessionContextValue | null>(null);
 
-/** The single editor group all view state lives in (step-1: no splits yet). */
+/**
+ * The id of the startup / reset group only. NEVER use it as the target of an
+ * open: splits mint fresh ids and `collapseEmptyGroup` can remove `g0` (close
+ * the original group's last tab while a split exists), after which every pure
+ * op aimed at `g0` silently no-ops. Opens must target `activeGroupId`, which
+ * the model guarantees always references a live group.
+ */
 const GROUP_ID = 'g0';
 
 function formatUserMessage(error: unknown): string {
@@ -638,7 +644,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       activateOpenFile(path);
       return;
     }
-    const next = openInGroup(groupsRef.current, GROUP_ID, path);
+    const next = openInGroup(groupsRef.current, groupsRef.current.activeGroupId, path);
     commitGroups(next);
     setBuffers((b) => ({ ...b, [path]: text }));
     setSavedBuffers((b) => ({ ...b, [path]: text }));
@@ -680,7 +686,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         return n;
       });
     } else {
-      const next = openInGroup(groupsRef.current, GROUP_ID, chosen);
+      const next = openInGroup(groupsRef.current, groupsRef.current.activeGroupId, chosen);
       commitGroups(next);
       setBuffers((prev) => ({ ...prev, [chosen]: documentText }));
       setSavedBuffers((prev) => ({ ...prev, [chosen]: documentText }));
@@ -713,7 +719,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       if (path === '') {
         return;
       }
-      const next = openInGroup(groupsRef.current, GROUP_ID, path);
+      const next = openInGroup(groupsRef.current, groupsRef.current.activeGroupId, path);
       commitGroups(next);
       setBinaryTabs((prev) => {
         if (prev.has(path)) return prev;
@@ -744,8 +750,8 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         // Re-open: activate, and (for-keeps) promote it if it was the preview.
         // openInGroup with preview=false handles both activation and promotion.
         const next = preview
-          ? activateInGroup(groupsRef.current, GROUP_ID, trimmed)
-          : openInGroup(groupsRef.current, GROUP_ID, trimmed);
+          ? activateInGroup(groupsRef.current, groupsRef.current.activeGroupId, trimmed)
+          : openInGroup(groupsRef.current, groupsRef.current.activeGroupId, trimmed);
         commitGroups(next);
         showActiveBuffer(next);
         return;
@@ -772,7 +778,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         const replacedOld =
           preview && old != null && old !== trimmed && previewClean;
 
-        const next = openInGroup(groupsRef.current, GROUP_ID, trimmed, {
+        const next = openInGroup(groupsRef.current, groupsRef.current.activeGroupId, trimmed, {
           preview,
           cleanPreview: previewClean,
         });
@@ -859,7 +865,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
 
   const openPanel = useCallback(
     (id: string) => {
-      commitGroups(openPanelInGroup(groupsRef.current, GROUP_ID, id));
+      commitGroups(openPanelInGroup(groupsRef.current, groupsRef.current.activeGroupId, id));
     },
     [commitGroups],
   );

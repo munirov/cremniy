@@ -356,6 +356,50 @@ describe('activateGroup', () => {
   });
 });
 
+describe('active-group invariant across collapse sequences', () => {
+  it('split → close original → close last tab: activeGroupId stays live and openable', () => {
+    let s = withFiles('g0', '/a');
+    s = duplicateToNewGroup(s, 'g0', '/a', 'right', 'g1'); // /a in both, active g1
+    s = closeInGroup(s, 'g0', '/a'); // g0 empties → collapses; only g1 left
+    expect(s.groups.map((g) => g.id)).toEqual(['g1']);
+    expectActiveGroupLive(s);
+    s = closeInGroup(s, 'g1', '/a'); // last group stays, now empty
+    expectActiveGroupLive(s);
+
+    // Opening into the (live) active group from an empty editor always works.
+    const after = openInGroup(s, s.activeGroupId, '/b');
+    expect(after).not.toBe(s);
+    expect(getActiveGroup(after).openTabs).toEqual(['/b']);
+    expect(getActiveGroup(after).activeFilePath).toBe('/b');
+  });
+
+  it('moveTabBetweenGroups collapsing the source keeps activeGroupId live and openable', () => {
+    let s = withFiles('g0', '/a');
+    s = duplicateToNewGroup(s, 'g0', '/a', 'right', 'g1');
+    s = openInGroup(s, 'g1', '/b'); // g0:[/a], g1:[/a,/b]
+    s = moveTabBetweenGroups(s, 'g0', 'g1', '/a'); // g0 empties → collapses
+    expect(s.groups.map((g) => g.id)).toEqual(['g1']);
+    expectActiveGroupLive(s);
+    s = closeInGroup(s, 'g1', '/a');
+    s = closeInGroup(s, 'g1', '/b');
+    expectActiveGroupLive(s);
+    expect(getActiveGroup(openInGroup(s, s.activeGroupId, '/c')).activeFilePath).toBe('/c');
+  });
+
+  it('closePanelInGroup collapsing a panel-only group keeps activeGroupId live and panel-openable', () => {
+    let s = withFiles('g0', '/a');
+    s = duplicateToNewGroup(s, 'g0', '/a', 'right', 'g1');
+    s = closeInGroup(s, 'g1', '/a'); // g1 collapses → only g0
+    s = openPanelInGroup(s, s.activeGroupId, 'settings');
+    s = closeInGroup(s, s.activeGroupId, '/a');
+    s = closePanelInGroup(s, s.activeGroupId, 'settings'); // last group stays, empty
+    expectActiveGroupLive(s);
+    const after = openPanelInGroup(s, s.activeGroupId, 'settings');
+    expect(after).not.toBe(s);
+    expect(getActiveGroup(after).activePanel).toBe('settings');
+  });
+});
+
 describe('selectors', () => {
   it('groupContaining / isPathOpenAnywhere / allOpenPaths span all groups', () => {
     let s = withFiles('g1', '/a', '/b');

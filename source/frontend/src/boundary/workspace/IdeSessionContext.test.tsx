@@ -872,6 +872,35 @@ describe('IdeSessionContext editor groups (per-group API)', () => {
     expect(result.current.editorGroups).toHaveLength(1);
   });
 
+  it('openFileFromWorkspace opens into the focused group, not always the first', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('a').mockResolvedValueOnce('b');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    const firstGroupId = result.current.activeGroupId;
+    await act(async () => {
+      result.current.splitActiveFile('right');
+    });
+    const newGroupId = result.current.activeGroupId;
+    expect(newGroupId).not.toBe(firstGroupId);
+
+    // The NEW group is focused → a tree click must open there (VS Code parity).
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/b.txt');
+    });
+
+    const target = result.current.editorGroups.find((g) => g.id === newGroupId)!;
+    expect(target.openTabs).toEqual(['/proj/a.txt', '/proj/b.txt']);
+    expect(result.current.activeFilePath).toBe('/proj/b.txt');
+    const first = result.current.editorGroups.find((g) => g.id === firstGroupId)!;
+    expect(first.openTabs).toEqual(['/proj/a.txt']);
+  });
+
   it('moveFileToGroup moves a tab from the split group back into the first', async () => {
     vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('a').mockResolvedValueOnce('b');
 
@@ -900,5 +929,123 @@ describe('IdeSessionContext editor groups (per-group API)', () => {
     expect(result.current.editorGroups).toHaveLength(1);
     expect(result.current.editorGroups[0]!.id).toBe(g1!.id);
     expect(result.current.editorGroups[0]!.openTabs).toEqual(['/proj/a.txt', '/proj/b.txt']);
+  });
+});
+
+describe('IdeSessionContext regression: opening after close-all', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(readWorkspaceUserFile).mockResolvedValue('');
+    vi.mocked(loadPreferences).mockResolvedValue(DEFAULT_APP_PREFERENCES);
+    vi.mocked(savePreferences).mockResolvedValue(undefined);
+  });
+
+  it('openFileFromWorkspace works again after closeAllOpenFiles (single group)', async () => {
+    vi.mocked(readWorkspaceUserFile)
+      .mockResolvedValueOnce('a')
+      .mockResolvedValueOnce('b')
+      .mockResolvedValueOnce('a-again');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/b.txt');
+    });
+    await act(async () => {
+      result.current.closeAllOpenFiles();
+    });
+    expect(result.current.openFilePaths).toEqual([]);
+    expect(result.current.activeFilePath).toBeNull();
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+
+    expect(result.current.openFilePaths).toEqual(['/proj/a.txt']);
+    expect(result.current.activeFilePath).toBe('/proj/a.txt');
+    expect(result.current.documentText).toBe('a-again');
+  });
+
+  /**
+   * The user repro: split a file into a second group, close the FIRST group's
+   * tab (the first group collapses — only the minted split group survives),
+   * close the remaining tab. Every later open must still work even though the
+   * startup group id no longer exists.
+   */
+  it('openFileFromWorkspace works after the original group collapsed and all tabs closed', async () => {
+    vi.mocked(readWorkspaceUserFile)
+      .mockResolvedValueOnce('a')
+      .mockResolvedValueOnce('a-again');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    const firstGroupId = result.current.activeGroupId;
+    await act(async () => {
+      result.current.splitActiveFile('right');
+    });
+    expect(result.current.editorGroups).toHaveLength(2);
+
+    // Close the file in the ORIGINAL group → that group collapses.
+    await act(async () => {
+      result.current.closeFileInGroup(firstGroupId, '/proj/a.txt');
+    });
+    expect(result.current.editorGroups).toHaveLength(1);
+    expect(result.current.editorGroups[0]!.id).not.toBe(firstGroupId);
+
+    // Close the last tab in the surviving group → empty editor area.
+    await act(async () => {
+      result.current.closeOpenFile('/proj/a.txt');
+    });
+    expect(result.current.openFilePaths).toEqual([]);
+    expect(result.current.activeFilePath).toBeNull();
+
+    // A tree click must open the file again — not silently no-op.
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    expect(result.current.openFilePaths).toEqual(['/proj/a.txt']);
+    expect(result.current.activeFilePath).toBe('/proj/a.txt');
+    expect(result.current.documentText).toBe('a-again');
+  });
+
+  it('openPanel works after the original group collapsed and all tabs closed', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('a');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    const firstGroupId = result.current.activeGroupId;
+    await act(async () => {
+      result.current.splitActiveFile('right');
+    });
+    await act(async () => {
+      result.current.closeFileInGroup(firstGroupId, '/proj/a.txt');
+    });
+    await act(async () => {
+      result.current.closeOpenFile('/proj/a.txt');
+    });
+    expect(result.current.editorGroups).toHaveLength(1);
+    expect(result.current.openFilePaths).toEqual([]);
+
+    // Settings / tools must still open as a center panel.
+    await act(async () => {
+      result.current.openPanel('settings');
+    });
+    expect(result.current.activePanel).toBe('settings');
+    expect(result.current.openPanels).toEqual(['settings']);
   });
 });
