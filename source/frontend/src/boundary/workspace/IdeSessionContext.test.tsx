@@ -651,3 +651,155 @@ describe('IdeSessionContext runFileMenuAction', () => {
     expect(decodeURIComponent(result.current.loc.search)).toContain('root=/new-ws');
   });
 });
+
+describe('IdeSessionContext editor groups (per-group API)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(readWorkspaceUserFile).mockResolvedValue('');
+    vi.mocked(loadPreferences).mockResolvedValue(DEFAULT_APP_PREFERENCES);
+    vi.mocked(savePreferences).mockResolvedValue(undefined);
+  });
+
+  it('exposes a single default group whose projection mirrors the active group', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('a').mockResolvedValueOnce('b');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    expect(result.current.editorGroups).toHaveLength(1);
+    expect(result.current.activeGroupId).toBe(result.current.editorGroups[0]!.id);
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/b.txt');
+    });
+
+    const g = result.current.editorGroups[0]!;
+    expect(g.openTabs).toEqual(['/proj/a.txt', '/proj/b.txt']);
+    expect(g.activeFilePath).toBe('/proj/b.txt');
+    // The projection matches the top-level active-group fields.
+    expect(g.openTabs).toEqual(result.current.openFilePaths);
+    expect(g.activeFilePath).toBe(result.current.activeFilePath);
+  });
+
+  it('getBuffer / writeBuffer round-trip and writeBuffer mirrors documentText', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('hello');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    expect(result.current.getBuffer('/proj/a.txt')).toBe('hello');
+    expect(result.current.getBuffer('/proj/missing.txt')).toBe('');
+
+    await act(async () => {
+      result.current.writeBuffer('/proj/a.txt', 'edited');
+    });
+    expect(result.current.getBuffer('/proj/a.txt')).toBe('edited');
+    // /proj/a.txt is the active group's active file → documentText mirror updates.
+    expect(result.current.documentText).toBe('edited');
+    expect(result.current.dirtyFilePaths).toEqual(['/proj/a.txt']);
+  });
+
+  it('isBinaryPath reflects binary tabs', async () => {
+    vi.mocked(readWorkspaceUserFile).mockRejectedValueOnce(new Error('not utf-8'));
+    vi.mocked(getWorkspaceFileSize).mockResolvedValueOnce(2048);
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/app.exe');
+    });
+
+    expect(result.current.isBinaryPath('/proj/app.exe')).toBe(true);
+    expect(result.current.isBinaryPath('/proj/text.txt')).toBe(false);
+  });
+
+  it('per-group mutators on the active group match their active-group counterparts', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('a').mockResolvedValueOnce('b');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/b.txt');
+    });
+
+    const gid = result.current.activeGroupId;
+
+    // activateFileInGroup switches the active file + documentText.
+    await act(async () => {
+      result.current.activateFileInGroup(gid, '/proj/a.txt');
+    });
+    expect(result.current.activeFilePath).toBe('/proj/a.txt');
+    expect(result.current.documentText).toBe('a');
+
+    // reorderFilesInGroup reorders within the group.
+    await act(async () => {
+      result.current.reorderFilesInGroup(gid, 0, 1);
+    });
+    expect(result.current.openFilePaths).toEqual(['/proj/b.txt', '/proj/a.txt']);
+
+    // closeFileInGroup removes the tab (clean buffer → no confirm).
+    await act(async () => {
+      result.current.closeFileInGroup(gid, '/proj/b.txt');
+    });
+    expect(result.current.openFilePaths).toEqual(['/proj/a.txt']);
+  });
+
+  it('closeFileInGroup honors the unsaved-changes confirm', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('saved');
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/dirty.txt');
+    });
+    await act(async () => {
+      result.current.writeBuffer('/proj/dirty.txt', 'unsaved');
+    });
+    await act(async () => {
+      result.current.closeFileInGroup(result.current.activeGroupId, '/proj/dirty.txt');
+    });
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(result.current.openFilePaths).toEqual(['/proj/dirty.txt']);
+    confirmSpy.mockRestore();
+  });
+
+  it('focusEditorGroup is a no-op for the already-active single group', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('a');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+
+    const gid = result.current.activeGroupId;
+    const before = result.current.editorGroups;
+    await act(async () => {
+      result.current.focusEditorGroup(gid);
+    });
+    expect(result.current.activeGroupId).toBe(gid);
+    // Same projection reference — focusing the active group changes nothing.
+    expect(result.current.editorGroups).toBe(before);
+  });
+});

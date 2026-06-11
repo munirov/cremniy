@@ -87,6 +87,17 @@ function stubSession(activeFilePath: string | null): IdeSessionContextValue {
     bumpFileTreeRevision: vi.fn(),
     fileContentRevision: 0,
     bumpFileContentRevision: vi.fn(),
+    editorGroups: [],
+    activeGroupId: 'g0',
+    focusEditorGroup: vi.fn(),
+    activateFileInGroup: vi.fn(),
+    closeFileInGroup: vi.fn(),
+    reorderFilesInGroup: vi.fn(),
+    activatePanelInGroup: vi.fn(),
+    closePanelInGroup: vi.fn(),
+    getBuffer: vi.fn(() => ''),
+    writeBuffer: vi.fn(),
+    isBinaryPath: vi.fn(() => false),
   };
 }
 

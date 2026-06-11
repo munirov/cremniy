@@ -17,14 +17,16 @@ import {
 import {
   initialGroupsState,
   getActiveGroup,
+  getGroup,
   isPathOpenAnywhere,
   openInGroup,
   activateInGroup,
   openPanelInGroup,
-  activatePanelInGroup,
+  activatePanelInGroup as activatePanelInGroupState,
   closeInGroup,
-  closePanelInGroup,
+  closePanelInGroup as closePanelInGroupState,
   reorderInGroup,
+  activateGroup,
   renamePathInGroups,
   type GroupsState,
 } from '@domain/editor/editorGroups';
@@ -46,6 +48,20 @@ import { registerAgentCommands, registerAgentState } from '@shared/agent/agentBr
 import { useNotify } from '@boundary/notifications/NotificationContext';
 
 import { useWorkspaceRoot } from './WorkspaceContext';
+
+/**
+ * A read-only projection of one {@link EditorGroup} for consumers that render
+ * groups (the editor-pane grid). Mirrors the group's view state; the document
+ * buffers stay global and are read via {@link IdeSessionContextValue.getBuffer}.
+ */
+export type EditorGroupView = {
+  id: string;
+  openTabs: string[];
+  openPanels: string[];
+  activeFilePath: string | null;
+  activePanel: string | null;
+  previewFilePath: string | null;
+};
 
 export type IdeSessionContextValue = {
   activeFilePath: string | null;
@@ -82,6 +98,29 @@ export type IdeSessionContextValue = {
   closeOpenFile: (filePath: string) => void;
   closeOtherOpenFiles: (keepFilePath: string) => void;
   closeAllOpenFiles: () => void;
+  // ── editor groups (VS Code-style 1D grid) ───────────────────────────────
+  /** Every editor group, left→right (render order). One group in the default. */
+  editorGroups: ReadonlyArray<EditorGroupView>;
+  /** The focused group's id — the active-group projection above mirrors it. */
+  activeGroupId: string;
+  /** Focus a group (delegates to the pure `activateGroup`). */
+  focusEditorGroup: (groupId: string) => void;
+  /** Activate an open file tab inside a specific group. */
+  activateFileInGroup: (groupId: string, filePath: string) => void;
+  /** Close a file tab inside a specific group (same unsaved-changes confirm). */
+  closeFileInGroup: (groupId: string, filePath: string) => void;
+  /** Reorder a file tab within a specific group (caller keeps zones valid). */
+  reorderFilesInGroup: (groupId: string, fromIndex: number, toIndex: number) => void;
+  /** Re-focus an already-open center panel inside a specific group. */
+  activatePanelInGroup: (groupId: string, id: string) => void;
+  /** Close a center panel inside a specific group. */
+  closePanelInGroup: (groupId: string, id: string) => void;
+  /** Read a path's global document buffer (`''` when none). */
+  getBuffer: (filePath: string) => string;
+  /** Write a path's global document buffer (promotes preview, mirrors active). */
+  writeBuffer: (filePath: string, text: string) => void;
+  /** True when the path is a binary tab (no text buffer; shown via byte tools). */
+  isBinaryPath: (filePath: string) => boolean;
   runFileMenuAction: (id: FileMenuActionId) => Promise<void>;
   fileTreeRevision: number;
   bumpFileTreeRevision: () => void;
@@ -166,6 +205,23 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
   const previewFilePath = activeGroup.previewFilePath;
   const openPanels = activeGroup.openPanels;
   const activePanel = activeGroup.activePanel;
+  const activeGroupId = groups.activeGroupId;
+
+  // A read-only projection of every group for the editor-pane grid. Each entry
+  // is a new object only when its group's view state changes (groups identity is
+  // stable across unrelated state updates), so consumers can memo on g.id.
+  const editorGroups = useMemo<ReadonlyArray<EditorGroupView>>(
+    () =>
+      groups.groups.map((g) => ({
+        id: g.id,
+        openTabs: g.openTabs,
+        openPanels: g.openPanels,
+        activeFilePath: g.activeFilePath,
+        activePanel: g.activePanel,
+        previewFilePath: g.previewFilePath,
+      })),
+    [groups],
+  );
 
   // Reflect the active file's buffer into documentText whenever the model says
   // a (different) file is active — drives the editor binding the way the legacy
@@ -221,13 +277,20 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Swap two tabs. Caller must ensure both indices live in the same zone
-  // (both pinned or both unpinned) — the strip enforces that.
-  const reorderOpenFiles = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      commitGroups(reorderInGroup(groupsRef.current, GROUP_ID, fromIndex, toIndex));
+  // Swap two tabs in a group. Caller must ensure both indices live in the same
+  // zone (both pinned or both unpinned) — the strip enforces that.
+  const reorderFilesInGroup = useCallback(
+    (groupId: string, fromIndex: number, toIndex: number) => {
+      commitGroups(reorderInGroup(groupsRef.current, groupId, fromIndex, toIndex));
     },
     [commitGroups],
+  );
+
+  const reorderOpenFiles = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      reorderFilesInGroup(groupsRef.current.activeGroupId, fromIndex, toIndex);
+    },
+    [reorderFilesInGroup],
   );
 
   const navigateToWorkspace = useCallback(
@@ -247,27 +310,39 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     [navigateToWorkspace],
   );
 
-  const activateOpenFile = useCallback(
-    (filePath: string) => {
+  const activateFileInGroup = useCallback(
+    (groupId: string, filePath: string) => {
       const path = filePath.trim();
       if (path === '') {
         return;
       }
-      const next = activateInGroup(groupsRef.current, GROUP_ID, path);
+      const next = activateInGroup(groupsRef.current, groupId, path);
       if (next === groupsRef.current) {
         return; // not open here — no-op (mirrors the old openTabs guard)
       }
       commitGroups(next);
+      // showActiveBuffer is a no-op unless this changed the *active* group's file.
       showActiveBuffer(next);
     },
     [commitGroups, showActiveBuffer],
   );
 
-  const closeOpenFile = useCallback(
+  const activateOpenFile = useCallback(
     (filePath: string) => {
+      activateFileInGroup(groupsRef.current.activeGroupId, filePath);
+    },
+    [activateFileInGroup],
+  );
+
+  const closeFileInGroup = useCallback(
+    (groupId: string, filePath: string) => {
       const path = filePath.trim();
       if (path === '') {
         return;
+      }
+      const g = getGroup(groupsRef.current, groupId);
+      if (g == null || !g.openTabs.includes(path)) {
+        return; // not open in this group — nothing to close.
       }
 
       const currentBuffer = buffersRef.current[path];
@@ -279,7 +354,7 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const next = closeInGroup(groupsRef.current, GROUP_ID, path);
+      const next = closeInGroup(groupsRef.current, groupId, path);
       commitGroups(next);
 
       // Buffer GC: only drop the global buffer/saved/binary/bom entries when the
@@ -309,17 +384,27 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
           delete n[path];
           bomFlagsRef.current = n;
         }
+        // Pinning is global; only forget it once the tab is gone everywhere
+        // (with one group this is the only group, so it's always reached).
+        setPinnedFilePaths((prev) => {
+          if (!prev.has(path)) return prev;
+          const n = new Set(prev);
+          n.delete(path);
+          return n;
+        });
       }
-      setPinnedFilePaths((prev) => {
-        if (!prev.has(path)) return prev;
-        const n = new Set(prev);
-        n.delete(path);
-        return n;
-      });
 
+      // No-op unless this changed the *active* group's visible file.
       showActiveBuffer(next);
     },
     [commitGroups, showActiveBuffer],
+  );
+
+  const closeOpenFile = useCallback(
+    (filePath: string) => {
+      closeFileInGroup(groupsRef.current.activeGroupId, filePath);
+    },
+    [closeFileInGroup],
   );
 
   const closeOtherOpenFiles = useCallback(
@@ -344,24 +429,78 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     }
   }, [closeOpenFile, pinnedFilePaths]);
 
-  const setDocumentText = useCallback(
-    (value: string) => {
-      setDocumentTextState(value);
-      if (activeFilePath != null && activeFilePath !== '') {
-        setBuffers((prev) => ({ ...prev, [activeFilePath]: value }));
-        // Editing the previewed file promotes it to a permanent tab — clear the
-        // group's preview flag when the active file's text diverges from saved.
-        const g = getActiveGroup(groupsRef.current);
-        if (
-          g.previewFilePath === activeFilePath &&
-          value !== (savedBuffersRef.current[activeFilePath] ?? '')
-        ) {
-          // Re-opening the current preview "for keeps" promotes it in place.
-          commitGroups(openInGroup(groupsRef.current, GROUP_ID, activeFilePath));
+  const getBuffer = useCallback((filePath: string): string => buffersRef.current[filePath] ?? '', []);
+
+  const isBinaryPath = useCallback((filePath: string): boolean => binaryTabs.has(filePath), [binaryTabs]);
+
+  const focusEditorGroup = useCallback(
+    (groupId: string) => {
+      const next = activateGroup(groupsRef.current, groupId);
+      if (next === groupsRef.current) {
+        return;
+      }
+      commitGroups(next);
+      // The active group changed → mirror its active file into documentText.
+      showActiveBuffer(next);
+    },
+    [commitGroups, showActiveBuffer],
+  );
+
+  // Write a path's global buffer (used by any group's editor). Promotes a
+  // preview tab to permanent in every group previewing this path once the text
+  // diverges from disk, and mirrors documentText when the path is the active
+  // group's visible file (the legacy single-source-of-truth the editor binds to).
+  const writeBuffer = useCallback(
+    (filePath: string, text: string) => {
+      const path = filePath?.trim() ?? '';
+      if (path === '') {
+        return;
+      }
+      setBuffers((prev) => ({ ...prev, [path]: text }));
+
+      if (getActiveGroup(groupsRef.current).activeFilePath === path) {
+        setDocumentTextState(text);
+      }
+
+      // Editing a previewed file promotes it to a permanent tab — clear the
+      // preview flag in every group that previews this path once the text
+      // diverges from saved. openInGroup(preview=false) on an open path promotes
+      // it in place.
+      if (text !== (savedBuffersRef.current[path] ?? '')) {
+        let state = groupsRef.current;
+        let changed = false;
+        for (const g of state.groups) {
+          if (g.previewFilePath === path) {
+            const after = openInGroup(state, g.id, path);
+            if (after !== state) {
+              state = after;
+              changed = true;
+            }
+          }
+        }
+        if (changed) {
+          // openInGroup focuses the touched group; with one group that's a no-op.
+          // Re-home the active group so writing doesn't steal focus across groups.
+          state = activateGroup(state, groupsRef.current.activeGroupId);
+          commitGroups(state);
         }
       }
     },
-    [activeFilePath, commitGroups],
+    [commitGroups],
+  );
+
+  const setDocumentText = useCallback(
+    (value: string) => {
+      // Generalized: write the active group's active-file buffer. When no file
+      // is active (scratch buffer), still reflect the typed text into the mirror.
+      const path = getActiveGroup(groupsRef.current).activeFilePath ?? '';
+      if (path === '') {
+        setDocumentTextState(value);
+        return;
+      }
+      writeBuffer(path, value);
+    },
+    [writeBuffer],
   );
 
   const openWorkspaceFolderFlow = useCallback(async () => {
@@ -648,21 +787,38 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
     [commitGroups],
   );
 
-  const activatePanel = useCallback(
-    (id: string) => {
-      commitGroups(activatePanelInGroup(groupsRef.current, GROUP_ID, id));
+  const activatePanelInGroup = useCallback(
+    (groupId: string, id: string) => {
+      const next = activatePanelInGroupState(groupsRef.current, groupId, id);
+      commitGroups(next);
+      // No-op unless this changed the *active* group's overlay.
+      showActiveBuffer(next);
     },
-    [commitGroups],
+    [commitGroups, showActiveBuffer],
   );
 
-  const closePanel = useCallback(
+  const activatePanel = useCallback(
     (id: string) => {
-      const next = closePanelInGroup(groupsRef.current, GROUP_ID, id);
+      activatePanelInGroup(groupsRef.current.activeGroupId, id);
+    },
+    [activatePanelInGroup],
+  );
+
+  const closePanelInGroup = useCallback(
+    (groupId: string, id: string) => {
+      const next = closePanelInGroupState(groupsRef.current, groupId, id);
       commitGroups(next);
       // Closing the visible panel re-picks a file/panel — refresh documentText.
       showActiveBuffer(next);
     },
     [commitGroups, showActiveBuffer],
+  );
+
+  const closePanel = useCallback(
+    (id: string) => {
+      closePanelInGroup(groupsRef.current.activeGroupId, id);
+    },
+    [closePanelInGroup],
   );
 
   const closeWorkspaceFlow = useCallback(() => {
@@ -793,6 +949,17 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       openPanel,
       activatePanel,
       closePanel,
+      editorGroups,
+      activeGroupId,
+      focusEditorGroup,
+      activateFileInGroup,
+      closeFileInGroup,
+      reorderFilesInGroup,
+      activatePanelInGroup,
+      closePanelInGroup,
+      getBuffer,
+      writeBuffer,
+      isBinaryPath,
     }),
     [
       activeDocumentDirty,
@@ -824,6 +991,17 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       openPanel,
       activatePanel,
       closePanel,
+      editorGroups,
+      activeGroupId,
+      focusEditorGroup,
+      activateFileInGroup,
+      closeFileInGroup,
+      reorderFilesInGroup,
+      activatePanelInGroup,
+      closePanelInGroup,
+      getBuffer,
+      writeBuffer,
+      isBinaryPath,
     ],
   );
 

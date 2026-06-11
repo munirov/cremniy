@@ -19,24 +19,67 @@ import styles from './IdeEditorTabStrip.module.css';
 
 const DRAG_MIME = 'application/x-cremniy-tab';
 
-export function IdeEditorTabStrip() {
+export type IdeEditorTabStripProps = {
+  /**
+   * Which editor group this strip renders. Defaults to the active group, in
+   * which case the strip behaves exactly like the pre-groups single strip. A
+   * tab is shown active only when it's this group's active tab AND this group
+   * is the focused one — so the inactive group's strip never shows a selection.
+   */
+  groupId?: string;
+};
+
+export function IdeEditorTabStrip({ groupId }: IdeEditorTabStripProps = {}) {
+  const session = useIdeSession();
   const {
-    openFilePaths,
-    activeFilePath,
     dirtyFilePaths,
     pinnedFilePaths,
     togglePinFilePath,
-    reorderOpenFiles,
-    activateOpenFile,
-    closeOpenFile,
     closeOtherOpenFiles,
     closeAllOpenFiles,
-    openPanels,
-    activePanel,
-    previewFilePath,
-    activatePanel,
-    closePanel,
-  } = useIdeSession();
+  } = session;
+
+  // Resolve the group this strip renders. When `groupId` is given, scope to that
+  // group's view + per-group mutators; otherwise fall back to the active-group
+  // projection (identical to the legacy single-group strip).
+  const activeGroupId = session.activeGroupId;
+  const targetGroupId = groupId ?? activeGroupId;
+  const group = session.editorGroups?.find((g) => g.id === targetGroupId);
+  const isActiveGroup = targetGroupId === activeGroupId;
+
+  // View state for this group (group projection when scoped, else the top-level
+  // active-group fields the context still exposes for backward compatibility).
+  const openFilePaths = group?.openTabs ?? session.openFilePaths;
+  const groupActiveFilePath = group?.activeFilePath ?? session.activeFilePath;
+  const openPanels = group?.openPanels ?? session.openPanels;
+  const groupActivePanel = group?.activePanel ?? session.activePanel;
+  const previewFilePath = group?.previewFilePath ?? session.previewFilePath;
+  // A tab/panel only reads as "selected" when it's active in its group AND that
+  // group has focus — the unfocused group shows no active tab.
+  const activeFilePath = isActiveGroup ? groupActiveFilePath : null;
+  const activePanel = isActiveGroup ? groupActivePanel : null;
+
+  // Per-group mutators, scoped to this strip's group.
+  const activateOpenFile = useCallback(
+    (path: string) => session.activateFileInGroup(targetGroupId, path),
+    [session, targetGroupId],
+  );
+  const closeOpenFile = useCallback(
+    (path: string) => session.closeFileInGroup(targetGroupId, path),
+    [session, targetGroupId],
+  );
+  const reorderOpenFiles = useCallback(
+    (from: number, to: number) => session.reorderFilesInGroup(targetGroupId, from, to),
+    [session, targetGroupId],
+  );
+  const activatePanel = useCallback(
+    (id: string) => session.activatePanelInGroup(targetGroupId, id),
+    [session, targetGroupId],
+  );
+  const closePanel = useCallback(
+    (id: string) => session.closePanelInGroup(targetGroupId, id),
+    [session, targetGroupId],
+  );
   useRegistryVersion(); // re-render so a disabled plugin's center-panel tab vanishes
   const dirtyFiles = new Set(dirtyFilePaths);
   const navigatedFromKeyboardRef = useRef(false);

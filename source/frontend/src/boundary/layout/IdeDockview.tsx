@@ -1,16 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor/IdeMonacoEditor';
-import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
-import { BinaryFilePlaceholder } from '@boundary/editor/BinaryFilePlaceholder';
-import { ImageTab } from '@boundary/editor/ImageTab';
-import { MarkdownPreview } from '@boundary/editor/MarkdownPreview';
-import { IdeBreadcrumb } from '@boundary/layout/IdeBreadcrumb';
-import { IdeEditorTabStrip } from '@boundary/layout/IdeEditorTabStrip';
-import { resolveCenterPanel } from '@boundary/layout/centerPanels';
+import { GroupEditorPane } from '@boundary/layout/GroupEditorPane';
 import { pluginToolTabs } from '@shared/plugins/registry';
 import { useRegistryVersion } from '@shared/plugins/useRegistry';
-import { IdeStatusStrip } from '@boundary/layout/IdeStatusStrip';
 import { IdeToolDock } from '@boundary/layout/IdeToolDock';
 import { Pane } from '@boundary/layout/Pane';
 import { SplitContainer } from '@boundary/layout/SplitContainer';
@@ -208,20 +201,6 @@ export function IdeDockview({
     }
   }, [editorSplit, activeToolTab, setActiveToolTab]);
 
-  // Markdown files get a VS Code-style "Markdown | Preview" toggle at the
-  // editor's top-right. Preview swaps the Monaco source for the rendered doc.
-  // Reset to source mode whenever the active file changes so a freshly opened
-  // file always lands in the editor, not someone else's stale preview.
-  const isMarkdown = isMarkdownPath(ide.activeFilePath);
-  const [mdPreview, setMdPreview] = useState(false);
-  useEffect(() => {
-    setMdPreview(false);
-  }, [ide.activeFilePath]);
-  // Only render markdown as preview when it's actually the source-editor branch
-  // (not a center panel, not a binary/image file).
-  const showMarkdownPreview =
-    isMarkdown && mdPreview && ide.activePanel == null && !ide.activeFileIsBinary;
-
   const paneVisibility: Record<BuiltinPaneId, boolean> = {
     fileTree: paneVisibilityProp?.fileTree ?? true,
     editor: paneVisibilityProp?.editor ?? true,
@@ -241,8 +220,51 @@ export function IdeDockview({
     </Pane>
   ) : null;
 
-  // The editor pane (Monaco + tabs + status). Always built when the editor is
-  // visible; how it shares the slot with a tool is decided below.
+  // The legacy split-editor toggle (editor beside a tool). It still rides at the
+  // far-right of the active group's tab strip, so it's handed to that group's
+  // pane as `headerRight` — keeping the editorSplit flow entirely here while the
+  // pane owns the strip. Hidden while split (then it lives on the tool pane).
+  const splitToggleNode: ReactNode = !editorSplit ? (
+    <button
+      type="button"
+      className={styles.splitBtn}
+      onClick={toggleEditorSplit}
+      title="Split editor (open a tool / second editor beside)"
+      aria-label="Split editor"
+    >
+      <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="1.5" />
+        <path d="M12 4v16" />
+      </svg>
+    </button>
+  ) : null;
+
+  // Shared editor props passed to every group's pane.
+  const groupEditorProps = {
+    editorCommand,
+    wordWrapEnabled,
+    editorInsertSpaces,
+    editorTabWidth,
+    editorFontSize,
+    onEditorFontSizeChange,
+    onCursorPositionChange,
+    cursorPosition,
+    workspaceRoot,
+  };
+
+  // The editor groups, laid out left→right. One group (the default) renders the
+  // single pane directly — byte-identical to the pre-groups editor body. More
+  // than one wraps them in a horizontal split.
+  const groups = ide.editorGroups;
+  const renderGroupPane = (g: (typeof groups)[number]): ReactNode => (
+    <GroupEditorPane
+      key={g.id}
+      group={g}
+      {...groupEditorProps}
+      headerRight={g.id === ide.activeGroupId ? splitToggleNode : null}
+    />
+  );
+
   const editorPaneNode = paneVisibility.editor ? (
     <Pane
       id="editor"
@@ -255,113 +277,17 @@ export function IdeDockview({
         </div>
       )}
     >
-      <div className={styles.editorStack}>
-        {ide.openFilePaths.length > 0 || ide.openPanels.length > 0 ? (
-          <div className={styles.tabStrip} role="region" aria-label="Document tabs">
-            <IdeEditorTabStrip />
-            {/* Markdown source/preview toggle — only for .md/.markdown in the
-                source-editor branch, pinned top-right like VS Code. */}
-            {isMarkdown && ide.activePanel == null && !ide.activeFileIsBinary ? (
-              <div className={styles.mdToggle} role="group" aria-label="Markdown view">
-                <button
-                  type="button"
-                  className={`${styles.mdToggleBtn} ${!mdPreview ? styles.mdToggleBtnActive : ''}`}
-                  onClick={() => setMdPreview(false)}
-                  aria-pressed={!mdPreview}
-                  title="Edit Markdown source"
-                >
-                  Markdown
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.mdToggleBtn} ${mdPreview ? styles.mdToggleBtnActive : ''}`}
-                  onClick={() => setMdPreview(true)}
-                  aria-pressed={mdPreview}
-                  title="Preview rendered Markdown"
-                >
-                  Preview
-                </button>
-              </div>
-            ) : null}
-            {/* While split, the toggle lives on the right pane (far edge) so it's
-                not stuck to the left window — see IdeToolDock's onToggleSplit. */}
-            {!editorSplit ? (
-              <button
-                type="button"
-                className={styles.splitBtn}
-                onClick={toggleEditorSplit}
-                title="Split editor (open a tool / second editor beside)"
-                aria-label="Split editor"
-              >
-                <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="16" rx="1.5" />
-                  <path d="M12 4v16" />
-                </svg>
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-        {ide.activePanel != null ? (
-          <div className={styles.editorBody}>{resolveCenterPanel(ide.activePanel)?.render() ?? null}</div>
-        ) : ide.activeFileIsBinary && isImagePath(ide.activeFilePath) ? (
-          <>
-            <IdeBreadcrumb
-              filePath={ide.activeFilePath}
-              workspaceRoot={workspaceRoot?.path ?? null}
-            />
-            <div className={styles.editorBody}>
-              <ImageTab filePath={ide.activeFilePath} />
+      {groups.length > 1 ? (
+        <SplitContainer direction="horizontal" defaultSizes={groups.map(() => 1)}>
+          {groups.map((g) => (
+            <div key={g.id} style={{ width: '100%', height: '100%', display: 'flex' }}>
+              {renderGroupPane(g)}
             </div>
-          </>
-        ) : ide.activeFileIsBinary ? (
-          <>
-            <IdeBreadcrumb
-              filePath={ide.activeFilePath}
-              workspaceRoot={workspaceRoot?.path ?? null}
-            />
-            <div className={styles.editorBody}>
-              <BinaryFilePlaceholder filePath={ide.activeFilePath} />
-            </div>
-          </>
-        ) : showMarkdownPreview ? (
-          <>
-            <IdeBreadcrumb
-              filePath={ide.activeFilePath}
-              workspaceRoot={workspaceRoot?.path ?? null}
-            />
-            <div className={styles.editorBody}>
-              <MarkdownPreview source={ide.documentText} />
-            </div>
-          </>
-        ) : (
-          <>
-            <IdeBreadcrumb
-              filePath={ide.activeFilePath}
-              workspaceRoot={workspaceRoot?.path ?? null}
-            />
-            <div className={styles.editorBody}>
-              <IdeMonacoEditor
-                value={ide.documentText}
-                onChange={ide.setDocumentText}
-                filePath={ide.activeFilePath}
-                revealTarget={ide.revealTarget}
-                onCursorPositionChange={onCursorPositionChange}
-                wordWrapEnabled={wordWrapEnabled}
-                insertSpaces={editorInsertSpaces}
-                tabWidth={editorTabWidth}
-                fontSize={editorFontSize}
-                onFontSizeChange={onEditorFontSizeChange}
-                command={editorCommand}
-              />
-            </div>
-            <IdeStatusStrip
-              activeFilePath={ide.activeFilePath}
-              cursorLine={cursorPosition?.line ?? null}
-              cursorColumn={cursorPosition?.column ?? null}
-            />
-          </>
-        )}
-      </div>
+          ))}
+        </SplitContainer>
+      ) : (
+        renderGroupPane(groups[0]!)
+      )}
     </Pane>
   ) : null;
 
@@ -516,42 +442,6 @@ export function IdeDockview({
       ) : null}
     </div>
   );
-}
-
-/** Raster image extensions we render in an ImageTab instead of the byte placeholder. */
-const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
-  'png',
-  'jpg',
-  'jpeg',
-  'gif',
-  'webp',
-  'bmp',
-  'ico',
-]);
-
-/** True when the path's (lowercased) extension is a raster image we can preview. */
-function isImagePath(path: string | null): boolean {
-  if (path == null) {
-    return false;
-  }
-  const dot = path.lastIndexOf('.');
-  if (dot < 0) {
-    return false;
-  }
-  return IMAGE_EXTENSIONS.has(path.slice(dot + 1).toLowerCase());
-}
-
-/** True when the path's (lowercased) extension is `md` or `markdown`. */
-function isMarkdownPath(path: string | null): boolean {
-  if (path == null) {
-    return false;
-  }
-  const dot = path.lastIndexOf('.');
-  if (dot < 0) {
-    return false;
-  }
-  const ext = path.slice(dot + 1).toLowerCase();
-  return ext === 'md' || ext === 'markdown';
 }
 
 function parseLayout(raw: unknown): IdeLayoutSizes {

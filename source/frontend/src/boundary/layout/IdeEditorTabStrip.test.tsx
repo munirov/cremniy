@@ -14,6 +14,11 @@ beforeAll(() => {
   registerPlugin(gitPlugin);
 });
 
+// The strip renders a single (active) group. We mock the session with the
+// per-group projection (editorGroups + activeGroupId) and the per-group
+// mutators the strip calls; pinning + dirty stay global. `g0` is the default
+// group, so the strip scopes to it and treats it as the focused group.
+const GROUP_ID = 'g0';
 const ideSessionMocks = vi.hoisted(() => ({
   openFilePaths: [] as string[],
   activeFilePath: null as string | null,
@@ -22,33 +27,45 @@ const ideSessionMocks = vi.hoisted(() => ({
   openPanels: [] as string[],
   activePanel: null as string | null,
   previewFilePath: null as string | null,
-  activateOpenFile: vi.fn(),
-  closeOpenFile: vi.fn(),
+  activateFileInGroup: vi.fn(),
+  closeFileInGroup: vi.fn(),
   closeOtherOpenFiles: vi.fn(),
   closeAllOpenFiles: vi.fn(),
   togglePinFilePath: vi.fn(),
-  reorderOpenFiles: vi.fn(),
-  activatePanel: vi.fn(),
-  closePanel: vi.fn(),
+  reorderFilesInGroup: vi.fn(),
+  activatePanelInGroup: vi.fn(),
+  closePanelInGroup: vi.fn(),
 }));
 
 vi.mock('@boundary/workspace/IdeSessionContext', () => ({
   useIdeSession: () => ({
+    activeGroupId: GROUP_ID,
+    editorGroups: [
+      {
+        id: GROUP_ID,
+        openTabs: ideSessionMocks.openFilePaths,
+        openPanels: ideSessionMocks.openPanels,
+        activeFilePath: ideSessionMocks.activeFilePath,
+        activePanel: ideSessionMocks.activePanel,
+        previewFilePath: ideSessionMocks.previewFilePath,
+      },
+    ],
+    // Top-level projection kept for any code that still reads it.
     openFilePaths: ideSessionMocks.openFilePaths,
     activeFilePath: ideSessionMocks.activeFilePath,
-    dirtyFilePaths: ideSessionMocks.dirtyFilePaths,
-    pinnedFilePaths: ideSessionMocks.pinnedFilePaths,
     openPanels: ideSessionMocks.openPanels,
     activePanel: ideSessionMocks.activePanel,
     previewFilePath: ideSessionMocks.previewFilePath,
-    activateOpenFile: ideSessionMocks.activateOpenFile,
-    closeOpenFile: ideSessionMocks.closeOpenFile,
+    dirtyFilePaths: ideSessionMocks.dirtyFilePaths,
+    pinnedFilePaths: ideSessionMocks.pinnedFilePaths,
     closeOtherOpenFiles: ideSessionMocks.closeOtherOpenFiles,
     closeAllOpenFiles: ideSessionMocks.closeAllOpenFiles,
     togglePinFilePath: ideSessionMocks.togglePinFilePath,
-    reorderOpenFiles: ideSessionMocks.reorderOpenFiles,
-    activatePanel: ideSessionMocks.activatePanel,
-    closePanel: ideSessionMocks.closePanel,
+    activateFileInGroup: ideSessionMocks.activateFileInGroup,
+    closeFileInGroup: ideSessionMocks.closeFileInGroup,
+    reorderFilesInGroup: ideSessionMocks.reorderFilesInGroup,
+    activatePanelInGroup: ideSessionMocks.activatePanelInGroup,
+    closePanelInGroup: ideSessionMocks.closePanelInGroup,
   }),
 }));
 
@@ -62,14 +79,14 @@ describe('IdeEditorTabStrip', () => {
     ideSessionMocks.openPanels = [];
     ideSessionMocks.activePanel = null;
     ideSessionMocks.previewFilePath = null;
-    ideSessionMocks.activateOpenFile.mockReset();
-    ideSessionMocks.closeOpenFile.mockReset();
+    ideSessionMocks.activateFileInGroup.mockReset();
+    ideSessionMocks.closeFileInGroup.mockReset();
     ideSessionMocks.closeOtherOpenFiles.mockReset();
     ideSessionMocks.closeAllOpenFiles.mockReset();
     ideSessionMocks.togglePinFilePath.mockReset();
-    ideSessionMocks.reorderOpenFiles.mockReset();
-    ideSessionMocks.activatePanel.mockReset();
-    ideSessionMocks.closePanel.mockReset();
+    ideSessionMocks.reorderFilesInGroup.mockReset();
+    ideSessionMocks.activatePanelInGroup.mockReset();
+    ideSessionMocks.closePanelInGroup.mockReset();
   });
 
   it('shows empty state when no files are open', () => {
@@ -111,8 +128,8 @@ describe('IdeEditorTabStrip', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'second.txt' }));
 
-    expect(ideSessionMocks.activateOpenFile).toHaveBeenCalledTimes(1);
-    expect(ideSessionMocks.activateOpenFile).toHaveBeenCalledWith('/a/second.txt');
+    expect(ideSessionMocks.activateFileInGroup).toHaveBeenCalledTimes(1);
+    expect(ideSessionMocks.activateFileInGroup).toHaveBeenCalledWith(GROUP_ID, '/a/second.txt');
   });
 
   it('calls closeOpenFile when close control is clicked', () => {
@@ -123,8 +140,8 @@ describe('IdeEditorTabStrip', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close one.rs' }));
 
-    expect(ideSessionMocks.closeOpenFile).toHaveBeenCalledTimes(1);
-    expect(ideSessionMocks.closeOpenFile).toHaveBeenCalledWith('/x/one.rs');
+    expect(ideSessionMocks.closeFileInGroup).toHaveBeenCalledTimes(1);
+    expect(ideSessionMocks.closeFileInGroup).toHaveBeenCalledWith(GROUP_ID, '/x/one.rs');
   });
 
   it('closes tab row on middle-button (auxclick)', () => {
@@ -144,8 +161,8 @@ describe('IdeEditorTabStrip', () => {
       }),
     );
 
-    expect(ideSessionMocks.closeOpenFile).toHaveBeenCalledTimes(1);
-    expect(ideSessionMocks.closeOpenFile).toHaveBeenCalledWith('/pkg/main.rs');
+    expect(ideSessionMocks.closeFileInGroup).toHaveBeenCalledTimes(1);
+    expect(ideSessionMocks.closeFileInGroup).toHaveBeenCalledWith(GROUP_ID, '/pkg/main.rs');
   });
 
   it('cycles active tab with ArrowRight key on tab strip', () => {
@@ -157,8 +174,8 @@ describe('IdeEditorTabStrip', () => {
     const tablist = screen.getByRole('tablist');
     fireEvent.keyDown(tablist, { key: 'ArrowRight', code: 'ArrowRight' });
 
-    expect(ideSessionMocks.activateOpenFile).toHaveBeenCalledTimes(1);
-    expect(ideSessionMocks.activateOpenFile).toHaveBeenCalledWith('/x/b.ts');
+    expect(ideSessionMocks.activateFileInGroup).toHaveBeenCalledTimes(1);
+    expect(ideSessionMocks.activateFileInGroup).toHaveBeenCalledWith(GROUP_ID, '/x/b.ts');
   });
 
   it('cycles active tab with ArrowLeft from first to last file', () => {
@@ -170,7 +187,7 @@ describe('IdeEditorTabStrip', () => {
     const tablist = screen.getByRole('tablist');
     fireEvent.keyDown(tablist, { key: 'ArrowLeft', code: 'ArrowLeft' });
 
-    expect(ideSessionMocks.activateOpenFile).toHaveBeenCalledWith('/x/b.ts');
+    expect(ideSessionMocks.activateFileInGroup).toHaveBeenCalledWith(GROUP_ID, '/x/b.ts');
   });
 
   it('gives tabindex 0 only to the active tab select button', () => {
@@ -212,7 +229,7 @@ describe('IdeEditorTabStrip', () => {
 
     // Re-clicking re-activates the panel through the session.
     fireEvent.click(panelTab);
-    expect(ideSessionMocks.activatePanel).toHaveBeenCalledWith('settings');
+    expect(ideSessionMocks.activatePanelInGroup).toHaveBeenCalledWith(GROUP_ID, 'settings');
   });
 
   it('closes a center-panel tab via its close control', () => {
@@ -222,7 +239,7 @@ describe('IdeEditorTabStrip', () => {
     render(<IdeEditorTabStrip />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Close Git' }));
-    expect(ideSessionMocks.closePanel).toHaveBeenCalledWith('advancedGit');
+    expect(ideSessionMocks.closePanelInGroup).toHaveBeenCalledWith(GROUP_ID, 'advancedGit');
   });
 
   it('marks the active file tab as unselected while a panel is active', () => {
