@@ -132,9 +132,11 @@
   z-index: 20;
 }
 
-/* The translucent band preview. Left/right cover the outer quarter (a "new
-   group will open here" hint); center covers the whole body (a "move into this
-   group" hint). A subtle white fill + a brighter inner edge, no blue. */
+/* The translucent band preview. Left/right cover the target HALF — i.e. where
+   the new group lands after the split, with the divider line at the CENTRE (50%,
+   exactly where the resulting 50/50 split divider sits), so the hint matches the
+   result. Center covers the whole body (a "move into this group" hint). A subtle
+   white fill + a brighter divider edge, no blue. */
 .dropPreview {
   position: absolute;
   top: 0;
@@ -145,13 +147,13 @@
 
 .dropPreviewLeft {
   left: 0;
-  width: 25%;
+  width: 50%;
   border-right: 2px solid rgba(255, 255, 255, 0.4);
 }
 
 .dropPreviewRight {
   right: 0;
-  width: 25%;
+  width: 50%;
   border-left: 2px solid rgba(255, 255, 255, 0.4);
 }
 
