@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 
 import type { IdeEditorCommand, IdeEditorCursorPosition } from '@boundary/editor/IdeMonacoEditor';
 import { IdeMonacoEditor } from '@boundary/editor/IdeMonacoEditor';
@@ -26,12 +26,6 @@ export type GroupEditorPaneProps = {
   onCursorPositionChange: (position: IdeEditorCursorPosition | null) => void;
   cursorPosition: IdeEditorCursorPosition | null;
   workspaceRoot: WorkspaceRoot | null;
-  /**
-   * Optional content rendered at the right edge of the tab strip — used by the
-   * shell to keep the legacy split-editor toggle in this row without coupling
-   * GroupEditorPane to the editor/tool split state.
-   */
-  headerRight?: ReactNode;
 };
 
 /**
@@ -54,10 +48,9 @@ export function GroupEditorPane({
   onCursorPositionChange,
   cursorPosition,
   workspaceRoot,
-  headerRight,
 }: GroupEditorPaneProps) {
   const ide = useIdeSession();
-  const { getBuffer, writeBuffer, isBinaryPath, focusEditorGroup, revealTarget } = ide;
+  const { getBuffer, writeBuffer, isBinaryPath, focusEditorGroup, splitActiveFile, revealTarget } = ide;
 
   const activeFilePath = group.activeFilePath;
   const activePanel = group.activePanel;
@@ -133,7 +126,25 @@ export function GroupEditorPane({
               </button>
             </div>
           ) : null}
-          {headerRight}
+          {/* Split right: open the active file in a new group beside this one
+              (VS Code "Split Editor Right"). Both views share the buffer. The
+              pane's onMouseDown already focuses this group, so splitting acts on
+              it; focusing again here is belt-and-suspenders for event ordering. */}
+          <button
+            type="button"
+            className={styles.splitBtn}
+            onClick={() => {
+              focusEditorGroup(group.id);
+              splitActiveFile('right');
+            }}
+            title="Split editor right"
+            aria-label="Split editor right"
+          >
+            <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="1.5" />
+              <path d="M12 4v16" />
+            </svg>
+          </button>
         </div>
       ) : null}
       {activePanel != null ? (

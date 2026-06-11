@@ -180,26 +180,7 @@ export function IdeDockview({
   );
 
   const ide = useIdeSession();
-  const { activeToolTab, setActiveToolTab } = useToolDock();
-
-  // Split the editor slot: show the editor AND the active tool side by side
-  // instead of the tool replacing the editor. Toggling it on with no tool open
-  // defaults the second pane to a code editor (≈ two editors). Local layout
-  // state, not persisted.
-  const [editorSplit, setEditorSplit] = useState(false);
-  const toggleEditorSplit = useCallback(() => {
-    const next = !editorSplit;
-    setEditorSplit(next);
-    if (next) {
-      if (activeToolTab == null) {
-        setActiveToolTab('codeEditor');
-      }
-    } else {
-      // Un-split → back to a single editor. Clear the tool that was sharing the
-      // slot, otherwise it stays full-screen and the editor looks "broken".
-      setActiveToolTab(null);
-    }
-  }, [editorSplit, activeToolTab, setActiveToolTab]);
+  const { activeToolTab } = useToolDock();
 
   const paneVisibility: Record<BuiltinPaneId, boolean> = {
     fileTree: paneVisibilityProp?.fileTree ?? true,
@@ -220,25 +201,6 @@ export function IdeDockview({
     </Pane>
   ) : null;
 
-  // The legacy split-editor toggle (editor beside a tool). It still rides at the
-  // far-right of the active group's tab strip, so it's handed to that group's
-  // pane as `headerRight` — keeping the editorSplit flow entirely here while the
-  // pane owns the strip. Hidden while split (then it lives on the tool pane).
-  const splitToggleNode: ReactNode = !editorSplit ? (
-    <button
-      type="button"
-      className={styles.splitBtn}
-      onClick={toggleEditorSplit}
-      title="Split editor (open a tool / second editor beside)"
-      aria-label="Split editor"
-    >
-      <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="1.5" />
-        <path d="M12 4v16" />
-      </svg>
-    </button>
-  ) : null;
-
   // Shared editor props passed to every group's pane.
   const groupEditorProps = {
     editorCommand,
@@ -257,12 +219,7 @@ export function IdeDockview({
   // than one wraps them in a horizontal split.
   const groups = ide.editorGroups;
   const renderGroupPane = (g: (typeof groups)[number]): ReactNode => (
-    <GroupEditorPane
-      key={g.id}
-      group={g}
-      {...groupEditorProps}
-      headerRight={g.id === ide.activeGroupId ? splitToggleNode : null}
-    />
+    <GroupEditorPane key={g.id} group={g} {...groupEditorProps} />
   );
 
   const editorPaneNode = paneVisibility.editor ? (
@@ -293,28 +250,10 @@ export function IdeDockview({
 
   const toolNode = activeToolTab != null ? <IdeToolDock /> : null;
 
-  // Editor slot: split → editor + tool side by side; otherwise the tool replaces
-  // the editor (legacy) or the editor shows alone.
-  const editorNode: ReactNode = (() => {
-    if (editorSplit && editorPaneNode != null && toolNode != null) {
-      return (
-        <SplitContainer direction="horizontal" defaultSizes={[1, 1]}>
-          <div key="editor-pane" style={{ width: '100%', height: '100%' }}>
-            {editorPaneNode}
-          </div>
-          <div key="tool-pane" style={{ width: '100%', height: '100%' }}>
-            {/* The split toggle rides on this (right) pane so it sits at the far
-                edge, common to the split, not buried in the left window. */}
-            <IdeToolDock onToggleSplit={toggleEditorSplit} />
-          </div>
-        </SplitContainer>
-      );
-    }
-    if (toolNode != null && !editorSplit) {
-      return toolNode;
-    }
-    return editorPaneNode ?? toolNode;
-  })();
+  // Editor slot: a rail tool (when one is selected) replaces the editor in this
+  // slot; otherwise the editor groups show. Side-by-side editor groups come from
+  // the GroupEditorPane grid above (`editorPaneNode`), not a tool split.
+  const editorNode: ReactNode = toolNode ?? editorPaneNode;
 
   const terminalNode = paneVisibility.terminal ? (
     <Pane id="terminal" title="Terminal">

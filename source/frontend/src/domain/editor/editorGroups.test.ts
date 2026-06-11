@@ -8,6 +8,7 @@ import {
   closeInGroup,
   closePanelInGroup,
   collapseEmptyGroup,
+  duplicateToNewGroup,
   getActiveGroup,
   getGroup,
   groupContaining,
@@ -199,6 +200,60 @@ describe('splitGroup', () => {
     const s = withFiles('g1', '/a', '/b');
     expect(splitGroup(s, 'g1', '/x', 'right', 'g2')).toBe(s);
     expect(splitGroup(s, 'g1', '/b', 'right', 'g1')).toBe(s);
+  });
+});
+
+describe('duplicateToNewGroup', () => {
+  it('opens the file in a NEW group on the right while keeping it in the source (shared)', () => {
+    let s = withFiles('g1', '/a', '/b'); // active=b
+    s = duplicateToNewGroup(s, 'g1', '/b', 'right', 'g2');
+    expect(s.groups.map((g) => g.id)).toEqual(['g1', 'g2']);
+    // Source UNCHANGED — /b still there, both tabs, /b still active.
+    expect(getGroup(s, 'g1')!.openTabs).toEqual(['/a', '/b']);
+    expect(getGroup(s, 'g1')!.activeFilePath).toBe('/b');
+    // New group holds just /b, active, mru seeded.
+    expect(getGroup(s, 'g2')!.openTabs).toEqual(['/b']);
+    expect(getGroup(s, 'g2')!.activeFilePath).toBe('/b');
+    expect(getGroup(s, 'g2')!.mru).toEqual(['/b']);
+    // The file is open in BOTH groups (one shared buffer).
+    expect(isPathOpenAnywhere(s, '/b')).toBe(true);
+    expect(s.groups.filter((g) => g.openTabs.includes('/b'))).toHaveLength(2);
+    // New group is active.
+    expect(s.activeGroupId).toBe('g2');
+    expectActiveGroupLive(s);
+  });
+
+  it('inserts the new group on the left when side=left', () => {
+    let s = withFiles('g1', '/a', '/b');
+    s = duplicateToNewGroup(s, 'g1', '/a', 'left', 'g2');
+    expect(s.groups.map((g) => g.id)).toEqual(['g2', 'g1']);
+    expect(getGroup(s, 'g2')!.openTabs).toEqual(['/a']);
+    expect(getGroup(s, 'g1')!.openTabs).toEqual(['/a', '/b']); // source still has /a
+  });
+
+  it('duplicates a single-tab group (unlike splitGroup, this is NOT a no-op)', () => {
+    let s = withFiles('g1', '/a'); // only tab
+    s = duplicateToNewGroup(s, 'g1', '/a', 'right', 'g2');
+    expect(s.groups.map((g) => g.id)).toEqual(['g1', 'g2']);
+    expect(getGroup(s, 'g1')!.openTabs).toEqual(['/a']); // source kept it
+    expect(getGroup(s, 'g2')!.openTabs).toEqual(['/a']);
+    expect(s.activeGroupId).toBe('g2');
+  });
+
+  it('leaves the source group active-file / preview / mru untouched', () => {
+    let s = openInGroup(initialGroupsState('g1'), 'g1', '/a', { preview: true });
+    s = openInGroup(s, 'g1', '/b'); // /b for keeps, active; /a still preview
+    const sourceBefore = getGroup(s, 'g1')!;
+    s = duplicateToNewGroup(s, 'g1', '/b', 'right', 'g2');
+    expect(getGroup(s, 'g1')).toEqual(sourceBefore); // byte-identical source group
+    expect(getGroup(s, 'g1')!.previewFilePath).toBe('/a');
+  });
+
+  it('ignores an unknown path or a colliding new id', () => {
+    const s = withFiles('g1', '/a', '/b');
+    expect(duplicateToNewGroup(s, 'g1', '/x', 'right', 'g2')).toBe(s);
+    expect(duplicateToNewGroup(s, 'nope', '/a', 'right', 'g2')).toBe(s);
+    expect(duplicateToNewGroup(s, 'g1', '/b', 'right', 'g1')).toBe(s); // id collision
   });
 });
 

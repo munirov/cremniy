@@ -77,6 +77,33 @@
   opacity: 1;
 }
 
+/* Split-editor-right button, pinned to the right of this group's document tabs
+   (right of the Markdown toggle when present). Monochrome per DESIGN.md — a
+   white-opacity hover fill, never a brand colour. */
+.splitBtn {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin-left: 0.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--color-text-primary);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.splitBtn:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
 .editorBody {
   flex: 1;
   display: flex;

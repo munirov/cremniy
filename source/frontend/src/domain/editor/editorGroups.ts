@@ -428,6 +428,47 @@ export function splitGroup(
 }
 
 /**
+ * VS Code "Split Right/Left": open `path` in a NEW group on the given side while
+ * leaving it in the source group too. Unlike {@link splitGroup} (which MOVES the
+ * file), the file now lives in BOTH groups — and since document buffers are
+ * global, the two views share one buffer (edit one → both update, save once).
+ * The new group holds just `path` (active, `mru=[path]`) and becomes active. The
+ * source group is untouched (tabs, active file, preview, MRU all unchanged).
+ *
+ * No-op if the source group is unknown, `path` is not open in it, or `newGroupId`
+ * collides with an existing group (the caller must mint a fresh id).
+ */
+export function duplicateToNewGroup(
+  state: GroupsState,
+  sourceGroupId: GroupId,
+  path: string,
+  side: SplitSide,
+  newGroupId: GroupId,
+): GroupsState {
+  const source = getGroup(state, sourceGroupId);
+  if (source == null || !source.openTabs.includes(path)) {
+    return state;
+  }
+  if (getGroup(state, newGroupId) != null) {
+    return state; // id collision — caller must mint a fresh id
+  }
+  const created: EditorGroup = {
+    ...emptyGroup(newGroupId),
+    openTabs: [path],
+    activeFilePath: path,
+    mru: [path],
+  };
+  const srcIdx = state.groups.findIndex((g) => g.id === sourceGroupId);
+  const insertAt = side === 'left' ? srcIdx : srcIdx + 1;
+  const groups = [
+    ...state.groups.slice(0, insertAt),
+    created,
+    ...state.groups.slice(insertAt),
+  ];
+  return { groups, activeGroupId: newGroupId };
+}
+
+/**
  * Save-As / rename: rewrite `oldPath` → `newPath` in every group (a file open in
  * two groups renames in both). If a group already has `newPath` open, the old
  * tab is dropped (merge) rather than duplicated.

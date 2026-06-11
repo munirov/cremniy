@@ -85,33 +85,6 @@
   background-color: var(--color-bg-panel);
 }
 
-.splitBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 1.7rem;
-  height: 1.7rem;
-  padding: 0;
-  border: none;
-  border-radius: 3px;
-  background: transparent;
-  color: var(--color-text-primary);
-  opacity: 0.55;
-  cursor: pointer;
-  transition: opacity 0.12s ease, background-color 0.12s ease;
-}
-
-.splitBtn:hover {
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.06);
-}
-
-.splitBtnActive {
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
 .toolTab {
   display: inline-flex;
   align-items: center;

@@ -31,7 +31,8 @@
 отражает.
 
 - `welcome.*` — экран приветствия (открыть проект, недавние).
-- `file.*` / `session.*` — открытие/сохранение, вкладки, активный документ.
+- `file.*` / `session.*` — открытие/сохранение, вкладки, активный документ, сплит-группы
+  редактора (`session.splitActiveFile { side? }`, `session.moveFileToGroup`, `session.activateGroup`).
 - `view.*` / `tool.*` / `edit.*` / `dialog.*` — IDE chrome: панели, инструменты, поиск, диалоги.
 - `plugin.*` — управление плагинами: `list`, `setEnabled { id, enabled }`, `showDetails { id }`.
 - `fs.*` — операции с файлами workspace по явным аргументам: `list`, `readText`, `readBytes`,

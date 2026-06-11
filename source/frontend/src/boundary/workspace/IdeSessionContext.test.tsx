@@ -802,4 +802,103 @@ describe('IdeSessionContext editor groups (per-group API)', () => {
     // Same projection reference — focusing the active group changes nothing.
     expect(result.current.editorGroups).toBe(before);
   });
+
+  it('splitActiveFile makes a second group with the same file, active on the new group', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('body');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    const firstGroupId = result.current.activeGroupId;
+
+    await act(async () => {
+      result.current.splitActiveFile('right');
+    });
+
+    // Two groups now, both holding /proj/a.txt (shared buffer).
+    expect(result.current.editorGroups).toHaveLength(2);
+    expect(result.current.editorGroups[0]!.id).toBe(firstGroupId);
+    expect(result.current.editorGroups[0]!.openTabs).toEqual(['/proj/a.txt']);
+    expect(result.current.editorGroups[1]!.openTabs).toEqual(['/proj/a.txt']);
+    // The NEW (right) group is active.
+    expect(result.current.activeGroupId).toBe(result.current.editorGroups[1]!.id);
+    expect(result.current.activeGroupId).not.toBe(firstGroupId);
+  });
+
+  it('splitActiveFile shares the buffer — editing in one group updates both', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('start');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    await act(async () => {
+      result.current.splitActiveFile('right');
+    });
+
+    // Edit the file (the new group is active and shows /proj/a.txt).
+    await act(async () => {
+      result.current.writeBuffer('/proj/a.txt', 'edited-in-split');
+    });
+
+    // One global buffer → both groups read the same edited text.
+    expect(result.current.getBuffer('/proj/a.txt')).toBe('edited-in-split');
+    expect(result.current.documentText).toBe('edited-in-split');
+    expect(result.current.dirtyFilePaths).toEqual(['/proj/a.txt']);
+  });
+
+  it('splitActiveFile is a no-op when no file is active (scratch buffer)', async () => {
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      result.current.setDocumentText('scratch only');
+    });
+    expect(result.current.editorGroups).toHaveLength(1);
+
+    await act(async () => {
+      result.current.splitActiveFile('right');
+    });
+
+    // No active file → nothing to split; still one group.
+    expect(result.current.editorGroups).toHaveLength(1);
+  });
+
+  it('moveFileToGroup moves a tab from the split group back into the first', async () => {
+    vi.mocked(readWorkspaceUserFile).mockResolvedValueOnce('a').mockResolvedValueOnce('b');
+
+    const { result } = renderHook(() => useIdeSession(), {
+      wrapper: createWrapper('/ide?root=/proj'),
+    });
+
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/a.txt');
+    });
+    await act(async () => {
+      await result.current.openFileFromWorkspace('/proj/b.txt');
+    });
+    // Split /proj/b.txt (active) into a new group on the right.
+    await act(async () => {
+      result.current.splitActiveFile('right');
+    });
+    const [g1, g2] = result.current.editorGroups;
+    expect(g2!.openTabs).toEqual(['/proj/b.txt']);
+
+    // Move /proj/b.txt from the new group into the first → second collapses.
+    await act(async () => {
+      result.current.moveFileToGroup(g2!.id, g1!.id, '/proj/b.txt');
+    });
+
+    expect(result.current.editorGroups).toHaveLength(1);
+    expect(result.current.editorGroups[0]!.id).toBe(g1!.id);
+    expect(result.current.editorGroups[0]!.openTabs).toEqual(['/proj/a.txt', '/proj/b.txt']);
+  });
 });

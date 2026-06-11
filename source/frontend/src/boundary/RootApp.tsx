@@ -243,16 +243,11 @@ function RootAppIdeShell({ settingsService }: RootAppProps) {
         ide.openPanel('binary');
         return;
       }
-      if (id === 'openCodeEditorTool') {
-        // The code-editor "tool" is the editor-split mirror, not a center tab.
-        toolDock.setActiveToolTab('codeEditor');
-        return;
-      }
       if (id === 'openDisassemblerTool') {
         ide.openPanel('disassembler');
       }
     },
-    [toolDock, ide],
+    [ide],
   );
 
   const handleRefsMenu = useCallback((id: ReferencesMenuActionId) => {

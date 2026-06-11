@@ -28,7 +28,11 @@ import {
   reorderInGroup,
   activateGroup,
   renamePathInGroups,
+  duplicateToNewGroup,
+  moveTabBetweenGroups,
+  nextGroupId,
   type GroupsState,
+  type SplitSide,
 } from '@domain/editor/editorGroups';
 import type { FileMenuActionId } from '@domain/menu/fileMenu';
 import { normalizeFsPath, parentDirectoryPath, fileNameFromPath } from '@domain/workspace/paths';
@@ -115,6 +119,28 @@ export type IdeSessionContextValue = {
   activatePanelInGroup: (groupId: string, id: string) => void;
   /** Close a center panel inside a specific group. */
   closePanelInGroup: (groupId: string, id: string) => void;
+  /**
+   * VS Code "Split Right/Left": open the active group's active file in a NEW
+   * group on `side` (default `'right'`). The file stays in the source group too,
+   * so both views share its global buffer. No-op when no file is active.
+   */
+  splitActiveFile: (side?: SplitSide) => void;
+  /**
+   * Move an open file tab from one group to another (Step 4 drag uses this).
+   * `toIndex` inserts at a position in the target (default: end).
+   */
+  moveFileToGroup: (
+    fromGroupId: string,
+    toGroupId: string,
+    filePath: string,
+    toIndex?: number,
+  ) => void;
+  /**
+   * Split a specific file off `sourceGroupId` into a NEW group on `side`,
+   * sharing its buffer (Step 4 drag-to-edge uses this). The file stays in the
+   * source group.
+   */
+  splitFileToNewGroup: (sourceGroupId: string, filePath: string, side: SplitSide) => void;
   /** Read a path's global document buffer (`''` when none). */
   getBuffer: (filePath: string) => string;
   /** Write a path's global document buffer (promotes preview, mirrors active). */
@@ -441,6 +467,57 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       }
       commitGroups(next);
       // The active group changed → mirror its active file into documentText.
+      showActiveBuffer(next);
+    },
+    [commitGroups, showActiveBuffer],
+  );
+
+  // Split a specific file off a group into a fresh group, keeping it in the
+  // source (shared buffer). The new group becomes active.
+  const splitFileToNewGroup = useCallback(
+    (sourceGroupId: string, filePath: string, side: SplitSide) => {
+      const path = filePath?.trim() ?? '';
+      if (path === '') {
+        return;
+      }
+      const next = duplicateToNewGroup(groupsRef.current, sourceGroupId, path, side, nextGroupId());
+      if (next === groupsRef.current) {
+        return; // path not open in that group, or id collision — no-op
+      }
+      commitGroups(next);
+      // The new (active) group shows the same file — its buffer is already the
+      // active one, so documentText needn't change, but keep the mirror honest.
+      showActiveBuffer(next);
+    },
+    [commitGroups, showActiveBuffer],
+  );
+
+  // VS Code Split Right/Left on the active group's active file.
+  const splitActiveFile = useCallback(
+    (side: SplitSide = 'right') => {
+      const g = getActiveGroup(groupsRef.current);
+      const path = g.activeFilePath?.trim() ?? '';
+      if (path === '') {
+        return; // nothing active to split (scratch buffer or empty group)
+      }
+      splitFileToNewGroup(g.id, path, side);
+    },
+    [splitFileToNewGroup],
+  );
+
+  // Move a tab between groups (Step 4 drag). Re-mirrors documentText since the
+  // target becomes active.
+  const moveFileToGroup = useCallback(
+    (fromGroupId: string, toGroupId: string, filePath: string, toIndex?: number) => {
+      const path = filePath?.trim() ?? '';
+      if (path === '') {
+        return;
+      }
+      const next = moveTabBetweenGroups(groupsRef.current, fromGroupId, toGroupId, path, toIndex);
+      if (next === groupsRef.current) {
+        return;
+      }
+      commitGroups(next);
       showActiveBuffer(next);
     },
     [commitGroups, showActiveBuffer],
@@ -957,6 +1034,9 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       reorderFilesInGroup,
       activatePanelInGroup,
       closePanelInGroup,
+      splitActiveFile,
+      moveFileToGroup,
+      splitFileToNewGroup,
       getBuffer,
       writeBuffer,
       isBinaryPath,
@@ -999,6 +1079,9 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
       reorderFilesInGroup,
       activatePanelInGroup,
       closePanelInGroup,
+      splitActiveFile,
+      moveFileToGroup,
+      splitFileToNewGroup,
       getBuffer,
       writeBuffer,
       isBinaryPath,
@@ -1044,6 +1127,32 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         name: 'session.setDocumentText',
         description: 'Replace the active editor text { text } (mirrors typing in the editor).',
         run: (args) => agentValueRef.current.setDocumentText(String(args.text ?? '')),
+      },
+      {
+        name: 'session.splitActiveFile',
+        description:
+          'Split the active file into a new editor group beside the current one { side?: left | right } (default right). The file opens in both groups, sharing its buffer.',
+        run: (args) => {
+          const side = args.side === 'left' ? 'left' : 'right';
+          agentValueRef.current.splitActiveFile(side);
+        },
+      },
+      {
+        name: 'session.moveFileToGroup',
+        description:
+          'Move an open file tab between editor groups { fromGroupId, toGroupId, path, toIndex? }.',
+        run: (args) =>
+          agentValueRef.current.moveFileToGroup(
+            String(args.fromGroupId ?? ''),
+            String(args.toGroupId ?? ''),
+            String(args.path ?? ''),
+            typeof args.toIndex === 'number' ? args.toIndex : undefined,
+          ),
+      },
+      {
+        name: 'session.activateGroup',
+        description: 'Focus an editor group by id { groupId } (its tabs/active file become the active group).',
+        run: (args) => agentValueRef.current.focusEditorGroup(String(args.groupId ?? '')),
       },
       {
         name: 'file.openFolder',
