@@ -132,23 +132,14 @@ export function GroupEditorPane({
   // stays borderless (pixel-identical to the pre-groups shell).
   const focused = group.id === ide.activeGroupId && ide.editorGroups.length > 1;
 
-  // Editor binding. A real file binds to its global buffer. With NO active file
-  // (the scratch buffer), the active group binds to the global documentText
-  // mirror + setDocumentText — preserving the pre-groups scratch behavior (type
-  // before opening a file, then Save-As). A non-active group with no file shows
-  // an empty editor (no scratch sharing across groups).
+  // Editor binding. A real file binds DIRECTLY to its global buffer — never the
+  // `documentText` mirror, so a stale mirror can never surface in a group. A
+  // group with no active file (its last tab was moved/closed away) shows the
+  // idle welcome card (value=''), not leftover content. There is no per-group
+  // scratch buffer: an empty group is an empty group.
   const hasFile = activeFilePath != null && activeFilePath !== '';
-  const isActiveGroup = group.id === ide.activeGroupId;
-  const editorValue = hasFile
-    ? getBuffer(activeFilePath!)
-    : isActiveGroup
-      ? ide.documentText
-      : '';
-  const onEditorChange = hasFile
-    ? (t: string) => writeBuffer(activeFilePath!, t)
-    : isActiveGroup
-      ? ide.setDocumentText
-      : () => undefined;
+  const editorValue = hasFile ? getBuffer(activeFilePath!) : '';
+  const onEditorChange = hasFile ? (t: string) => writeBuffer(activeFilePath!, t) : () => undefined;
 
   const onPaneMouseDown = (_e: MouseEvent<HTMLDivElement>): void => {
     focusEditorGroup(group.id);

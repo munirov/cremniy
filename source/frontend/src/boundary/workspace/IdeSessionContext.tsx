@@ -1105,6 +1105,13 @@ export function IdeSessionProvider({ children }: { children: ReactNode }) {
         activeDocumentDirty: v.activeDocumentDirty,
         activeFileIsBinary: v.activeFileIsBinary,
         documentText: v.documentText,
+        activeGroupId: v.activeGroupId,
+        editorGroups: v.editorGroups.map((g) => ({
+          id: g.id,
+          openTabs: g.openTabs,
+          activeFilePath: g.activeFilePath,
+          activePanel: g.activePanel,
+        })),
       };
     });
     const unregisterCommands = registerAgentCommands([
