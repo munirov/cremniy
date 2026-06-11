@@ -86,40 +86,17 @@ pub fn disassemble_workspace_file(
             strip_leading_dot(&sec.name),
         ));
 
-        let mut decoder = Decoder::with_ip(sec.bitness, &sec.bytes, sec.vaddr, DecoderOptions::NONE);
-        let mut formatter: Box<dyn Formatter> = match syntax {
-            DisassemblySyntaxOption::Att => Box::new(GasFormatter::new()),
-            DisassemblySyntaxOption::Intel => Box::new(IntelFormatter::new()),
-        };
-
-        let mut instruction = Instruction::default();
-        while decoder.can_decode() {
-            let pre = decoder.position();
-            decoder.decode_out(&mut instruction);
-            let post = decoder.position();
-
-            let raw = &sec.bytes[pre..post];
-            let bytes_str = raw
-                .iter()
-                .map(|b| format!("{:02x}", b))
-                .collect::<Vec<_>>()
-                .join(" ");
-
-            let mut text = String::new();
-            formatter.format(&instruction, &mut text);
-
-            stdout.push_str(&format!(
-                "  {:>8x}:\t{:<22}\t{}\n",
-                instruction.ip(),
-                bytes_str,
-                text,
-            ));
-
-            total_emitted += 1;
-            if total_emitted >= limit {
-                truncated = true;
-                break 'sections;
-            }
+        // Budget what's left of the global cap to this section. The decode loop
+        // is bounded by it, so a multi-MB `.text` can't balloon `stdout` (and
+        // therefore the IPC payload + the rows the frontend parses) past the
+        // user's instruction limit — the core guard against the OOM/hang.
+        let remaining = limit.saturating_sub(total_emitted);
+        let outcome = decode_section_rows(&sec.bytes, sec.bitness, sec.vaddr, syntax, remaining);
+        stdout.push_str(&outcome.body);
+        total_emitted += outcome.emitted;
+        if outcome.hit_budget {
+            truncated = true;
+            break 'sections;
         }
     }
 
@@ -159,6 +136,88 @@ pub fn test_objdump_tool(
     Ok(String::from(
         "Cremniy embedded disassembler is available (iced-x86 + goblin). No external objdump required.",
     ))
+}
+
+/// Result of decoding one section under a row budget.
+struct SectionDecode {
+    /// objdump-style listing body for the section's instructions.
+    body: String,
+    /// How many instruction rows were emitted.
+    emitted: usize,
+    /// True if decoding stopped because the row budget was reached (so the
+    /// caller can mark the whole result truncated). When `budget == 0` this is
+    /// true immediately and nothing is decoded.
+    hit_budget: bool,
+}
+
+/// Decode a section's bytes into at most `budget` objdump-style rows.
+///
+/// Pulled out of `disassemble_workspace_file` so the instruction-cap behaviour
+/// is unit-testable without the filesystem / Tauri layer. This is THE bound that
+/// keeps a huge `.text` from producing an unbounded `stdout` string (and an
+/// unbounded number of rows the frontend would then parse + render), which is
+/// what hung / OOM'd the app.
+fn decode_section_rows(
+    bytes: &[u8],
+    bitness: u32,
+    vaddr: u64,
+    syntax: DisassemblySyntaxOption,
+    budget: usize,
+) -> SectionDecode {
+    if budget == 0 {
+        return SectionDecode {
+            body: String::new(),
+            emitted: 0,
+            hit_budget: true,
+        };
+    }
+
+    let mut decoder = Decoder::with_ip(bitness, bytes, vaddr, DecoderOptions::NONE);
+    let mut formatter: Box<dyn Formatter> = match syntax {
+        DisassemblySyntaxOption::Att => Box::new(GasFormatter::new()),
+        DisassemblySyntaxOption::Intel => Box::new(IntelFormatter::new()),
+    };
+
+    let mut body = String::new();
+    let mut emitted = 0usize;
+    let mut instruction = Instruction::default();
+    while decoder.can_decode() {
+        let pre = decoder.position();
+        decoder.decode_out(&mut instruction);
+        let post = decoder.position();
+
+        let raw = &bytes[pre..post];
+        let bytes_str = raw
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<Vec<_>>()
+            .join(" ");
+
+        let mut text = String::new();
+        formatter.format(&instruction, &mut text);
+
+        body.push_str(&format!(
+            "  {:>8x}:\t{:<22}\t{}\n",
+            instruction.ip(),
+            bytes_str,
+            text,
+        ));
+
+        emitted += 1;
+        if emitted >= budget {
+            return SectionDecode {
+                body,
+                emitted,
+                hit_budget: true,
+            };
+        }
+    }
+
+    SectionDecode {
+        body,
+        emitted,
+        hit_budget: false,
+    }
 }
 
 #[derive(Debug)]
@@ -343,4 +402,47 @@ fn canonical_workspace_file(root_canon: &Path, file_path: &str) -> Result<PathBu
         return Err(String::from("file_path is not a regular file"));
     }
     Ok(file_canon)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A short x86-64 sled: each `nop` (0x90) is one instruction, so the byte
+    // count equals the instruction count. Lets us assert the cap exactly.
+    const NOP_SLED: [u8; 8] = [0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90];
+
+    #[test]
+    fn budget_caps_emitted_rows_and_flags_truncation() {
+        let out = decode_section_rows(&NOP_SLED, 64, 0x1000, DisassemblySyntaxOption::Intel, 3);
+        assert_eq!(out.emitted, 3, "must stop exactly at the budget");
+        assert!(out.hit_budget, "hitting the budget marks the result truncated");
+        assert_eq!(out.body.lines().count(), 3, "one listing line per emitted row");
+    }
+
+    #[test]
+    fn budget_above_available_decodes_all_without_truncating() {
+        let out = decode_section_rows(&NOP_SLED, 64, 0x1000, DisassemblySyntaxOption::Intel, 1000);
+        assert_eq!(out.emitted, NOP_SLED.len(), "all instructions decode");
+        assert!(!out.hit_budget, "a slack budget is not a truncation");
+    }
+
+    #[test]
+    fn zero_budget_decodes_nothing_but_signals_truncation() {
+        // This is what a fully-consumed global cap looks like for a later
+        // section: emit nothing, but still report the result as truncated so the
+        // user sees the "showing N of M" signal rather than silent data loss.
+        let out = decode_section_rows(&NOP_SLED, 64, 0x1000, DisassemblySyntaxOption::Intel, 0);
+        assert_eq!(out.emitted, 0);
+        assert!(out.body.is_empty());
+        assert!(out.hit_budget);
+    }
+
+    #[test]
+    fn rows_use_the_section_virtual_address_as_ip() {
+        // The first emitted row's address must reflect the section vaddr, so the
+        // frontend's file-offset math lines up (offset = vaddr base + delta).
+        let out = decode_section_rows(&NOP_SLED, 64, 0x4000, DisassemblySyntaxOption::Intel, 1);
+        assert!(out.body.contains("4000:"), "body was: {}", out.body);
+    }
 }
