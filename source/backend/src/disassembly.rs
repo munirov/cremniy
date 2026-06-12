@@ -12,6 +12,14 @@ use iced_x86::{Decoder, DecoderOptions, Formatter, GasFormatter, Instruction, In
 
 const X86_64_DEFAULT_BITNESS: u32 = 64;
 
+/// Architectural maximum length of an x86 instruction (15), rounded up. Used to
+/// size the per-section byte window from the instruction budget.
+const MAX_X86_INSTRUCTION_LEN: usize = 16;
+
+/// Absolute ceiling on the bytes copied out of any one section, so even a
+/// pathological instruction limit can't make a section copy unbounded.
+const MAX_SECTION_WINDOW_BYTES: usize = 16 * 1024 * 1024;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DisassemblySyntaxOption {
@@ -37,7 +45,7 @@ pub struct DisassemblyResultDto {
 }
 
 #[tauri::command]
-pub fn disassemble_workspace_file(
+pub async fn disassemble_workspace_file(
     workspace_root: String,
     file_path: String,
     // The following two args are kept on the signature for frontend
@@ -50,17 +58,46 @@ pub fn disassemble_workspace_file(
 ) -> Result<DisassemblyResultDto, String> {
     let _ = objdump_path;
     let _ = arch_hint;
+    // Run the file read + decode OFF the UI thread, so the panel stays
+    // responsive (the spinner animates, Cancel works) instead of freezing while
+    // a large binary is processed.
+    tauri::async_runtime::spawn_blocking(move || {
+        run_disassembly(workspace_root, file_path, syntax, instruction_limit)
+    })
+    .await
+    .map_err(|e| format!("disassembly task failed: {e}"))?
+}
 
+/// The embedded-disassembler core, free of Tauri / threading concerns so it
+/// stays unit-testable and can run on a blocking worker (see the command above).
+fn run_disassembly(
+    workspace_root: String,
+    file_path: String,
+    syntax: Option<DisassemblySyntaxOption>,
+    instruction_limit: Option<usize>,
+) -> Result<DisassemblyResultDto, String> {
     let root = canonical_workspace_directory(&workspace_root)?;
     let file = canonical_workspace_file(&root, &file_path)?;
     let bytes = std::fs::read(&file).map_err(|e| format!("read file: {e}"))?;
 
     let syntax = syntax.unwrap_or(DisassemblySyntaxOption::Intel);
-    let sections = extract_executable_sections(&bytes)?;
 
     let limit = instruction_limit
         .filter(|value| *value > 0)
         .unwrap_or(usize::MAX);
+
+    // We never decode more than `limit` instructions, and an x86 instruction is
+    // at most 15 bytes, so this many bytes from a section's start always
+    // satisfies the budget. Copying only this window — rather than whole
+    // sections, or the entire file as a raw blob — keeps memory O(limit)
+    // regardless of binary size. This is the fix for the OOM / freeze the
+    // disassembler hit on large binaries: the instruction cap bounded the decode
+    // and the rows, but the INPUT copy was still O(file).
+    let window_bytes = limit
+        .saturating_mul(MAX_X86_INSTRUCTION_LEN)
+        .saturating_add(4096)
+        .min(MAX_SECTION_WINDOW_BYTES);
+    let sections = extract_executable_sections(&bytes, window_bytes)?;
 
     let mut stdout = String::new();
     let mut header_stdout = String::new();
@@ -230,24 +267,29 @@ struct ExecutableSection {
     size: u64,
 }
 
-fn extract_executable_sections(bytes: &[u8]) -> Result<Vec<ExecutableSection>, String> {
+fn extract_executable_sections(
+    bytes: &[u8],
+    window_bytes: usize,
+) -> Result<Vec<ExecutableSection>, String> {
     if bytes.is_empty() {
         return Err(String::from("file is empty"));
     }
 
     let parsed = Object::parse(bytes);
     match parsed {
-        Ok(Object::Elf(elf)) => extract_elf_sections(&elf, bytes),
-        Ok(Object::PE(pe)) => extract_pe_sections(&pe, bytes),
+        Ok(Object::Elf(elf)) => extract_elf_sections(&elf, bytes, window_bytes),
+        Ok(Object::PE(pe)) => extract_pe_sections(&pe, bytes, window_bytes),
         Ok(Object::Mach(_)) => {
             Err(String::from("Mach-O binaries are not yet supported."))
         }
         // Unknown / unrecognized container — fall back to treating the file as
-        // raw x86-64 code so .bin firmware and detached blobs still work.
+        // raw x86-64 code so .bin firmware and detached blobs still work. Only
+        // the decode window is copied, NOT the whole blob (which could be
+        // gigabytes); `size` still reports the full length for the header.
         Ok(_) | Err(_) => Ok(vec![ExecutableSection {
             name: String::from(".text"),
             bitness: X86_64_DEFAULT_BITNESS,
-            bytes: bytes.to_vec(),
+            bytes: bytes[..bytes.len().min(window_bytes)].to_vec(),
             vaddr: 0,
             file_offset: 0,
             size: bytes.len() as u64,
@@ -258,6 +300,7 @@ fn extract_executable_sections(bytes: &[u8]) -> Result<Vec<ExecutableSection>, S
 fn extract_elf_sections(
     elf: &goblin::elf::Elf,
     bytes: &[u8],
+    window_bytes: usize,
 ) -> Result<Vec<ExecutableSection>, String> {
     use goblin::elf::header::{EM_386, EM_X86_64};
     use goblin::elf::section_header::SHF_EXECINSTR;
@@ -289,10 +332,11 @@ fn extract_elf_sections(
             .get_at(sh.sh_name)
             .unwrap_or("?")
             .to_string();
+        let copy_len = size.min(window_bytes);
         sections.push(ExecutableSection {
             name,
             bitness,
-            bytes: bytes[offset..offset + size].to_vec(),
+            bytes: bytes[offset..offset + copy_len].to_vec(),
             vaddr: sh.sh_addr,
             file_offset: sh.sh_offset,
             size: sh.sh_size,
@@ -311,6 +355,7 @@ fn extract_elf_sections(
 fn extract_pe_sections(
     pe: &goblin::pe::PE,
     bytes: &[u8],
+    window_bytes: usize,
 ) -> Result<Vec<ExecutableSection>, String> {
     // PE machine codes from winnt.h.
     const IMAGE_FILE_MACHINE_I386: u16 = 0x14c;
@@ -339,10 +384,11 @@ fn extract_pe_sections(
         }
         let name = sh.name().unwrap_or("?").to_string();
         let vaddr = image_base.saturating_add(sh.virtual_address as u64);
+        let copy_len = size.min(window_bytes);
         sections.push(ExecutableSection {
             name,
             bitness,
-            bytes: bytes[offset..offset + size].to_vec(),
+            bytes: bytes[offset..offset + copy_len].to_vec(),
             vaddr,
             file_offset: sh.pointer_to_raw_data as u64,
             size: sh.size_of_raw_data as u64,
@@ -436,6 +482,26 @@ mod tests {
         assert_eq!(out.emitted, 0);
         assert!(out.body.is_empty());
         assert!(out.hit_budget);
+    }
+
+    #[test]
+    fn raw_blob_copies_only_the_window_not_the_whole_file() {
+        // A 1 MB unrecognized blob: only `window_bytes` may be copied for
+        // decoding, but the reported section size stays the full length. This is
+        // the bound that stops a large binary from blowing up memory even though
+        // the instruction cap already bounds the decode.
+        let big = vec![0x90u8; 1_000_000];
+        let sections = extract_executable_sections(&big, 2048).expect("raw fallback");
+        assert_eq!(sections.len(), 1);
+        assert_eq!(sections[0].size, 1_000_000, "size reports the full section");
+        assert_eq!(sections[0].bytes.len(), 2048, "but only the window is copied");
+    }
+
+    #[test]
+    fn window_at_least_the_file_copies_everything() {
+        let small = vec![0x90u8; 100];
+        let sections = extract_executable_sections(&small, 4096).expect("raw fallback");
+        assert_eq!(sections[0].bytes.len(), 100, "a slack window copies all of it");
     }
 
     #[test]
