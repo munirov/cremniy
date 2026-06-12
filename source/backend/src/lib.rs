@@ -124,6 +124,7 @@ mod sftp;
 mod shellcode;
 mod ssh;
 mod terminal;
+mod win_command;
 
 use std::io::{ErrorKind, Read, Write};
 use std::path::{Component, Path, PathBuf};
@@ -783,7 +784,7 @@ fn test_external_tool(
     path: Option<String>,
     version_arg: Option<String>,
 ) -> Result<String, String> {
-    use std::process::Command;
+    use crate::win_command::command;
     let exe = if let Some(p) = path.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
         PathBuf::from(p)
     } else {
@@ -793,7 +794,7 @@ fn test_external_tool(
         return Err(format!("Path does not exist: {}", exe.display()));
     }
     let arg = version_arg.unwrap_or_else(|| "--version".to_string());
-    let output = Command::new(&exe)
+    let output = command(&exe)
         .arg(&arg)
         .output()
         .map_err(|e| format!("Failed to spawn {}: {e}", exe.display()))?;
@@ -846,7 +847,7 @@ fn which_on_path_lib(name: &str) -> Option<PathBuf> {
 /// there's no portable "select" verb.
 #[tauri::command]
 fn reveal_in_file_manager(path: String) -> Result<(), String> {
-    use std::process::Command;
+    use crate::win_command::command;
     let p = PathBuf::from(path.trim());
     if p.as_os_str().is_empty() {
         return Err(String::from("path must not be empty"));
@@ -857,7 +858,7 @@ fn reveal_in_file_manager(path: String) -> Result<(), String> {
 
     #[cfg(target_os = "windows")]
     {
-        Command::new("explorer")
+        command("explorer")
             .arg(format!("/select,{}", p.display()))
             .spawn()
             .map_err(|e| e.to_string())?;
@@ -865,7 +866,7 @@ fn reveal_in_file_manager(path: String) -> Result<(), String> {
     }
     #[cfg(target_os = "macos")]
     {
-        Command::new("open")
+        command("open")
             .args(["-R"])
             .arg(&p)
             .spawn()
@@ -879,7 +880,7 @@ fn reveal_in_file_manager(path: String) -> Result<(), String> {
         } else {
             p
         };
-        Command::new("xdg-open")
+        command("xdg-open")
             .arg(&target)
             .spawn()
             .map_err(|e| e.to_string())?;

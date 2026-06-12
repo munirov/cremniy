@@ -8,7 +8,8 @@
 
 use std::io::Write;
 use std::path::PathBuf;
-use std::process::Command;
+
+use crate::win_command::command;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -50,7 +51,7 @@ pub fn assemble_with_nasm(
 
     let out_path = src_file.path().with_extension("bin");
 
-    let output = Command::new(&nasm)
+    let output = command(&nasm)
         .args(["-f", "bin", "-o"])
         .arg(&out_path)
         .arg(src_file.path())

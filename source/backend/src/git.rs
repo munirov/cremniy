@@ -1,10 +1,11 @@
 use std::io::Write;
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 use serde::Serialize;
 
 use crate::canonical_workspace_root;
+use crate::win_command::command;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -50,7 +51,7 @@ pub struct RepoRef {
 #[tauri::command]
 pub fn git_status(workspace_root: String) -> Result<GitStatus, String> {
     let root = canonical_workspace_root(&workspace_root)?;
-    let output = Command::new("git")
+    let output = command("git")
         .arg("-C")
         .arg(&root)
         .args([
@@ -90,7 +91,7 @@ pub fn git_status(workspace_root: String) -> Result<GitStatus, String> {
 /// Run a git subcommand in the workspace; map a non-zero exit to its stderr so
 /// the UI can surface a real message ("nothing to commit", auth errors, …).
 fn run_git(root: &Path, args: &[&str]) -> Result<String, String> {
-    let out = Command::new("git")
+    let out = command("git")
         .arg("-C")
         .arg(root)
         .args(args)
@@ -293,7 +294,7 @@ pub fn git_clone(
         return Err(format!("'{name}' already exists in that folder"));
     }
     // Run from the parent so clone creates <name> beneath it.
-    let out = Command::new("git")
+    let out = command("git")
         .arg("-C")
         .arg(&parent)
         .args(["clone", url])
@@ -321,7 +322,7 @@ pub fn git_save_credentials(url: String, username: String, token: String) -> Res
         return Err(String::from("Token / password is empty"));
     }
     let input = format!("protocol={protocol}\nhost={host}\nusername={user}\npassword={pass}\n\n");
-    let mut child = Command::new("git")
+    let mut child = command("git")
         .args(["credential", "approve"])
         .stdin(Stdio::piped())
         .stdout(Stdio::null())

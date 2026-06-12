@@ -6,7 +6,9 @@
 
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+
+use crate::win_command::command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -60,7 +62,7 @@ pub fn run_workspace_command(
     let resolved_program = resolve_program_in_cwd(&cwd, &program);
 
     let started = Instant::now();
-    let mut child = Command::new(&resolved_program)
+    let mut child = command(&resolved_program)
         .args(&args)
         .current_dir(&cwd)
         .stdin(Stdio::null())
@@ -197,7 +199,7 @@ fn join_capture(handle: thread::JoinHandle<String>) -> String {
 
 #[cfg(windows)]
 fn kill_process_tree(pid: u32) {
-    let _ = Command::new("taskkill")
+    let _ = command("taskkill")
         .args(["/PID", &pid.to_string(), "/T", "/F"])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -206,7 +208,7 @@ fn kill_process_tree(pid: u32) {
 
 #[cfg(not(windows))]
 fn kill_process_tree(pid: u32) {
-    let _ = Command::new("kill")
+    let _ = command("kill")
         .args(["-9", &pid.to_string()])
         .stdout(Stdio::null())
         .stderr(Stdio::null())

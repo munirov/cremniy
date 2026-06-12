@@ -11,9 +11,9 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use crate::disassembly::{DisassemblyResultDto, DisassemblySyntaxOption};
+use crate::win_command::command;
 
 // Marker tokens we tell r2 to print between data sections in one script — far
 // less fragile than two-pass r2 invocations.
@@ -129,7 +129,7 @@ pub fn disassemble_with_radare2(
     script.push_str(&format!("?e {MARK_SEC};iSj;"));
     script.push_str(&format!("?e {MARK_DASM};pdj {limit} @ entry0"));
 
-    let output = Command::new(&r2)
+    let output = command(&r2)
         .args(["-q", "-c", &script, "--"])
         .arg(&file)
         .env("LANG", "C")
