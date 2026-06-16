@@ -1,0 +1,36 @@
+[package]
+name = "cremniy"
+version = "0.2.0"
+type = "app"
+license = "MIT"
+author = "Unknown"
+
+[build]
+language = "c++"
+cxx_standard = "c++17"
+cflags = ["-DQHEXVIEW_ENABLE_DIALOGS"]
+compiler = "clang"
+ldflags = ["-lm", "-lstdc++"]
+kind = "bin"
+roots = ["src"]
+qt = true
+include = [
+    "src", 
+    "src/widgets", 
+    "src/core/file", 
+    "src/core/project", 
+    "src/core/settings", 
+    "src/utils", 
+    "src/ui",
+    "src/libs/CodeEditor/include",
+    "src/libs/CodeEditor/include/core",
+    "src/libs/CodeEditor/third_party/QCodeEditor/include",
+    "src/libs/HexEditor/include",
+    "src/Modules/Tabs/Binary"
+]
+pkg_config = ["Qt6Widgets", "Qt6Core", "Qt6Svg", "Qt6Gui"]
+
+[toolchain]
+uic = "/usr/lib/qt6/uic"
+moc = "/usr/lib/qt6/moc"
+rcc = "/usr/lib/qt6/rcc"
