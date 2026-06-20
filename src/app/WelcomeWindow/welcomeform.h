@@ -1,13 +1,14 @@
 #ifndef WELCOMEFORM_H
 #define WELCOMEFORM_H
 
-#include "widgets/clickablelineedit.h"
 #include <QWidget>
 #include <qcombobox.h>
 #include <qlabel.h>
 #include <qlineedit.h>
 #include <qlistview.h>
 #include <qstackedwidget.h>
+
+class QPushButton;
 
 class WelcomeForm : public QWidget
 {
@@ -17,6 +18,8 @@ public:
     explicit WelcomeForm(QWidget *parent = nullptr);
     ~WelcomeForm();
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
     QStackedWidget *stack;
@@ -28,7 +31,7 @@ private:
     QLabel *language_label;
     QLabel *info_label;
     QLabel *path_label;
-    ClickableLineEdit *path_lineEdit;
+    QLineEdit *path_lineEdit;
     QListView *RecentProjectsList;
     void L2CreateProject(QString name, QString path, QString language);
     void SetProjectHistoryList();
