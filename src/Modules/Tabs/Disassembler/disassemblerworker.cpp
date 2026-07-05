@@ -181,7 +181,6 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
     if (filePath.endsWith(".bin", Qt::CaseInsensitive)) {
         args << "-D" << "-b" << "binary" << "-m" << effectiveArch;
     } else {
-        args << "-d";
         if (!effectiveArch.isEmpty()) args << "-m" << effectiveArch;
     }
    if (effectiveArch.contains("i386") || effectiveArch.contains("x86")) {

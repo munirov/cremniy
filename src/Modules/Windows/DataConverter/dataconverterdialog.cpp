@@ -245,7 +245,7 @@ bool DataConverterDialog::parseValue(const QString& text, qulonglong* outValue)
             qulonglong v = digits.toULongLong(&ok, 2);
             if (!ok) return false;
             const QString sign = bm.captured(1);
-            *outValue = (sign == "-") ? static_cast<qulonglong>(-static_cast<qlonglong>(v)) : v;
+            *outValue = (sign == "-") ? (~v + 1ULL) : v;
             return true;
         }
     }
@@ -270,7 +270,7 @@ bool DataConverterDialog::parseValue(const QString& text, qulonglong* outValue)
     }
     if (!ok) return false;
 
-    *outValue = (sign == "-") ? static_cast<qulonglong>(-static_cast<qlonglong>(v)) : v;
+    *outValue = (sign == "-") ? (~v + 1ULL) : v;
     return true;
 }
 
@@ -374,8 +374,8 @@ bool DataConverterDialog::parseExpression(const QString& text, qulonglong* outVa
                 }
                 else if (op == "+")  res = lhs + rhs;
                 else if (op == "-")  res = lhs - rhs;
-                else if (op == "<<") res = lhs << rhs;
-                else if (op == ">>") res = lhs >> rhs;
+                else if (op == "<<") res = lhs << (rhs & 63);
+                else if (op == ">>") res = lhs >> (rhs & 63);
                 else if (op == "&")  res = lhs & rhs;
                 else if (op == "^")  res = lhs ^ rhs;
                 else if (op == "|")  res = lhs | rhs;
