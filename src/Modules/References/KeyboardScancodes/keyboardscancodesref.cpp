@@ -157,17 +157,8 @@ void KeyboardScancodesRef::initWidgets()
     root->setContentsMargins(8, 8, 8, 8);
     root->setSpacing(6);
 
-    // Top: visual keyboard (scrollable)
-    m_viz = new KeyboardScanCodeVizWidget();
-    auto *scrollViz = new QScrollArea();
-    scrollViz->setWidgetResizable(true);
-    scrollViz->setWidget(m_viz);
-    scrollViz->setMinimumHeight(280);
-    scrollViz->setMaximumHeight(360);
-    root->addWidget(scrollViz, 0);
-
-    // Bottom: key info + reference table side by side
-    auto *bottomSplitter = new QSplitter(Qt::Horizontal, this);
+    // Top: key info + reference table side by side
+    auto *topSplitter = new QSplitter(Qt::Horizontal, this);
 
     // Key info group
     auto *infoGroup = new QGroupBox(tr("Last Key"));
@@ -202,7 +193,7 @@ void KeyboardScancodesRef::initWidgets()
         "QGroupBox { font-weight: 600; border: 1px solid #3f3f46; border-radius: 6px; "
         "margin-top: 10px; padding-top: 14px; } "
         "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; }"));
-    bottomSplitter->addWidget(infoGroup);
+    topSplitter->addWidget(infoGroup);
 
     // Reference table
     m_table = new QTableWidget();
@@ -221,12 +212,21 @@ void KeyboardScancodesRef::initWidgets()
     auto *scrollTable = new QScrollArea();
     scrollTable->setWidgetResizable(true);
     scrollTable->setWidget(m_table);
-    bottomSplitter->addWidget(scrollTable);
+    topSplitter->addWidget(scrollTable);
 
-    bottomSplitter->setStretchFactor(0, 1);
-    bottomSplitter->setStretchFactor(1, 2);
+    topSplitter->setStretchFactor(0, 1);
+    topSplitter->setStretchFactor(1, 2);
 
-    root->addWidget(bottomSplitter, 1);
+    root->addWidget(topSplitter, 1);
+
+    // Bottom: visual keyboard
+    m_viz = new KeyboardScanCodeVizWidget();
+    auto *scrollViz = new QScrollArea();
+    scrollViz->setWidgetResizable(true);
+    scrollViz->setWidget(m_viz);
+    scrollViz->setMinimumHeight(240);
+    scrollViz->setMaximumHeight(340);
+    root->addWidget(scrollViz, 0);
 }
 
 bool KeyboardScancodesRef::eventFilter(QObject *obj, QEvent *event)

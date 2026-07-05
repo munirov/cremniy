@@ -44,6 +44,10 @@ private:
     QToolButton *m_toggleShellBtn = nullptr;
     QToolButton *m_toggleDisasmBtn = nullptr;
 
+    QWidget *m_asmContainer = nullptr;
+    QWidget *m_shellContainer = nullptr;
+    QWidget *m_disasmContainer = nullptr;
+
     // Assembly input
     FileDataBuffer *m_asmBuffer = nullptr;
     CustomCodeEditor *m_asmEditor = nullptr;

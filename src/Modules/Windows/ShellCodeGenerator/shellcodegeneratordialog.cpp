@@ -176,26 +176,28 @@ void ShellcodeGeneratorDialog::setupToolbar(QWidget *parent) {
 void ShellcodeGeneratorDialog::setupEditors(QWidget *parent) {
     m_splitter = new QSplitter(Qt::Horizontal, parent);
 
-    // Assembly input
-    m_asmBuffer = new FileDataBuffer(this);
-    m_asmEditor = new CustomCodeEditor(parent);
-    m_asmEditor->setBuffer(m_asmBuffer);
+    auto makeLabeled = [&](const QString &title, CustomCodeEditor *&editor, FileDataBuffer *&buffer, QWidget *&container) {
+        container = new QWidget(parent);
+        auto *layout = new QVBoxLayout(container);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(4);
+        auto *label = new QLabel(title, container);
+        label->setStyleSheet(QStringLiteral("font-weight: 600; font-size: 12px; color: #a1a1aa; padding: 2px 4px;"));
+        layout->addWidget(label);
+        buffer = new FileDataBuffer(this);
+        editor = new CustomCodeEditor(container);
+        editor->setBuffer(buffer);
+        layout->addWidget(editor, 1);
+        return container;
+    };
+
+    m_splitter->addWidget(makeLabeled(tr("Assembly"), m_asmEditor, m_asmBuffer, m_asmContainer));
+    m_splitter->addWidget(makeLabeled(tr("Shellcode"), m_outputEditor, m_outputBuffer, m_shellContainer));
+    m_splitter->addWidget(makeLabeled(tr("Disassembly"), m_disasmEditor, m_disasmBuffer, m_disasmContainer));
+
     m_asmEditor->setFileExt("asm");
-    m_splitter->addWidget(m_asmEditor);
-
-    // Shellcode output
-    m_outputBuffer = new FileDataBuffer(this);
-    m_outputEditor = new CustomCodeEditor(parent);
-    m_outputEditor->setBuffer(m_outputBuffer);
     m_outputEditor->setFileExt("cpp");
-    m_splitter->addWidget(m_outputEditor);
-
-    // Disassembly output
-    m_disasmBuffer = new FileDataBuffer(this);
-    m_disasmEditor = new CustomCodeEditor(parent);
-    m_disasmEditor->setBuffer(m_disasmBuffer);
     m_disasmEditor->setFileExt("asm");
-    m_splitter->addWidget(m_disasmEditor);
 
     m_splitter->setStretchFactor(0, 1);
     m_splitter->setStretchFactor(1, 1);
@@ -207,9 +209,9 @@ int ShellcodeGeneratorDialog::currentBits() const {
 }
 
 void ShellcodeGeneratorDialog::togglePanel(int) {
-    m_asmEditor->setVisible(m_toggleAsmBtn->isChecked());
-    m_outputEditor->setVisible(m_toggleShellBtn->isChecked());
-    m_disasmEditor->setVisible(m_toggleDisasmBtn->isChecked());
+    m_asmContainer->setVisible(m_toggleAsmBtn->isChecked());
+    m_shellContainer->setVisible(m_toggleShellBtn->isChecked());
+    m_disasmContainer->setVisible(m_toggleDisasmBtn->isChecked());
 }
 
 void ShellcodeGeneratorDialog::onAssemble() {
