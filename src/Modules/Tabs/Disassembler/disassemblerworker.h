@@ -5,6 +5,7 @@
 #include <QHash>
 #include <QString>
 #include <QVector>
+#include <atomic>
 
 struct DisasmInstruction {
     QString address;
@@ -55,7 +56,7 @@ signals:
     void logLine(const QString &line);   // diagnostic log line
 
 private:
-    bool m_cancelled = false;
+    std::atomic<bool> m_cancelled{false};
     friend class Radare2Backend;
 
     QVector<DisasmSection> parseSections(const QByteArray &output, const QHash<QString, DisasmSection> &sectionMap = {});

@@ -237,7 +237,10 @@ DisassemblerTab::DisassemblerTab(QWidget *parent)
     m_worker = new DisassemblerWorker();
     m_worker->moveToThread(m_thread);
 
-    connect(m_thread, &QThread::finished,       m_worker, &QObject::deleteLater);
+    connect(m_thread, &QThread::finished, this, [this]() {
+        m_worker->deleteLater();
+        m_worker = nullptr;
+    });
     connect(this,  &DisassemblerTab::requestDisassembly,
             m_worker, &DisassemblerWorker::disassemble, Qt::QueuedConnection);
     connect(m_worker, &DisassemblerWorker::sectionFound,
@@ -758,7 +761,7 @@ void DisassemblerTab::setupUi()
     m_logView = new QPlainTextEdit(m_logPanel);
     m_logView->setReadOnly(true);
     m_logView->setMaximumBlockCount(5000);
-    m_logView->setStyleSheet("QPlainTextEdit font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 11px;");
+    m_logView->setStyleSheet("QPlainTextEdit { font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 11px; }");
     logLayout->addWidget(m_logView, 1);
     m_splitter->addWidget(m_logPanel);
 

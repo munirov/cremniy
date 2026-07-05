@@ -160,7 +160,7 @@ ParseResult ReverseCalculatorEngine::parseExpression(const QString &expression, 
                 }
                 qulonglong v = stack.pop();
                 if (token.value == "~") stack.push(~v);
-                else if (token.value == "-") stack.push(-v);
+                else if (token.value == "-") stack.push(~v + 1ULL);
                 else if (token.value == "+") stack.push(v);
             } else {
                 if (stack.size() < 2) {
