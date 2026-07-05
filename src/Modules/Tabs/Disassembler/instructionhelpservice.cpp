@@ -68,7 +68,7 @@ QString InstructionHelpService::extractMnemonicFromLine(const QString &line)
         tail = tail.mid(colon + 1);
     tail = tail.trimmed();
 
-    const QRegularExpression re("([A-Za-z]{2,12})");
+    static const QRegularExpression re("([A-Za-z]{2,12})");
     const QRegularExpressionMatch m = re.match(tail);
     if (!m.hasMatch())
         return {};

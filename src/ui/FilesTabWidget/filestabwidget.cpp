@@ -109,7 +109,8 @@ void FilesTabWidget::saveFileSlot() {
     qDebug() << "FilesTabWidget::saveFileSlot()";
     if (count() > 0) {
         FileTab *currentFileTab = dynamic_cast<FileTab *>(currentWidget());
-        currentFileTab->saveFile();
+        if (currentFileTab)
+            currentFileTab->saveFile();
     }
 }
 
