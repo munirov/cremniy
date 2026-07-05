@@ -16,12 +16,14 @@ public:
     void applyHighlight(const QKeyEvent *e);
     void clearHighlight();
 
-private:
     struct Cell {
         int qtKey;
+        int qtKeyAlt;
         int8_t keypadFilter;
         QFrame *frame;
     };
+
+private:
 
     QVector<Cell> m_cells;
     QVector<QFrame *> m_highlighted;

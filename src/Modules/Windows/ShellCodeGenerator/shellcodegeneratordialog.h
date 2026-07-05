@@ -6,11 +6,12 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QTabWidget>
+#include <QSplitter>
 
 class CustomCodeEditor;
 class FileDataBuffer;
 class QTimer;
+class QToolButton;
 
 class ShellcodeGeneratorDialog : public WindowBase {
     Q_OBJECT
@@ -21,6 +22,7 @@ private slots:
     void onAssemble();
     void onCopyActiveTab();
     void onClear();
+    void togglePanel(int index);
 
 private:
     void setupUi();
@@ -36,7 +38,11 @@ private:
     QLabel *m_byteCountLabel = nullptr;
     QPushButton *m_copyBtn = nullptr;
     QPushButton *m_clearBtn = nullptr;
-    QTabWidget *m_tabWidget = nullptr;
+
+    QSplitter *m_splitter = nullptr;
+    QToolButton *m_toggleAsmBtn = nullptr;
+    QToolButton *m_toggleShellBtn = nullptr;
+    QToolButton *m_toggleDisasmBtn = nullptr;
 
     // Assembly input
     FileDataBuffer *m_asmBuffer = nullptr;

@@ -157,21 +157,17 @@ void KeyboardScancodesRef::initWidgets()
     root->setContentsMargins(8, 8, 8, 8);
     root->setSpacing(6);
 
-    auto *splitter = new QSplitter(Qt::Horizontal, this);
-
-    // Left: visual keyboard
+    // Top: visual keyboard (scrollable)
     m_viz = new KeyboardScanCodeVizWidget();
     auto *scrollViz = new QScrollArea();
     scrollViz->setWidgetResizable(true);
     scrollViz->setWidget(m_viz);
-    scrollViz->setMinimumWidth(500);
-    splitter->addWidget(scrollViz);
+    scrollViz->setMinimumHeight(280);
+    scrollViz->setMaximumHeight(360);
+    root->addWidget(scrollViz, 0);
 
-    // Right: info panel + table
-    auto *rightPanel = new QWidget();
-    auto *rightLayout = new QVBoxLayout(rightPanel);
-    rightLayout->setContentsMargins(0, 0, 0, 0);
-    rightLayout->setSpacing(6);
+    // Bottom: key info + reference table side by side
+    auto *bottomSplitter = new QSplitter(Qt::Horizontal, this);
 
     // Key info group
     auto *infoGroup = new QGroupBox(tr("Last Key"));
@@ -181,7 +177,7 @@ void KeyboardScancodesRef::initWidgets()
     infoGrid->setVerticalSpacing(6);
 
     auto mkLabel = [this]() {
-        auto *v = new QLabel(QStringLiteral("—"));
+        auto *v = new QLabel(QStringLiteral("\xe2\x80\x94"));  // —
         v->setTextInteractionFlags(Qt::TextSelectableByMouse);
         v->setStyleSheet(QStringLiteral("font-family: monospace; font-size: 12px;"));
         return v;
@@ -206,7 +202,7 @@ void KeyboardScancodesRef::initWidgets()
         "QGroupBox { font-weight: 600; border: 1px solid #3f3f46; border-radius: 6px; "
         "margin-top: 10px; padding-top: 14px; } "
         "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; }"));
-    rightLayout->addWidget(infoGroup);
+    bottomSplitter->addWidget(infoGroup);
 
     // Reference table
     m_table = new QTableWidget();
@@ -225,13 +221,12 @@ void KeyboardScancodesRef::initWidgets()
     auto *scrollTable = new QScrollArea();
     scrollTable->setWidgetResizable(true);
     scrollTable->setWidget(m_table);
-    rightLayout->addWidget(scrollTable, 1);
+    bottomSplitter->addWidget(scrollTable);
 
-    splitter->addWidget(rightPanel);
-    splitter->setStretchFactor(0, 3);
-    splitter->setStretchFactor(1, 2);
+    bottomSplitter->setStretchFactor(0, 1);
+    bottomSplitter->setStretchFactor(1, 2);
 
-    root->addWidget(splitter, 1);
+    root->addWidget(bottomSplitter, 1);
 }
 
 bool KeyboardScancodesRef::eventFilter(QObject *obj, QEvent *event)

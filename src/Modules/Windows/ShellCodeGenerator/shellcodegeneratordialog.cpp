@@ -14,8 +14,9 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QShortcut>
-#include <QTabWidget>
+#include <QSplitter>
 #include <QTimer>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 static QString displayName() {
@@ -55,12 +56,11 @@ ShellcodeGeneratorDialog::ShellcodeGeneratorDialog(QWidget *parent)
 {
     setWindowTitle(tr("Shellcode Generator"));
     setModal(false);
-    setMinimumSize(QSize(1200, 700));
-    resize(1400, 800);
+    setMinimumSize(QSize(900, 600));
+    resize(1200, 750);
 
     setupUi();
 
-    // Debounce timer for auto-assembly
     m_debounceTimer = new QTimer(this);
     m_debounceTimer->setSingleShot(true);
     m_debounceTimer->setInterval(500);
@@ -77,11 +77,9 @@ ShellcodeGeneratorDialog::ShellcodeGeneratorDialog(QWidget *parent)
     connect(m_shellcodeStyle, qOverload<int>(&QComboBox::currentIndexChanged), this, triggerReassemble);
     connect(m_archCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, triggerReassemble);
 
-    // Shortcuts
     auto *assembleShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
     connect(assembleShortcut, &QShortcut::activated, this, &ShellcodeGeneratorDialog::onAssemble);
 
-    // Check dependencies on startup
     QTimer::singleShot(0, this, [this]() {
         QString missing;
         if (!ShellcodeEngine::checkDependencies(&missing)) {
@@ -104,9 +102,8 @@ void ShellcodeGeneratorDialog::setupUi() {
     root->addLayout(m_toolbarLayout);
 
     setupEditors(this);
-    root->addWidget(m_tabWidget, 1);
+    root->addWidget(m_splitter, 1);
 
-    // Status bar
     m_statusLabel = new QLabel(tr("Ready. Press F5 or start typing to assemble."), this);
     m_statusLabel->setStyleSheet(QStringLiteral("color: #a1a1aa; font-size: 11px; padding: 2px 4px;"));
     root->addWidget(m_statusLabel);
@@ -114,23 +111,50 @@ void ShellcodeGeneratorDialog::setupUi() {
 
 void ShellcodeGeneratorDialog::setupToolbar(QWidget *parent) {
     m_toolbarLayout = new QHBoxLayout();
-    m_toolbarLayout->setSpacing(8);
+    m_toolbarLayout->setSpacing(6);
 
     m_toolbarLayout->addWidget(new QLabel(tr("Architecture:"), parent));
     m_archCombo = new QComboBox(parent);
     m_archCombo->setMinimumWidth(110);
     for (int i = 0; i < kArchCount; ++i)
         m_archCombo->addItem(kArchEntries[i].label);
-    m_archCombo->setCurrentIndex(2); // default 64-bit
+    m_archCombo->setCurrentIndex(2);
     m_toolbarLayout->addWidget(m_archCombo);
 
-    m_toolbarLayout->addSpacing(10);
+    m_toolbarLayout->addSpacing(8);
     m_toolbarLayout->addWidget(new QLabel(tr("Output:"), parent));
     m_shellcodeStyle = new QComboBox(parent);
     m_shellcodeStyle->setMinimumWidth(70);
     for (int i = 0; i < kStyleCount; ++i)
         m_shellcodeStyle->addItem(kStyles[i].label, kStyles[i].id);
     m_toolbarLayout->addWidget(m_shellcodeStyle);
+
+    m_toolbarLayout->addSpacing(12);
+
+    // Toggle buttons for panel visibility
+    m_toggleAsmBtn = new QToolButton(parent);
+    m_toggleAsmBtn->setText(tr("ASM"));
+    m_toggleAsmBtn->setCheckable(true);
+    m_toggleAsmBtn->setChecked(true);
+    m_toggleAsmBtn->setToolTip(tr("Toggle Assembly panel"));
+    m_toolbarLayout->addWidget(m_toggleAsmBtn);
+    connect(m_toggleAsmBtn, &QToolButton::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
+
+    m_toggleShellBtn = new QToolButton(parent);
+    m_toggleShellBtn->setText(tr("Shell"));
+    m_toggleShellBtn->setCheckable(true);
+    m_toggleShellBtn->setChecked(true);
+    m_toggleShellBtn->setToolTip(tr("Toggle Shellcode panel"));
+    m_toolbarLayout->addWidget(m_toggleShellBtn);
+    connect(m_toggleShellBtn, &QToolButton::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
+
+    m_toggleDisasmBtn = new QToolButton(parent);
+    m_toggleDisasmBtn->setText(tr("Disasm"));
+    m_toggleDisasmBtn->setCheckable(true);
+    m_toggleDisasmBtn->setChecked(true);
+    m_toggleDisasmBtn->setToolTip(tr("Toggle Disassembly panel"));
+    m_toolbarLayout->addWidget(m_toggleDisasmBtn);
+    connect(m_toggleDisasmBtn, &QToolButton::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
 
     m_toolbarLayout->addStretch(1);
 
@@ -150,34 +174,42 @@ void ShellcodeGeneratorDialog::setupToolbar(QWidget *parent) {
 }
 
 void ShellcodeGeneratorDialog::setupEditors(QWidget *parent) {
-    m_tabWidget = new QTabWidget(parent);
+    m_splitter = new QSplitter(Qt::Horizontal, parent);
 
-    // Assembly input tab
+    // Assembly input
     m_asmBuffer = new FileDataBuffer(this);
     m_asmEditor = new CustomCodeEditor(parent);
     m_asmEditor->setBuffer(m_asmBuffer);
     m_asmEditor->setFileExt("asm");
-    m_tabWidget->addTab(m_asmEditor, tr("Assembly"));
+    m_splitter->addWidget(m_asmEditor);
 
-    // Shellcode output tab
+    // Shellcode output
     m_outputBuffer = new FileDataBuffer(this);
     m_outputEditor = new CustomCodeEditor(parent);
     m_outputEditor->setBuffer(m_outputBuffer);
     m_outputEditor->setFileExt("cpp");
-    m_tabWidget->addTab(m_outputEditor, tr("Shellcode"));
+    m_splitter->addWidget(m_outputEditor);
 
-    // Disassembly tab
+    // Disassembly output
     m_disasmBuffer = new FileDataBuffer(this);
     m_disasmEditor = new CustomCodeEditor(parent);
     m_disasmEditor->setBuffer(m_disasmBuffer);
     m_disasmEditor->setFileExt("asm");
-    m_tabWidget->addTab(m_disasmEditor, tr("Disassembly"));
+    m_splitter->addWidget(m_disasmEditor);
 
-    m_tabWidget->setCurrentIndex(0);
+    m_splitter->setStretchFactor(0, 1);
+    m_splitter->setStretchFactor(1, 1);
+    m_splitter->setStretchFactor(2, 1);
 }
 
 int ShellcodeGeneratorDialog::currentBits() const {
     return kArchEntries[m_archCombo->currentIndex()].bits;
+}
+
+void ShellcodeGeneratorDialog::togglePanel(int) {
+    m_asmEditor->setVisible(m_toggleAsmBtn->isChecked());
+    m_outputEditor->setVisible(m_toggleShellBtn->isChecked());
+    m_disasmEditor->setVisible(m_toggleDisasmBtn->isChecked());
 }
 
 void ShellcodeGeneratorDialog::onAssemble() {
@@ -217,7 +249,6 @@ void ShellcodeGeneratorDialog::onAssemble() {
     m_lastRawBinary = result.binary;
     m_byteCountLabel->setText(tr("%1 bytes").arg(result.binary.size()));
 
-    // Generate shellcode output
     const auto lines = engine.disassemble(result.binary, bits);
     const int styleId = m_shellcodeStyle->currentData().toInt();
 
@@ -231,7 +262,6 @@ void ShellcodeGeneratorDialog::onAssemble() {
 
     m_outputBuffer->loadData(output.toUtf8());
 
-    // Generate disassembly listing
     QString disasmText;
     for (const auto &l : lines) {
         disasmText += QStringLiteral("%1  %2  %3\n")
@@ -246,11 +276,13 @@ void ShellcodeGeneratorDialog::onAssemble() {
 
 void ShellcodeGeneratorDialog::onCopyActiveTab() {
     FileDataBuffer *activeBuffer = nullptr;
-    switch (m_tabWidget->currentIndex()) {
-    case 0: activeBuffer = m_asmBuffer; break;
-    case 1: activeBuffer = m_outputBuffer; break;
-    case 2: activeBuffer = m_disasmBuffer; break;
-    }
+
+    if (m_outputEditor->isVisible())
+        activeBuffer = m_outputBuffer;
+    else if (m_disasmEditor->isVisible())
+        activeBuffer = m_disasmBuffer;
+    else
+        activeBuffer = m_asmBuffer;
 
     if (activeBuffer) {
         const QByteArray data = activeBuffer->data();
