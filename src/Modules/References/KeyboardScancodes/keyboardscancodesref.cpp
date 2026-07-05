@@ -1,15 +1,16 @@
 #include "keyboardscancodesref.h"
 #include "keyboardscancodevizwidget.h"
 #include "core/modules/ModuleManager.h"
+#include <QApplication>
+#include <QGroupBox>
+#include <QGridLayout>
 #include <QHeaderView>
+#include <QKeyEvent>
 #include <QKeySequence>
 #include <QLabel>
-#include <QFormLayout>
 #include <QScrollArea>
-#include <QShowEvent>
 #include <QSplitter>
 #include <QTableWidget>
-#include <QToolButton>
 #include <QVBoxLayout>
 
 static QString displayName() {
@@ -20,29 +21,6 @@ static bool registered = []() {
     ModuleManager::instance().registerModule<ReferenceBase>(&displayName, "", []() { return new KeyboardScancodesRef(); });
     return true;
 }();
-
-KeyCaptureFrame::KeyCaptureFrame(QWidget *parent) : QFrame(parent)
-{
-    setFocusPolicy(Qt::StrongFocus);
-    setFrameShape(QFrame::StyledPanel);
-    setMinimumHeight(80);
-    setStyleSheet(QStringLiteral(
-        "KeyCaptureFrame { border: 2px dashed #525252; border-radius: 6px; background-color: rgba(0,0,0,0.15); }"));
-}
-
-void KeyCaptureFrame::keyPressEvent(QKeyEvent *event)
-{
-    emit keyActivity(event->key(), static_cast<quint32>(event->nativeScanCode()),
-                     static_cast<quint32>(event->nativeVirtualKey()), event->text(), event->modifiers(), false);
-    event->accept();
-}
-
-void KeyCaptureFrame::keyReleaseEvent(QKeyEvent *event)
-{
-    emit keyActivity(event->key(), static_cast<quint32>(event->nativeScanCode()),
-                     static_cast<quint32>(event->nativeVirtualKey()), QString(), event->modifiers(), true);
-    event->accept();
-}
 
 struct RefRow {
     const char *name;
@@ -158,85 +136,79 @@ KeyboardScancodesRef::KeyboardScancodesRef(QWidget *parent)
 {
     initWindow();
     initWidgets();
+    qApp->installEventFilter(this);
 }
 
+KeyboardScancodesRef::~KeyboardScancodesRef()
+{
+    qApp->removeEventFilter(this);
+}
 
 void KeyboardScancodesRef::initWindow()
 {
     setWindowTitle(tr("Keyboard scan codes"));
-    resize(980, 720);
+    resize(1100, 700);
+    setMinimumSize(800, 500);
 }
 
 void KeyboardScancodesRef::initWidgets()
 {
     auto *root = new QVBoxLayout(this);
-    root->setContentsMargins(10, 10, 10, 10);
-    root->setSpacing(8);
+    root->setContentsMargins(8, 8, 8, 8);
+    root->setSpacing(6);
 
-    m_helpToggle = new QToolButton(this);
-    m_helpToggle->setText(tr("Reference"));
-    m_helpToggle->setCheckable(true);
-    m_helpToggle->setChecked(false);
-    m_helpToggle->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    root->addWidget(m_helpToggle, 0, Qt::AlignLeft);
+    auto *splitter = new QSplitter(Qt::Horizontal, this);
 
-    m_helpContent = new QWidget(this);
-    auto *helpLay = new QVBoxLayout(m_helpContent);
-    helpLay->setContentsMargins(8, 8, 8, 8);
-    auto *helpText = new QLabel(
-        tr("• The table shows the reference make codes for IBM PC/AT Scan Code Set 1 (hex).\n"
-           "• The capture field displays the currently pressed key and native codes from Qt.\n"
-           "• The corresponding key is highlighted on the visual keyboard.\n"
-           "• The native scan code depends on the platform and may differ from Set 1."),
-        m_helpContent);
-    helpText->setWordWrap(true);
-    helpLay->addWidget(helpText);
-    m_helpContent->setVisible(false);
-    m_helpContent->setStyleSheet(QStringLiteral("background: rgba(255,255,255,0.03); border: 1px solid #3f3f46; border-radius: 6px;"));
-    root->addWidget(m_helpContent);
-    connect(m_helpToggle, &QToolButton::toggled, m_helpContent, &QWidget::setVisible);
+    // Left: visual keyboard
+    m_viz = new KeyboardScanCodeVizWidget();
+    auto *scrollViz = new QScrollArea();
+    scrollViz->setWidgetResizable(true);
+    scrollViz->setWidget(m_viz);
+    scrollViz->setMinimumWidth(500);
+    splitter->addWidget(scrollViz);
 
-    m_capture = new KeyCaptureFrame(this);
-    auto *capHint = new QLabel(tr("Focus: Click in the area below and press the button."), this);
-    root->addWidget(capHint);
-    root->addWidget(m_capture);
+    // Right: info panel + table
+    auto *rightPanel = new QWidget();
+    auto *rightLayout = new QVBoxLayout(rightPanel);
+    rightLayout->setContentsMargins(0, 0, 0, 0);
+    rightLayout->setSpacing(6);
 
-    auto *statusPanel = new QWidget(this);
-    auto *statusForm = new QFormLayout(statusPanel);
-    statusForm->setContentsMargins(8, 6, 8, 6);
-    statusForm->setLabelAlignment(Qt::AlignRight);
-    statusForm->setHorizontalSpacing(14);
-    statusForm->setVerticalSpacing(4);
+    // Key info group
+    auto *infoGroup = new QGroupBox(tr("Last Key"));
+    auto *infoGrid = new QGridLayout(infoGroup);
+    infoGrid->setContentsMargins(10, 10, 10, 10);
+    infoGrid->setHorizontalSpacing(14);
+    infoGrid->setVerticalSpacing(6);
 
-    auto mkVal = [this]() {
-        auto *v = new QLabel(QStringLiteral("—"), this);
+    auto mkLabel = [this]() {
+        auto *v = new QLabel(QStringLiteral("—"));
         v->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        v->setStyleSheet(QStringLiteral("font-family: monospace;"));
+        v->setStyleSheet(QStringLiteral("font-family: monospace; font-size: 12px;"));
         return v;
     };
-    m_keyNameValue = mkVal();
-    m_qtKeyValue = mkVal();
-    m_scanValue = mkVal();
-    m_vkValue = mkVal();
-    m_textValue = mkVal();
-    m_modsValue = mkVal();
 
-    statusForm->addRow(tr("Key:"), m_keyNameValue);
-    statusForm->addRow(tr("Qt::Key:"), m_qtKeyValue);
-    statusForm->addRow(tr("Native scan:"), m_scanValue);
-    statusForm->addRow(tr("Native VK:"), m_vkValue);
-    statusForm->addRow(tr("Text:"), m_textValue);
-    statusForm->addRow(tr("Modifiers:"), m_modsValue);
-    statusPanel->setStyleSheet(QStringLiteral("background: rgba(255,255,255,0.03); border: 1px solid #3f3f46; border-radius: 6px;"));
-    root->addWidget(statusPanel);
+    auto addRow = [&](int row, const QString &name, QLabel *&value) {
+        auto *lbl = new QLabel(name);
+        lbl->setStyleSheet(QStringLiteral("font-weight: 600; font-size: 12px; color: #a1a1aa;"));
+        value = mkLabel();
+        infoGrid->addWidget(lbl, row, 0, Qt::AlignRight);
+        infoGrid->addWidget(value, row, 1);
+    };
 
-    m_status = new QLabel(tr("Waiting for a key press"), this);
-    m_status->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    m_status->setStyleSheet(QStringLiteral("color: #a1a1aa;"));
-    root->addWidget(m_status);
+    addRow(0, tr("Key:"), m_keyNameValue);
+    addRow(1, tr("Qt::Key:"), m_qtKeyValue);
+    addRow(2, tr("Native scan:"), m_scanValue);
+    addRow(3, tr("Native VK:"), m_vkValue);
+    addRow(4, tr("Text:"), m_textValue);
+    addRow(5, tr("Modifiers:"), m_modsValue);
 
-    auto *split = new QSplitter(Qt::Vertical, this);
+    infoGroup->setStyleSheet(QStringLiteral(
+        "QGroupBox { font-weight: 600; border: 1px solid #3f3f46; border-radius: 6px; "
+        "margin-top: 10px; padding-top: 14px; } "
+        "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; }"));
+    rightLayout->addWidget(infoGroup);
 
+    // Reference table
     m_table = new QTableWidget();
     m_table->setColumnCount(3);
     m_table->setHorizontalHeaderLabels({tr("Key"), tr("Set 1 make"), tr("Notes")});
@@ -250,34 +222,39 @@ void KeyboardScancodesRef::initWidgets()
     m_table->sortByColumn(1, Qt::AscendingOrder);
     m_table->resizeColumnsToContents();
 
-    auto *scrollTable = new QScrollArea(split);
+    auto *scrollTable = new QScrollArea();
     scrollTable->setWidgetResizable(true);
     scrollTable->setWidget(m_table);
-    scrollTable->setMinimumHeight(200);
+    rightLayout->addWidget(scrollTable, 1);
 
-    m_viz = new KeyboardScanCodeVizWidget();
-    auto *scrollViz = new QScrollArea(split);
-    scrollViz->setWidgetResizable(true);
-    scrollViz->setWidget(m_viz);
-    scrollViz->setMinimumHeight(280);
+    splitter->addWidget(rightPanel);
+    splitter->setStretchFactor(0, 3);
+    splitter->setStretchFactor(1, 2);
 
-    split->addWidget(scrollTable);
-    split->addWidget(scrollViz);
-    split->setStretchFactor(0, 1);
-    split->setStretchFactor(1, 2);
-
-    root->addWidget(split, 1);
-
-    connect(m_capture, &KeyCaptureFrame::keyActivity, this, &KeyboardScancodesRef::onKeyActivity);
-
-    m_capture->setFocus();
+    root->addWidget(splitter, 1);
 }
 
-void KeyboardScancodesRef::showEvent(QShowEvent *event)
+bool KeyboardScancodesRef::eventFilter(QObject *obj, QEvent *event)
 {
-    QWidget::showEvent(event);
-    if (m_capture)
-        m_capture->setFocus();
+    if (!isVisible())
+        return ReferenceBase::eventFilter(obj, event);
+
+    if (event->type() == QEvent::KeyPress) {
+        auto *ke = static_cast<QKeyEvent*>(event);
+        // Ignore shortcuts and system keys that should propagate
+        if (ke->modifiers() & Qt::AltModifier && (ke->key() == Qt::Key_F4 || ke->key() == Qt::Key_Space))
+            return ReferenceBase::eventFilter(obj, event);
+        onKeyPress(ke);
+        return false;
+    }
+
+    if (event->type() == QEvent::KeyRelease) {
+        auto *ke = static_cast<QKeyEvent*>(event);
+        onKeyRelease(ke);
+        return false;
+    }
+
+    return ReferenceBase::eventFilter(obj, event);
 }
 
 void KeyboardScancodesRef::fillReferenceTable()
@@ -291,17 +268,12 @@ void KeyboardScancodesRef::fillReferenceTable()
     }
 }
 
-void KeyboardScancodesRef::onKeyActivity(int qtKey, quint32 nativeScan, quint32 nativeVk, const QString &text,
-                                         Qt::KeyboardModifiers mods, bool isRelease)
+void KeyboardScancodesRef::onKeyPress(QKeyEvent *event)
 {
-    if (isRelease) {
-        m_viz->clearHighlight();
-        return;
-    }
-
-    QKeyEvent ev(QEvent::KeyPress, qtKey, mods, text);
+    QKeyEvent ev(QEvent::KeyPress, event->key(), event->modifiers(), event->text());
     m_viz->applyHighlight(&ev);
 
+    const Qt::KeyboardModifiers mods = event->modifiers();
     QString modStr;
     if (mods & Qt::ShiftModifier)
         modStr += QStringLiteral("Shift ");
@@ -315,12 +287,17 @@ void KeyboardScancodesRef::onKeyActivity(int qtKey, quint32 nativeScan, quint32 
         modStr += QStringLiteral("Keypad ");
     modStr = modStr.trimmed();
 
-    const QString keyName = QKeySequence(qtKey).toString(QKeySequence::PortableText);
+    const QString keyName = QKeySequence(event->key()).toString(QKeySequence::PortableText);
     m_keyNameValue->setText(keyName.isEmpty() ? QStringLiteral("Unknown") : keyName);
-    m_qtKeyValue->setText(QString::number(qtKey));
-    m_scanValue->setText(QStringLiteral("0x") + QString::number(nativeScan, 16).toUpper());
-    m_vkValue->setText(QStringLiteral("0x") + QString::number(nativeVk, 16).toUpper());
-    m_textValue->setText(text.isEmpty() ? QStringLiteral("—") : text);
+    m_qtKeyValue->setText(QString::number(event->key()));
+    m_scanValue->setText(QStringLiteral("0x") + QString::number(event->nativeScanCode(), 16).toUpper());
+    m_vkValue->setText(QStringLiteral("0x") + QString::number(event->nativeVirtualKey(), 16).toUpper());
+    m_textValue->setText(event->text().isEmpty() ? QStringLiteral("—") : event->text());
     m_modsValue->setText(modStr.isEmpty() ? QStringLiteral("—") : modStr);
-    m_status->setText(tr("Last key: %1").arg(keyName.isEmpty() ? QStringLiteral("Unknown") : keyName));
+}
+
+void KeyboardScancodesRef::onKeyRelease(QKeyEvent *event)
+{
+    Q_UNUSED(event);
+    m_viz->clearHighlight();
 }

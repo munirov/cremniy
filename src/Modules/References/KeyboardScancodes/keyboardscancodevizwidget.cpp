@@ -238,7 +238,7 @@ void KeyboardScanCodeVizWidget::applyHighlight(const QKeyEvent *e)
         if (c.keypadFilter == 1 && !kp)
             continue;
         c.frame->setStyleSheet(
-            QStringLiteral("QFrame { border: 2px solid #60a5fa; background-color: rgba(96, 165, 250, 0.18); "
+            QStringLiteral("QFrame { border: 2px solid #60a5fa; background-color: rgba(96, 165, 250, 0.35); "
                            "border-radius: 4px; }"));
         m_highlighted.push_back(c.frame);
     }
