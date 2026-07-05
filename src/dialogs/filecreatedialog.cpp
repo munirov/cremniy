@@ -4,7 +4,7 @@
 #include "QFile"
 #include <qdir.h>
 
-FileCreateDialog::FileCreateDialog(QWidget *parent, QString path, bool _is_dir): QDialog(parent) {
+FileCreateDialog::FileCreateDialog(QWidget *parent, const QString& path, bool _is_dir): QDialog(parent) {
 
     this->dir_path = path;
     this->is_dir = _is_dir;
@@ -43,23 +43,23 @@ void FileCreateDialog::onCreateClicked() {
     }
 
     // тут можно создать файл
-    QString fullPath = QString("%1/%2").arg(dir_path).arg(fileName);
+    QString fullPath = QDir(dir_path).filePath(fileName);
 
     if (is_dir) {
         QDir dir;
         if (!dir.mkpath(fullPath)) {
             QMessageBox::critical(this, tr("Error"), tr("Failed to create directory!"));
+            return;
         }
+        accept();
     }
     else {
         QFile file(fullPath);
         if(file.open(QIODevice::WriteOnly)) {
             file.close();
-            accept(); // закрыть диалог
+            accept();
         } else {
             QMessageBox::critical(this, tr("Error"), tr("Failed to create file!"));
         }
     }
-
-    this->destroy();
 }

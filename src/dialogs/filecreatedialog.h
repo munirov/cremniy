@@ -10,7 +10,7 @@
 class FileCreateDialog : public QDialog {
     Q_OBJECT
 public:
-    explicit FileCreateDialog(QWidget *parent = nullptr, QString path = nullptr, bool is_dir = false);
+    explicit FileCreateDialog(QWidget *parent = nullptr, const QString& path = {}, bool is_dir = false);
     QString dir_path;
 private:
     bool is_dir = false;
