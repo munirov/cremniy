@@ -265,8 +265,9 @@ void WelcomeForm::L2CreateButton()
     }
 
     IDEWindow *mw = new IDEWindow(new_project_path, nullptr);
+    mw->setAttribute(Qt::WA_DeleteOnClose);
     mw->show();
-    this->destroy();
+    this->close();
 }
 
 void WelcomeForm::L2CreateProject(QString name, QString path, QString language){

@@ -9,6 +9,7 @@ class FilesTabWidget : public QTabWidget {
     Q_OBJECT
 public:
     FilesTabWidget(QWidget *parent = nullptr);
+    ~FilesTabWidget() override;
 
     void tabSelect(int index);
     void openFile(QString fullPath, QString fileName);

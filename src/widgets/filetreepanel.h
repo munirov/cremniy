@@ -6,8 +6,8 @@
 #include <QPointer>
 #include <QVBoxLayout>
 
-
 class QSortFilterProxyModel;
+class IconProvider;
 
 class FileTreePanel : public QWidget {
     Q_OBJECT
@@ -36,6 +36,7 @@ private:
     QTreeView* m_treeView;
     QSortFilterProxyModel* m_proxy;
     QFileSystemModel* m_fileModel;
+    IconProvider* m_iconProvider;
 
     QAction* m_createFile{};
     QAction* m_createDir{};

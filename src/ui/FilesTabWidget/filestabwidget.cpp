@@ -22,6 +22,11 @@ FilesTabWidget::FilesTabWidget(QWidget *parent) {
     connect(tabBar(), &QTabBar::tabMoved, this, &FilesTabWidget::onTabMoved);
     tabBar()->installEventFilter(this);
     QCoreApplication::instance()->installEventFilter(this);
+}
+
+FilesTabWidget::~FilesTabWidget() {
+    QCoreApplication::instance()->removeEventFilter(this);
+}
 
     connect(this, &FilesTabWidget::openTabModule,
             this, [this](ModuleDescription<TabBase> desc){

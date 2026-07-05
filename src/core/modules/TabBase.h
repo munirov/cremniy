@@ -39,6 +39,10 @@ public:
         : QWidget(parent)
     {}
 
+    ~TabBase() override {
+        delete m_fileContext;
+    }
+
     /**
      * @brief Получить лого инструмента для вкладки
      */

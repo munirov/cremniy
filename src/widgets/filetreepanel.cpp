@@ -17,6 +17,7 @@ FileTreePanel::FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilt
           m_treeView(new QTreeView(this)),
           m_proxy(proxy),
           m_fileModel(model),
+          m_iconProvider(new IconProvider(m_fileModel)),
           m_root_path(rootPath){
     m_proxy->setParent(this);
     m_fileModel->setParent(this);
@@ -28,7 +29,7 @@ FileTreePanel::FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilt
 
 void FileTreePanel::setupModel() const {
     m_fileModel->setRootPath(m_root_path);
-    m_fileModel->setIconProvider(new IconProvider());
+    m_fileModel->setIconProvider(m_iconProvider);
     m_proxy->setSourceModel(m_fileModel);
     m_treeView->setModel(m_proxy);
     m_treeView->setRootIndex(
