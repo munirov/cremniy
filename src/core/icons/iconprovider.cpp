@@ -49,28 +49,17 @@ QIcon IconProvider::icon(const QFileInfo &info) const {
         else iconName = "file";
     }
 
-    // 1. Пытаемся достать из темы (как положено)
-    qDebug() << "[IconProvider] Filename:" << info.fileName() << "| Expected Icon:" << iconName;
-
     // 1. Пробуем тему
     QIcon ic = QIcon::fromTheme(iconName);
-    
+
     if (ic.isNull()) {
-        qDebug() << "[IconProvider] fromTheme FAILED for" << iconName;
-        
-        // 2. Пробуем прямой путь (этот дебаг самый важный)
         QString directPath = QString(":/icons/phoicons/icons/%1.svg").arg(iconName);
         if (QFile::exists(directPath)) {
-            qDebug() << "[IconProvider] Found direct file at" << directPath << ". Attempting to load...";
             ic = QIcon(directPath);
             if (ic.isNull()) {
                 qWarning() << "[IconProvider] CRITICAL: File exists but QIcon failed to load it! (SVG plugin issue?)";
             }
-        } else {
-            qDebug() << "[IconProvider] Resource file NOT FOUND at" << directPath;
         }
-    } else {
-        qDebug() << "[IconProvider] fromTheme SUCCESS for" << iconName;
     }
 
     if (!ic.isNull()) {
