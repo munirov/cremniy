@@ -3,49 +3,56 @@
 
 #include "core/modules/WindowBase.h"
 #include <QComboBox>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QTextEdit>
+#include <QTabWidget>
+
+class CustomCodeEditor;
+class FileDataBuffer;
+class QTimer;
 
 class ShellcodeGeneratorDialog : public WindowBase {
     Q_OBJECT
-  public:
+public:
     explicit ShellcodeGeneratorDialog(QWidget *parent = nullptr);
 
-  private slots:
+private slots:
     void onAssemble();
-    void onCopyOutput();
+    void onCopyActiveTab();
     void onClear();
 
-  private:
-    struct DisasmEntry {
-        int offset;
-        int size;
-        QString mnemonic;
-        DisasmEntry(int o, int s, const QString &m) : offset(o), size(s), mnemonic(m) {}
-    };
-
-    QList<DisasmEntry> disassemble(const QByteArray &raw, const QString &bits) const;
-
-    static QString formatAnnotated(const QByteArray &raw, const QList<DisasmEntry> &entries);
-
-    QString generateC(const QByteArray &raw, const QString &bits) const;
-    QString generateCpp(const QByteArray &raw, const QString &bits) const;
-    QString generateRaw(const QByteArray &raw) const;
-
+private:
+    void setupUi();
+    void setupToolbar(QWidget *parent);
+    void setupEditors(QWidget *parent);
+    int currentBits() const;
     void setStatus(const QString &msg, bool error = false);
 
-    static QString findTool(const QString &name);
-    bool checkDependencies();
-
-    QTextEdit *m_asmInput = nullptr;
-    QTextEdit *m_shellcodeOutput = nullptr;
-    QComboBox *m_shellcodeStyle = nullptr;
+    QHBoxLayout *m_toolbarLayout = nullptr;
     QComboBox *m_archCombo = nullptr;
-    QPushButton *m_copyBtn = nullptr;
-    QPushButton *m_clearBtn = nullptr;
+    QComboBox *m_shellcodeStyle = nullptr;
     QLabel *m_statusLabel = nullptr;
     QLabel *m_byteCountLabel = nullptr;
+    QPushButton *m_copyBtn = nullptr;
+    QPushButton *m_clearBtn = nullptr;
+    QTabWidget *m_tabWidget = nullptr;
+
+    // Assembly input
+    FileDataBuffer *m_asmBuffer = nullptr;
+    CustomCodeEditor *m_asmEditor = nullptr;
+
+    // Shellcode output
+    FileDataBuffer *m_outputBuffer = nullptr;
+    CustomCodeEditor *m_outputEditor = nullptr;
+
+    // Disassembly output
+    FileDataBuffer *m_disasmBuffer = nullptr;
+    CustomCodeEditor *m_disasmEditor = nullptr;
+
+    QTimer *m_debounceTimer = nullptr;
+
+    QByteArray m_lastRawBinary;
 };
 
 #endif // SHELLCODEGENERATORDIALOG_H
