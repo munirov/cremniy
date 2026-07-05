@@ -16,7 +16,6 @@
 #include <QShortcut>
 #include <QSplitter>
 #include <QTimer>
-#include <QToolButton>
 #include <QVBoxLayout>
 
 static QString displayName() {
@@ -131,30 +130,24 @@ void ShellcodeGeneratorDialog::setupToolbar(QWidget *parent) {
 
     m_toolbarLayout->addSpacing(12);
 
-    // Toggle buttons for panel visibility
-    m_toggleAsmBtn = new QToolButton(parent);
-    m_toggleAsmBtn->setText(tr("ASM"));
-    m_toggleAsmBtn->setCheckable(true);
-    m_toggleAsmBtn->setChecked(true);
-    m_toggleAsmBtn->setToolTip(tr("Toggle Assembly panel"));
-    m_toolbarLayout->addWidget(m_toggleAsmBtn);
-    connect(m_toggleAsmBtn, &QToolButton::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
+    // Toggle checkboxes for panel visibility
+    m_toggleAsm = new QCheckBox(tr("ASM"), parent);
+    m_toggleAsm->setChecked(true);
+    m_toggleAsm->setToolTip(tr("Toggle Assembly panel"));
+    m_toolbarLayout->addWidget(m_toggleAsm);
+    connect(m_toggleAsm, &QCheckBox::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
 
-    m_toggleShellBtn = new QToolButton(parent);
-    m_toggleShellBtn->setText(tr("Shell"));
-    m_toggleShellBtn->setCheckable(true);
-    m_toggleShellBtn->setChecked(true);
-    m_toggleShellBtn->setToolTip(tr("Toggle Shellcode panel"));
-    m_toolbarLayout->addWidget(m_toggleShellBtn);
-    connect(m_toggleShellBtn, &QToolButton::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
+    m_toggleShell = new QCheckBox(tr("Shell"), parent);
+    m_toggleShell->setChecked(true);
+    m_toggleShell->setToolTip(tr("Toggle Shellcode panel"));
+    m_toolbarLayout->addWidget(m_toggleShell);
+    connect(m_toggleShell, &QCheckBox::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
 
-    m_toggleDisasmBtn = new QToolButton(parent);
-    m_toggleDisasmBtn->setText(tr("Disasm"));
-    m_toggleDisasmBtn->setCheckable(true);
-    m_toggleDisasmBtn->setChecked(true);
-    m_toggleDisasmBtn->setToolTip(tr("Toggle Disassembly panel"));
-    m_toolbarLayout->addWidget(m_toggleDisasmBtn);
-    connect(m_toggleDisasmBtn, &QToolButton::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
+    m_toggleDisasm = new QCheckBox(tr("Disasm"), parent);
+    m_toggleDisasm->setChecked(true);
+    m_toggleDisasm->setToolTip(tr("Toggle Disassembly panel"));
+    m_toolbarLayout->addWidget(m_toggleDisasm);
+    connect(m_toggleDisasm, &QCheckBox::toggled, this, &ShellcodeGeneratorDialog::togglePanel);
 
     m_toolbarLayout->addStretch(1);
 
@@ -209,9 +202,9 @@ int ShellcodeGeneratorDialog::currentBits() const {
 }
 
 void ShellcodeGeneratorDialog::togglePanel(int) {
-    m_asmContainer->setVisible(m_toggleAsmBtn->isChecked());
-    m_shellContainer->setVisible(m_toggleShellBtn->isChecked());
-    m_disasmContainer->setVisible(m_toggleDisasmBtn->isChecked());
+    m_asmContainer->setVisible(m_toggleAsm->isChecked());
+    m_shellContainer->setVisible(m_toggleShell->isChecked());
+    m_disasmContainer->setVisible(m_toggleDisasm->isChecked());
 }
 
 void ShellcodeGeneratorDialog::onAssemble() {

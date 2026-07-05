@@ -2,6 +2,7 @@
 #define SHELLCODEGENERATORDIALOG_H
 
 #include "core/modules/WindowBase.h"
+#include <QCheckBox>
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -11,7 +12,6 @@
 class CustomCodeEditor;
 class FileDataBuffer;
 class QTimer;
-class QToolButton;
 
 class ShellcodeGeneratorDialog : public WindowBase {
     Q_OBJECT
@@ -40,9 +40,9 @@ private:
     QPushButton *m_clearBtn = nullptr;
 
     QSplitter *m_splitter = nullptr;
-    QToolButton *m_toggleAsmBtn = nullptr;
-    QToolButton *m_toggleShellBtn = nullptr;
-    QToolButton *m_toggleDisasmBtn = nullptr;
+    QCheckBox *m_toggleAsm = nullptr;
+    QCheckBox *m_toggleShell = nullptr;
+    QCheckBox *m_toggleDisasm = nullptr;
 
     QWidget *m_asmContainer = nullptr;
     QWidget *m_shellContainer = nullptr;

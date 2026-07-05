@@ -168,9 +168,9 @@ void KeyboardScancodesRef::initWidgets()
     infoGrid->setVerticalSpacing(6);
 
     auto mkLabel = [this]() {
-        auto *v = new QLabel(QStringLiteral("\xe2\x80\x94"));  // —
+        auto *v = new QLabel(QStringLiteral("None"));
         v->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        v->setStyleSheet(QStringLiteral("font-family: monospace; font-size: 12px;"));
+        v->setStyleSheet(QStringLiteral("font-family: monospace; font-size: 12px; color: #71717a;"));
         return v;
     };
 
@@ -287,8 +287,8 @@ void KeyboardScancodesRef::onKeyPress(QKeyEvent *event)
     m_qtKeyValue->setText(QString::number(event->key()));
     m_scanValue->setText(QStringLiteral("0x") + QString::number(event->nativeScanCode(), 16).toUpper());
     m_vkValue->setText(QStringLiteral("0x") + QString::number(event->nativeVirtualKey(), 16).toUpper());
-    m_textValue->setText(event->text().isEmpty() ? QStringLiteral("—") : event->text());
-    m_modsValue->setText(modStr.isEmpty() ? QStringLiteral("—") : modStr);
+    m_textValue->setText(event->text().isEmpty() ? QStringLiteral("None") : event->text());
+    m_modsValue->setText(modStr.isEmpty() ? QStringLiteral("None") : modStr);
 }
 
 void KeyboardScancodesRef::onKeyRelease(QKeyEvent *event)
