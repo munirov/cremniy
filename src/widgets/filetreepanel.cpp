@@ -17,7 +17,7 @@ FileTreePanel::FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilt
           m_treeView(new QTreeView(this)),
           m_proxy(proxy),
           m_fileModel(model),
-          m_iconProvider(new IconProvider(m_fileModel)),
+          m_iconProvider(new IconProvider()),
           m_root_path(rootPath){
     m_proxy->setParent(this);
     m_fileModel->setParent(this);
@@ -25,6 +25,10 @@ FileTreePanel::FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilt
     setupUi();
     setupContextMenu();
     setupConnections();
+}
+
+FileTreePanel::~FileTreePanel() {
+    delete m_iconProvider;
 }
 
 void FileTreePanel::setupModel() const {
@@ -115,7 +119,7 @@ void FileTreePanel::remove() const {
     const QString body = tr("Are you sure you want to delete the file \"%1\"?").arg(m_fileModel->fileName(getSourceIndex()));
 
     QMessageBox confirmRemove(QMessageBox::Question, tr("Delete"), body, QMessageBox::NoButton);
-    [[maybe_unused]] const auto yes = confirmRemove.addButton(tr("Yes"), QMessageBox::YesRole);
+    const auto yes = confirmRemove.addButton(tr("Yes"), QMessageBox::YesRole);
     const auto no = confirmRemove.addButton(tr("No"), QMessageBox::NoRole);
     confirmRemove.exec();
 

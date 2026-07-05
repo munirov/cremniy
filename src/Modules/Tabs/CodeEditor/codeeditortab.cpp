@@ -112,7 +112,7 @@ CodeEditorTab::CodeEditorTab(QWidget* parent)
     connect(m_replaceButton, &QPushButton::clicked, this, &CodeEditorTab::replaceCurrent);
     connect(m_replaceAllButton, &QPushButton::clicked, this, &CodeEditorTab::replaceAll);
     connect(m_searchCloseButton, &QPushButton::clicked, this, &CodeEditorTab::closeSearchBar);
-    connect(m_matchCaseCheckBox, &QCheckBox::stateChanged, this, [this](int) {
+    connect(m_matchCaseCheckBox, &QCheckBox::checkStateChanged, this, [this](Qt::CheckState) {
         updateSearchUi();
     });
 

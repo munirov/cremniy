@@ -48,7 +48,7 @@ QByteArray Radare2Backend::runR2JsonCommand(const QString &r2Path,
                                            const QString &filePath,
                                            const QString &cmd,
                                            QString *error,
-                                           bool *cancelled)
+                                                       std::atomic<bool> *cancelled)
 {
     if (cancelled && *cancelled) {
         if (error) *error = QObject::tr("Cancelled");
@@ -104,7 +104,7 @@ QByteArray Radare2Backend::runR2JsonCommand(const QString &r2Path,
 Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
                                                        const QString &filePath,
                                                        const Options &opt,
-                                                       bool *cancelled)
+                                           std::atomic<bool> *cancelled)
 {
     Result res;
 

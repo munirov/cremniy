@@ -22,17 +22,16 @@ FilesTabWidget::FilesTabWidget(QWidget *parent) {
     connect(tabBar(), &QTabBar::tabMoved, this, &FilesTabWidget::onTabMoved);
     tabBar()->installEventFilter(this);
     QCoreApplication::instance()->installEventFilter(this);
-}
-
-FilesTabWidget::~FilesTabWidget() {
-    QCoreApplication::instance()->removeEventFilter(this);
-}
 
     connect(this, &FilesTabWidget::openTabModule,
             this, [this](ModuleDescription<TabBase> desc){
                 if (auto* tab = qobject_cast<FileTab*>(currentWidget()))
                     emit tab->openTabModule(desc);
             });
+}
+
+FilesTabWidget::~FilesTabWidget() {
+    QCoreApplication::instance()->removeEventFilter(this);
 }
 
 void FilesTabWidget::tabSelect(int index) {
@@ -203,7 +202,7 @@ void FilesTabWidget::closeTab(int index) {
     if (tab && tab->isFileUnsaved()) {
         QMessageBox question_save_file(QMessageBox::Question, tr("Save File"), tr("Do you want to save this file?"),QMessageBox::NoButton, this);
         const auto yes = question_save_file.addButton(tr("Yes") ,QMessageBox::YesRole);
-        [[maybe_unused]] const auto no = question_save_file.addButton(tr("No"), QMessageBox::NoRole);
+        const auto no = question_save_file.addButton(tr("No"), QMessageBox::NoRole);
         const auto cancel = question_save_file.addButton(tr("Cancel"), QMessageBox::RejectRole);
 
         question_save_file.exec();

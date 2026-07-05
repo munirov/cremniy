@@ -14,6 +14,7 @@ class FileTreePanel : public QWidget {
 
 public:
     explicit FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilterProxyModel* proxy, const QString& rootPath);
+    ~FileTreePanel() override;
 
 signals:
     void openFileRequested(const QString& filePath, const QString& fileName);

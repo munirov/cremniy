@@ -18,11 +18,7 @@ using ::tolower;
 #include <cctype>
 #endif
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #define QHEXVIEW_VARIANT_EQ(x, t) ((x).metaType().id() == QMetaType::Q##t)
-#else
-#define QHEXVIEW_VARIANT_EQ(x, t) ((x).type() == QVariant::t)
-#endif
 
 namespace QHexUtils {
 
@@ -250,15 +246,9 @@ QByteArray variantToByteArray(QVariant value, QHexFindMode mode,
 
                 bool ok = true;
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
                 for(auto i = 0; ok && i < s.size(); i += 2)
                     v.push_back(static_cast<char>(
                         QStringView{s}.mid(i, 2).toUInt(&ok, 16)));
-#else
-                for(auto i = 0; ok && i < s.size(); i += 2)
-                    v.push_back(
-                        static_cast<char>(s.midRef(i, 2).toUInt(&ok, 16)));
-#endif
 
                 if(!ok)
                     return {};

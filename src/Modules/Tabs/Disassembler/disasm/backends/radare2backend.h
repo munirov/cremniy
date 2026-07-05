@@ -24,10 +24,10 @@ public:
     };
 
     // r2Path: path to r2 executable (may be "r2" or absolute)
-    static Result disassembleFile(const QString &r2Path, const QString &filePath, const Options &opt, bool *cancelled = nullptr);
+    static Result disassembleFile(const QString &r2Path, const QString &filePath, const Options &opt, std::atomic<bool> *cancelled = nullptr);
 
 private:
-    static QByteArray runR2JsonCommand(const QString &r2Path, const QString &filePath, const QString &cmd, QString *error, bool *cancelled);
+    static QByteArray runR2JsonCommand(const QString &r2Path, const QString &filePath, const QString &cmd, QString *error, std::atomic<bool> *cancelled);
 };
 
 #endif // RADARE2BACKEND_H
