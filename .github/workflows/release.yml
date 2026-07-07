@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@v0.0.10
 
       - name: Install Qt (Windows)
         if: runner.os == 'Windows'
