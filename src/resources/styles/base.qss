@@ -41,7 +41,7 @@ QLineEdit, QTextEdit, QPlainTextEdit {
 
 #filesTabWidget QTabBar::tab {
     padding: 5px;
-    height: 10px;
+    height: 16px;
     min-width: 200px;
 }
 
