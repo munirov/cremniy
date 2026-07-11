@@ -18,7 +18,7 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
 
     // - - Menu Bar - -
     auto const menu = menuBar();
-    MenuBarBuilder const *menuBarBuilder = new MenuBarBuilder(menu, this);
+    MenuBarBuilder menuBarBuilder(menu, this);
     menu->setNativeMenuBar(false);
 
     // - - Widgets - -

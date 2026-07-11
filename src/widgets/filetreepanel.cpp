@@ -111,7 +111,10 @@ void FileTreePanel::open() {
 }
 
 void FileTreePanel::remove() const {
-    const QString body = tr("Are you sure you want to delete the file \"%1\"?").arg(m_fileModel->fileName(getSourceIndex()));
+    const QModelIndex srcIdx = getSourceIndex();
+    if (!srcIdx.isValid()) return;
+
+    const QString body = tr("Are you sure you want to delete the file \"%1\"?").arg(m_fileModel->fileName(srcIdx));
 
     QMessageBox confirmRemove(QMessageBox::Question, tr("Delete"), body, QMessageBox::NoButton);
     [[maybe_unused]] const auto yes = confirmRemove.addButton(tr("Yes"), QMessageBox::YesRole);
@@ -121,7 +124,7 @@ void FileTreePanel::remove() const {
     const auto reply = confirmRemove.clickedButton();
     if (reply == no) return;
 
-    m_fileModel->remove(getSourceIndex());
+    m_fileModel->remove(srcIdx);
 }
 
 QModelIndex FileTreePanel::getSourceIndex() const{

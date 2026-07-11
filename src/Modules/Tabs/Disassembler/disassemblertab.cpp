@@ -1034,7 +1034,7 @@ void DisassemblerTab::setFunctionsList(const QVector<DisasmFunction> &funcs)
 
     for (const auto &f : sorted) {
         auto *it = new QListWidgetItem(QString("%1  %2").arg(f.address, f.name), m_funcList);
-        it->setData(Qt::UserRole, f.address); 
+        it->setData(Qt::UserRole, f.address);
     }
 }
 

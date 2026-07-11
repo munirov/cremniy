@@ -22,7 +22,7 @@ public:
     static ModuleManager& instance();
 
     template<typename T>
-    void registerModule(std::function<QString()> name, const QString &group, std::function<T*()> creator, int position = 0) const {
+    void registerModule(std::function<QString()> name, const QString &group, std::function<T*()> creator, int position = 0) {
         ModuleDescription<T> desc{
             std::move(creator),
             std::move(name),
