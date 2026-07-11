@@ -163,6 +163,13 @@ bool FilesTabWidget::eventFilter(QObject *obj, QEvent *event) {
         break;
     }
 
+    case QEvent::MouseMove: {
+        if (obj == tabBar() && count() <= 1) {
+            return true;
+        }
+        break;
+    }
+
     case QEvent::ContextMenu: {
         if (obj == tabBar()) {
             auto *ce = static_cast<QContextMenuEvent *>(event);
