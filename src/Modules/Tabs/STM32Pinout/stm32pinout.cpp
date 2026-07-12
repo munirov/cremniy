@@ -3,7 +3,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTreeWidgetItem>
-#include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
 
@@ -238,6 +237,13 @@ static bool registered = []() {
 STM32PinoutTab::STM32PinoutTab(QWidget* parent)
     : TabBase{parent}
 {
+    // TabBase::m_dataBuffer объявлен без "= nullptr", поэтому в свежесозданном
+    // объекте там мусор из кучи, а не гарантированный nullptr. Если IDE вызовет
+    // setFile()/setTabData() до setFileDataBuffer(), проверка "if (m_dataBuffer)"
+    // без явного зануления здесь может пройти по мусорному указателю -> segfault
+    // внутри FileDataBuffer::data() (см. QMutexLocker на невалидном m_mutex).
+    m_dataBuffer = nullptr;
+
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
@@ -310,12 +316,6 @@ STM32PinoutTab::STM32PinoutTab(QWidget* parent)
 
     editLayout->addStretch();
 
-    m_saveBtn = new QPushButton("Save .ioc");
-    m_saveBtn->setEnabled(false);
-    m_saveBtn->setStyleSheet("background-color: #2d6a2d; color: white; "
-                              "font-weight: bold; padding: 6px;");
-    editLayout->addWidget(m_saveBtn);
-
     m_splitter->addWidget(m_editGroup);
     m_splitter->setStretchFactor(0, 3);
     m_splitter->setStretchFactor(1, 1);
@@ -326,7 +326,6 @@ STM32PinoutTab::STM32PinoutTab(QWidget* parent)
     connect(m_pinoutTree, &QTreeWidget::itemClicked, this, &STM32PinoutTab::onPinClickedInTree);
     connect(m_chipView, &ChipView::pinClicked, this, &STM32PinoutTab::onPinClickedInChip);
     connect(m_applyBtn, &QPushButton::clicked, this, &STM32PinoutTab::onApplyClicked);
-    connect(m_saveBtn, &QPushButton::clicked, this, &STM32PinoutTab::onSaveClicked);
 }
 
 
@@ -338,40 +337,63 @@ void ChipView::setModifiedPins(const QSet<QString>& pins)
 }
 void STM32PinoutTab::setFile(QString filepath)
 {
+    delete m_fileContext;
     m_fileContext = new FileContext(filepath);
-    if (filepath.endsWith(".ioc", Qt::CaseInsensitive))
-        parseIocFile(filepath);
-    else
+
+    if (!filepath.endsWith(".ioc", Qt::CaseInsensitive)) {
         m_microcontrollerInfo->setText("Not a .ioc file.");
+        return;
+    }
+
+    if (m_dataBuffer)
+        setTabData();
 }
 
 void STM32PinoutTab::setTabData()
 {
-    if (!m_fileContext || m_fileContext->filePath().isEmpty()) {
-        m_microcontrollerInfo->setText("No file loaded"); return;
+    if (!m_dataBuffer) {
+        m_microcontrollerInfo->setText("No file loaded");
+        return;
     }
-    parseIocFile(m_fileContext->filePath());
+    parseIocData(m_dataBuffer->data());
 }
 
-void STM32PinoutTab::saveTabData() {}
+void STM32PinoutTab::saveTabData()
+{
+    if (!m_dataBuffer) return;
+
+    if (!m_dataBuffer->saveToFile()) {
+        QMessageBox::critical(this, "Save Error",
+            QString("Cannot write to file:\n%1").arg(m_dataBuffer->filePath()));
+        return;
+    }
+
+    m_modifiedPins.clear();
+    setModifyIndicator(false);
+    emit dataEqual();
+    emit refreshDataAllTabsSignal();
+    rebuildViews();
+}
 
 void STM32PinoutTab::onDataChanged()
 {
-    if (m_fileContext && !m_fileContext->filePath().isEmpty())
-        parseIocFile(m_fileContext->filePath());
+    if (!m_dataBuffer) return;
+
+    setTabData();
+
+    const bool modified = m_dataBuffer->isModified();
+    setModifyIndicator(modified);
+    if (modified)
+        emit modifyData();
+    else
+        emit dataEqual();
 }
 
-void STM32PinoutTab::parseIocFile(const QString& filepath)
+void STM32PinoutTab::parseIocData(const QByteArray& raw)
 {
-    QFile file(filepath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        m_microcontrollerInfo->setText("Error: Cannot open .ioc file"); return;
-    }
-
-    m_currentFile = filepath;
     m_pinData.clear();
 
-    QTextStream in(&file);
+    QTextStream in(raw);
     static QRegularExpression pinRx("^P[A-K]\\d+(-.*)?$");
 
     while (!in.atEnd()) {
@@ -402,12 +424,10 @@ void STM32PinoutTab::parseIocFile(const QString& filepath)
         if (pinRx.match(pinName).hasMatch())
             m_pinData[pinName][param] = value;
     }
-    file.close();
 
     m_microcontrollerInfo->setText(
         QString("MCU: %1 | Package: %2").arg(m_mcuName, m_mcuPackage));
 
-    m_saveBtn->setEnabled(true);
     rebuildViews();
 }
 void STM32PinoutTab::rebuildViews()
@@ -495,7 +515,7 @@ void STM32PinoutTab::onPinClickedInChip(const QString& pinName)
 
 void STM32PinoutTab::onApplyClicked()
 {
-    if (m_selectedPin.isEmpty()) return;
+    if (m_selectedPin.isEmpty() || !m_dataBuffer) return;
 
     QString signal = m_editSignal->currentText().trimmed();
     QString label = m_editLabel->text().trimmed();
@@ -508,39 +528,18 @@ void STM32PinoutTab::onApplyClicked()
     else
         m_modifiedPins.remove(m_selectedPin);
 
-    rebuildViews();
+    m_dataBuffer->replaceData(buildIocBytes());
 }
 
-// сохранить в файл
-
-void STM32PinoutTab::onSaveClicked()
+// значения из m_pinData
+QByteArray STM32PinoutTab::buildIocBytes() const
 {
-    if (m_currentFile.isEmpty()) {
-        QMessageBox::warning(this, "Save Error", "No file is currently open.");
-        return;
-    };
-    QFile testFile(m_currentFile);
-    if(!testFile.open(QIODevice::WriteOnly | QIODevice::Text)){
-        QMessageBox::critical(this, "Save Error", QString("Cannot open file for writing: \n%1\n\n%2")
-        .arg(m_currentFile)
-        .arg(testFile.errorString()));
-        return;
-    }
-    testFile.close();
-
-    QFile readFile(m_currentFile);
-    if(!readFile.open(QIODevice::ReadOnly | QIODevice::Text)){
-        QMessageBox::critical(this, "Save Error",
-            QString("Cannot read file:\n%1").arg(readFile.errorString()));
-        return;
-    }
-
     QStringList lines;
-    QTextStream in(&readFile);
-    while(!in.atEnd()){
-        lines << in.readLine();
+    {
+        QTextStream in(m_dataBuffer ? m_dataBuffer->data() : QByteArray());
+        while (!in.atEnd())
+            lines << in.readLine();
     }
-    readFile.close();
 
     QMap<QString, QString> toWrite;
     for (auto pit = m_pinData.begin(); pit != m_pinData.end(); pit++){
@@ -577,33 +576,17 @@ void STM32PinoutTab::onSaveClicked()
         }
     }
 
-
     for (auto it = toWrite.begin(); it != toWrite.end(); it++){
         if (!writtenKeys.contains(it.key()) && !it.value().isEmpty()){
             lines << it.key() + "=" + it.value();
         }
     }
     lines.removeAll(QString());
-    QFile writeFile(m_currentFile);
-    if (!writeFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, "Save Error",
-            QString("Cannot write to file:\n%1").arg(writeFile.errorString()));
-        return;
-    }
 
-    QTextStream out(&writeFile);
-    for (const QString& line : lines) {
-        out << line << "\n";
-    }
-    writeFile.close();
-
-
-    m_modifiedPins.clear();
-    rebuildViews();
-
-    QMessageBox::information(this, "Success", QString("Pinout saved to: \n%1").arg(m_currentFile));
-
-
+    QByteArray out;
+    for (const QString& line : lines)
+        out += line.toUtf8() + '\n';
+    return out;
 }
 
 QStringList STM32PinoutTab::getAllPinsForPackage(const QString& mcuName, const QString& package)

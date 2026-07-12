@@ -82,7 +82,6 @@ private slots:
     void onPinClickedInTree(QTreeWidgetItem* item, int column);
     void onPinClickedInChip(const QString& pinName);
     void onApplyClicked();
-    void onSaveClicked();
 private:
     // layout
 
@@ -98,15 +97,16 @@ private:
     QComboBox* m_editSignal = nullptr;
     QLineEdit* m_editLabel = nullptr;
     QPushButton* m_applyBtn = nullptr;
-    QPushButton* m_saveBtn = nullptr;
     // Data
-    QString m_currentFile;
     QMap<QString, QMap<QString, QString>> m_pinData;
     QString m_mcuName;
     QString m_mcuPackage;
     QString m_selectedPin;
     static QStringList getAllPinsForPackage(const QString& mcuName, const QString& package);
-    void parseIocFile(const QString& filepath);
+    
+    void parseIocData(const QByteArray& raw);
+    
+    QByteArray buildIocBytes() const;
     void rebuildViews();
     void selectPin(const QString& pinName);
 };
