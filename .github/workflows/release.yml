@@ -32,6 +32,10 @@ jobs:
           version: '6.8.2'
           arch: 'win64_msvc2022_64'
           cache: true
+
+      - name: Set up MSVC Developer Command Prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
       
       - name: Install Qt (Linux/macOS)
         if: runner.os != 'Windows'
@@ -64,13 +68,14 @@ jobs:
         shell: pwsh
         env:
           SCCACHE_GHA_ENABLED: "true"
-        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-      
+        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+
       - name: Configure CMake (Linux/macOS)
         if: runner.os != 'Windows'
         env:
           SCCACHE_GHA_ENABLED: "true"
-        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        # Явно задаем Unix Makefiles, чтобы на macOS не включился Xcode
+        run: cmake -B build -S src -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
       - name: Build
         run: cmake --build build --config Release --parallel
@@ -98,10 +103,11 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path package -Force
-          if (!(Test-Path "build/Release/cremniy.exe")) {
-            throw "build/Release/cremniy.exe was not produced"
+          # Убираем /Release/ из пути, так как Ninja кладет бинарник прямо в build
+          if (!(Test-Path "build/cremniy.exe")) {
+            throw "build/cremniy.exe was not produced"
           }
-          Copy-Item build/Release/cremniy.exe package/
+          Copy-Item build/cremniy.exe package/
           
           New-Item -ItemType Directory -Path "package/Resources/translations" -Force
           Copy-Item build/*.qm "package/Resources/translations/"
