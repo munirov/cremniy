@@ -49,6 +49,10 @@ public slots:
     void openTabModule(ModuleDescription<TabBase> desc);
 
 signals:
+    void openFileAtLineRequested(const QString& filePath, int lineNumber, const QString& highlightText);
+    void findRequested();
+    void replaceRequested();
+    void projectFindRequested();
     void removeStarSignal();
     void setupStarSignal();
     void saveFileSignal();

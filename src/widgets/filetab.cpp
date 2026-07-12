@@ -27,6 +27,11 @@ FileTab::FileTab(QWidget* parent, QString path)
 
     connect(this, &FileTab::openTabModule, m_tooltabWidget, &ToolsTabWidget::openTabModule);
 
+    connect(m_tooltabWidget, &ToolsTabWidget::openFileAtLineRequested, this, &FileTab::openFileAtLineRequested);
+    connect(m_tooltabWidget, &ToolsTabWidget::findRequested, this, &FileTab::findRequested);
+    connect(m_tooltabWidget, &ToolsTabWidget::replaceRequested, this, &FileTab::replaceRequested);
+    connect(m_tooltabWidget, &ToolsTabWidget::projectFindRequested, this, &FileTab::projectFindRequested);
+
 }
 
 void FileTab::setPinned(bool pinned){

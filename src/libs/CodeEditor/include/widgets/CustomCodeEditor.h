@@ -65,12 +65,12 @@ public:
     bool hasSelection() const;
     QString selectedText() const;
     QString syntaxKey() const;
-    bool findText(const QString& text, bool forward = true, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive);
+    bool findText(const QString& text, bool forward = true, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive, bool wholeWord = false);
     bool goToLine(qint64 oneBasedLineNumber);
-    int countMatches(const QString& text, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive) const;
-    int currentMatchIndex(const QString& text, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive) const;
-    bool replaceCurrentSelection(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive);
-    int replaceAllMatches(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive);
+    int countMatches(const QString& text, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive, bool wholeWord = false) const;
+    int currentMatchIndex(const QString& text, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive, bool wholeWord = false) const;
+    bool replaceCurrentSelection(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive, bool wholeWord = false);
+    int replaceAllMatches(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive, bool wholeWord = false);
     
     // Zoom support
     void setScaleFactor(double factor);

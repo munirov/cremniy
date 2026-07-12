@@ -24,6 +24,7 @@ public slots:
     void saveFileSlot();
     void closeTab(int index);
     void onTabMoved(int from, int to);
+    void openFileAtLine(const QString& filePath, int lineNumber, const QString& highlightText);
 
     void setWordWrapSlot(bool checked);
     void setTabReplaceSlot(bool checked);
@@ -41,6 +42,9 @@ signals:
     void setTabWidthSignal(int width);
     void statusBarInfoChanged(const QString& info);
     void openTabModule(ModuleDescription<TabBase> desc);
+    void findRequested();
+    void replaceRequested();
+    void projectFindRequested();
 };
 
 #endif // FILESTABWIDGET_H

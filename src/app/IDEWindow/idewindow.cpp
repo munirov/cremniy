@@ -1,5 +1,7 @@
 #include "idewindow.h"
 #include "dialogs/filecreatedialog.h"
+#include "Modules/Tabs/CodeEditor/search/SearchPanelWidget.h"
+#include "Modules/Tabs/CodeEditor/codeeditortab.h"
 #include "QFileSystemModel"
 #include "QMessageBox"
 #include <qheaderview.h>
@@ -35,8 +37,6 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     m_verticalSplitter = new QSplitter(Qt::Vertical, m_mainWidget);
 
     // Terminal is initialized lazily on demand (see on_Toggle_Terminal)
-    // m_terminal = new TerminalWidget(this, ProjectPath);
-    // m_terminal->setVisible(false);
     m_terminal = nullptr;
 
     m_leftSidebar = new QWidget(this);
@@ -57,17 +57,26 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     m_mainSplitter->addWidget(m_filesTabWidget);
     m_mainSplitter->setSizes({200, 1000});
 
-    m_verticalSplitter->addWidget(m_mainSplitter); // Сверху все наше IDE
+    m_verticalSplitter->addWidget(m_mainSplitter);
     m_verticalSplitter->setSizes({800, 200});
 
     m_mainLayout->addWidget(m_verticalSplitter);
     setCentralWidget(m_mainWidget);
 
+    // - - Right Sidebar (Search) - -
+    m_rightSidebar = new QWidget(this);
+    auto* rightLayout = new QVBoxLayout(m_rightSidebar);
+    rightLayout->setContentsMargins(0, 0, 0, 0);
+    m_searchPanel = new SearchPanelWidget(nullptr, m_rightSidebar);
+    rightLayout->addWidget(m_searchPanel);
+    m_mainSplitter->addWidget(m_rightSidebar);
+    m_rightSidebar->hide();
 
     // - - Tunning Widgets/Layouts - -
-    m_mainSplitter->setSizes({200, 1000});
+    m_mainSplitter->setSizes({200, 800, 300});
     m_mainSplitter->setCollapsible(0, false);
     m_mainSplitter->setCollapsible(1, false);
+    m_mainSplitter->setCollapsible(2, true);
 
     m_verticalSplitter->setSizes({800, 200});
 
@@ -101,9 +110,39 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     connect(m_filesTreeView, &FileTreePanel::openFileRequested, this, [this](const QString& filePath, const QString& fileName) {
             m_filesTabWidget->openFile(filePath, fileName);
     });
+
+    // Search dock connections
+    connect(m_filesTabWidget, &FilesTabWidget::findRequested, this, &IDEWindow::on_FindInFile);
+    connect(m_filesTabWidget, &FilesTabWidget::projectFindRequested, this, &IDEWindow::on_FindInProject);
+
+    connect(m_searchPanel, &SearchPanelWidget::openFileAtLine,
+            m_filesTabWidget, &FilesTabWidget::openFileAtLine);
+
+    // Update search panel's editor reference when tab changes
+    connect(m_filesTabWidget, &QTabWidget::currentChanged, this, [this](int) {
+        updateSearchEditor();
+    });
 }
 
 IDEWindow::~IDEWindow() = default;
+
+void IDEWindow::updateSearchEditor()
+{
+    if (!m_searchPanel)
+        return;
+
+    if (auto* fileTab = qobject_cast<FileTab*>(m_filesTabWidget->currentWidget())) {
+        if (auto* tools = fileTab->toolsTabWidget()) {
+            for (int i = 0; i < tools->count(); ++i) {
+                if (auto* codeTab = qobject_cast<CodeEditorTab*>(tools->widget(i))) {
+                    m_searchPanel->setEditor(codeTab->editor());
+                    return;
+                }
+            }
+        }
+    }
+    m_searchPanel->setEditor(nullptr);
+}
 
 void IDEWindow::on_Toggle_Terminal(bool checked) {
     if (checked && !m_terminal) {
@@ -122,6 +161,38 @@ void IDEWindow::on_Toggle_Terminal(bool checked) {
     if (checked) {
         m_terminal->setFocus();
     }
+}
+
+void IDEWindow::on_Toggle_Search(bool checked) {
+    m_rightSidebar->setVisible(checked);
+    if (checked) {
+        updateSearchEditor();
+        m_searchPanel->setFocus();
+    }
+}
+
+void IDEWindow::on_FindInFile() {
+    if (m_rightSidebar->isVisible() && m_searchMode == 0) {
+        m_rightSidebar->hide();
+        m_searchMode = -1;
+        return;
+    }
+    m_rightSidebar->show();
+    updateSearchEditor();
+    m_searchPanel->showInFileMode();
+    m_searchMode = 0;
+}
+
+void IDEWindow::on_FindInProject() {
+    if (m_rightSidebar->isVisible() && m_searchMode == 1) {
+        m_rightSidebar->hide();
+        m_searchMode = -1;
+        return;
+    }
+    m_rightSidebar->show();
+    updateSearchEditor();
+    m_searchPanel->showProjectMode();
+    m_searchMode = 1;
 }
 
 void IDEWindow::on_SetWordWrap(bool checked) {

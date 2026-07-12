@@ -738,7 +738,7 @@ QString CustomCodeEditor::lineCommentPrefix() const
     return EditorLanguageSupport::lineCommentPrefix(syntaxKey());
 }
 
-bool CustomCodeEditor::findText(const QString& text, bool forward, Qt::CaseSensitivity caseSensitivity)
+bool CustomCodeEditor::findText(const QString& text, bool forward, Qt::CaseSensitivity caseSensitivity, bool wholeWord)
 {
     if (!m_buffer || text.isEmpty() || m_lineIndex->lineCount() == 0)
         return false;
@@ -746,24 +746,42 @@ bool CustomCodeEditor::findText(const QString& text, bool forward, Qt::CaseSensi
     const qint64 startPos = hasSelection() ? (forward ? m_selectionStart + m_selectionLength : m_selectionStart) : m_cursorBytePos;
     const qint64 startLine = lineFromBytePos(startPos);
 
+    auto isWordBoundary = [](const QString& line, int pos) -> bool {
+        auto isWordChar = [](QChar c) { return c.isLetterOrNumber() || c == '_' || c == '.'; };
+        bool leftOk = (pos == 0) || !isWordChar(line[pos - 1]);
+        bool rightOk = (pos + 1 >= line.length()) || !isWordChar(line[pos + 1]);
+        return leftOk && rightOk;
+    };
+
     auto searchInLine = [&](qint64 lineNum, int fromColumn) -> bool {
         const QString lineText = displayTextForLine(lineNum);
-        const int index = forward
-            ? lineText.indexOf(text, qMax(0, fromColumn), caseSensitivity)
-            : lineText.lastIndexOf(text, qMin(fromColumn, lineText.length()), caseSensitivity);
+        int searchFrom = forward ? qMax(0, fromColumn) : qMin(fromColumn, lineText.length());
 
-        if (index < 0)
-            return false;
+        while (true) {
+            const int index = forward
+                ? lineText.indexOf(text, searchFrom, caseSensitivity)
+                : lineText.lastIndexOf(text, searchFrom, caseSensitivity);
 
-        m_selectionStart = bytePosForColumn(lineNum, index);
-        m_selectionLength = bytePosForColumn(lineNum, index + text.length()) - m_selectionStart;
-        m_cursorBytePos = forward ? m_selectionStart + m_selectionLength : m_selectionStart;
-        m_selectionAnchor = m_selectionStart;
-        syncSelectionToBuffer();
-        ensureCursorVisible();
-        emit cursorPositionChanged();
-        viewport()->update();
-        return true;
+            if (index < 0)
+                return false;
+
+            if (wholeWord && !isWordBoundary(lineText, index)) {
+                searchFrom = forward ? index + 1 : index - 1;
+                if (searchFrom < 0 || searchFrom > lineText.length())
+                    return false;
+                continue;
+            }
+
+            m_selectionStart = bytePosForColumn(lineNum, index);
+            m_selectionLength = bytePosForColumn(lineNum, index + text.length()) - m_selectionStart;
+            m_cursorBytePos = forward ? m_selectionStart + m_selectionLength : m_selectionStart;
+            m_selectionAnchor = m_selectionStart;
+            syncSelectionToBuffer();
+            ensureCursorVisible();
+            emit cursorPositionChanged();
+            viewport()->update();
+            return true;
+        }
     };
 
     if (forward) {
@@ -807,47 +825,70 @@ bool CustomCodeEditor::goToLine(qint64 oneBasedLineNumber)
     return true;
 }
 
-int CustomCodeEditor::countMatches(const QString& text, Qt::CaseSensitivity caseSensitivity) const
+int CustomCodeEditor::countMatches(const QString& text, Qt::CaseSensitivity caseSensitivity, bool wholeWord) const
 {
     if (!m_buffer || text.isEmpty())
         return 0;
 
+    auto isWordBoundary = [](const QString& line, int pos) -> bool {
+        auto isWordChar = [](QChar c) { return c.isLetterOrNumber() || c == '_' || c == '.'; };
+        bool leftOk = (pos == 0) || !isWordChar(line[pos - 1]);
+        bool rightOk = (pos + 1 >= line.length()) || !isWordChar(line[pos + 1]);
+        return leftOk && rightOk;
+    };
+
     int count = 0;
     for (qint64 lineNum = 0; lineNum < m_lineIndex->lineCount(); ++lineNum) {
         const QString lineText = const_cast<CustomCodeEditor*>(this)->displayTextForLine(lineNum);
-        int index = lineText.indexOf(text, 0, caseSensitivity);
-        while (index >= 0) {
-            ++count;
-            index = lineText.indexOf(text, index + text.length(), caseSensitivity);
+        int searchFrom = 0;
+        while (true) {
+            int index = lineText.indexOf(text, searchFrom, caseSensitivity);
+            if (index < 0)
+                break;
+            if (!wholeWord || isWordBoundary(lineText, index))
+                ++count;
+            searchFrom = index + text.length();
         }
     }
 
     return count;
 }
 
-int CustomCodeEditor::currentMatchIndex(const QString& text, Qt::CaseSensitivity caseSensitivity) const
+int CustomCodeEditor::currentMatchIndex(const QString& text, Qt::CaseSensitivity caseSensitivity, bool wholeWord) const
 {
     if (!m_buffer || text.isEmpty() || !hasSelection())
         return 0;
 
+    auto isWordBoundary = [](const QString& line, int pos) -> bool {
+        auto isWordChar = [](QChar c) { return c.isLetterOrNumber() || c == '_' || c == '.'; };
+        bool leftOk = (pos == 0) || !isWordChar(line[pos - 1]);
+        bool rightOk = (pos + 1 >= line.length()) || !isWordChar(line[pos + 1]);
+        return leftOk && rightOk;
+    };
+
     int currentIndex = 0;
     for (qint64 lineNum = 0; lineNum < m_lineIndex->lineCount(); ++lineNum) {
         const QString lineText = const_cast<CustomCodeEditor*>(this)->displayTextForLine(lineNum);
-        int index = lineText.indexOf(text, 0, caseSensitivity);
-        while (index >= 0) {
-            ++currentIndex;
-            const qint64 matchStart = bytePosForColumn(lineNum, index);
-            const qint64 matchEnd = bytePosForColumn(lineNum, index + text.length());
-            if (matchStart == m_selectionStart && matchEnd - matchStart == m_selectionLength)
-                return currentIndex;
-            index = lineText.indexOf(text, index + text.length(), caseSensitivity);
+        int searchFrom = 0;
+        while (true) {
+            int index = lineText.indexOf(text, searchFrom, caseSensitivity);
+            if (index < 0)
+                break;
+            if (!wholeWord || isWordBoundary(lineText, index)) {
+                ++currentIndex;
+                const qint64 matchStart = bytePosForColumn(lineNum, index);
+                const qint64 matchEnd = bytePosForColumn(lineNum, index + text.length());
+                if (matchStart == m_selectionStart && matchEnd - matchStart == m_selectionLength)
+                    return currentIndex;
+            }
+            searchFrom = index + text.length();
         }
     }
 
     return 0;
 }
 
-bool CustomCodeEditor::replaceCurrentSelection(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity)
+bool CustomCodeEditor::replaceCurrentSelection(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity, bool wholeWord)
 {
     if (!m_buffer || text.isEmpty() || !hasSelection())
         return false;
@@ -860,14 +901,35 @@ bool CustomCodeEditor::replaceCurrentSelection(const QString& text, const QStrin
     if (!matches)
         return false;
 
+    if (wholeWord) {
+        // Find the line and column of the selection to check word boundaries
+        qint64 lineNum = lineFromBytePos(m_selectionStart);
+        QString lineText = displayTextForLine(lineNum);
+        int col = columnForBytePos(lineNum, m_selectionStart);
+        auto isWordBoundary = [](const QString& l, int pos) -> bool {
+            bool leftOk = (pos == 0) || !l[pos - 1].isLetterOrNumber();
+            bool rightOk = (pos + 1 >= l.length()) || !l[pos + 1].isLetterOrNumber();
+            return leftOk && rightOk;
+        };
+        if (!isWordBoundary(lineText, col))
+            return false;
+    }
+
     replaceRange(m_selectionStart, m_selectionLength, replacement.toUtf8());
     return true;
 }
 
-int CustomCodeEditor::replaceAllMatches(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity)
+int CustomCodeEditor::replaceAllMatches(const QString& text, const QString& replacement, Qt::CaseSensitivity caseSensitivity, bool wholeWord)
 {
     if (!m_buffer || text.isEmpty() || m_lineIndex->lineCount() == 0)
         return 0;
+
+    auto isWordBoundary = [](const QString& line, int pos) -> bool {
+        auto isWordChar = [](QChar c) { return c.isLetterOrNumber() || c == '_' || c == '.'; };
+        bool leftOk = (pos == 0) || !isWordChar(line[pos - 1]);
+        bool rightOk = (pos + 1 >= line.length()) || !isWordChar(line[pos + 1]);
+        return leftOk && rightOk;
+    };
 
     struct MatchRange {
         qint64 start = 0;
@@ -884,6 +946,11 @@ int CustomCodeEditor::replaceAllMatches(const QString& text, const QString& repl
             const int index = lineText.indexOf(text, searchFrom, caseSensitivity);
             if (index < 0)
                 break;
+
+            if (wholeWord && !isWordBoundary(lineText, index)) {
+                searchFrom = index + 1;
+                continue;
+            }
 
             const qint64 start = bytePosForColumn(lineNum, index);
             const qint64 end = bytePosForColumn(lineNum, index + text.length());

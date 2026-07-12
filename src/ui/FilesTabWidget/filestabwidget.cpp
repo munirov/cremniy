@@ -1,4 +1,5 @@
 #include "filestabwidget.h"
+#include "core/modules/TabBase.h"
 
 #include <qabstractbutton.h>
 #include <QApplication>
@@ -14,7 +15,7 @@
 #include <QFontMetrics>
 #include <QPixmap>
 #include <qboxlayout.h>
-#include <qfileinfo.h>
+#include <QFileInfo>
 #include <QPushButton>
 
 FilesTabWidget::FilesTabWidget(QWidget *parent) {
@@ -71,6 +72,11 @@ void FilesTabWidget::openFile(QString filePath, QString tabTitle) {
     connect(this, &FilesTabWidget::setWordWrapSignal, filetab, &FileTab::setWordWrapSlot);
     connect(this, &FilesTabWidget::setTabReplaceSignal, filetab, &FileTab::setTabReplaceSlot);
     connect(this, &FilesTabWidget::setTabWidthSignal, filetab, &FileTab::setTabWidthSlot);
+
+    connect(filetab, &FileTab::openFileAtLineRequested, this, &FilesTabWidget::openFileAtLine);
+    connect(filetab, &FileTab::findRequested, this, &FilesTabWidget::findRequested);
+    connect(filetab, &FileTab::replaceRequested, this, &FilesTabWidget::replaceRequested);
+    connect(filetab, &FileTab::projectFindRequested, this, &FilesTabWidget::projectFindRequested);
 
 }
 
@@ -317,4 +323,24 @@ void FilesTabWidget::setTabReplaceSlot(bool checked){
 
 void FilesTabWidget::setTabWidthSlot(int width){
     emit setTabWidthSignal(width);
+}
+
+void FilesTabWidget::openFileAtLine(const QString& filePath, int lineNumber, const QString& highlightText) {
+    QFileInfo fi(filePath);
+    openFile(filePath, fi.fileName());
+
+    for (int i = 0; i < count(); ++i) {
+        FileTab* tab = qobject_cast<FileTab*>(widget(i));
+        if (tab && tab->filePath == filePath) {
+            if (ToolsTabWidget* tools = tab->toolsTabWidget()) {
+                for (int j = 0; j < tools->count(); ++j) {
+                    if (TabBase* codeTab = qobject_cast<TabBase*>(tools->widget(j))) {
+                        codeTab->navigateToLine(lineNumber, highlightText);
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+    }
 }

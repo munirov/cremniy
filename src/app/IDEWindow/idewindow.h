@@ -12,12 +12,16 @@
 #include <QLabel>
 #include "widgets/terminal/terminalwidget.h"
 
+class SearchPanelWidget;
+
 class IDEWindow : public QMainWindow {
     Q_OBJECT
 
 public:
     explicit IDEWindow(const QString &ProjectPath, QWidget *parent = nullptr);
     ~IDEWindow() override;
+
+    QString projectPath() const { return m_projectPath; }
 
 private:
     FileTab* currentFileTab() const;
@@ -28,7 +32,7 @@ private:
     QLabel* m_statusLabel;
     QWidget* m_mainWidget;
     QHBoxLayout* m_mainLayout;
-    QSplitter* m_verticalSplitter;  // splitter (вверх вниз)
+    QSplitter* m_verticalSplitter;
     QSplitter* m_mainSplitter;
 
     // - - General Widgets - -
@@ -38,62 +42,31 @@ private:
     QWidget* m_leftSidebar;
     FileTreePanel* m_filesTreeView;
 
+    // - - Right Sidebar (Search) - -
+    QWidget* m_rightSidebar = nullptr;
+    SearchPanelWidget* m_searchPanel = nullptr;
+    int m_searchMode = -1; // -1=none, 0=in-file, 1=project
+
     // - - Terminal Widget - -
     TerminalWidget *m_terminal;
     QString m_projectPath;
 
+    void updateSearchEditor();
+
 public slots:
-    /**
-     * @brief Создать новый проект (QMenuBar->File->NewProject)
-    */
     void on_NewProject();
-
-    /**
-     * @brief Открыть другой проект (QMenuBar->File->OpenProject)
-    */
     void on_OpenProject();
-
-    /**
-     * @brief Сохранить файл (QMenuBar->File->SaveFile)
-    */
     void on_SaveFile();
-
-    /**
-     * @brief Закрыть проект (QMenuBar->File->CloseProject)
-    */
     void on_ClosingProject();
-
-    /**
-     * @brief Нажатие на Settings (QMenuBar->Edit->Settings)
-     *
-     * Открывает окно Settings
-    */
     void on_openSettings();
-
-    /**
-     * @brief Отображение терминала
-     */
     void on_Toggle_Terminal(bool checked);
-
-    /**
-     * @brief Переключение переноса строк в редакторах кода
-     */
     void on_SetWordWrap(bool checked);
-
-    /**
-     * @brief Переключение вставки пробелов вместо tab в редакторах кода
-     */
     void on_SetTabReplace(bool checked);
-
-    /**
-     * @brief Изменение визуальной ширины tab в редакторах кода
-     */
     void on_SetTabWidth(int width);
-
-    /**
-     * @brief Отображение дерева файлов
-    */
     void on_Toggle_FileTree(bool checked) const;
+    void on_Toggle_Search(bool checked);
+    void on_FindInFile();
+    void on_FindInProject();
 
 signals:
     void saveFileSignal();

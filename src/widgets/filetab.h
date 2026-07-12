@@ -43,6 +43,11 @@ signals:
 
     void statusBarInfoChanged(const QString& info);
 
+    void openFileAtLineRequested(const QString& filePath, int lineNumber, const QString& highlightText);
+    void findRequested();
+    void replaceRequested();
+    void projectFindRequested();
+
     void openTabModule(ModuleDescription<TabBase> desc);
 
 };

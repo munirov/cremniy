@@ -8,11 +8,13 @@
 
 #include "app/WelcomeWindow/welcomeform.h"
 #include "core/locale/LanguageManager.h"
+#include "Modules/Tabs/CodeEditor/search/SearchDefs.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     LanguageManager::instance().loadUserDefaultLocale();
+    qRegisterMetaType<SearchResult>();
 
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");

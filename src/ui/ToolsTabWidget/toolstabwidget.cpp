@@ -110,6 +110,11 @@ void ToolsTabWidget::createTab(const ModuleDescription<TabBase>& desc, bool isAl
             emit statusBarInfoChanged(info);
     });
 
+    connect(tab, &TabBase::openFileAtLineRequested, this, &ToolsTabWidget::openFileAtLineRequested);
+    connect(tab, &TabBase::findRequested, this, &ToolsTabWidget::findRequested);
+    connect(tab, &TabBase::replaceRequested, this, &ToolsTabWidget::replaceRequested);
+    connect(tab, &TabBase::projectFindRequested, this, &ToolsTabWidget::projectFindRequested);
+
     connect(this, &ToolsTabWidget::setWordWrapSignal, tab, &TabBase::setWordWrapSlot);
     connect(this, &ToolsTabWidget::setTabReplaceSignal, tab, &TabBase::setTabReplaceSlot);
     connect(this, &ToolsTabWidget::setTabWidthSignal, tab, &TabBase::setTabWidthSlot);

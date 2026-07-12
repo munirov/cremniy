@@ -147,7 +147,21 @@ public slots:
      */
     virtual void setTabWidthSlot(int width) = 0;
 
+    /**
+     * @brief Перейти к указанной строке и подсветить текст (для навигации из поиска)
+     */
+    virtual void navigateToLine(int lineNumber, const QString& highlightText) { Q_UNUSED(lineNumber); Q_UNUSED(highlightText); }
+
 signals:
+    /**
+     * @brief Открыть файл на указанной строке (для навигации из поиска по проекту)
+     */
+    void openFileAtLineRequested(const QString& filePath, int lineNumber, const QString& highlightText);
+
+    void findRequested();
+    void replaceRequested();
+    void projectFindRequested();
+
     /**
      * @brief Status bar information changed
      *
