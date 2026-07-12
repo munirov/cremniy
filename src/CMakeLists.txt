@@ -128,7 +128,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Svg)
 set(APP_LANGUAGES
         en
         ru
-        uk
 )
 
 list(JOIN APP_LANGUAGES ";" APP_LANGUAGES_STR)
@@ -144,9 +143,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 set(TS_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_ru.ts
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/app_uk.ts
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/qtbase_ru.ts
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/translations/qtbase_uk.ts
 )
 
 qt6_add_translation(QM_FILES ${TS_FILES})
