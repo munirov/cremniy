@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-14]
 
     steps:
       - name: Checkout code
@@ -30,6 +30,10 @@ jobs:
           arch: 'win64_msvc2022_64'
           cache: true
       
+      - name: Set up MSVC Developer Command Prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Install Qt (Linux/macOS)
         if: runner.os != 'Windows'
         uses: jurplel/install-qt-action@v4
@@ -48,6 +52,55 @@ jobs:
             libxcb-xkb1 libdbus-1-3 \
             libfuse2 file imagemagick librsvg2-bin
 
+      - name: Cache vcpkg binary archives (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/vcpkg/archives
+          key: vcpkg-archives-linux-libgit2-v1
+          restore-keys: |
+            vcpkg-archives-linux-
+
+      - name: Cache vcpkg binary archives (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: C:\Users\runneradmin\AppData\Local\vcpkg\archives
+          key: vcpkg-archives-windows-libgit2-v1
+          restore-keys: |
+            vcpkg-archives-windows-
+
+      - name: Cache vcpkg binary archives (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: ~/vcpkg/archives
+          key: vcpkg-archives-macos-libgit2-v1
+          restore-keys: |
+            vcpkg-archives-macos-
+
+      - name: Setup vcpkg (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+          ./vcpkg/vcpkg install libgit2
+
+      - name: Setup vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat
+          .\vcpkg\vcpkg install libgit2:x64-windows
+
+      - name: Setup vcpkg (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+          ./vcpkg/vcpkg install libgit2
+
       - name: Download linuxdeploy tools
         if: runner.os == 'Linux'
         run: |
@@ -61,13 +114,19 @@ jobs:
         shell: pwsh
         env:
           SCCACHE_GHA_ENABLED: "true"
-        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
       
-      - name: Configure CMake (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Configure CMake (macOS)
+        if: runner.os == 'macOS'
         env:
           SCCACHE_GHA_ENABLED: "true"
-        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      
+      - name: Configure CMake (Linux)
+        if: runner.os == 'Linux'
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+        run: cmake -B build -S src -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build
         run: cmake --build build --config Release --parallel
@@ -95,10 +154,11 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path package -Force
-          if (!(Test-Path "build/Release/cremniy.exe")) {
-            throw "build/Release/cremniy.exe was not produced"
+          # Ninja кладет бинарник прямо в build
+          if (!(Test-Path "build/cremniy.exe")) {
+            throw "build/cremniy.exe was not produced"
           }
-          Copy-Item build/Release/cremniy.exe package/
+          Copy-Item build/cremniy.exe package/
           
           New-Item -ItemType Directory -Path "package/Resources/translations" -Force
           Copy-Item build/*.qm "package/Resources/translations/"

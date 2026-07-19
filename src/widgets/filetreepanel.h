@@ -23,13 +23,12 @@ private slots:
     void showMenu(const QPoint& point) const;
 
 private:
-    void setupUi() const;
-    void setupModel() const;
+    void setupUi();
+    void setupModel();
     void setupContextMenu();
     void setupConnections();
-
     void open();
-    void remove() const;
+    void remove();
     [[nodiscard]] QString currentPath() const;
     [[nodiscard]] QModelIndex getSourceIndex() const;
 

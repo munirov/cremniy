@@ -79,7 +79,7 @@ QListWidget#hexTabsList::item:focus {
 }
 
 QTreeView {
-    qproperty-iconRedraw: true;
+
 }
 
 QMenu::item {
