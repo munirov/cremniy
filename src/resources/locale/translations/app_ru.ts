@@ -792,12 +792,12 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="47"/>
         <source>No directory specified!</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="54"/>
         <source>Directory does not exist: %1</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="62"/>
@@ -807,7 +807,7 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../dialogs/filecreatedialog.cpp" line="75"/>
         <source>Failed to create file: %1</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Failed to create file!</source>
@@ -1088,7 +1088,7 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="748"/>
         <source>Merge branch &apos;</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Не удалось добавить файл</source>
@@ -1117,7 +1117,7 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="27"/>
         <source>Failed to open repository</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="108"/>
@@ -1140,74 +1140,74 @@ Check the Log panel for details.</source>
         <location filename="../../../core/git/gitmanager.cpp" line="1037"/>
         <location filename="../../../core/git/gitmanager.cpp" line="1055"/>
         <source>Repository not open</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="117"/>
         <location filename="../../../core/git/gitmanager.cpp" line="194"/>
         <location filename="../../../core/git/gitmanager.cpp" line="222"/>
         <source>Branch not found: </source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="129"/>
         <location filename="../../../core/git/gitmanager.cpp" line="406"/>
         <source>Checkout error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="138"/>
         <source>HEAD setup error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="157"/>
         <location filename="../../../core/git/gitmanager.cpp" line="527"/>
         <source>Failed to get HEAD</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="164"/>
         <location filename="../../../core/git/gitmanager.cpp" line="534"/>
         <source>Failed to find HEAD commit</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="174"/>
         <source>Failed to create branch</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="203"/>
         <source>Failed to delete branch</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="232"/>
         <source>Failed to rename branch</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="254"/>
         <location filename="../../../core/git/gitmanager.cpp" line="817"/>
         <location filename="../../../core/git/gitmanager.cpp" line="851"/>
         <source>Failed to get index</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="263"/>
         <source>Failed to write tree</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="271"/>
         <source>Failed to find tree</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="313"/>
         <source>Failed to create commit</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="388"/>
@@ -1215,112 +1215,112 @@ Check the Log panel for details.</source>
         <location filename="../../../core/git/gitmanager.cpp" line="459"/>
         <location filename="../../../core/git/gitmanager.cpp" line="492"/>
         <source>Invalid commit OID</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="395"/>
         <location filename="../../../core/git/gitmanager.cpp" line="499"/>
         <source>Commit not found</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="433"/>
         <location filename="../../../core/git/gitmanager.cpp" line="466"/>
         <source>Object not found</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="442"/>
         <location filename="../../../core/git/gitmanager.cpp" line="475"/>
         <source>Reset error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="508"/>
         <source>Revert error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="551"/>
         <source>Failed to get commit tree</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="579"/>
         <source>Amend error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="600"/>
         <location filename="../../../core/git/gitmanager.cpp" line="666"/>
         <source>Remote not found: </source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="608"/>
         <source>Push branch not specified</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="628"/>
         <source>Push error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="648"/>
         <source>Branch not specified</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="676"/>
         <source>Fetch error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="697"/>
         <source>Failed to find: </source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="704"/>
         <source>Failed to find commit for merge</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="717"/>
         <source>Merge error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="825"/>
         <source>Failed to add file</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="833"/>
         <location filename="../../../core/git/gitmanager.cpp" line="867"/>
         <source>Failed to write index</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="859"/>
         <source>Failed to remove file from index</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="934"/>
         <source>Clone error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="952"/>
         <source>Init error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="983"/>
         <source>On branch </source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="998"/>
@@ -1352,22 +1352,22 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="1026"/>
         <source>Stash save error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="1044"/>
         <source>Stash apply error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="1062"/>
         <source>Stash delete error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../core/git/gitmanager.cpp" line="1206"/>
         <source>Failed to create signature</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Ошибка stash save</source>
@@ -1545,210 +1545,210 @@ Check the Log panel for details.</source>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="24"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="262"/>
         <source>Branches</source>
-        <translation type="unfinished"></translation>
+        <translation>Ветки</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="26"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="179"/>
         <source>Checkout Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>Переключиться на ветку</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="27"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="196"/>
         <source>Create Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать ветку</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="28"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="213"/>
         <source>Delete Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить ветку</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="29"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="230"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="233"/>
         <source>Rename Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>Переименовать ветку</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="31"/>
         <source>List Branches</source>
-        <translation type="unfinished"></translation>
+        <translation>Список веток</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="34"/>
         <source>Commits</source>
-        <translation type="unfinished"></translation>
+        <translation>Коммиты</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="36"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="274"/>
         <source>Create Commit</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать коммит</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="37"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="306"/>
         <source>Commit History</source>
-        <translation type="unfinished"></translation>
+        <translation>История коммитов</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="39"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="329"/>
         <source>Checkout Commit</source>
-        <translation type="unfinished"></translation>
+        <translation>Переключиться на коммит</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="40"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="363"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="369"/>
         <source>Reset (hard)</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить (hard)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="41"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="386"/>
         <source>Reset (mixed)</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить (mixed)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="42"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="403"/>
         <source>Revert Commit</source>
-        <translation type="unfinished"></translation>
+        <translation>Отменить коммит (revert)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="44"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="420"/>
         <source>Amend Commit</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменить последний коммит</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="47"/>
         <source>Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>Синхронизация</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="49"/>
         <source>Push</source>
-        <translation type="unfinished"></translation>
+        <translation>Отправить (push)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="50"/>
         <source>Pull</source>
-        <translation type="unfinished"></translation>
+        <translation>Получить (pull)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="51"/>
         <source>Fetch</source>
-        <translation type="unfinished"></translation>
+        <translation>Получить без слияния (fetch)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="54"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="483"/>
         <source>Merge</source>
-        <translation type="unfinished"></translation>
+        <translation>Слияние</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="56"/>
         <source>Merge Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>Слить ветку</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="57"/>
         <source>Show Conflicts</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать конфликты</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="60"/>
         <source>Staging</source>
-        <translation type="unfinished"></translation>
+        <translation>Индексация</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="62"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="521"/>
         <source>Stage File</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить файл (stage)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="63"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="538"/>
         <source>Unstage File</source>
-        <translation type="unfinished"></translation>
+        <translation>Убрать из индекса (unstage)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="65"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="555"/>
         <source>Show Diff</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать изменения (diff)</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="66"/>
         <source>Show Staged Diff</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать staged изменения</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="69"/>
         <source>Repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Репозиторий</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="71"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="615"/>
         <source>Clone Repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Клонировать репозиторий</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="72"/>
         <source>Init Repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Инициализировать репозиторий</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="73"/>
         <source>Open Repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть репозиторий</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="76"/>
         <source>Extra</source>
-        <translation type="unfinished"></translation>
+        <translation>Дополнительно</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="78"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="664"/>
         <source>Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Статус</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="80"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="692"/>
         <source>Save Stash</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить stash</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="81"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="708"/>
         <source>Apply Stash</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить stash</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="82"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="725"/>
         <source>Delete Stash</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить stash</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="83"/>
         <source>Stash List</source>
-        <translation type="unfinished"></translation>
+        <translation>Список stash</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="85"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="770"/>
         <source>Log Graph</source>
-        <translation type="unfinished"></translation>
+        <translation>Лог с графом веток</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="175"/>
@@ -1801,7 +1801,7 @@ Check the Log panel for details.</source>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="738"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="759"/>
         <source>Error</source>
-        <translation type="unfinished">Ошибка</translation>
+        <translation>Ошибка</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="175"/>
@@ -1832,12 +1832,12 @@ Check the Log panel for details.</source>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="738"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="759"/>
         <source>Repository not open</source>
-        <translation type="unfinished"></translation>
+        <translation>Репозиторий не открыт</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="179"/>
         <source>Enter branch name:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите имя ветки:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="183"/>
@@ -1863,53 +1863,53 @@ Check the Log panel for details.</source>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="712"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="729"/>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="196"/>
         <source>Enter new branch name:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите имя новой ветки:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="200"/>
         <source>Branch created: </source>
-        <translation type="unfinished"></translation>
+        <translation>Создана ветка: </translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="213"/>
         <source>Enter branch name to delete:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите имя ветки для удаления:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="230"/>
         <source>Current branch name:</source>
-        <translation type="unfinished"></translation>
+        <translation>Текущее имя ветки:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="233"/>
         <source>New branch name:</source>
-        <translation type="unfinished"></translation>
+        <translation>Новое имя ветки:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="274"/>
         <source>Enter commit message:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите сообщение коммита:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="278"/>
         <source>Commit created</source>
-        <translation type="unfinished"></translation>
+        <translation>Коммит создан</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="293"/>
         <source>History</source>
-        <translation type="unfinished"></translation>
+        <translation>История</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="293"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="765"/>
         <source>No commits</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет коммитов</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="315"/>
@@ -1918,184 +1918,184 @@ Check the Log panel for details.</source>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="678"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="780"/>
         <source>Close</source>
-        <translation type="unfinished"></translation>
+        <translation>Закрыть</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="329"/>
         <source>Enter commit hash:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите хеш коммита:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="364"/>
         <source>This will delete all uncommitted changes. Continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Это удалит все незакоммиченные изменения. Продолжить?</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="369"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="386"/>
         <source>Enter commit hash to reset:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите хеш коммита для сброса:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="373"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="390"/>
         <source>Reset completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Сброс выполнен</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="403"/>
         <source>Enter commit hash to revert:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите хеш коммита для отмены:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="407"/>
         <source>Commit reverted</source>
-        <translation type="unfinished"></translation>
+        <translation>Коммит отменён</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="420"/>
         <source>New message:</source>
-        <translation type="unfinished"></translation>
+        <translation>Новое сообщение:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="424"/>
         <source>Last commit amended</source>
-        <translation type="unfinished"></translation>
+        <translation>Последний коммит изменён</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="440"/>
         <source>Changes pushed</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменения отправлены</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="454"/>
         <source>Changes pulled</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменения получены</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="468"/>
         <source>Changes fetched</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменения получены без слияния</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="483"/>
         <source>Enter branch name to merge:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите имя ветки для слияния:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="488"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="506"/>
         <source>Conflicts</source>
-        <translation type="unfinished"></translation>
+        <translation>Конфликты</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="488"/>
         <source>Conflicts detected. Resolve them and make a commit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружены конфликты. Разрешите их и сделайте коммит.</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="490"/>
         <source>Merge completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Слияние выполнено</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="506"/>
         <source>No conflicts</source>
-        <translation type="unfinished"></translation>
+        <translation>Конфликтов нет</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="508"/>
         <source>Conflict files</source>
-        <translation type="unfinished"></translation>
+        <translation>Конфликтные файлы</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="521"/>
         <source>Enter file path (relative to repo root):</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите путь к файлу (относительно корня репозитория):</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="538"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="555"/>
         <source>Enter file path:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите путь к файлу:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="560"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="664"/>
         <source>No changes</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет изменений</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="590"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="595"/>
         <source>Staged Diff</source>
-        <translation type="unfinished"></translation>
+        <translation>Staged изменения</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="590"/>
         <source>No staged changes</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет staged изменений</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="615"/>
         <source>Repository URL:</source>
-        <translation type="unfinished"></translation>
+        <translation>URL репозитория:</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="618"/>
         <source>Select folder to clone into</source>
-        <translation type="unfinished"></translation>
+        <translation>Выберите папку для клонирования</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="630"/>
         <source>Select folder to initialize</source>
-        <translation type="unfinished"></translation>
+        <translation>Выберите папку для инициализации</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="643"/>
         <source>Select repository folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Выберите папку с репозиторием</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="669"/>
         <source>Repository status</source>
-        <translation type="unfinished"></translation>
+        <translation>Статус репозитория</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="692"/>
         <source>Message (optional):</source>
-        <translation type="unfinished"></translation>
+        <translation>Сообщение (необязательно):</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="695"/>
         <source>Changes saved to stash</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменения сохранены в stash</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="708"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="725"/>
         <source>Stash index (0 - latest):</source>
-        <translation type="unfinished"></translation>
+        <translation>Индекс stash (0 - последний):</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="712"/>
         <source>Stash applied</source>
-        <translation type="unfinished"></translation>
+        <translation>Stash применён</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="729"/>
         <source>Stash deleted</source>
-        <translation type="unfinished"></translation>
+        <translation>Stash удалён</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="744"/>
         <source>No stash saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет сохранённых stash</translation>
     </message>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="765"/>
         <source>Log</source>
-        <translation type="unfinished">Лог</translation>
+        <translation>Лог</translation>
     </message>
     <message>
         <source>Ошибка</source>
@@ -2258,7 +2258,7 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="560"/>
         <source>Diff</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменения</translation>
     </message>
     <message>
         <source>Нет изменений</source>
@@ -2621,7 +2621,7 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../Modules/References/KeyboardScancodes/keyboardscancodesref.cpp" line="164"/>
         <source>Last Key</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../Modules/References/KeyboardScancodes/keyboardscancodesref.cpp" line="185"/>
@@ -2782,22 +2782,22 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="73"/>
         <source>Untitled</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodeengine.cpp" line="64"/>
         <source>Failed to create temp file.</source>
-        <translation type="unfinished">Не удалось создать временный файл</translation>
+        <translation>Не удалось создать временный файл</translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodeengine.cpp" line="76"/>
         <source>nasm not found. Ensure it is installed and in PATH.</source>
-        <translation type="unfinished">nasm не найден. Убедитесь, что он установлен и добавлен в переменную PATH.</translation>
+        <translation>nasm не найден. Убедитесь, что он установлен и добавлен в переменную PATH.</translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodeengine.cpp" line="94"/>
         <source>Failed to read nasm output.</source>
-        <translation type="unfinished">Не удалось прочитать вывод nasm.</translation>
+        <translation>Не удалось прочитать вывод nasm.</translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodeengine.cpp" line="198"/>
@@ -2969,7 +2969,7 @@ Check the Log panel for details.</source>
     <message>
         <location filename="../../../Modules/Tabs/STM32Pinout/stm32pinout.cpp" line="229"/>
         <source>STM32 Pinout</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -3316,12 +3316,12 @@ e asm.bits=64</translation>
 
 Please install them or add to PATH.
 Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="106"/>
         <source>Ready. Press F5 or start typing to assemble.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="115"/>
@@ -3331,17 +3331,17 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="124"/>
         <source>Output:</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="166"/>
         <source>Assembly</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="167"/>
         <source>Shellcode</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Output style:</source>
@@ -3409,7 +3409,7 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="227"/>
         <source>Assembled %1 bytes successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="242"/>
@@ -3525,22 +3525,22 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="172"/>
         <source>Projects</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="173"/>
         <source>Settings</source>
-        <translation type="unfinished">Настройки</translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="174"/>
         <source>Docs</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="198"/>
         <source>New Project</source>
-        <translation type="unfinished">Создать проект</translation>
+        <translation>Создать проект</translation>
     </message>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="269"/>
@@ -3550,7 +3550,7 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="279"/>
         <source>Location:</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Path:</source>
@@ -3569,7 +3569,7 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="315"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="597"/>
