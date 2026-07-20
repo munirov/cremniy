@@ -31,7 +31,7 @@ FileTreePanel::~FileTreePanel() {
     delete m_iconProvider;
 }
 
-void FileTreePanel::setupModel() const {
+void FileTreePanel::setupModel() {
     m_fileModel->setRootPath(m_root_path);
     m_fileModel->setIconProvider(m_iconProvider);
     m_proxy->setSourceModel(m_fileModel);
@@ -43,7 +43,7 @@ void FileTreePanel::setupModel() const {
     );
 }
 
-void FileTreePanel::setupUi() const {
+void FileTreePanel::setupUi() {
     m_layout->setContentsMargins(0, 0, 0, 0);
     m_layout->addWidget(m_treeView, 1);
 
@@ -122,7 +122,7 @@ void FileTreePanel::open() {
     else emit openFileRequested(m_fileModel->filePath(srcIdx), m_fileModel->fileName(srcIdx));
 }
 
-void FileTreePanel::remove() const {
+void FileTreePanel::remove() {
     const QModelIndex srcIdx = getSourceIndex();
     if (!srcIdx.isValid()) return;
 
