@@ -12,13 +12,13 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    LanguageManager::instance().loadUserDefaultLocale();
 
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");
     a.setWindowIcon(QIcon(":/icons/icon.svg"));
 
     // - - Fonts - -
+    LanguageManager::instance().loadUserDefaultLocale();
 
     int jbFontRegId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Regular.ttf");
     int jbFontBoldId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Bold.ttf");
