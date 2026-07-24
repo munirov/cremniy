@@ -9,12 +9,11 @@
 #include <QDateTime>
 #include <QFileInfo>
 #include <QDir>
-#include <memory>
 
 // регистрируем меню
 static bool registered = [](){
     MenuFactory::instance().registerMenu("7", [](){
-        return std::make_unique<GitMenu>().release();
+        return new GitMenu();
     });
     return true;
 }();
