@@ -136,7 +136,7 @@ void FileTreePanel::remove() {
     confirmRemove.exec();
 
     const auto reply = confirmRemove.clickedButton();
-    if (reply == no) return;
+    if (reply != yes) return;
 
     m_fileModel->remove(srcIdx);
 }

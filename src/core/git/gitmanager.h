@@ -6,9 +6,9 @@
 #include <git2.h>
 
 /**
- * @brief Класс-обёртка над libgit2 для всех гит операций
- * Все методы возвращают true при успехе и false при ошибке.
- * Текст ошибки можно получить через lastError().
+ * @brief Wrapper class over libgit2 for all git operations
+ * All methods return true on success and false on error.
+ * Error text can be obtained via lastError().
  */
 class GitManager : public QObject
 {
@@ -18,136 +18,136 @@ public:
     explicit GitManager(QObject *parent = nullptr);
     ~GitManager() override;
 
-    /** @brief Открыть репозиторий по пути */
+    /** @brief Open repository at path */
     bool open(const QString &repoPath);
 
-    /** @brief Закрыть текущий репозиторий */
+    /** @brief Close current repository */
     void close();
 
-    /** @brief Проверить, открыт ли репозиторий */
+    /** @brief Check if repository is open */
     bool isOpen() const;
 
-    /** @brief Получить последнюю ошибку */
+    /** @brief Get last error */
     QString lastError() const;
 
-    /** @brief Получить путь к репозиторию */
+    /** @brief Get repository path */
     QString repoPath() const;
 
-    /* Ветки */
+    /* Branches */
 
-    /** @brief Получить список всех веток */
+    /** @brief Get list of all branches */
     QStringList branches() const;
 
-    /** @brief Получить текущую ветку */
+    /** @brief Get current branch */
     QString currentBranch() const;
 
-    /** @brief Переключиться на ветку */
+    /** @brief Checkout branch */
     bool checkoutBranch(const QString &branchName);
 
-    /** @brief Создать новую ветку */
+    /** @brief Create new branch */
     bool createBranch(const QString &branchName);
 
-    /** @brief Удалить ветку */
+    /** @brief Delete branch */
     bool deleteBranch(const QString &branchName);
 
-    /** @brief Переименовать ветку */
+    /** @brief Rename branch */
     bool renameBranch(const QString &oldName, const QString &newName);
 
-    /* Коммиты */
+    /* Commits */
 
-    /** @brief Создать коммит */
+    /** @brief Create commit */
     bool createCommit(const QString &message);
 
-    /** @brief Получить историю коммитов (возвращает OID в виде hex строк) */
+    /** @brief Get commit history (returns OIDs as hex strings) */
     QStringList commitHistory(int count = 50) const;
 
-    /** @brief Получить сообщение коммита по OID */
+    /** @brief Get commit message by OID */
     QString commitMessage(const QString &oid) const;
 
-    /** @brief Получить автора коммита по OID */
+    /** @brief Get commit author by OID */
     QString commitAuthor(const QString &oid) const;
 
-    /** @brief Переключиться на коммит (detached HEAD) */
+    /** @brief Checkout commit (detached HEAD) */
     bool checkoutCommit(const QString &oid);
 
-    /** @brief Откатить коммит (reset --hard) */
+    /** @brief Reset commit (reset --hard) */
     bool resetHard(const QString &oid);
 
-    /** @brief Откатить коммит (reset --mixed) */
+    /** @brief Reset commit (reset --mixed) */
     bool resetMixed(const QString &oid);
 
-    /** @brief Отменить коммит (revert) */
+    /** @brief Revert commit */
     bool revertCommit(const QString &oid);
 
-    /** @brief Изменить последний коммит (amend) */
+    /** @brief Amend last commit */
     bool amendCommit(const QString &message);
 
-    /* Синхронизация */
+    /* Synchronization */
 
-    /** @brief Отправить изменения (push) */
+    /** @brief Push changes */
     bool push(const QString &remote = "origin", const QString &branch = "");
 
-    /** @brief Получить изменения (pull) */
+    /** @brief Pull changes */
     bool pull(const QString &remote = "origin", const QString &branch = "");
 
-    /** @brief Получить изменения без слияния (fetch) */
+    /** @brief Fetch changes */
     bool fetch(const QString &remote = "origin");
 
-    /* Слияние */
+    /* Merge */
 
-    /** @brief Выполнить слияние ветки */
+    /** @brief Merge branch */
     bool merge(const QString &branchName);
 
-    /** @brief Проверить, есть ли конфликты */
+    /** @brief Check if there are conflicts */
     bool hasConflicts() const;
 
-    /** @brief Получить список конфликтных файлов */
+    /** @brief Get list of conflict files */
     QStringList conflictFiles() const;
 
-    /* Индексация */
+    /* Staging */
 
-    /** @brief Добавить файл в индекс */
+    /** @brief Stage file */
     bool stageFile(const QString &filePath);
 
-    /** @brief Удалить файл из индекса */
+    /** @brief Unstage file */
     bool unstageFile(const QString &filePath);
 
-    /** @brief Получить diff для файла */
+    /** @brief Get diff for file */
     QString fileDiff(const QString &filePath) const;
 
-    /** @brief Получить diff для staged изменений */
+    /** @brief Get diff for staged changes */
     QString stagedDiff() const;
 
-    /* Репозиторий */
+    /* Repository */
 
-    /** @brief Клонировать репозиторий */
+    /** @brief Clone repository */
     bool clone(const QString &url, const QString &path);
 
-    /** @brief Инициализировать репозиторий */
+    /** @brief Initialize repository */
     bool init(const QString &path);
 
-    /* Дополнительно */
+    /* Additional */
 
-    /** @brief Получить статус репозитория */
+    /** @brief Get repository status */
     QString status() const;
 
-    /** @brief Сохранить stash */
+    /** @brief Save stash */
     bool stashSave(const QString &message = "");
 
-    /** @brief Применить stash */
+    /** @brief Apply stash */
     bool stashApply(int index = 0);
 
-    /** @brief Удалить stash */
+    /** @brief Drop stash */
     bool stashDrop(int index = 0);
 
-    /** @brief Получить список stash */
+    /** @brief Get stash list */
     QStringList stashList() const;
 
-    /** @brief Получить лог с графом веток (текстовое представление) */
+    /** @brief Get log with branch graph (text representation) */
     QString logGraph(int count = 50) const;
 
 signals:
-    /** @brief Сигнал об изменении репозитория */
+    /** @brief Signal on repository change */
     void repositoryChanged();
 
 private:
@@ -155,15 +155,15 @@ private:
     QString m_repoPath;
     mutable QString m_lastError;
 
-    /** @brief Установить сообщение об ошибке */
+    /** @brief Set error message */
     void setError(const QString &error) const;
 
-    /** @brief Получить имя пользователя из конфига */
+    /** @brief Get username from config */
     QString userName() const;
 
-    /** @brief Получить email пользователя из конфига */
+    /** @brief Get user email from config */
     QString userEmail() const;
 
-    /** @brief Создать подпись (signature) */
+    /** @brief Create signature */
     git_signature *createSignature() const;
 };

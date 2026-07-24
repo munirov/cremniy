@@ -10,10 +10,10 @@
 #include <QTimer>
 
 /**
- * @brief Меню Git для работы с репозиторием
+ * @brief Git menu for repository operations
  *
- * Содержит все операции с Git: ветки, коммиты, синхронизация,
- * слияние, индексация, репозиторий и дополнительные функции.
+ * Contains all Git operations: branches, commits, synchronization,
+ * merge, staging, repository, and additional functions.
  */
 class GitMenu : public BaseMenu
 {
@@ -24,27 +24,27 @@ public:
     void setupConnections(IDEWindow* ideWind) override;
 
 private:
-    // Указатели на менеджер и IDE окно
+    // Pointers to manager and IDE window
     GitManager *m_git = nullptr;
     IDEWindow *m_ideWind = nullptr;
 
-    // Подменю
-    QMenu *m_branchMenu;        // Ветки
-    QMenu *m_commitMenu;        // Коммиты
-    QMenu *m_syncMenu;          // Синхронизация
-    QMenu *m_mergeMenu;         // Слияние
-    QMenu *m_stagingMenu;       // Индексация
-    QMenu *m_repoMenu;          // Репозиторий
-    QMenu *m_extraMenu;         // Дополнительно
+    // Submenus
+    QMenu *m_branchMenu;        // Branches
+    QMenu *m_commitMenu;        // Commits
+    QMenu *m_syncMenu;          // Synchronization
+    QMenu *m_mergeMenu;         // Merge
+    QMenu *m_stagingMenu;       // Staging
+    QMenu *m_repoMenu;          // Repository
+    QMenu *m_extraMenu;         // Additional
 
-    // Действия веток
+    // Branch actions
     QAction *m_checkoutBranch;
     QAction *m_createBranch;
     QAction *m_deleteBranch;
     QAction *m_renameBranch;
     QAction *m_listBranches;
 
-    // Действия коммитов
+    // Commit actions
     QAction *m_createCommit;
     QAction *m_showHistory;
     QAction *m_checkoutCommit;
@@ -53,27 +53,27 @@ private:
     QAction *m_revertCommit;
     QAction *m_amendCommit;
 
-    // Действия синхронизации
+    // Synchronization actions
     QAction *m_push;
     QAction *m_pull;
     QAction *m_fetch;
 
-    // Действия слияния
+    // Merge actions
     QAction *m_mergeBranch;
     QAction *m_showConflicts;
 
-    // Действия индексации
+    // Staging actions
     QAction *m_stageFile;
     QAction *m_unstageFile;
     QAction *m_showDiff;
     QAction *m_showStagedDiff;
 
-    // Действия репозитория
+    // Repository actions
     QAction *m_cloneRepo;
     QAction *m_initRepo;
     QAction *m_openRepo;
 
-    // Дополнительные действия
+    // Additional actions
     QAction *m_showStatus;
     QAction *m_stashSave;
     QAction *m_stashApply;
@@ -81,22 +81,22 @@ private:
     QAction *m_stashList;
     QAction *m_showLogGraph;
 
-    /** @brief Показать сообщение об ошибке */
+    /** @brief Show error message */
     void showError(const QString &title, const QString &message);
 
-    /** @brief Показать информационное сообщение */
+    /** @brief Show information message */
     void showInfo(const QString &title, const QString &message);
 
-    /** @brief Запросить ввод текста */
+    /** @brief Request text input */
     QString inputDialog(const QString &title, const QString &label);
 
-    /** @brief Найти корень git-репозитория (ищет .git во всех родительских директориях) */
+    /** @brief Find git repository root (searches .git in all parent directories) */
     static QString findGitRepositoryRoot(const QString &path);
 
-    /** @brief Проверить, является ли путь гит репозиторием */
+    /** @brief Check if path is a git repository */
     static bool isGitRepository(const QString &path);
 
-    // Слоты для действий
+    // Slots for actions
     void onCheckoutBranch();
     void onCreateBranch();
     void onDeleteBranch();
@@ -136,6 +136,6 @@ private:
 
     void onRepoWatchTimeout();
 
-    /** @brief Таймер автоматического отслеживания репозитория */
+    /** @brief Timer for automatic repository monitoring */
     QTimer m_repoWatchTimer;
 };
