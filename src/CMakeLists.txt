@@ -140,6 +140,9 @@ if(TARGET libgit2::libgit2)
 else()
     target_include_directories(${PROJECT_NAME} PRIVATE ${LIBGIT2_INCLUDE_DIR})
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Widgets Qt6::Gui Qt6::Svg ${LIBGIT2_LIB})
+    if(UNIX AND NOT APPLE)
+        target_link_libraries(${PROJECT_NAME} PRIVATE z)
+    endif()
 endif()
 
 set(APP_LANGUAGES
