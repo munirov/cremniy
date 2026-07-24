@@ -12,6 +12,7 @@
 
 IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     : QMainWindow(parent), m_projectPath(ProjectPath) {
+    setProperty("projectPath", ProjectPath);
     // - - Window Settings - -
     this->setWindowState(Qt::WindowMaximized);
     this->setWindowTitle("Cremniy");

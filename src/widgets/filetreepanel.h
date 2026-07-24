@@ -1,12 +1,13 @@
-#ifndef FILETREEPANEL_H
-#define FILETREEPANEL_H
+#pragma once
 
-#include <QTreeView>
 #include <QFileSystemModel>
 #include <QPointer>
 #include <QVBoxLayout>
 
+class QTreeView;
 class QSortFilterProxyModel;
+class QAction;
+class QPoint;
 class IconProvider;
 
 class FileTreePanel : public QWidget {
@@ -23,13 +24,12 @@ private slots:
     void showMenu(const QPoint& point) const;
 
 private:
-    void setupUi() const;
-    void setupModel() const;
+    void setupUi();
+    void setupModel();
     void setupContextMenu();
     void setupConnections();
-
     void open();
-    void remove() const;
+    void remove();
     [[nodiscard]] QString currentPath() const;
     [[nodiscard]] QModelIndex getSourceIndex() const;
 
@@ -48,4 +48,3 @@ private:
     mutable QString m_contextPath;
     const QString m_root_path;
 };
-#endif // FILETREEPANEL_H
