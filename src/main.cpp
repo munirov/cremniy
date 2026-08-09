@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QCoreApplication>
+#include <QEvent>
 #include <QImageReader>
 #include <QDirIterator>
 #include <QDebug>
@@ -9,12 +10,69 @@
 #include "app/WelcomeWindow/welcomeform.h"
 #include "core/locale/LanguageManager.h"
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+
+namespace {
+
+using DwmSetWindowAttributeFn = HRESULT(WINAPI*)(HWND, DWORD, LPCVOID, DWORD);
+
+void applyDarkTitleBar(QWidget* widget)
+{
+    if (!widget || !widget->isWindow())
+        return;
+
+    const HWND hwnd = reinterpret_cast<HWND>(widget->winId());
+    if (!hwnd)
+        return;
+
+    static DwmSetWindowAttributeFn setAttribute = nullptr;
+    if (!setAttribute) {
+        const HMODULE dwm = LoadLibraryW(L"dwmapi.dll");
+        if (!dwm)
+            return;
+        setAttribute = reinterpret_cast<DwmSetWindowAttributeFn>(
+            GetProcAddress(dwm, "DwmSetWindowAttribute"));
+        if (!setAttribute)
+            return;
+    }
+
+    const BOOL dark = TRUE;
+    /* DWMWA_USE_IMMERSIVE_DARK_MODE is attribute 20 on Windows 10 2004+ and
+       attribute 19 on earlier builds; applying both is harmless because only
+       the one supported by the running system is accepted */
+    setAttribute(hwnd, 19, &dark, sizeof(dark));
+    setAttribute(hwnd, 20, &dark, sizeof(dark));
+}
+
+class DarkTitleBarFilter : public QObject
+{
+public:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        if (event->type() == QEvent::Show || event->type() == QEvent::WinIdChange) {
+            if (auto* widget = qobject_cast<QWidget*>(watched))
+                applyDarkTitleBar(widget);
+        }
+        return false;
+    }
+};
+
+} // namespace
+#endif
+
 int main(int argc, char *argv[])
 {
     #ifdef Q_OS_LINUX
     qputenv("QT_QPA_PLATFORMTHEME", "generic");
     #endif
     QApplication a(argc, argv);
+
+    #ifdef Q_OS_WIN
+    /* Dark native title bar for all top-level windows */
+    DarkTitleBarFilter darkTitleBarFilter;
+    a.installEventFilter(&darkTitleBarFilter);
+    #endif
 
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");
@@ -27,7 +85,10 @@ int main(int argc, char *argv[])
     int jbFontBoldId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Bold.ttf");
     int jbFontItalId = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Italic.ttf");
 
-    QString jbFontFamily = QFontDatabase::applicationFontFamilies(jbFontRegId).at(0);
+    const QStringList jbFontFamilies = QFontDatabase::applicationFontFamilies(jbFontRegId);
+    QString jbFontFamily;
+    if (!jbFontFamilies.isEmpty())
+        jbFontFamily = jbFontFamilies.at(0);
 
     qDebug() << jbFontFamily;
 

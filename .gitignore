@@ -125,6 +125,18 @@ Testing/
 install_manifest.txt
 compile_commands.json
 
+# Deployed Qt runtime (local build output placed in the repo root)
+/cremniy.exe
+/Qt6*.dll
+/platforms/
+/styles/
+/imageformats/
+/iconengines/
+/generic/
+/networkinformation/
+/tls/
+/Resources/
+
 # Ninja
 build.ninja
 .ninja_deps

@@ -26,9 +26,15 @@ FileTreePanel::FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilt
     setupConnections();
 }
 
-void FileTreePanel::setupModel() const {
+FileTreePanel::~FileTreePanel()
+{
+    delete m_iconProvider;
+}
+
+void FileTreePanel::setupModel() {
     m_fileModel->setRootPath(m_root_path);
-    m_fileModel->setIconProvider(new IconProvider());
+    m_iconProvider = new IconProvider();
+    m_fileModel->setIconProvider(m_iconProvider);
     m_proxy->setSourceModel(m_fileModel);
     m_treeView->setModel(m_proxy);
     m_treeView->setRootIndex(
@@ -135,12 +141,18 @@ QModelIndex FileTreePanel::getSourceIndex() const{
     return m_proxy->mapToSource(idx);
 }
 
-void FileTreePanel::showMenu(const QPoint& point) const {
+void FileTreePanel::showMenu(const QPoint& point) {
     const auto index = m_treeView->indexAt(point);
+    if (index.isValid()) {
+        m_treeView->setCurrentIndex(index);
+        m_treeView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
+    }
+
     const bool onItem = index.isValid();
+    const bool dirUnderCursor = m_fileModel->isDir(m_proxy->mapToSource(index));
     QMenu menu;
 
-    if (!onItem || m_fileModel->isDir(getSourceIndex())) {
+    if (!onItem || dirUnderCursor) {
         menu.addAction(m_createDir);
         menu.addAction(m_createFile);
     }

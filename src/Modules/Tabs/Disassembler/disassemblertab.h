@@ -104,6 +104,7 @@ private:
     void jumpToAddress(const QString &addr);
     QString autoCommentForLine(const LineInfo &li) const;
     bool tryResolveStringRefAddr(const LineInfo &li, quint64 *outAddr) const;
+    bool vaToFileOffset(quint64 va, qint64 *outOffset) const;
 
     QThread            *m_thread  = nullptr;
     DisassemblerWorker *m_worker  = nullptr;

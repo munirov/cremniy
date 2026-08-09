@@ -36,11 +36,11 @@ private:
     // путь к файлу (ссылка на FileTab->m_filePath)
     QString m_filePath;
     // количество загруженных (текущих отображаемых) байтов
-    uint64_t m_bytesCount;
+    uint64_t m_bytesCount = 0;
     // начало в файле (номер байта)
-    uint64_t m_startOffset;
+    uint64_t m_startOffset = 0;
     // конец в файле (номер байта)
-    uint64_t m_endOffset;
+    uint64_t m_endOffset = 0;
 
 };
 

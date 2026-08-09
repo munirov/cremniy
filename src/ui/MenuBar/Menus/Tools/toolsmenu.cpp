@@ -62,6 +62,7 @@ ToolsMenu::ToolsMenu() : BaseMenu(tr("Tools")) {
 
             connect(newAction, &QAction::triggered, this, [this, desc](){
                 auto* module = desc.creator();
+                module->setAttribute(Qt::WA_DeleteOnClose);
                 module->showWindow();
             });
         }

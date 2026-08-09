@@ -203,6 +203,9 @@ bool AppSettings::importFromIni(const QString &filePath, QString *error)
         if (error) *error = QObject::tr("Failed to apply settings");
         return false;
     }
+
+    if (in.contains(keyExcludedPatterns()))
+        emit SettingsNotifier::instance()->excludedPatternsChanged();
     return true;
 }
 

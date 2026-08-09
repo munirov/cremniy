@@ -25,6 +25,7 @@ ReferencesMenu::ReferencesMenu() : BaseMenu(tr("References")) {
             groupMenu->addAction(newAction);
             connect(newAction, &QAction::triggered, this, [this, desc](){
                 auto* module = desc.creator();
+                module->setAttribute(Qt::WA_DeleteOnClose);
                 module->showWindow();
             });
         }

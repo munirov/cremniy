@@ -18,7 +18,7 @@ QString QHexMetadata::getComment(qint64 line, qint64 column) const {
     QStringList comments;
 
     for(auto& mi : *metadataline) {
-        if((offset < mi.begin || offset > mi.end) || mi.comment.isEmpty())
+        if((offset < mi.begin || offset >= mi.end) || mi.comment.isEmpty())
             continue;
         comments.push_back(mi.comment);
     }

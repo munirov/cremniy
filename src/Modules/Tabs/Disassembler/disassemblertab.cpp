@@ -80,8 +80,7 @@ static QByteArray bytesToArray(const QString &hex, bool *okOut = nullptr)
 }
 
 bool DisassemblerTab::tryResolveStringRefAddr(const LineInfo &li, quint64 *outAddr) const
-{
-    if (!outAddr) return false;
+{    if (!outAddr) return false;
     *outAddr = 0;
     if (m_stringByAddr.isEmpty()) return false;
 
@@ -142,6 +141,31 @@ bool DisassemblerTab::tryResolveStringRefAddr(const LineInfo &li, quint64 *outAd
         *outAddr = target;
         return true;
     }
+}
+
+bool DisassemblerTab::vaToFileOffset(quint64 va, qint64 *outOffset) const
+{
+    if (!outOffset)
+        return false;
+
+    bool anyMapping = false;
+    for (const DisasmSection &sec : m_sections) {
+        if (!sec.hasFileMapping)
+            continue;
+        anyMapping = true;
+        if (va >= sec.vaddr && va < sec.vaddr + sec.size) {
+            *outOffset = static_cast<qint64>(sec.fileOffset + (va - sec.vaddr));
+            return true;
+        }
+    }
+
+    if (!anyMapping) {
+        /* Flat binary (no section mapping): addresses equal file offsets */
+        *outOffset = static_cast<qint64>(va);
+        return true;
+    }
+
+    return false;
 }
 
 QString DisassemblerTab::autoCommentForLine(const LineInfo &li) const
@@ -625,10 +649,14 @@ void DisassemblerTab::setupUi()
                 setModifyIndicator(m_dataBuffer->isModified());
                 emit modifyData();
 
-                // Update cached bytes and refresh view.
-                m_lines[idx].bytes = normalizeBytes(text);
-                m_lines[idx].bytesL = m_lines[idx].bytes.toLower();
-                m_lines[idx].size = newBytes.size();
+                // Update cached bytes and refresh view. The line index may have
+                // shifted if the worker appended more sections while the menu
+                // was open, so guard it.
+                if (idx >= 0 && idx < m_lines.size()) {
+                    m_lines[idx].bytes = normalizeBytes(text);
+                    m_lines[idx].bytesL = m_lines[idx].bytes.toLower();
+                    m_lines[idx].size = newBytes.size();
+                }
                 applyFilter();
                 appendLog(QString("[patch] wrote %1 bytes at 0x%2")
                               .arg(newBytes.size())
@@ -659,21 +687,24 @@ void DisassemblerTab::setupUi()
                         return;
                     }
 
-                    QFile f(m_fileContext->filePath());
-                    if (!f.open(QIODevice::ReadWrite)) {
-                        QMessageBox::warning(this, tr("String patch"), tr("Failed to open file for writing."));
+                    qint64 fileOff = 0;
+                    if (!vaToFileOffset(saddr, &fileOff)) {
+                        QMessageBox::warning(this, tr("String patch"),
+                                             tr("Cannot map string address 0x%1 to a file offset.").arg(QString::number(saddr, 16)));
                         return;
                     }
-                    if (!f.seek(static_cast<qint64>(saddr))) {
-                        QMessageBox::warning(this, tr("String patch"), tr("Failed to seek to 0x%1.").arg(QString::number(saddr, 16)));
+                    if (!m_dataBuffer) {
+                        QMessageBox::warning(this, tr("String patch"), tr("No data buffer available."));
                         return;
                     }
-                    const qint64 wr = f.write(newBytes);
-                    f.close();
-                    if (wr != newBytes.size()) {
-                        QMessageBox::warning(this, tr("String patch"), tr("Failed to write all bytes."));
+                    if (fileOff < 0 || fileOff + newBytes.size() > m_dataBuffer->size()) {
+                        QMessageBox::warning(this, tr("String patch"), tr("Patch exceeds file size."));
                         return;
                     }
+
+                    m_dataBuffer->setBytes(fileOff, newBytes);
+                    setModifyIndicator(m_dataBuffer->isModified());
+                    emit modifyData();
 
                     appendLog(QString("[hexpatch] wrote %1 bytes at string 0x%2")
                                   .arg(newBytes.size())
@@ -687,17 +718,18 @@ void DisassemblerTab::setupUi()
                 const QByteArray utf8 = str.toUtf8();
                 const int want = utf8.size() + 1; // include '\0'
 
-                QFile f(m_fileContext->filePath());
-                if (!f.open(QIODevice::ReadOnly)) {
-                    QMessageBox::warning(this, tr("String bytes"), tr("Failed to open file."));
+                qint64 fileOff = 0;
+                if (!vaToFileOffset(saddr, &fileOff)) {
+                    QMessageBox::warning(this, tr("String bytes"),
+                                         tr("Cannot map string address 0x%1 to a file offset.").arg(QString::number(saddr, 16)));
                     return;
                 }
-                if (!f.seek(static_cast<qint64>(saddr))) {
-                    QMessageBox::warning(this, tr("String bytes"), tr("Failed to seek to 0x%1.").arg(QString::number(saddr, 16)));
+
+                const QByteArray data = m_dataBuffer ? m_dataBuffer->read(fileOff, want) : QByteArray();
+                if (data.isEmpty()) {
+                    QMessageBox::warning(this, tr("String bytes"), tr("Failed to read at string 0x%1.").arg(QString::number(saddr, 16)));
                     return;
                 }
-                const QByteArray data = f.read(want);
-                f.close();
 
                 QStringList hx;
                 hx.reserve(data.size());

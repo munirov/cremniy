@@ -55,8 +55,22 @@ void QFileDataBuffer::remove(qint64 offset, int length)
 
 void QFileDataBuffer::replace(qint64 offset, const QByteArray& data)
 {
+    if (offset < 0 || data.isEmpty())
+        return;
+
+    const qint64 size = m_buffer->size();
+
     m_ignoreExternalSignals = true;
-    m_buffer->setBytes(offset, data);
+    m_buffer->beginHistoryGroup();
+    if (offset < size) {
+        const qint64 inPlace = qMin<qint64>(data.size(), size - offset);
+        m_buffer->setBytes(offset, data.left(inPlace));
+        if (inPlace < data.size())
+            m_buffer->insertBytes(size, data.mid(inPlace));
+    } else {
+        m_buffer->insertBytes(size, data);
+    }
+    m_buffer->endHistoryGroup();
     m_ignoreExternalSignals = false;
 }
 

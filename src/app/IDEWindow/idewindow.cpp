@@ -107,7 +107,7 @@ IDEWindow::~IDEWindow() = default;
 
 void IDEWindow::on_Toggle_Terminal(bool checked) {
     if (checked && !m_terminal) {
-        m_terminal = new TerminalWidget(this);
+        m_terminal = new TerminalWidget(this, m_projectPath);
         m_verticalSplitter->addWidget(m_terminal);
         m_verticalSplitter->setCollapsible(1, true);
         m_verticalSplitter->setSizes({800, 200});

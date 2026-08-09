@@ -64,29 +64,33 @@ void QDeviceBuffer::write(QIODevice* device) {
 }
 
 qint64 QDeviceBuffer::indexOf(const QByteArray& ba, qint64 from) {
+    if(ba.isEmpty() || from < 0 || from >= m_device->size())
+        return -1;
+
     const auto MAX = std::numeric_limits<int>::max();
-    qint64 idx = -1;
+    const qint64 searchLen = ba.size();
+    qint64 pos = from;
+    m_device->seek(from);
 
-    if(from < m_device->size()) {
-        idx = from;
-        m_device->seek(from);
+    while(pos < m_device->size()) {
+        QByteArray data = m_device->read(MAX);
+        if(data.isEmpty())
+            return -1;
 
-        while(idx < m_device->size()) {
-            QByteArray data = m_device->read(MAX);
-            int sidx = data.indexOf(ba);
+        int sidx = data.indexOf(ba);
+        if(sidx >= 0)
+            return pos + sidx;
 
-            if(sidx >= 0) {
-                idx += sidx;
-                break;
-            }
+        if(pos + data.size() >= m_device->size())
+            return -1;
 
-            if(idx + data.size() >= m_device->size())
-                return -1;
-            m_device->seek(m_device->pos() + data.size() - ba.size());
-        }
+        /* Keep an overlap of searchLen - 1 bytes so a match
+           straddling a chunk boundary is not missed */
+        pos += qMax<qint64>(1, data.size() - searchLen + 1);
+        m_device->seek(pos);
     }
 
-    return idx;
+    return -1;
 }
 
 qint64 QDeviceBuffer::lastIndexOf(const QByteArray& ba, qint64 from) {

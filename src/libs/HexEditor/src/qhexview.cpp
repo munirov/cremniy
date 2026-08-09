@@ -604,7 +604,7 @@ void QHexView::removeSelection() {
         return;
     if(!m_readonly)
         m_hexdocument->remove(m_hexcursor->selectionStartOffset(),
-                              m_hexcursor->selectionLength() - 1);
+                              m_hexcursor->selectionLength());
     m_hexcursor->clearSelection();
 }
 

@@ -45,21 +45,23 @@ void FileCreateDialog::onCreateClicked() {
     // тут можно создать файл
     QString fullPath = QString("%1/%2").arg(dir_path).arg(fileName);
 
+    bool created = false;
+
     if (is_dir) {
         QDir dir;
-        if (!dir.mkpath(fullPath)) {
+        created = dir.mkpath(fullPath);
+        if (!created)
             QMessageBox::critical(this, tr("Error"), tr("Failed to create directory!"));
-        }
     }
     else {
         QFile file(fullPath);
-        if(file.open(QIODevice::WriteOnly)) {
+        created = file.open(QIODevice::WriteOnly);
+        if (created)
             file.close();
-            accept(); // закрыть диалог
-        } else {
+        else
             QMessageBox::critical(this, tr("Error"), tr("Failed to create file!"));
-        }
     }
 
-    this->destroy();
+    if (created)
+        accept();
 }

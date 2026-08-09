@@ -14,7 +14,7 @@ protected:
      *
      * Хранит все данные файла и обеспечивает синхронизацию между вкладками
      */
-    FileDataBuffer* m_dataBuffer;
+    FileDataBuffer* m_dataBuffer = nullptr;
 
     /**
      * @brief Контекст файла
@@ -64,7 +64,23 @@ public:
      * @param newFileDataBuffer указатель на общий буффер
      */
     virtual void setFileDataBuffer(FileDataBuffer* newFileDataBuffer){
+        if (m_dataBuffer == newFileDataBuffer)
+            return;
+
+        if (m_dataBuffer) {
+            disconnect(m_dataBuffer, &FileDataBuffer::byteChanged,
+                       this, &TabBase::onByteChanged);
+            disconnect(m_dataBuffer, &FileDataBuffer::bytesChanged,
+                       this, &TabBase::onBytesChanged);
+            disconnect(m_dataBuffer, &FileDataBuffer::selectionChanged,
+                       this, &TabBase::onSelectionChanged);
+            disconnect(m_dataBuffer, &FileDataBuffer::dataChanged,
+                       this, &TabBase::onDataChanged);
+        }
+
         m_dataBuffer = newFileDataBuffer;
+        if (!m_dataBuffer)
+            return;
 
         connect(m_dataBuffer, &FileDataBuffer::byteChanged,
                 this, &TabBase::onByteChanged);

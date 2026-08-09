@@ -50,6 +50,9 @@ private:
     // File-tree exclusion
     QPlainTextEdit *m_excludedPatterns = nullptr;
 
+    // Language
+    QComboBox *m_languageCombo = nullptr;
+
     QPushButton *m_testBtn      = nullptr;
     QPushButton *m_exportBtn    = nullptr;
     QPushButton *m_importBtn    = nullptr;

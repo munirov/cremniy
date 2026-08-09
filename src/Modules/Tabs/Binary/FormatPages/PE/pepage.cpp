@@ -59,8 +59,8 @@ void PEPage::setPageData(QByteArray& data)
         return;
     }
 
-    uint32_t peOffset = qFromLittleEndian<uint32_t>(bytes + 0x3C);
-    if ((int)(peOffset + 24) >= data.size()) {
+    const uint32_t peOffset = qFromLittleEndian<uint32_t>(bytes + 0x3C);
+    if (static_cast<quint64>(peOffset) + 24 >= static_cast<quint64>(data.size())) {
         m_warning->setText("Некорректное смещение PE заголовка");
         m_warning->show();
         emit dataEqual();

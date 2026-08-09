@@ -48,9 +48,9 @@ QByteArray Radare2Backend::runR2JsonCommand(const QString &r2Path,
                                            const QString &filePath,
                                            const QString &cmd,
                                            QString *error,
-                                           bool *cancelled)
+                                           std::atomic_bool *cancelled)
 {
-    if (cancelled && *cancelled) {
+    if (cancelled && cancelled->load()) {
         if (error) *error = QObject::tr("Cancelled");
         return {};
     }
@@ -74,7 +74,7 @@ QByteArray Radare2Backend::runR2JsonCommand(const QString &r2Path,
 
     // Small polling loop to allow cancellation.
     while (!proc.waitForFinished(50)) {
-        if (cancelled && *cancelled) {
+        if (cancelled && cancelled->load()) {
             proc.kill();
             if (error) *error = QObject::tr("Cancelled");
             return {};
@@ -104,7 +104,7 @@ QByteArray Radare2Backend::runR2JsonCommand(const QString &r2Path,
 Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
                                                        const QString &filePath,
                                                        const Options &opt,
-                                                       bool *cancelled)
+                                                       std::atomic_bool *cancelled)
 {
     Result res;
 
@@ -215,7 +215,7 @@ Radare2Backend::Result Radare2Backend::disassembleFile(const QString &r2Path,
     const int insnLimit = (opt.insnLimitPerSection > 0) ? opt.insnLimitPerSection : 4000;
 
     for (const QJsonValue &v : sections) {
-        if (cancelled && *cancelled) break;
+        if (cancelled && cancelled->load()) break;
         if (!v.isObject()) continue;
         const QJsonObject o = v.toObject();
 

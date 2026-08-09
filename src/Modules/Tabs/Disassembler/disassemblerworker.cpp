@@ -2,6 +2,7 @@
 #include "core/settings/appsettings.h"
 #include "disasm/backends/radare2backend.h"
 
+#include <QElapsedTimer>
 #include <QProcess>
 #include <QProcessEnvironment>
 #include <QRegularExpression>
@@ -16,9 +17,42 @@ struct ObjdumpSectionHeader {
     bool valid = false;
 };
 
+static bool waitForStarted(QProcess& proc, int timeoutMs, const std::atomic_bool* cancelled)
+{
+    QElapsedTimer timer;
+    timer.start();
+    while (!proc.waitForStarted(100)) {
+        if (cancelled && cancelled->load()) {
+            proc.kill();
+            return false;
+        }
+        if (proc.state() == QProcess::NotRunning)
+            return false;
+        if (timer.elapsed() >= timeoutMs)
+            return false;
+    }
+    return true;
+}
+
+static bool waitForFinished(QProcess& proc, int timeoutMs, const std::atomic_bool* cancelled)
+{
+    QElapsedTimer timer;
+    timer.start();
+    while (!proc.waitForFinished(100)) {
+        if (cancelled && cancelled->load()) {
+            proc.kill();
+            return false;
+        }
+        if (timer.elapsed() >= timeoutMs)
+            return false;
+    }
+    return true;
+}
+
 static QHash<QString, DisasmSection> parseObjdumpSectionHeaders(const QString &objdumpExe,
                                                                 const QString &filePath,
-                                                                const QProcessEnvironment &env)
+                                                                const QProcessEnvironment &env,
+                                                                const std::atomic_bool *cancelled)
 {
     QHash<QString, DisasmSection> sections;
 
@@ -26,9 +60,9 @@ static QHash<QString, DisasmSection> parseObjdumpSectionHeaders(const QString &o
     proc.setProcessEnvironment(env);
     proc.setProcessChannelMode(QProcess::SeparateChannels);
     proc.start(objdumpExe, {"-h", filePath});
-    if (!proc.waitForStarted(5000))
+    if (!waitForStarted(proc, 5000, cancelled))
         return sections;
-    if (!proc.waitForFinished(10000) || proc.exitCode() != 0)
+    if (!waitForFinished(proc, 10000, cancelled) || proc.exitCode() != 0)
         return sections;
 
     static const QRegularExpression re(
@@ -75,7 +109,9 @@ QString DisassemblerWorker::detectArch(const QString &filePath)
 {
     QProcess fileProc;
     fileProc.start("file", {"-b", filePath});
-    if (!fileProc.waitForFinished(3000))
+    if (!waitForStarted(fileProc, 3000, &m_cancelled))
+        return {};
+    if (!waitForFinished(fileProc, 3000, &m_cancelled))
         return {};
 
     QString desc = QString::fromUtf8(fileProc.readAllStandardOutput()).toLower();
@@ -212,7 +248,7 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
 
     emit logLine("[disasm] objdump started (pid " + QString::number(proc.processId()) + ")");
 
-    const QHash<QString, DisasmSection> sectionHeaders = parseObjdumpSectionHeaders(objdumpExe, filePath, env);
+    const QHash<QString, DisasmSection> sectionHeaders = parseObjdumpSectionHeaders(objdumpExe, filePath, env, &m_cancelled);
 
     QByteArray output;
     while (!proc.waitForFinished(200)) {

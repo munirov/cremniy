@@ -8,22 +8,24 @@
 
 
 class QSortFilterProxyModel;
+class IconProvider;
 
 class FileTreePanel : public QWidget {
     Q_OBJECT
 
 public:
     explicit FileTreePanel(QWidget* parent, QFileSystemModel* model, QSortFilterProxyModel* proxy, const QString& rootPath);
+    ~FileTreePanel() override;
 
 signals:
     void openFileRequested(const QString& filePath, const QString& fileName);
 
 private slots:
-    void showMenu(const QPoint& point) const;
+    void showMenu(const QPoint& point);
 
 private:
     void setupUi() const;
-    void setupModel() const;
+    void setupModel();
     void setupContextMenu();
     void setupConnections();
 
@@ -36,6 +38,7 @@ private:
     QTreeView* m_treeView;
     QSortFilterProxyModel* m_proxy;
     QFileSystemModel* m_fileModel;
+    IconProvider* m_iconProvider = nullptr;
 
     QAction* m_createFile{};
     QAction* m_createDir{};

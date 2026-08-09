@@ -37,7 +37,7 @@ public:
     qint64 indexOf(const QByteArray& ba, qint64 from = 0);
     qint64 lastIndexOf(const QByteArray& ba, qint64 from = 0);
     QByteArray read(qint64 offset, int len = 0) const;
-    uchar at(int offset) const;
+    uchar at(qint64 offset) const;
 
 public Q_SLOTS:
     void clearChanges();

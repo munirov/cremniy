@@ -265,8 +265,10 @@ void WelcomeForm::L2CreateButton()
     }
 
     IDEWindow *mw = new IDEWindow(new_project_path, nullptr);
+    mw->setAttribute(Qt::WA_DeleteOnClose);
+    mw->setWindowState(Qt::WindowMaximized);
     mw->show();
-    this->destroy();
+    this->close();
 }
 
 void WelcomeForm::L2CreateProject(QString name, QString path, QString language){
@@ -280,4 +282,10 @@ void WelcomeForm::SetProjectHistoryList(){
     QStringListModel *model = new QStringListModel(this);
     model->setStringList(history);
     RecentProjectsList->setModel(model);
+
+    /* setModel() destroys the previous selection model, so reconnect the handler */
+    connect(RecentProjectsList->selectionModel(),
+            &QItemSelectionModel::selectionChanged,
+            this,
+            &WelcomeForm::SelectProjectInList);
 }

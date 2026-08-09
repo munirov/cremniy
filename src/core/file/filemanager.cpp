@@ -29,7 +29,7 @@ QByteArray FileManager::openFile(FileContext* fc){
     file.close();
     fc->m_bytesCount = data.size();
     fc->m_startOffset = 0;
-    fc->m_endOffset = data.size() - 1;
+    fc->m_endOffset = data.isEmpty() ? 0 : data.size() - 1;
     return data;
 }
 

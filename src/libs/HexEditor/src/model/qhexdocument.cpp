@@ -134,7 +134,7 @@ qint64 QHexDocument::length() const {
     return m_buffer ? m_buffer->length() : 0;
 }
 
-uchar QHexDocument::at(int offset) const { return m_buffer->at(offset); }
+uchar QHexDocument::at(qint64 offset) const { return m_buffer->at(offset); }
 
 QHexDocument* QHexDocument::fromFile(QString filename, QObject* parent) {
     QFile f(filename);
