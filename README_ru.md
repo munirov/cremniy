@@ -43,7 +43,7 @@
 
 ![out](https://github.com/user-attachments/assets/f5e9c520-fb31-45cc-ab11-17eff66d7069)
 
-## Возможности
+## Возможности ✨
 
 ### Доступно сейчас
 
@@ -58,14 +58,14 @@
 - 🐛 **Отладчик** — пошаговое выполнение, просмотр регистров и памяти
 - 🧠 **Визуализация памяти** — наглядные карты расположения и выделения памяти
 
-## Сборка
+## Сборка 🛠️
 
 ### Зависимости
 
 | Зависимость | Мин. версия |
 |---|---|
-| **CMake** | 3.16 |
-| **Qt** | 6.8.2 |
+| **[CMake](https://cmake.org/download/)** | 3.16 |
+| **[Qt](https://www.qt.io/development/download-qt-installer-oss)** | 6.8.2 |
 | **[libgit2](https://libgit2.org/)** | 1.x |
 | **Компилятор C++** | Поддержка C++17 |
 
@@ -83,14 +83,20 @@ pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86
 </details>
 
 <details>
-<summary><b>🐧 Linux (Ubuntu / Debian)</b></summary>
+<summary><b>🐧 Linux (Debian-based / Fedora)</b></summary>
 
+Для дистрибутивов, основанных на Debian:
 ```bash
 sudo apt update
 sudo apt install cmake g++ qt6-base-dev libgit2-dev
 ```
+Для Fedora:
+```bash
+sudo dnf update --refresh
+sudo dnf install cmake gcc-c++ qt6-qtbase-devel libgit2-devel
+```
 
-> [!NOTE]
+> ℹ️ **NOTE:** 
 > Если пакет `qt6-base-dev` недоступен в вашем дистрибутиве, используйте [официальный установщик Qt](https://www.qt.io/download-qt-installer-oss).
 
 </details>
@@ -143,7 +149,7 @@ cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
-## Участие в разработке
+## Участие в разработке 👋
 
 Вклад в проект **приветствуется**.
 
@@ -156,6 +162,6 @@ cmake --build . --config Release
 Подробнее — в [CONTRIBUTING.md](CONTRIBUTING_ru.md).
 
 
-## Лицензия
+## Лицензия 📖
 
 Распространяется на условиях, описанных в [LICENSE](LICENSE).

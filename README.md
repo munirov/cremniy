@@ -43,7 +43,7 @@ You constantly **switch** between different windows, and the tools are **not lin
 
 ![out](https://github.com/user-attachments/assets/f5e9c520-fb31-45cc-ab11-17eff66d7069)
 
-## Features
+## Features ✨
 
 ### Available now
 
@@ -58,16 +58,16 @@ You constantly **switch** between different windows, and the tools are **not lin
 - 🐛 **Debugger** — step through execution, inspect registers and memory
 - 🧠 **Memory visualization** — visual maps of memory layout and allocation
 
-## Build
+## Build 🛠️
 
 ### Prerequisites
 
 | Dependency | Minimum version |
 |---|---|
-| **CMake** | 3.16 |
-| **Qt** | 6.8.2 |
+| **[CMake](https://cmake.org/download/)** | 3.16 |
+| **[Qt](https://www.qt.io/development/download-qt-installer-oss)** | 6.8.2 |
 | **[libgit2](https://libgit2.org/)** | 1.x |
-| **C++ compiler** | C++17 support |
+| **C++ compiler** | C++17 compliant |
 
 <details>
 <summary><b>🪟 Windows</b></summary>
@@ -83,14 +83,20 @@ pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86
 </details>
 
 <details>
-<summary><b>🐧 Linux (Ubuntu / Debian)</b></summary>
+<summary><b>🐧 Linux (Debian-based / Fedora)</b></summary>
 
+For Debian-based distributions:
 ```bash
 sudo apt update
 sudo apt install cmake g++ qt6-base-dev libgit2-dev
 ```
+For Fedora:
+```bash
+sudo dnf update --refresh
+sudo dnf install cmake gcc-c++ qt6-qtbase-devel libgit2-devel
+```
 
-> [!NOTE]
+> ℹ️ **NOTE:** 
 > If `qt6-base-dev` is unavailable in your distribution's repositories, use the [official Qt installer](https://www.qt.io/download-qt-installer-oss) instead.
 
 </details>
@@ -143,7 +149,7 @@ cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
-## Contributing
+## Contributing 👋
 
 Contributions are **welcome and encouraged**.
 
@@ -155,6 +161,6 @@ All contributors are credited in [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) and 
 
 For guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## License
+## License 📖
 
 Distributed under the terms described in [LICENSE](LICENSE).

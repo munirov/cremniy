@@ -14,6 +14,12 @@ Your time, ideas, and effort help the project grow and move forward.
 
 People who contributed their time and code to Cremniy.
 
+<a href="https://github.com/munirov/cremniy/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=munirov/cremniy" />
+</a>
+
+---
+
 [@teenageswag](https://github.com/teenageswag)
 
 [@Altro-O](https://github.com/Altro-O)
