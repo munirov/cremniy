@@ -225,7 +225,6 @@ private:
     QPoint contentPointForBytePos(qint64 bytePos) const;
     void centerViewOnBytePos(qint64 bytePos);
     void clampCursorToBuffer();
-    void initSyntaxSupport();
     void rebuildHighlighterForCurrentExtension();
     QString normalizedFileExt(const QString& ext) const;
     QString lineCommentPrefix() const;
@@ -285,7 +284,6 @@ private:
     bool m_pendingTripleClick;
     QTextDocument* m_highlightDocument;
     QSyntaxStyle* m_syntaxStyle;
-    QHash<QString, QString> m_languageResourceByExt;
     QString m_languageResource;
     int m_savedVerticalScrollValue;
     int m_savedHorizontalScrollValue;

@@ -91,6 +91,7 @@ QString ProjectCard::shortLang(const QString& lang)
     if (lang == "C") return "C";
     if (lang == "ASM") return "ASM";
     if (lang == "C + ASM") return "C+ASM";
+    if (lang == "Rust") return "RS";
     if (lang == "Custom") return "USR";
     if (lang == "?") return "?";
     return lang;

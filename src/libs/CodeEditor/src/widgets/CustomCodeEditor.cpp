@@ -5,7 +5,7 @@
 #include "widgets/EditorTypingBehaviors.h"
 #include "widgets/LineNumberArea.h"
 #include "widgets/BlameTooltip.h"
-#include "highlighters/HighlighterFactory.h"
+#include "languages/LanguageRegistry.h"
 #include "QSyntaxStyle.hpp"
 #include "QStyleSyntaxHighlighter.hpp"
 #include "FileDataBuffer.h"
@@ -266,7 +266,6 @@ CustomCodeEditor::CustomCodeEditor(QWidget* parent)
     , m_editGroupTimer(new QTimer(this))
     , m_currentEditGroupType(EditGroupNone)
 {
-    initSyntaxSupport();
     setFont(m_font);
     setFocusPolicy(Qt::StrongFocus);
     viewport()->setCursor(Qt::IBeamCursor);
@@ -388,93 +387,7 @@ bool CustomCodeEditor::event(QEvent* event)
 QString CustomCodeEditor::syntaxKeyForPath(const QString& filePath)
 {
     const QFileInfo info(filePath);
-    const QString fileName = info.fileName().toLower();
-    const QString suffix = info.suffix().toLower();
-
-    if (fileName == QStringLiteral("makefile") || fileName.endsWith(QStringLiteral(".mk")))
-        return QStringLiteral("make");
-    if (fileName == QStringLiteral("cmakelists.txt") || fileName == QStringLiteral("cmakecache.txt"))
-        return QStringLiteral("cmake");
-    if (fileName == QStringLiteral("dockerfile"))
-        return QStringLiteral("sh");
-    if (fileName.endsWith(QStringLiteral(".vcxproj")) || fileName.endsWith(QStringLiteral(".vcproj")) ||
-        fileName.endsWith(QStringLiteral(".csproj")) || fileName.endsWith(QStringLiteral(".fsproj")) ||
-        fileName.endsWith(QStringLiteral(".props")) || fileName.endsWith(QStringLiteral(".targets")) ||
-        fileName.endsWith(QStringLiteral(".filters")) || fileName.endsWith(QStringLiteral(".xml")) ||
-        fileName.endsWith(QStringLiteral(".xaml")) || fileName.endsWith(QStringLiteral(".svg")))
-        return QStringLiteral("xml");
-    if (fileName.endsWith(QStringLiteral(".sln")))
-        return QStringLiteral("sln");
-    if (fileName == QStringLiteral(".gitignore") || fileName == QStringLiteral(".dockerignore"))
-        return QStringLiteral("ini");
-    if (fileName == QStringLiteral(".env"))
-        return QStringLiteral("ini");
-    if (suffix == QStringLiteral("yml"))
-        return QStringLiteral("yaml");
-    if (suffix == QStringLiteral("bash") || suffix == QStringLiteral("zsh") || suffix == QStringLiteral("fish"))
-        return QStringLiteral("sh");
-    if (suffix == QStringLiteral("conf") || suffix == QStringLiteral("cfg") || suffix == QStringLiteral("properties"))
-        return QStringLiteral("ini");
-    if (suffix == QStringLiteral("mjs") || suffix == QStringLiteral("cjs") || suffix == QStringLiteral("jsx"))
-        return QStringLiteral("js");
-    if (suffix == QStringLiteral("tsx"))
-        return QStringLiteral("ts");
-    return suffix;
-}
-
-void CustomCodeEditor::initSyntaxSupport()
-{
-    // Reuse the old editor's language assets where they already exist, and
-    // fall back to rule-based highlighters for common formats that were not
-    // previously covered by QCodeEditor.
-    m_languageResourceByExt.insert(QStringLiteral("c"), QStringLiteral(":/languages/c.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("h"), QStringLiteral(":/languages/c.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("cpp"), QStringLiteral(":/languages/cpp.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("hpp"), QStringLiteral(":/languages/cpp.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("cc"), QStringLiteral(":/languages/cpp.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("cxx"), QStringLiteral(":/languages/cpp.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("asm"), QStringLiteral(":/languages/asm.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("s"), QStringLiteral(":/languages/asm.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("rs"), QStringLiteral(":/languages/rust.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("mk"), QStringLiteral(":/languages/gnumake.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("make"), QStringLiteral(":/languages/gnumake.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("txt"), QStringLiteral(":/languages/plain"));
-    m_languageResourceByExt.insert(QStringLiteral("cmake"), QStringLiteral(":/languages/cmake.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("py"), QStringLiteral(":/languages/python.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("lua"), QStringLiteral(":/languages/lua.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("glsl"), QStringLiteral(":/languages/glsl.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("vert"), QStringLiteral(":/languages/glsl.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("frag"), QStringLiteral(":/languages/glsl.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("md"), QStringLiteral(":/languages/markdown"));
-    m_languageResourceByExt.insert(QStringLiteral("markdown"), QStringLiteral(":/languages/markdown"));
-    m_languageResourceByExt.insert(QStringLiteral("json"), QStringLiteral(":/languages/json"));
-    m_languageResourceByExt.insert(QStringLiteral("yaml"), QStringLiteral(":/languages/yaml"));
-    m_languageResourceByExt.insert(QStringLiteral("yml"), QStringLiteral(":/languages/yaml"));
-    m_languageResourceByExt.insert(QStringLiteral("toml"), QStringLiteral(":/languages/toml"));
-    m_languageResourceByExt.insert(QStringLiteral("ini"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("cfg"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("conf"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("properties"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("env"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("sh"), QStringLiteral(":/languages/sh"));
-    m_languageResourceByExt.insert(QStringLiteral("bash"), QStringLiteral(":/languages/sh"));
-    m_languageResourceByExt.insert(QStringLiteral("zsh"), QStringLiteral(":/languages/sh"));
-    m_languageResourceByExt.insert(QStringLiteral("fish"), QStringLiteral(":/languages/sh"));
-    m_languageResourceByExt.insert(QStringLiteral("js"), QStringLiteral(":/languages/js"));
-    m_languageResourceByExt.insert(QStringLiteral("mjs"), QStringLiteral(":/languages/js"));
-    m_languageResourceByExt.insert(QStringLiteral("cjs"), QStringLiteral(":/languages/js"));
-    m_languageResourceByExt.insert(QStringLiteral("jsx"), QStringLiteral(":/languages/js"));
-    m_languageResourceByExt.insert(QStringLiteral("ts"), QStringLiteral(":/languages/ts"));
-    m_languageResourceByExt.insert(QStringLiteral("tsx"), QStringLiteral(":/languages/ts"));
-    m_languageResourceByExt.insert(QStringLiteral("java"), QStringLiteral(":/languages/java"));
-    m_languageResourceByExt.insert(QStringLiteral("cs"), QStringLiteral(":/languages/cs"));
-    m_languageResourceByExt.insert(QStringLiteral("go"), QStringLiteral(":/languages/go"));
-    m_languageResourceByExt.insert(QStringLiteral("php"), QStringLiteral(":/languages/php"));
-    m_languageResourceByExt.insert(QStringLiteral("sql"), QStringLiteral(":/languages/sql"));
-    m_languageResourceByExt.insert(QStringLiteral("xml"), QStringLiteral(":/languages/xml"));
-    m_languageResourceByExt.insert(QStringLiteral("xaml"), QStringLiteral(":/languages/xml"));
-    m_languageResourceByExt.insert(QStringLiteral("svg"), QStringLiteral(":/languages/xml"));
-    m_languageResourceByExt.insert(QStringLiteral("sln"), QStringLiteral(":/languages/sln"));
+    return EditorLanguageSupport::syntaxKeyForFileName(info.fileName());
 }
 
 QString CustomCodeEditor::normalizedFileExt(const QString& ext) const
@@ -484,10 +397,10 @@ QString CustomCodeEditor::normalizedFileExt(const QString& ext) const
 
 void CustomCodeEditor::rebuildHighlighterForCurrentExtension()
 {
-    const QString ext = normalizedFileExt(m_fileExt);
-    const QString resource = EditorLanguageSupport::languageResourceForExtension(ext);
-    m_languageResource = resource;
-    setSyntaxHighlighter(HighlighterFactory::create(resource, ext, m_highlightDocument));
+    const QString languageId = normalizedFileExt(m_fileExt);
+    const LanguageDefinition& language = LanguageRegistry::instance().resolveForExtension(languageId);
+    m_languageResource = language.id;
+    setSyntaxHighlighter(language.createHighlighter ? language.createHighlighter(m_highlightDocument) : nullptr);
     applyEditorPalette();
 }
 

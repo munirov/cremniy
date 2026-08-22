@@ -1,6 +1,7 @@
 #include "codeeditortab.h"
 #include "utils/utils.h"
 #include "libs/CodeEditor/include/widgets/CustomCodeEditor.h"
+#include "libs/CodeEditor/include/languages/LanguageRegistry.h"
 #include "core/modules/ModuleManager.h"
 #include "core/settings/appsettings.h"
 #include "core/git/gitmanager.h"
@@ -203,40 +204,16 @@ void CodeEditorTab::setGitBlameSlot(bool checked)
 
 QString CodeEditorTab::detectLanguage(const QString& filePath)
 {
-    QFileInfo fi(filePath);
-    QString ext = fi.suffix().toLower();
-    QString baseName = fi.fileName().toLower();
+    // Single source of truth: LanguageRegistry. See docs/adding_a_language.md.
+    const QFileInfo fi(filePath);
+    const LanguageDefinition& language = LanguageRegistry::instance().resolveForFile(fi.fileName());
+    if (&language != &LanguageRegistry::plainTextLanguage())
+        return language.displayName;
 
-    static const QHash<QString, QString> extMap = {
-        {"c", "C"}, {"h", "C"},
-        {"cpp", "C++"}, {"cxx", "C++"}, {"cc", "C++"}, {"hpp", "C++"}, {"hxx", "C++"},
-        {"py", "Python"},
-        {"rs", "Rust"},
-        {"asm", "Assembly"}, {"s", "Assembly"},
-        {"js", "JavaScript"},
-        {"ts", "TypeScript"},
-        {"java", "Java"},
-        {"go", "Go"},
-        {"cmake", "CMake"},
-        {"mk", "Makefile"}, {"make", "Makefile"},
-        {"sh", "Shell"}, {"bash", "Shell"}, {"zsh", "Shell"},
-        {"json", "JSON"}, {"xml", "XML"}, {"html", "HTML"}, {"css", "CSS"},
-    };
-
-    if (extMap.contains(ext))
-        return extMap.value(ext);
-
-    if (ext.isEmpty()) {
-        if (baseName == "makefile" || baseName == "gnumakefile")
-            return "Makefile";
-        if (baseName == "cmakelists.txt")
-            return "CMake";
-        if (baseName == "dockerfile")
-            return "Dockerfile";
-        return "Plain Text";
-    }
-
-    return ext.toUpper();
+    // Unknown extension: fall back to the extension itself (uppercased) so the
+    // status bar still shows something useful, matching the previous behavior.
+    const QString ext = fi.suffix();
+    return ext.isEmpty() ? QStringLiteral("Plain Text") : ext.toUpper();
 }
 
 void CodeEditorTab::setTabData()

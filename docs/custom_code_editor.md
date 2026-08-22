@@ -51,10 +51,13 @@ Key properties:
 
 ## Supported Highlighting Groups
 
-The editor reuses the old `QCodeEditor` language assets where possible and
-adds rule-based highlighting for common formats.
+All language support goes through a single `LanguageRegistry` — each language
+is self-contained in one file under `src/libs/CodeEditor/src/languages/` and
+registers itself automatically at startup. See
+[Adding a New Language](adding_a_language.md) for the full guide on adding
+support for a new language.
 
-Examples:
+Currently supported:
 
 - C / C++ / headers
 - assembly
