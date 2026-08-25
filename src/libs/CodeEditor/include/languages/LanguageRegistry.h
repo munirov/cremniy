@@ -19,7 +19,7 @@ class QTextDocument;
  *   - создать хайлайтер для документа.
  *
  * Языки НЕ регистрируются вручную в этом файле или в CustomCodeEditor.cpp.
- * Каждый язык живёт в своём .cpp-файле в src/languages/ и регистрирует себя
+ * Каждый язык живёт в своей директории src/languages/<name>/ и регистрирует себя
  * сам при старте программы через макрос CREMNIY_REGISTER_LANGUAGE (ниже) —
  * то есть добавление языка сводится к добавлению одного нового файла.
  *
@@ -67,7 +67,7 @@ private:
 /// Регистрирует функцию, которая будет вызвана один раз при старте программы
 /// и должна вызвать LanguageRegistry::instance().registerLanguage(...).
 ///
-/// Пример использования — в конце файла src/languages/PythonLanguage.cpp:
+/// Пример использования — в конце файла src/languages/python/PythonLanguage.cpp:
 ///
 ///     CREMNIY_REGISTER_LANGUAGE(registerPythonLanguage)
 ///
@@ -79,7 +79,7 @@ private:
 /// отбросить .o-файл языка целиком, если на него нет ни одной явной ссылки
 /// (побочный эффект конструктора статического объекта для линкера "ссылкой"
 /// не считается). Поэтому макрос дополнительно объявляет функцию с внешним
-/// связыванием (`<имя>_forceLink`), на которую src/languages/LanguageRegistration.cpp
+/// связыванием (`<имя>_forceLink`), на которую src/languages/core/LanguageRegistration.cpp
 /// ссылается явно, а main() вызывает registerAllLanguages() один раз при
 /// старте программы, до создания первого CustomCodeEditor — это гарантирует,
 /// что object file языка попадёт в финальный бинарник независимо от
@@ -87,7 +87,7 @@ private:
 ///
 /// При добавлении нового языка: помимо CREMNIY_REGISTER_LANGUAGE в новом
 /// .cpp-файле нужно добавить одну строку (extern-объявление + вызов) в
-/// src/languages/LanguageRegistration.cpp — см. комментарий в том файле
+/// src/languages/core/LanguageRegistration.cpp — см. комментарий в том файле
 /// и docs/adding_a_language.md.
 #define CREMNIY_REGISTER_LANGUAGE(registerFn)                                 \
     namespace {                                                              \

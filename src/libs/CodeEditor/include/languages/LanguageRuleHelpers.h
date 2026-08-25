@@ -1,7 +1,7 @@
 #ifndef LANGUAGERULEHELPERS_H
 #define LANGUAGERULEHELPERS_H
 
-#include "highlighters/RuleBasedHighlighter.h"
+#include "core/RuleBasedHighlighter.h"
 
 #include <QRegularExpression>
 #include <QStringList>
@@ -47,6 +47,18 @@ inline RegexRule numberLiteralRule()
 inline QVector<RegexRule> literalRules()
 {
     return {stringLiteralRule(), numberLiteralRule()};
+}
+
+/// Готовый набор правил для "C-подобных" языков с раздельными списками
+/// ключевых слов и примитивных типов поверх обычных строк/чисел.
+/// Используется семьёй языков с фигурными скобками (Java, C#, Go, PHP) —
+/// каждый передаёт свои списки слов, но форма правил одинакова.
+inline QVector<RegexRule> keywordsAndTypesRules(const QStringList& keywords, const QStringList& primitiveTypes)
+{
+    QVector<RegexRule> rules = literalRules();
+    rules += wordRules(keywords, QStringLiteral("Keyword"));
+    rules += wordRules(primitiveTypes, QStringLiteral("PrimitiveType"));
+    return rules;
 }
 
 } // namespace LanguageRuleHelpers

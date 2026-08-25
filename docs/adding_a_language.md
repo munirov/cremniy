@@ -9,11 +9,15 @@ English • [Русский](adding_a_language_ru.md)
 ## Overview
 
 Syntax highlighting for every language in the editor goes through a single
-interface: `LanguageRegistry`. Adding a new language means creating **one
-new `.cpp` file**, adding **one line** to `CMakeLists.txt`, and adding **one
-line** to `LanguageRegistration.cpp` (a linker-visibility requirement,
-explained below). You do not need to touch `CustomCodeEditor.cpp`,
-`EditorLanguageSupport`, or any other existing file.
+interface: `LanguageRegistry`. Each language lives in its own directory
+under `src/libs/CodeEditor/src/languages/<name>/`, with its own
+`CMakeLists.txt` — the same "one directory, self-contained" pattern used by
+`src/ui/MenuBar/Menus/`. Adding a new language means creating **one new
+directory** (one `.cpp` file, one `CMakeLists.txt`), and adding **one line**
+to `LanguageRegistration.cpp` (a linker-visibility requirement, explained
+below). You never touch `src/libs/CodeEditor/CMakeLists.txt`,
+`CustomCodeEditor.cpp`, `EditorLanguageSupport`, or any other existing
+language's files.
 
 This document walks through the whole process using a fictional "Zig-like"
 language as an example.
@@ -60,10 +64,13 @@ state, for instance). Existing examples: `AsmHighlighter`,
 
 For almost every new language, option A is the right choice.
 
-### 2. Create the language file
+### 2. Create the language directory and file
 
-Create `src/libs/CodeEditor/src/languages/<Name>Language.cpp`. Here is a
-complete, working example for a rule-based language ("Zig-like"):
+Create a new directory `src/libs/CodeEditor/src/languages/<name>/`
+(lowercase, matching the language's `id`) and, inside it,
+`<Name>Language.cpp`. For "Zig-like" that's
+`src/libs/CodeEditor/src/languages/zig/ZigLanguage.cpp`. Here is a
+complete, working example for a rule-based language:
 
 ```cpp
 #include "languages/LanguageRegistry.h"
@@ -125,21 +132,42 @@ Field-by-field:
   `document` parameter (standard `QSyntaxHighlighter` behavior), or
   `nullptr` if the language is intentionally unhighlighted.
 
-If you need multiple closely related languages (like the existing
-`CBraceFamilyLanguages.cpp` for Java/C#/Go/PHP), it's fine to register
-several `LanguageDefinition`s from the same file and the same
-`CREMNIY_REGISTER_LANGUAGE` call — see that file for the pattern.
+If a language needs more than one closely related `LanguageDefinition`
+(like `make/MakeLanguage.cpp`, which registers both "make" and "cmake"),
+it's fine to register several from the same file and the same
+`CREMNIY_REGISTER_LANGUAGE` call — see that file for the pattern. Prefer
+this only when the definitions are genuinely inseparable (same file
+historically, same tooling domain); otherwise each language gets its own
+directory, even closely related ones — see `java/`, `csharp/`, `go/`, and
+`php/` for four languages that share highlighting logic (via
+`LanguageRuleHelpers::keywordsAndTypesRules`) but still live apart.
 
-### 3. Register the file in CMake
+If your language needs its own `QStyleSyntaxHighlighter` subclass (option B
+above), put its `.h`/`.cpp` in the same directory as the language file —
+see `asm/AsmHighlighter.*`, `make/MakefileHighlighter.*`, or
+`markdown/MarkdownHighlighter.*` for examples. Generic engines reused by
+several languages live elsewhere (see "Where Things Live" below), and are
+reached with a directory-qualified include, e.g.
+`#include "core/RuleBasedHighlighter.h"`.
 
-Open `src/libs/CodeEditor/CMakeLists.txt` and add your new file to the
-`add_library(CodeEditor STATIC ...)` list, next to the other files under
-`src/languages/`:
+### 3. Register the directory in CMake
+
+Create `src/libs/CodeEditor/src/languages/<name>/CMakeLists.txt`:
 
 ```cmake
-    src/languages/YamlLanguage.cpp
-    src/languages/ZigLanguage.cpp   # <- add this line
+target_sources(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ZigLanguage.cpp
+)
 ```
+
+If your language also has its own highlighter class, list its `.h`/`.cpp`
+here too (see `asm/CMakeLists.txt` for an example with a highlighter).
+
+That's it — `src/libs/CodeEditor/src/languages/CMakeLists.txt` globs every
+subdirectory here and calls `add_subdirectory()` on it automatically, the
+same pattern used by `src/ui/MenuBar/Menus/`. You never edit
+`src/libs/CodeEditor/CMakeLists.txt` or the top-level `languages/`
+`CMakeLists.txt` to add a language.
 
 ### 4. Add one line to LanguageRegistration.cpp
 
@@ -152,9 +180,9 @@ the linker a reason to keep the file; `LanguageRegistration.cpp` is the one
 place that calls every language's thunk explicitly, and `main()` calls
 `registerAllLanguages()` once at startup.
 
-Open `src/libs/CodeEditor/src/languages/LanguageRegistration.cpp` and add
-two lines: an `extern` declaration alongside the others, and a call inside
-`registerAllLanguages()`:
+Open `src/libs/CodeEditor/src/languages/core/LanguageRegistration.cpp` and
+add two lines: an `extern` declaration alongside the others, and a call
+inside `registerAllLanguages()`:
 
 ```cpp
 extern void registerYamlLanguage_forceLink();
@@ -200,6 +228,9 @@ for anything new. Use this only if you're deliberately reusing one of the
 existing `.xml` resource files.
 
 ```cpp
+#include "xml/XmlLanguageHighlighter.h"
+
+// ...
 [](QTextDocument* document) -> QStyleSyntaxHighlighter* {
     return new XmlLanguageHighlighter(
         QStringLiteral(":/languages/mylang.xml"),
@@ -212,15 +243,16 @@ existing `.xml` resource files.
 
 ## Common Mistakes
 
-- **Forgetting the `CMakeLists.txt` line.** The file simply won't be
-  compiled and the language won't appear — no error, no warning.
+- **Forgetting the `CMakeLists.txt` file (or the `target_sources` line in
+  it).** The file simply won't be compiled and the language won't appear —
+  no error, no warning.
 - **Forgetting the `LanguageRegistration.cpp` entry.** The project still
   builds fine, but the language silently doesn't register at runtime on
   linkers that drop unreferenced object files from a static library — see
   step 4 above.
 - **Duplicate `id`.** Re-registering an existing id silently overwrites the
   previous definition. Check `LanguageRegistry::allLanguages()` (or just
-  grep `src/languages/`) before picking an id.
+  grep `src/libs/CodeEditor/src/languages/`) before picking an id.
 - **Forgetting `nullptr`-safety in `createHighlighter`.** If your lambda can
   throw or fail to construct a highlighter, return `nullptr` explicitly
   rather than leaving undefined behavior — the caller checks for it.
@@ -230,13 +262,14 @@ existing `.xml` resource files.
 
 ## Where Things Live
 
-| What                                    | Where |
-|------------------------------------------|-------|
-| Interface definition                     | `src/libs/CodeEditor/include/languages/LanguageDefinition.h` |
-| Registry + registration macro            | `src/libs/CodeEditor/include/languages/LanguageRegistry.h`, `src/languages/LanguageRegistry.cpp` |
-| Force-link hook (add one line here too)  | `src/libs/CodeEditor/src/languages/LanguageRegistration.cpp` |
-| Rule-building helpers                    | `src/libs/CodeEditor/include/languages/LanguageRuleHelpers.h` |
-| Existing per-language files (examples)   | `src/libs/CodeEditor/src/languages/*.cpp` |
-| Generic rule-based highlighter           | `src/libs/CodeEditor/src/widgets/highlighters/RuleBasedHighlighter.*` |
-| Legacy XML-resource highlighter          | `src/libs/CodeEditor/src/widgets/highlighters/XmlLanguageHighlighter.*` |
-| Build file to update                     | `src/libs/CodeEditor/CMakeLists.txt` |
+| What                                      | Where |
+|--------------------------------------------|-------|
+| Interface definition                       | `src/libs/CodeEditor/include/languages/LanguageDefinition.h` |
+| Registry + registration macro              | `src/libs/CodeEditor/include/languages/LanguageRegistry.h`, `src/libs/CodeEditor/src/languages/core/LanguageRegistry.cpp` |
+| Force-link hook (add one line here too)    | `src/libs/CodeEditor/src/languages/core/LanguageRegistration.cpp` |
+| Rule-building helpers                      | `src/libs/CodeEditor/include/languages/LanguageRuleHelpers.h` |
+| Existing per-language directories (examples) | `src/libs/CodeEditor/src/languages/<name>/` |
+| Generic rule-based highlighter             | `src/libs/CodeEditor/src/languages/core/RuleBasedHighlighter.*` |
+| Legacy XML-resource highlighter            | `src/libs/CodeEditor/src/languages/xml/XmlLanguageHighlighter.*` |
+| Language-directory glob (rarely touched)   | `src/libs/CodeEditor/src/languages/CMakeLists.txt` |
+| Build file to update                       | never — create `src/libs/CodeEditor/src/languages/<name>/CMakeLists.txt` instead |

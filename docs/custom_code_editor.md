@@ -52,8 +52,9 @@ Key properties:
 ## Supported Highlighting Groups
 
 All language support goes through a single `LanguageRegistry` — each language
-is self-contained in one file under `src/libs/CodeEditor/src/languages/` and
-registers itself automatically at startup. See
+is self-contained in its own directory under
+`src/libs/CodeEditor/src/languages/<name>/` and registers itself
+automatically at startup. See
 [Adding a New Language](adding_a_language.md) for the full guide on adding
 support for a new language.
 

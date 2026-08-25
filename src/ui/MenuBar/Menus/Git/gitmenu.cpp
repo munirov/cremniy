@@ -1,6 +1,4 @@
 #include "gitmenu.h"
-#include "core/settings/appsettings.h"
-#include "Modules/Tabs/CodeEditor/codeeditorsettings.h"
 #include "ui/MenuBar/menufactory.h"
 #include <QApplication>
 #include <QFileDialog>
@@ -85,11 +83,6 @@ GitMenu::GitMenu() : BaseMenu(tr("Git"))
     m_stashList = m_extraMenu->addAction(tr("Stash List"));
     m_extraMenu->addSeparator();
     m_showLogGraph = m_extraMenu->addAction(tr("Log Graph"));
-
-    addSeparator();
-    m_toggleBlame = addAction(tr("Inline Git Blame"));
-    m_toggleBlame->setCheckable(true);
-    m_toggleBlame->setChecked(CodeEditorSettings::gitBlameEnabled());
 }
 
 void GitMenu::setupConnections(IDEWindow* ideWind)
@@ -153,16 +146,6 @@ void GitMenu::setupConnections(IDEWindow* ideWind)
     connect(m_stashDrop, &QAction::triggered, this, &GitMenu::onStashDrop);
     connect(m_stashList, &QAction::triggered, this, &GitMenu::onStashList);
     connect(m_showLogGraph, &QAction::triggered, this, &GitMenu::onShowLogGraph);
-
-    connect(m_toggleBlame, &QAction::toggled, this, [](bool checked) {
-        CodeEditorSettings::setGitBlameEnabled(checked);
-    });
-
-    connect(SettingsNotifier::instance(), &SettingsNotifier::settingsChanged,
-            this, [this](const QString &key) {
-        if (key == CodeEditorSettings::keyGitBlameEnabled())
-            m_toggleBlame->setChecked(CodeEditorSettings::gitBlameEnabled());
-    });
 }
 
 // Вспомогательные методы
@@ -803,7 +786,21 @@ void GitMenu::onShowLogGraph()
 
 QString GitMenu::findGitRepositoryRoot(const QString &path)
 {
-    return GitManager::findGitRepositoryRoot(path);
+    QDir dir(path);
+    
+    // Ищем гит директорию, поднимаясь по иерархии
+    while (!dir.isRoot()) {
+        if (dir.exists(".git")) {
+            QDir gitDir(dir.filePath(".git"));
+            // Проверяем, что это директория (а не файл, как в случае worktrees)
+            if (gitDir.exists() || QFileInfo(dir.filePath(".git")).isDir()) {
+                return dir.absolutePath();
+            }
+        }
+        if (!dir.cdUp()) break;
+    }
+    
+    return {};
 }
 
 bool GitMenu::isGitRepository(const QString &path)

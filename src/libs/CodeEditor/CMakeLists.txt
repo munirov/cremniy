@@ -35,36 +35,6 @@ add_library(CodeEditor STATIC
     src/widgets/EditorTypingBehaviors.cpp
     src/widgets/LineNumberArea.cpp
     src/widgets/BlameTooltip.cpp
-    src/widgets/highlighters/AsmHighlighter.h
-    src/widgets/highlighters/AsmHighlighter.cpp
-    src/widgets/highlighters/MakefileHighlighter.h
-    src/widgets/highlighters/MakefileHighlighter.cpp
-    src/widgets/highlighters/MarkdownHighlighter.h
-    src/widgets/highlighters/MarkdownHighlighter.cpp
-    src/widgets/highlighters/RuleBasedHighlighter.h
-    src/widgets/highlighters/RuleBasedHighlighter.cpp
-    src/widgets/highlighters/XmlLanguageHighlighter.h
-    src/widgets/highlighters/XmlLanguageHighlighter.cpp
-    src/languages/LanguageRegistry.cpp
-    src/languages/LanguageRegistration.cpp
-    src/languages/AsmLanguage.cpp
-    src/languages/CBraceFamilyLanguages.cpp
-    src/languages/CppLanguage.cpp
-    src/languages/GlslLanguage.cpp
-    src/languages/IniLanguage.cpp
-    src/languages/JavaScriptLanguage.cpp
-    src/languages/JsonLanguage.cpp
-    src/languages/LuaLanguage.cpp
-    src/languages/MakeLanguage.cpp
-    src/languages/MarkdownLanguage.cpp
-    src/languages/PythonLanguage.cpp
-    src/languages/RustLanguage.cpp
-    src/languages/ShellLanguage.cpp
-    src/languages/SlnLanguage.cpp
-    src/languages/SqlLanguage.cpp
-    src/languages/TomlLanguage.cpp
-    src/languages/XmlLanguage.cpp
-    src/languages/YamlLanguage.cpp
     third_party/QCodeEditor/include/QCECompleter.hpp
     third_party/QCodeEditor/include/QCXXHighlighter.hpp
     third_party/QCodeEditor/include/QCodeEditor.hpp
@@ -99,4 +69,18 @@ target_include_directories(CodeEditor PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/QCodeEditor/src
 )
 
+# Each language's code (definition + any language-specific highlighter) lives
+# in its own directory under src/languages/<name>/, added below. This include
+# path lets any language reach shared pieces by directory, e.g.
+# #include "core/RuleBasedHighlighter.h" or #include "xml/XmlLanguageHighlighter.h".
+target_include_directories(CodeEditor PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/languages
+)
+
 target_link_libraries(CodeEditor PUBLIC Qt6::Widgets)
+
+# src/languages/CMakeLists.txt globs and adds every language subdirectory
+# (one language = one directory = its own CMakeLists.txt), the same pattern
+# used by src/ui/MenuBar/Menus/. Adding a new language never requires
+# touching this file — see docs/adding_a_language.md.
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/languages)

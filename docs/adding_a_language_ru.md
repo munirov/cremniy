@@ -9,12 +9,15 @@
 ## Обзор
 
 Подсветка синтаксиса для всех языков в редакторе идёт через единый
-интерфейс — `LanguageRegistry`. Добавление нового языка сводится к
-созданию **одного нового `.cpp` файла**, добавлению **одной строки** в
-`CMakeLists.txt` и **одной строки** в `LanguageRegistration.cpp`
-(требование, связанное с видимостью символов для линкера — объяснено
-ниже). Трогать `CustomCodeEditor.cpp`, `EditorLanguageSupport` или любой
-другой существующий файл не нужно.
+интерфейс — `LanguageRegistry`. Каждый язык живёт в своей директории
+`src/libs/CodeEditor/src/languages/<name>/` со своим `CMakeLists.txt` — по
+тому же принципу "одна директория — всё самодостаточно", что и в
+`src/ui/MenuBar/Menus/`. Добавление нового языка сводится к созданию
+**одной новой директории** (один `.cpp`-файл, один `CMakeLists.txt`) и
+добавлению **одной строки** в `LanguageRegistration.cpp` (требование,
+связанное с видимостью символов для линкера — объяснено ниже). Трогать
+`src/libs/CodeEditor/CMakeLists.txt`, `CustomCodeEditor.cpp`,
+`EditorLanguageSupport` или файлы любого другого языка не нужно.
 
 В этом документе процесс разобран на примере вымышленного языка
 "Zig-подобный".
@@ -62,10 +65,13 @@ regex-правила применительно к одной строке (на
 
 Почти для любого нового языка правильный выбор — вариант А.
 
-### 2. Создай файл языка
+### 2. Создай директорию и файл языка
 
-Создай `src/libs/CodeEditor/src/languages/<Name>Language.cpp`. Вот полный
-рабочий пример для языка на правилах ("Zig-подобный"):
+Создай новую директорию `src/libs/CodeEditor/src/languages/<name>/`
+(в нижнем регистре, совпадает с `id` языка), а внутри неё —
+`<Name>Language.cpp`. Для "Zig-подобного" это
+`src/libs/CodeEditor/src/languages/zig/ZigLanguage.cpp`. Вот полный
+рабочий пример для языка на правилах:
 
 ```cpp
 #include "languages/LanguageRegistry.h"
@@ -128,21 +134,42 @@ CREMNIY_REGISTER_LANGUAGE(registerZigLanguage)
   `document` (стандартное поведение `QSyntaxHighlighter`), либо `nullptr`,
   если язык осознанно не подсвечивается.
 
-Если нужно добавить несколько близкородственных языков (как в существующем
-`CBraceFamilyLanguages.cpp` для Java/C#/Go/PHP), можно зарегистрировать
-несколько `LanguageDefinition` из одного файла и одного вызова
-`CREMNIY_REGISTER_LANGUAGE` — см. этот файл как образец.
+Если языку нужно больше одного тесно связанного `LanguageDefinition` (как
+`make/MakeLanguage.cpp`, который регистрирует и "make", и "cmake"), можно
+зарегистрировать несколько из одного файла и одного вызова
+`CREMNIY_REGISTER_LANGUAGE` — см. этот файл как образец. Делай так только
+если определения реально неразделимы (исторически один файл, одна область
+инструментов); в остальных случаях у каждого языка своя директория, даже у
+близкородственных — смотри `java/`, `csharp/`, `go/` и `php/`: четыре языка
+делят логику подсветки (через
+`LanguageRuleHelpers::keywordsAndTypesRules`), но всё равно живут раздельно.
 
-### 3. Зарегистрируй файл в CMake
+Если языку нужен собственный класс-наследник `QStyleSyntaxHighlighter`
+(вариант Б выше), помести его `.h`/`.cpp` в ту же директорию, что и файл
+языка — см. `asm/AsmHighlighter.*`, `make/MakefileHighlighter.*` или
+`markdown/MarkdownHighlighter.*` как примеры. Универсальные движки,
+переиспользуемые несколькими языками, живут отдельно (см. "Где что лежит"
+ниже) и подключаются через путь с директорией, например
+`#include "core/RuleBasedHighlighter.h"`.
 
-Открой `src/libs/CodeEditor/CMakeLists.txt` и добавь новый файл в список
-`add_library(CodeEditor STATIC ...)`, рядом с остальными файлами из
-`src/languages/`:
+### 3. Зарегистрируй директорию в CMake
+
+Создай `src/libs/CodeEditor/src/languages/<name>/CMakeLists.txt`:
 
 ```cmake
-    src/languages/YamlLanguage.cpp
-    src/languages/ZigLanguage.cpp   # <- добавь эту строку
+target_sources(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ZigLanguage.cpp
+)
 ```
+
+Если у языка есть свой класс хайлайтера, добавь его `.h`/`.cpp` сюда же
+(см. `asm/CMakeLists.txt` — пример с хайлайтером).
+
+Это всё — `src/libs/CodeEditor/src/languages/CMakeLists.txt` сам
+перебирает все поддиректории и вызывает для каждой `add_subdirectory()`,
+по тому же принципу, что и `src/ui/MenuBar/Menus/`. Ни
+`src/libs/CodeEditor/CMakeLists.txt`, ни корневой `CMakeLists.txt` в
+`languages/` для добавления языка редактировать не нужно.
 
 ### 4. Добавь одну строку в LanguageRegistration.cpp
 
@@ -156,7 +183,7 @@ CREMNIY_REGISTER_LANGUAGE(registerZigLanguage)
 вызываются thunk-функции всех языков, а `main()` один раз при старте
 вызывает `registerAllLanguages()`.
 
-Открой `src/libs/CodeEditor/src/languages/LanguageRegistration.cpp` и
+Открой `src/libs/CodeEditor/src/languages/core/LanguageRegistration.cpp` и
 добавь две строки: `extern`-объявление рядом с остальными и вызов внутри
 `registerAllLanguages()`:
 
@@ -204,6 +231,9 @@ XML-определения из стороннего компонента `QCode
 если осознанно переиспользуешь один из существующих `.xml`-ресурсов.
 
 ```cpp
+#include "xml/XmlLanguageHighlighter.h"
+
+// ...
 [](QTextDocument* document) -> QStyleSyntaxHighlighter* {
     return new XmlLanguageHighlighter(
         QStringLiteral(":/languages/mylang.xml"),
@@ -216,8 +246,9 @@ XML-определения из стороннего компонента `QCode
 
 ## Частые ошибки
 
-- **Забыть строку в `CMakeLists.txt`.** Файл просто не скомпилируется, и
-  язык не появится — без ошибок и предупреждений.
+- **Забыть файл `CMakeLists.txt` (или строку `target_sources` в нём).**
+  Файл просто не скомпилируется, и язык не появится — без ошибок и
+  предупреждений.
 - **Забыть строку в `LanguageRegistration.cpp`.** Проект соберётся и
   слинкуется без ошибок, но язык молча не зарегистрируется в рантайме на
   линковщиках, отбрасывающих неиспользуемые object-файлы из статической
@@ -225,7 +256,7 @@ XML-определения из стороннего компонента `QCode
 - **Дублирующийся `id`.** Повторная регистрация существующего id молча
   перезаписывает предыдущее определение. Перед выбором id проверь
   `LanguageRegistry::allLanguages()` (или просто поищи grep'ом по
-  `src/languages/`).
+  `src/libs/CodeEditor/src/languages/`).
 - **Забыть про безопасность `nullptr` в `createHighlighter`.** Если лямбда
   может не суметь создать хайлайтер, верни `nullptr` явно, а не оставляй
   неопределённое поведение — вызывающий код это проверяет.
@@ -235,12 +266,14 @@ XML-определения из стороннего компонента `QCode
 
 ## Где что лежит
 
-| Что                                       | Где |
-|--------------------------------------------|-----|
-| Определение интерфейса                     | `src/libs/CodeEditor/include/languages/LanguageDefinition.h` |
-| Реестр + макрос регистрации                 | `src/libs/CodeEditor/include/languages/LanguageRegistry.h`, `src/languages/LanguageRegistry.cpp` |
-| Хелперы построения правил                   | `src/libs/CodeEditor/include/languages/LanguageRuleHelpers.h` |
-| Существующие файлы языков (примеры)         | `src/libs/CodeEditor/src/languages/*.cpp` |
-| Универсальный хайлайтер на правилах         | `src/libs/CodeEditor/src/widgets/highlighters/RuleBasedHighlighter.*` |
-| Устаревший XML-ресурсный хайлайтер          | `src/libs/CodeEditor/src/widgets/highlighters/XmlLanguageHighlighter.*` |
-| Файл сборки для обновления                  | `src/libs/CodeEditor/CMakeLists.txt` |
+| Что                                          | Где |
+|------------------------------------------------|-----|
+| Определение интерфейса                         | `src/libs/CodeEditor/include/languages/LanguageDefinition.h` |
+| Реестр + макрос регистрации                     | `src/libs/CodeEditor/include/languages/LanguageRegistry.h`, `src/libs/CodeEditor/src/languages/core/LanguageRegistry.cpp` |
+| Хук принудительной линковки (тоже добавь строку) | `src/libs/CodeEditor/src/languages/core/LanguageRegistration.cpp` |
+| Хелперы построения правил                       | `src/libs/CodeEditor/include/languages/LanguageRuleHelpers.h` |
+| Существующие директории языков (примеры)        | `src/libs/CodeEditor/src/languages/<name>/` |
+| Универсальный хайлайтер на правилах             | `src/libs/CodeEditor/src/languages/core/RuleBasedHighlighter.*` |
+| Устаревший XML-ресурсный хайлайтер              | `src/libs/CodeEditor/src/languages/xml/XmlLanguageHighlighter.*` |
+| Общий glob по директориям языков (менять редко) | `src/libs/CodeEditor/src/languages/CMakeLists.txt` |
+| Файл сборки для обновления                      | никогда — вместо этого создай `src/libs/CodeEditor/src/languages/<name>/CMakeLists.txt` |

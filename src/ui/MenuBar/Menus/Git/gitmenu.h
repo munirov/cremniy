@@ -81,7 +81,6 @@ private:
     QAction *m_stashDrop;
     QAction *m_stashList;
     QAction *m_showLogGraph;
-    QAction *m_toggleBlame;
 
     /** @brief Show error message */
     void showError(const QString &title, const QString &message);
