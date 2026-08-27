@@ -402,6 +402,10 @@ bool FileDataBuffer::saveToFile(const QString& filePath)
     }
 
     m_originalHash = computeCurrentHashLocked();
+    locker.unlock();
+
+    /* Notify observers so they can adopt the new on-disk contents as known */
+    emit savedToFile(targetPath);
     return true;
 }
 

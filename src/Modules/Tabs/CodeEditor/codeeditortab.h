@@ -48,6 +48,23 @@ public:
     QString selectedSearchText() const;
     bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length);
 
+    /**
+     * @brief Текущая строка курсора редактора (нумерация с единицы)
+     *
+     * Используется для восстановления позиции чтения при перезагрузке файла
+     */
+    qint64 currentCursorLine() const {
+        return m_codeEditorWidget ? m_codeEditorWidget->cursorLine() : -1;
+    }
+
+    /**
+     * @brief Перейти на указанную строку редактора (нумерация с единицы)
+     */
+    void goToCursorLine(qint64 oneBasedLine) {
+        if (m_codeEditorWidget)
+            m_codeEditorWidget->goToLine(oneBasedLine);
+    }
+
     void setFileDataBuffer(FileDataBuffer* newFileDataBuffer) override;
 
 signals:

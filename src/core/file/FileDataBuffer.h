@@ -102,6 +102,14 @@ signals:
     // Запрос восстановления позиции курсора (при undo/redo)
     void cursorRestoreRequested(qint64 cursorPos);
 
+    /**
+     * @brief Buffer has been successfully written to disk
+     *
+     * Emitted at the end of a successful saveToFile() call, so observers can
+     * treat the new on-disk contents as known (i.e. not an external change).
+     */
+    void savedToFile(const QString& filePath);
+
 private:
     static constexpr qint64 kDefaultChunkSize = 64 * 1024;
     static constexpr int kDefaultMaxCachedChunks = 64;

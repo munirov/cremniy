@@ -155,6 +155,39 @@ void ToolsTabWidget::refreshDataAllTabs(){
     }
 }
 
+bool ToolsTabWidget::reloadFromDisk()
+{
+    if (!m_sharedBuffer)
+        return false;
+
+    const QString path = m_sharedBuffer->filePath();
+    if (path.isEmpty())
+        return false;
+
+    /* Keep the reading position across the reload when possible */
+    CodeEditorTab* editor = codeEditorTab(false);
+    const qint64 cursorLineBefore = editor ? editor->currentCursorLine() : -1;
+
+    if (!m_sharedBuffer->openFile(path))
+        return false;
+
+    for (int tabIndex = 0; tabIndex < this->count(); ++tabIndex){
+        TabBase* tab = dynamic_cast<TabBase*>(this->widget(tabIndex));
+        if (tab) {
+            tab->setTabData();
+            tab->setProperty("tabDataLoaded", true);
+        }
+    }
+
+    if (cursorLineBefore > 0) {
+        editor = codeEditorTab(false);
+        if (editor)
+            editor->goToCursorLine(cursorLineBefore);
+    }
+
+    return true;
+}
+
 void ToolsTabWidget::closeToolTab(int index)
 {
     QWidget* toolWidget = widget(index);
