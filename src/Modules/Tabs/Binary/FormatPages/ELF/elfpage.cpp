@@ -43,7 +43,7 @@ void ELFPage::setPageData(QByteArray& data)
     m_table->setRowCount(0);
 
     if (data.size() < 64) {
-        m_warning->setText("Файл слишком мал для ELF заголовка");
+        m_warning->setText(""File is too small for an ELF header"");
         m_warning->show();
         emit dataEqual();
         return;
@@ -54,7 +54,7 @@ void ELFPage::setPageData(QByteArray& data)
     bool valid = (bytes[0] == 0x7F && bytes[1] == 'E' &&
                   bytes[2] == 'L'  && bytes[3] == 'F');
     if (!valid) {
-        m_warning->setText("Нет ELF-сигнатуры (7F 45 4C 46) → не является ELF файлом");
+        m_warning->setText("Н"No ELF signature (7F 45 4C 46) → not an ELF file"");
         m_warning->show();
         emit dataEqual();
         return;
