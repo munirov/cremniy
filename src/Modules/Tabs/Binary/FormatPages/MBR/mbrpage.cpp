@@ -28,7 +28,7 @@ MBRPage::MBRPage(QWidget *parent)
     layout->addWidget(m_warning);
 
     m_table = new QTableWidget(4, 6, this);
-    m_table->setHorizontalHeaderLabels({"№", "Active", "Type (hex)", "Start LBA", "Size (sectors)", "Тип"});
+    m_table->setHorizontalHeaderLabels({"№", "Active", "Type (hex)", "Start LBA", "Size (sectors)", "Type"});
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->verticalHeader()->setVisible(false);
