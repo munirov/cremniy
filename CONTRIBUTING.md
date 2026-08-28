@@ -1,4 +1,3 @@
-```text
 <div align="center">
 
 [![Community](https://img.shields.io/badge/Community-Telegram-blue?logo=telegram&style=flat-square)](https://t.me/cremniy_com)
@@ -356,5 +355,4 @@ Then you need to process the file and fill in all fields with the "unfinished" s
         <translation type="unfinished">this text must be translated</translation>
     </message>
  </context>
-```
 ```
