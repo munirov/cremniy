@@ -28,7 +28,7 @@ ELFPage::ELFPage(QWidget *parent)
     layout->addWidget(m_warning);
 
     m_table = new QTableWidget(0, 2, this);
-    m_table->setHorizontalHeaderLabels({"Field", "Meaning"}); 
+    m_table->setHorizontalHeaderLabels({"Field", "Value"}); 
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->verticalHeader()->setVisible(false);
@@ -54,7 +54,7 @@ void ELFPage::setPageData(QByteArray& data)
     bool valid = (bytes[0] == 0x7F && bytes[1] == 'E' &&
                   bytes[2] == 'L'  && bytes[3] == 'F');
     if (!valid) {
-        m_warning->setText("Н"No ELF signature (7F 45 4C 46) → not an ELF file"");
+        m_warning->setText("No ELF signature (7F 45 4C 46) → not an ELF file"");
         m_warning->show();
         emit dataEqual();
         return;
