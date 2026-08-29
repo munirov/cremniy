@@ -11,16 +11,30 @@ English • [Русский](CONTRIBUTING_ru.md)
 Thank you for your interest in the Cremniy project.  
 Any help in improving the project is highly appreciated.
 
-## Ways to Contribute
+## Table of Contents
+
+- [1. Ways to Contribute](#1-ways-to-contribute)
+- [2. Where to Find Tasks](#2-where-to-find-tasks)
+- [3. Pull Requests](#3-pull-requests)
+- [4. Acknowledgements](#4-acknowledgements)
+- [5. Language Policy](#5-language-policy)
+- [6. Working with Branches](#6-working-with-branches)
+- [7. Coding Style Guidelines](#7-coding-style-guidelines)
+	- [7.1. Comments](#71-comments)
+ 	- [7.2. Class, Structure, and Other Unit Declarations](#72-class-structure-and-other-unit-declarations)
+	- [7.3. Pointers, References, and Large Functions](#73-pointers-references-and-large-functions)
+- [8. Styling UI Text Elements](#8-styling-ui-text-elements)
+
+## 1. Ways to Contribute
 
 You can help in several ways:
 
 - Report bugs (create a new **Issue** using the `Bug report` template)
-- Suggest new features (create a new **Issue** with the `idea` tag)
+- Suggest new features (create a new **Issue** using the `Feature` template)
 - Improve documentation
 - Submit pull requests ([more info](CONTRIBUTING.md#pull-requests))
 
-## Roadmap
+## 2. Where to Find Tasks
 
 All tasks can be found in [**GitHub Projects**](https://github.com/orgs/munirov/projects/2/views/1)
 
@@ -29,11 +43,42 @@ All tasks can be found in [**GitHub Projects**](https://github.com/orgs/munirov/
 >
 > Additionally, once you submit a Pull Request, reference the corresponding [Issue](https://github.com/munirov/cremniy/issues) in the PR description using `Closes #ISSUE_NUMBER`.
 
-## Language Policy
+## 3. Pull Requests
 
-To keep the project accessible to international contributors, **all issues, pull requests, and commit messages must be written in English**. 
+Before submitting a PR, **please** read the requirements and instructions provided below.
 
-## Working with Branches
+### Requirements
+
+- A pull request should address **one specific task** or a tightly related group of tasks.
+- Do not combine **different changes** in a single PR (e.g., new features, refactoring, and fixes at the same time).
+- Large changes should be **split into multiple** separate PRs.
+- Link your PR to a task if one exists ([see details below](CONTRIBUTING.md#linking-pr-to-tasks)).
+
+### Submission
+
+1. Fork the repository
+2. Create a new branch from the appropriate base branch:
+   - `dev` for new features
+   - `main` for bug fixes
+3. Make your changes
+4. Sync your branch with the base branch (`dev` or `main`) and resolve any conflicts
+5. Open a pull request to the appropriate branch (`dev` or `main`) with a clear description or a linked Issue
+
+### Linking PR to tasks
+
+Each Pull Request should **clearly indicate which task or Issue it addresses**, if such a [task](ROADMAP.md) or Issue exists.  
+If there is no corresponding task, simply describe the changes in the PR.
+
+## 4. Acknowledgements
+
+All contributors will be **permanently added to the "Acknowledgements" window** inside Cremniy itself  
+and will be **mentioned at the end of each video** on the [YouTube channel](https://www.youtube.com/@igmunv).
+
+## 5. Language Policy
+
+To keep the project accessible to international contributors, **all issues, pull requests, commit messages, and code comments must be written in English**.
+
+## 6. Working with Branches
 
 Only two branches are officially maintained in the main repository:
 
@@ -45,18 +90,19 @@ All other branches (`feature/...`, `fix/...`) are created **in your fork** when 
 - **feature/...**: branches for new features (created from `dev`). After completion, a PR is created to merge into `dev`.
 - **fix/...**: branches for bug fixes (created from `main`). After completion, a PR is created to merge into `main`. Once merged into `main`, the bugfix is also merged into `dev` to include the changes in the development version.
 
+## 7. Coding Style Guidelines
 
-## Coding Style Guidelines
+It is equally important to declare the style used in the project.  
+The decisions presented in the sections below are based on the commonly accepted rules used in Qt,  
+as a large portion of the project uses this framework. Differences in code style create  
+confusion and hinder further analysis and development.
 
-This is a very important part of each project, please use it primarily
-in current project scope. 
-Guidelines represented here bases mostly on Qt framework coding rules.
-That's why the most part of Cremniy bases on Qt 6.
+Project fragments will be used in the nested sections for clarity.
 
-Next following regions fully describes coding style rules.
+### 7.1. Comments
 
-### Comments declaration
-Instead of single-line comments (a.k.a. `//`) we use block-comments (`/**/`)!
+Instead of single-line comments (`//`), multi-line comments are used, as shown in the listing below.  
+Note that comments must be written in English.
 
 ```cpp
 /* Window setup */
@@ -65,22 +111,22 @@ this->setWindowTitle("Cremniy"); /* <-- correct */
 
 this->setWindowTitle("") // incorrect
 ```
-Block-comments format usually could been set up in the code editor.
-For anyway, make sure that big multiline comment (a.k.a. `/**/`) consists of
-direct stars column and each star what follows next are having same column position.
 
-We use Doxygen comments. Here is the good source to understand this feature
- - [Documenting C++ Code — LSST DM Developer Guide main...](https://developer.lsst.io/cpp/api-docs.html)  
+The format of multi-line comments is usually fixed by the code editor. Nevertheless,  
+subsequent lines must follow exactly behind the previous one, and be accompanied by an asterisk at the beginning of each comment line.
+
+We use Doxygen, and we recommend it to you. Here is a decent source explaining what it is:
+ - [Documenting C++ Code — LSST DM Developer Guide main...](https://developer.lsst.io/cpp/api-docs.html)
 
 ```cpp
 /**
- * @brief This is a correct doc comment! 
+ * @brief This is a correct doc comment 
  * @param projectPath Make sure, your stars follows one by one (and sleep well)
  */
 IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow(parent)
 ```
 
-After this example, represented examples below are **WRONG**.
+The listings below show how comments must **not** be formatted:
 
 ```cpp
 /**
@@ -102,23 +148,20 @@ IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow
 IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow(parent)
 
 /**
- * @brief 这份文件很好，但不是用英文写的。 
- * Unfortunately, we don't understand what you want. 
- * Please write comments in English!
- * @param projectPath Remember it
+ * @brief Эта документация прекрасна, но она написана не на английском. Такое недопускается! 
+ * @param projectPath Имейте это ввиду.
  */
 IDEWindow::IDEWindow(const QString& projectPath, QWidget * parent) : QMainWindow(parent)
 ```
 
-### Declare `Classes`/`Structures` right
+### 7.2. Class, Structure, and Other Unit Declarations
 
-We accepted that:
- - All objects which have body `{...}` (e.g. functions, conditions, counters) are K&R styled;
- - All variables, pointers, fields will be `camelCase`;
- - Classes, structures, enum-s will be `PascalCase`.   
+Please note that:
+ - All objects that have a body (e.g., a function or a conditional statement) must be formatted in K&R style;
+ - All variables, fields, and functions, regardless of their modifiers, must be written in `camelCase`;
+ - Classes, structures, and enums are written in `PascalCase`.
 
-Hungarian notation doesn't use there. But once thing you may to know about.
-All class fields are have `m_` prefix, what means "member_" prefix.
+Hungarian notation is not allowed, except for declarations of private fields inside a class/struct.
 
 ```cpp
 /* 
@@ -148,10 +191,10 @@ private:
 }
 ```
 
-### Declare References & Pointers right!
+### 7.3. Pointers, References, and Large Functions
 
-This part very important too! We decided to declare references and pointers
-with the special character after the type (at the right-side).
+This is perhaps the strangest and most unfair decision to note.  
+Pointers are always declared with the asterisk placed closer to the data type.
 
 ```cpp
 /* correct definition | correct cast style */
@@ -165,7 +208,7 @@ auto  *model = dynamic_cast< QFileSystemModel * >(m_filesTreeView->model());
 auto model = dynamic_cast<QFileSystemModel *>(m_filesTreeView->model());
 ```
 
-This rule still uses in bit-fields declaration
+This rule also applies to references and bit-fields.
 
 ```cpp
 /* correct definition | correct dereference*/
@@ -182,9 +225,8 @@ struct UInt48 {
 #pragma pop()
 ```
 
-Last rule, accepted in this project scope is functions declatation.
-Functions, what have input arguments which length more than 80 symbols, 
-are will be wrapped at the new line; And closing brace will be wrapped at the next line after last argument.
+The last rule is about calling large functions.  
+Functions whose arguments do not fit within 80 characters or that accept strictly more than 3 arguments are called as follows:
 
 ```cpp
 /*correct Qt macro call*/
@@ -194,6 +236,11 @@ connect(
     m_filesTabWidget,
     &FilesTabWidget::saveFileSlot
 );
+```
+
+The distance between the function name and its arguments is exactly one tab.
+
+```cpp
 /*incorrect. 2 tabs size. Closing brace not at the new line.*/
 connect(
         this,
@@ -208,28 +255,24 @@ connect(
     &FilesTabWidget::saveFileSlot
     ); /* <-- incorrect. Bad closing brace placement */
 ```
----
-## Styling UI Text Elements
+
+## 8. Styling UI Text Elements
 
 All user-visible text elements should be wrapped using standard Qt tools:
 
-- `tr()` – for regular text elements that are not constants or static.
+- `tr()` – for regular text elements that are not constants and `static`.
 - `QT_TRANSLATE_NOOP(context, text)` – declaration for Qt to ensure the text is included in the translation file.
 - `QCoreApplication::translate(context, text)` – for static constants, the translation will be applied immediately.
 
----
-
 #### `tr()`
 
-```C++
+```c++
 m_createFile = new QAction(tr("Create File"), this);
-m_createDir = new QAction(tr("Create Folder"), this);
-m_delete = new QAction(tr("Delete"), this);
-m_rename = new QAction(tr("Rename"), this);
-m_open = new QAction(tr("Open"), this);
+m_createDir  = new QAction(tr("Create Folder"), this);
+m_delete     = new QAction(tr("Delete"), this);
+m_rename     = new QAction(tr("Rename"), this);
+m_open       = new QAction(tr("Open"), this);
 ```
-
----
 
 #### `QT_TRANSLATE_NOOP(context, text)`
 
@@ -239,76 +282,63 @@ Used for static arrays and constants. It doesn't translate itself; it marks the 
 
 ```c++
 static const RefRow kRefRows[] = {
-
-{"Esc", "01", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "Break code: 81")},
-
-{"1", "02", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "... 0 (top row) 0B")},
-
-// ...
+    {"Esc", "01", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "Break code: 81")},
+    {"1",   "02", QT_TRANSLATE_NOOP("KeyboardScanCodesRef", "… 0 (top row) 0B")},
+    // ...
 };
 
 for (int i = 0; i < n; ++i) {
-// .....
-m_table->setItem(i, 2, new QTableWidgetItem(
-QCoreApplication::translate("KeyboardScanCodesRef", kRefRows[i].notes)
-));
+    // ....
+    m_table->setItem(i, 2, new QTableWidgetItem(
+        QCoreApplication::translate("KeyboardScanCodesRef", kRefRows[i].notes)
+    ));
 }
 ```
 
 If rendering occurs in the same class, you can use `tr()` directly:
-> The key is that the context you define for static elements has the same name as the class. In the `DataConverterDialog` example, according to the Qt standard, the context name is specified exactly this way.
+> The key point is that the context you define for static elements has the same name as the class. In the `DataConverterDialog` example, according to the Qt standard, the context name is specified exactly this way.
 ```c++
 static const UnitInfo kUnits[] = {
-
-{ QT_TRANSLATE_NOOP("DataConverterDialog", "Bits"), "Bit", 1.0 / 8.0 },
-
-{ QT_TRANSLATE_NOOP("DataConverterDialog", "Bytes"), "Byte", 1.0 },
-
-{ QT_TRANSLATE_NOOP("DataConverterDialog", "Kilobytes"), "KB", 1024.0 },
-
-// ...
+    { QT_TRANSLATE_NOOP("DataConverterDialog", "Bits"),      "Bit", 1.0 / 8.0 },
+    { QT_TRANSLATE_NOOP("DataConverterDialog", "Bytes"),     "Byte", 1.0 },
+    { QT_TRANSLATE_NOOP("DataConverterDialog", "Kilobytes"), "KB",   1024.0 },
+    // ...
 };
 
 for (int i = 0; i < kUnitCount; ++i) {
-// ....
-m_form->addRow(tr(kUnits[i].label), rowWidget);
-
+    m_form->addRow(tr(kUnits[i].label), rowWidget);
 }
 ```
-
----
 
 #### `QMessageBox` with custom buttons
 
 If you've installed your own buttons, wrap their text in `tr()`:
 
-```C++
+```c++
 QMessageBox question_save_file(
-QMessageBox::Question,
-tr("Save file"),
-tr("Do you want to save this file?"),
-QMessageBox::NoButton,
-this
+    QMessageBox::Question,
+    tr("Save File"),
+    tr("Do you want to save this file?"),
+    QMessageBox::NoButton,
+    this
 );
 
-const auto yes = questions_save_file.addButton(tr("Yes"), QMessageBox::YesRole);
-const auto no = questions_save_file.addButton(tr("No"), QMessageBox::NoRole);
-const auto cancel = questions_save_file.addButton(tr("Cancel"), QMessageBox::RejectRole);
+const auto yes    = question_save_file.addButton(tr("Yes"),    QMessageBox::YesRole);
+const auto no     = question_save_file.addButton(tr("No"),     QMessageBox::NoRole);
+const auto cancel = question_save_file.addButton(tr("Cancel"), QMessageBox::RejectRole);
 
 question_save_file.exec();
 
 const auto reply = question_save_file.clickedButton();
-if (reply == yes) tab->saveFile();
+if (reply == yes)    tab->saveFile();
 else if (reply == cancel) return;
 ```
-
----
 
 #### Updating file translations
 
 After finishing working with the code, run the `lupdate` utility:
 
-``` bash
+```bash
 lupdate src -ts src/resources/locale/translations/app_ru.ts
 ```
 
@@ -316,42 +346,13 @@ Then you need to process the file and fill in all fields with the "unfinished" s
 
 ```xml
 <context>
-<name>QHexView</name> <-- This is your context
-<message>
-<location filename="../../../libs/HexEditor/src/qhexview.cpp" line="378"/> <-- The place where you marked the expression as `tr()`
-<location filename="../../../libs/HexEditor/src/qhexview.cpp" line="397"/>
-<location filename="../../../libs/HexEditor/src/qhexview.cpp" line="405"/>
-<source>Go to</source> <-- text that was marked with tr()
-<translation type="unfinished">this text must be translated</translation>
-</message>
-</context>
+    <name>QHexView</name> <-- This is your context
+    <message>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="378"/> <-- The place where you marked the expression as `tr()`
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="397"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="405"/>
+        <source>Go to</source> <-- text that was marked with tr()
+        <translation type="unfinished">this text must be translated</translation>
+    </message>
+ </context>
 ```
----
-## Pull Requests
-
-### Requirements
-
-- A pull request should address **one specific task** or a tightly related group of tasks.
-- Do not combine **different changes** in a single PR (e.g., new features, refactoring, and fixes at the same time).
-- Large changes should be **split into multiple** separate PRs.
-- Link your PR to a task if one exists ([see details below](CONTRIBUTING.md#linking-pr-to-tasks))
-
-### Submission
-
-1. Fork the repository
-2. Create a new branch from the appropriate base branch:
-   - `dev` for new features
-   - `main` for bug fixes
-3. Make your changes
-4. Sync your branch with the base branch (`dev` or `main`) and resolve any conflicts
-5. Open a pull request to the appropriate branch (`dev` or `main`) with a clear description or a linked Issue
-
-### Linking PR to tasks
-
-Each Pull Request should **clearly indicate which task or Issue it addresses**, if such a [task](ROADMAP.md) or Issue exists.  
-If there is no corresponding task, simply describe the changes in the PR.
-
-## Acknowledgements
-
-All contributors will be added to [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md)  
-and mentioned at the end of each video on the [YouTube channel](https://www.youtube.com/@igmunv)

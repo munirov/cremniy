@@ -28,7 +28,7 @@ MBRPage::MBRPage(QWidget *parent)
     layout->addWidget(m_warning);
 
     m_table = new QTableWidget(4, 6, this);
-    m_table->setHorizontalHeaderLabels({"№", "Active", "Type (hex)", "Start LBA", "Size (sectors)", "Тип"});
+    m_table->setHorizontalHeaderLabels({"№", "Active", "Type (hex)", "Start LBA", "Size (sectors)", "Type"});
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->verticalHeader()->setVisible(false);
@@ -42,7 +42,7 @@ void MBRPage::setPageData(QByteArray& data)
     m_dataHash = qHash(data, 0);
 
     if (data.size() < 512) {
-        m_warning->setText("Файл слишком мал для MBR (< 512 байт)");
+        m_warning->setText(""File is too small for MBR (< 512 bytes)"");
         m_warning->show();
         return;
     }
@@ -51,7 +51,7 @@ void MBRPage::setPageData(QByteArray& data)
 
     bool valid = (bytes[510] == 0x55 && bytes[511] == 0xAA);
     if (!valid) {
-        m_warning->setText("Нет сигнатуры 55 AA на позициях 510–511 → не похоже на MBR");
+        m_warning->setText(""No 55 AA signature at positions 510–511 → does not appear to be an MBR"");
         m_warning->show();
     } else {
         m_warning->hide();

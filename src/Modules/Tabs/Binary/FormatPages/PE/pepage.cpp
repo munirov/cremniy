@@ -28,7 +28,7 @@ PEPage::PEPage(QWidget *parent)
     layout->addWidget(m_warning);
 
     m_table = new QTableWidget(0, 2, this);
-    m_table->setHorizontalHeaderLabels({"Поле", "Значение"});
+    m_table->setHorizontalHeaderLabels({"Field", "Value"});
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->verticalHeader()->setVisible(false);
@@ -43,7 +43,7 @@ void PEPage::setPageData(QByteArray& data)
     m_table->setRowCount(0);
 
     if (data.size() < 64) {
-        m_warning->setText("Файл слишком мал для PE заголовка");
+        m_warning->setText("File is too small for a PE header");
         m_warning->show();
         emit dataEqual();
         return;
@@ -53,7 +53,7 @@ void PEPage::setPageData(QByteArray& data)
 
     bool valid = (bytes[0] == 'M' && bytes[1] == 'Z');
     if (!valid) {
-        m_warning->setText("Нет DOS-сигнатуры MZ → не является PE файлом");
+        m_warning->setText("No DOS signature MZ → not a PE file");
         m_warning->show();
         emit dataEqual();
         return;
@@ -62,7 +62,7 @@ void PEPage::setPageData(QByteArray& data)
     const uint32_t peOffset = qFromLittleEndian<uint32_t>(bytes + 0x3C);
     // 24 -- PE + IMAGE_FILE_HEADER
     if (static_cast<quint64>(peOffset) + 24 > static_cast<quint64>(data.size())) {
-        m_warning->setText("Некорректное смещение PE заголовка");
+        m_warning->setText("Invalid PE header offset");
         m_warning->show();
         emit dataEqual();
         return;
@@ -71,7 +71,7 @@ void PEPage::setPageData(QByteArray& data)
     bool peValid = (bytes[peOffset]   == 'P' && bytes[peOffset+1] == 'E' &&
                     bytes[peOffset+2] == 0   && bytes[peOffset+3] == 0);
     if (!peValid) {
-        m_warning->setText("Нет PE-сигнатуры → повреждённый файл");
+        m_warning->setText("No PE signature → corrupted file");
         m_warning->show();
         emit dataEqual();
         return;
