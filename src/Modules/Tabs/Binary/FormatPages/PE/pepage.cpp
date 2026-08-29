@@ -28,7 +28,7 @@ PEPage::PEPage(QWidget *parent)
     layout->addWidget(m_warning);
 
     m_table = new QTableWidget(0, 2, this);
-    m_table->setHorizontalHeaderLabels({"Field", "Meaning"});
+    m_table->setHorizontalHeaderLabels({"Field", "Value"});
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->verticalHeader()->setVisible(false);
