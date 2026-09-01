@@ -7,7 +7,7 @@
 #include "project_info_manager.h"
 #include "widgets/filetab.h"
 
-class FileSyncMonitor;
+class FileSyncController;
 
 class FilesTabWidget : public QTabWidget {
     Q_OBJECT
@@ -51,7 +51,7 @@ private:
     FileTab* findTabByPath(const QString& filePath) const;
     void reloadTabFromDisk(FileTab *tab);
     bool m_adjustingTabMove = false;
-    FileSyncMonitor* m_syncMonitor = nullptr;
+    FileSyncController* m_syncController = nullptr;
     bool m_externalFileDialogActive = false;
 
 signals:

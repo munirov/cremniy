@@ -20,6 +20,8 @@
 #include "Modules/Tabs/CodeEditor/codeeditortab.h"
 #include "buildTab/buildtab.h"
 #include "core/file/FileDataBuffer.h"
+#include "core/file/filesynccontroller.h"
+#include "core/file/filesyncdecision.h"
 #include "core/file/filesyncmonitor.h"
 
 namespace {
@@ -46,20 +48,105 @@ FilesTabWidget::FilesTabWidget(QWidget *parent) {
     tabBar()->installEventFilter(this);
     QCoreApplication::instance()->installEventFilter(this);
 
-    m_syncMonitor = new FileSyncMonitor(this);
+    m_syncController = new FileSyncController(this);
 
     connect(
-        m_syncMonitor,
-        &FileSyncMonitor::fileChangedOnDisk,
+        m_syncController,
+        &FileSyncController::reloadRequested,
         this,
-        &FilesTabWidget::onFileChangedOnDisk
+        [this](const QString& filePath) {
+            FileTab* tab = findTabByPath(filePath);
+            if (tab) {
+                reloadTabFromDisk(tab);
+            }
+        }
     );
 
     connect(
-        m_syncMonitor,
-        &FileSyncMonitor::fileDisappeared,
+        m_syncController,
+        &FileSyncController::keepCurrentRequested,
         this,
-        &FilesTabWidget::onFileDisappeared
+        [this](const QString& filePath) {
+            FileTab* tab = findTabByPath(filePath);
+            if (!tab || !tab->toolsTabWidget()) {
+                return;
+            }
+
+            auto* buffer = tab->toolsTabWidget()->sharedBuffer();
+            if (m_externalFileDialogActive || !buffer) {
+                return;
+            }
+
+            m_externalFileDialogActive = true;
+            QMessageBox question(
+                QMessageBox::Question,
+                tr("File changed on disk"),
+                tr("\"%1\" has been changed on disk.\n"
+                   "Do you want to reload it and lose your unsaved changes?")
+                    .arg(QFileInfo(tab->filePath).fileName()),
+                QMessageBox::NoButton,
+                this
+            );
+
+            const auto reloadBtn = question.addButton(tr("Reload"), QMessageBox::YesRole);
+            question.addButton(tr("Keep my changes"), QMessageBox::NoRole);
+            question.exec();
+            m_externalFileDialogActive = false;
+
+            if (question.clickedButton() == reloadBtn) {
+                reloadTabFromDisk(tab);
+            }
+        }
+    );
+
+    connect(
+        m_syncController,
+        &FileSyncController::closeRequested,
+        this,
+        [this](const QString& filePath) {
+            FileTab* tab = findTabByPath(filePath);
+            if (!tab || !tab->toolsTabWidget()) {
+                return;
+            }
+
+            if (m_externalFileDialogActive) {
+                return;
+            }
+
+            m_externalFileDialogActive = true;
+            QMessageBox question(
+                QMessageBox::Warning,
+                tr("File deleted on disk"),
+                tr("\"%1\" was deleted or renamed outside the editor.")
+                    .arg(QFileInfo(tab->filePath).fileName()),
+                QMessageBox::NoButton,
+                this
+            );
+
+            const auto keepOpenBtn = question.addButton(tr("Keep open"), QMessageBox::YesRole);
+            const auto closeTabBtn = question.addButton(tr("Close tab"), QMessageBox::DestructiveRole);
+            question.exec();
+            m_externalFileDialogActive = false;
+
+            const auto reply = question.clickedButton();
+            if (reply == closeTabBtn) {
+                closeTab(indexOf(tab));
+            } else if (reply == keepOpenBtn) {
+                tab->toolsTabWidget()->setupStar();
+            }
+        }
+    );
+
+    connect(
+        m_syncController,
+        &FileSyncController::markDirtyRequested,
+        this,
+        [this](const QString& filePath) {
+            FileTab* tab = findTabByPath(filePath);
+            if (tab && tab->toolsTabWidget()) {
+                tab->toolsTabWidget()->setupStar();
+            }
+        }
     );
 
     connect(this, &FilesTabWidget::openTabModule,
@@ -139,22 +226,33 @@ void FilesTabWidget::startFileSync(FileTab *tab) {
         return;
     }
 
-    m_syncMonitor->watch(comparablePath(tab->filePath));
+    const QString normalizedPath = comparablePath(tab->filePath);
+    m_syncController->attachFile(normalizedPath, tools->sharedBuffer()->isModified());
 
-    /* Writes performed by the application itself are not external changes */
     connect(
         tools->sharedBuffer(),
         &FileDataBuffer::savedToFile,
-        m_syncMonitor,
-        &FileSyncMonitor::refreshBaseline
+        m_syncController,
+        &FileSyncController::refreshBaseline
+    );
+
+    connect(
+        tools->sharedBuffer(),
+        &FileDataBuffer::dataChanged,
+        m_syncController,
+        [this, normalizedPath, buffer = tools->sharedBuffer()]() {
+            if (m_syncController && buffer) {
+                m_syncController->updateFileState(normalizedPath, buffer->isModified());
+            }
+        }
     );
 }
 
 void FilesTabWidget::stopFileSync(const QString& filePath) {
-    if (!m_syncMonitor)
+    if (!m_syncController)
         return;
 
-    m_syncMonitor->unwatch(filePath);
+    m_syncController->detachFile(filePath);
 }
 
 FileTab* FilesTabWidget::findTabByPath(const QString& filePath) const {
@@ -182,100 +280,14 @@ void FilesTabWidget::reloadTabFromDisk(FileTab *tab) {
 }
 
 void FilesTabWidget::onFileChangedOnDisk(const QString& filePath) {
-    FileTab *tab = findTabByPath(filePath);
-    if (!tab || !tab->toolsTabWidget() || !tab->toolsTabWidget()->sharedBuffer()) {
-        stopFileSync(filePath);
-        return;
-    }
-
-    auto* buffer = tab->toolsTabWidget()->sharedBuffer();
-
-    if (m_externalFileDialogActive) {
-        qDebug() << "FilesTabWidget: skip disk sync dialog, another one is active";
-        return;
-    }
-
-    /* No unsaved local edits: update the contents automatically */
-    if (!buffer->isModified()) {
-        reloadTabFromDisk(tab);
-        return;
-    }
-
-    m_externalFileDialogActive = true;
-
-    QMessageBox question(
-        QMessageBox::Question,
-        tr("File changed on disk"),
-        tr("\"%1\" has been changed on disk.\n"
-           "Do you want to reload it and lose your unsaved changes?")
-            .arg(QFileInfo(tab->filePath).fileName()),
-        QMessageBox::NoButton,
-        this
-    );
-
-    const auto reloadBtn = question.addButton(tr("Reload"), QMessageBox::YesRole);
-    question.addButton(tr("Keep my changes"), QMessageBox::NoRole);
-
-    question.exec();
-
-    m_externalFileDialogActive = false;
-
-    if (question.clickedButton() == reloadBtn) {
-        reloadTabFromDisk(tab);
-    } else {
-        /*
-         * Keep the local version untouched; the monitor already adopted the
-         * new on-disk state as its baseline, so subsequent real changes are
-         * still reported.
-         */
+    if (m_syncController) {
+        m_syncController->handleFileChanged(filePath);
     }
 }
 
 void FilesTabWidget::onFileDisappeared(const QString& filePath) {
-    FileTab *tab = findTabByPath(filePath);
-    if (!tab || !tab->toolsTabWidget()) {
-        stopFileSync(filePath);
-        return;
-    }
-
-    /*
-     * The file may have been recreated between the OS notification and the
-     * debounced check; adopt the current contents silently instead of
-     * reporting stale news about a file that exists again.
-     */
-    if (QFileInfo(filePath).exists()) {
-        m_syncMonitor->refreshBaseline(comparablePath(filePath));
-        return;
-    }
-
-    if (m_externalFileDialogActive) {
-        return;
-    }
-
-    m_externalFileDialogActive = true;
-
-    QMessageBox question(
-        QMessageBox::Warning,
-        tr("File deleted on disk"),
-        tr("\"%1\" was deleted or renamed outside the editor.")
-            .arg(QFileInfo(tab->filePath).fileName()),
-        QMessageBox::NoButton,
-        this
-    );
-
-    const auto keepOpenBtn = question.addButton(tr("Keep open"), QMessageBox::YesRole);
-    const auto closeTabBtn = question.addButton(tr("Close tab"), QMessageBox::DestructiveRole);
-
-    question.exec();
-
-    m_externalFileDialogActive = false;
-
-    const auto reply = question.clickedButton();
-    if (reply == closeTabBtn) {
-        closeTab(indexOf(tab));
-    } else if (reply == keepOpenBtn) {
-        /* Mark the kept-in-editor copy as diverged from the disk */
-        tab->toolsTabWidget()->setupStar();
+    if (m_syncController) {
+        m_syncController->handleFileDisappeared(filePath);
     }
 }
 
