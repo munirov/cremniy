@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
+<img src="docs/assets/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
 
 <br>
 <h3>Cremniy</h3>
@@ -41,9 +41,9 @@
 - 🔗 Всё связано между собой
 - 💻 Единый workflow
 
-![out](https://github.com/user-attachments/assets/f5e9c520-fb31-45cc-ab11-17eff66d7069)
+<img src="docs/assets/features.gif" alt="Features" width="1280">
 
-## Возможности
+## Возможности ✨
 
 ### Доступно сейчас
 
@@ -58,14 +58,31 @@
 - 🐛 **Отладчик** — пошаговое выполнение, просмотр регистров и памяти
 - 🧠 **Визуализация памяти** — наглядные карты расположения и выделения памяти
 
-## Сборка
+## Участие в разработке 👋
+
+Вклад в проект **приветствуется**.
+
+Будь то исправление ошибок, новая функциональность или улучшение документации — открывайте issue или отправляйте pull request.
+
+Все задачи находятся в [**GitHub Projects**](https://github.com/orgs/munirov/projects/2/views/1).
+
+Все участники указываются в [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) и упоминаются в видео на [YouTube-канале](https://www.youtube.com/@igmunv).
+
+Подробнее — в [CONTRIBUTING.md](CONTRIBUTING_ru.md).
+
+> [!WARNING]
+> Если вы хотите взять задачу в работу, пожалуйста, оставьте комментарий в соответствующем [Issue](https://github.com/munirov/cremniy/issues). Это необходимо, чтобы избежать дублирования работы.
+>
+> Также после отправки Pull Request'а, укажите соответствующий [Issue](https://github.com/munirov/cremniy/issues) в описании к Pull Request'у с помощью строки `Closes #НОМЕР_ISSUE`
+
+## Сборка 🛠️
 
 ### Зависимости
 
 | Зависимость | Мин. версия |
 |---|---|
-| **CMake** | 3.16 |
-| **Qt** | 6.8.2 |
+| **[CMake](https://cmake.org/download/)** | 3.16 |
+| **[Qt](https://www.qt.io/development/download-qt-installer-oss)** | 6.8.2 |
 | **[libgit2](https://libgit2.org/)** | 1.x |
 | **Компилятор C++** | Поддержка C++17 |
 
@@ -83,14 +100,20 @@ pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86
 </details>
 
 <details>
-<summary><b>🐧 Linux (Ubuntu / Debian)</b></summary>
+<summary><b>🐧 Linux (Debian-based / Fedora)</b></summary>
 
+Для дистрибутивов, основанных на Debian:
 ```bash
 sudo apt update
-sudo apt install cmake g++ qt6-base-dev libgit2-dev
+sudo apt install cmake g++ qt6-base-dev qt6-svg-dev qt6-tools-dev-tools libgit2-dev zlib1g-dev libssl-dev libpcre2-dev libhttp-parser-dev
+```
+Для Fedora:
+```bash
+sudo dnf update --refresh
+sudo dnf install cmake gcc-c++ qt6-qtbase-devel qt6-qtsvg-devel qt6-qttools-devel libgit2-devel zlib-devel openssl-devel pcre2-devel http-parser-devel
 ```
 
-> [!NOTE]
+> ℹ️ **NOTE:** 
 > Если пакет `qt6-base-dev` недоступен в вашем дистрибутиве, используйте [официальный установщик Qt](https://www.qt.io/download-qt-installer-oss).
 
 </details>
@@ -143,19 +166,6 @@ cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
-## Участие в разработке
-
-Вклад в проект **приветствуется**.
-
-Будь то исправление ошибок, новая функциональность или улучшение документации — открывайте issue или отправляйте pull request.
-
-Текущие задачи [находятся в ROADMAP](https://github.com/munirov/cremniy/blob/main/ROADMAP_ru.md)
-
-Все участники указываются в [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) и упоминаются в видео на [YouTube-канале](https://www.youtube.com/@igmunv).
-
-Подробнее — в [CONTRIBUTING.md](CONTRIBUTING_ru.md).
-
-
-## Лицензия
+## Лицензия 📖
 
 Распространяется на условиях, описанных в [LICENSE](LICENSE).

@@ -306,7 +306,7 @@ bool CustomCodeEditor::event(QEvent* event)
         if (m_gitBlameEnabled && !m_lastBlameRect.isNull() && m_lastBlameRect.contains(helpEvent->pos())) {
             const qint64 cursorLine = lineFromBytePos(m_cursorBytePos);
             if (cursorLine >= 0 && cursorLine < (qint64)m_blameData.size()) {
-                const BlameLineInfo& info = m_blameData.at(static_cast<int>(cursorLine));
+                const EditorBlameLineInfo& info = m_blameData.at(static_cast<int>(cursorLine));
                 if (!info.authorName.isEmpty()) {
                     if (m_blameTooltip->currentCommitHash() != info.fullOid || !m_blameTooltip->isVisible()) {
                         m_blameTooltip->setBlameInfo(info);
@@ -941,7 +941,7 @@ void CustomCodeEditor::setGitBlamePadding(int padding)
     viewport()->update();
 }
 
-void CustomCodeEditor::setBlameData(const QVector<BlameLineInfo>& blameData)
+void CustomCodeEditor::setBlameData(const QVector<EditorBlameLineInfo>& blameData)
 {
     m_blameData = blameData;
     viewport()->update();
@@ -3553,7 +3553,7 @@ void CustomCodeEditor::renderInlineBlame(QPainter* painter)
         return;
     }
 
-    const BlameLineInfo& info = m_blameData.at(static_cast<int>(cursorLine));
+    const EditorBlameLineInfo& info = m_blameData.at(static_cast<int>(cursorLine));
     if (info.authorName.isEmpty()) {
         m_lastBlameRect = QRect();
         return;
@@ -3587,7 +3587,7 @@ void CustomCodeEditor::renderInlineBlame(QPainter* painter)
         else timeStr = tr("%1 years ago").arg(secs / (86400 * 365));
     }
 
-    QString text = info.isUncommitted ? timeStr : QString("%1, %2").arg(info.authorName).arg(timeStr);
+    QString text = info.isUncommitted ? timeStr : tr("%1, %2").arg(info.authorName, timeStr);
 
     painter->save();
     painter->setFont(m_font);

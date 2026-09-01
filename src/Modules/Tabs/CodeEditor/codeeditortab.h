@@ -3,10 +3,8 @@
 
 #include "libs/CodeEditor/include/widgets/CustomCodeEditor.h"
 #include "core/modules/TabBase.h"
-#include "core/git/gitblameworker.h"
 #include <QShortcut>
 #include <QWidget>
-#include <QThread>
 
 class CodeEditorTab : public TabBase
 {
@@ -17,10 +15,6 @@ private:
      * @brief Виджет редактора кода
     */
     CustomCodeEditor* m_codeEditorWidget;
-
-    QThread* m_blameThread = nullptr;
-    GitBlameWorker* m_blameWorker = nullptr;
-    QString m_repoRoot;
 
     /**
      * @brief Главный виджет страницы "Binary File Detected"
@@ -34,6 +28,7 @@ private:
     */
     bool forceSetData = false;
     bool m_largeFileMode = false;
+    bool m_gitBlameEnabled = false;
     bool m_updatingSelection = false;
     QShortcut* m_goToLineShortcut = nullptr;
     QString m_currentLang = "Plain Text";
@@ -45,6 +40,7 @@ public:
     explicit CodeEditorTab(QWidget *parent = nullptr);
 
     QIcon icon() const override { return QIcon(":/icons/code.svg"); };
+    bool gitBlameEnabled() const override { return m_gitBlameEnabled; }
     QString selectedSearchText() const;
     bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length);
 
@@ -91,11 +87,14 @@ public slots:
     void setWordWrapSlot(bool checked) override;
     void setTabReplaceSlot(bool checked) override;
     void setTabWidthSlot(int width) override;
-    void setGitBlameSlot(bool checked);
+    void setGitBlameSlot(bool checked) override;
+    void setGitBlameData(const QString &filePath,
+                         const QVector<TabGitBlameLineInfo> &lines) override;
+    void setGitBlameError(const QString &filePath, const QString &error) override;
+    void refreshGitBlame() override;
 
 private slots:
     void requestBlameUpdate();
-    void onBlameFinished(const QVector<BlameLineInfo> &result);
 };
 
 #endif // CODEEDITORTAB_H

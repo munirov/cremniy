@@ -1,28 +1,30 @@
 #pragma once
 
+#include "blamelineinfo.h"
 #include <QObject>
 #include <QString>
 #include <QStringList>
-#include <QDateTime>
 #include <QVector>
-#include <git2.h>
-#include "widgets/BlameLineInfo.h"
+#include <memory>
+
+namespace GitInternal {
+    class Repository;
+}
 
 /**
  * @brief Wrapper class over libgit2 for all git operations
  * All methods return true on success and false on error.
  * Error text can be obtained via lastError().
  */
-class GitManager : public QObject
-{
+class GitManager : public QObject {
     Q_OBJECT
 
 public:
-    explicit GitManager(QObject *parent = nullptr);
+    explicit GitManager(QObject* parent = nullptr);
     ~GitManager() override;
 
     /** @brief Open repository at path */
-    bool open(const QString &repoPath);
+    bool open(const QString& repoPath);
 
     /** @brief Close current repository */
     void close();
@@ -45,61 +47,61 @@ public:
     QString currentBranch() const;
 
     /** @brief Checkout branch */
-    bool checkoutBranch(const QString &branchName);
+    bool checkoutBranch(const QString& branchName);
 
     /** @brief Create new branch */
-    bool createBranch(const QString &branchName);
+    bool createBranch(const QString& branchName);
 
     /** @brief Delete branch */
-    bool deleteBranch(const QString &branchName);
+    bool deleteBranch(const QString& branchName);
 
     /** @brief Rename branch */
-    bool renameBranch(const QString &oldName, const QString &newName);
+    bool renameBranch(const QString& oldName, const QString& newName);
 
     /* Commits */
 
     /** @brief Create commit */
-    bool createCommit(const QString &message);
+    bool createCommit(const QString& message);
 
     /** @brief Get commit history (returns OIDs as hex strings) */
     QStringList commitHistory(int count = 50) const;
 
     /** @brief Get commit message by OID */
-    QString commitMessage(const QString &oid) const;
+    QString commitMessage(const QString& oid) const;
 
     /** @brief Get commit author by OID */
-    QString commitAuthor(const QString &oid) const;
+    QString commitAuthor(const QString& oid) const;
 
     /** @brief Checkout commit (detached HEAD) */
-    bool checkoutCommit(const QString &oid);
+    bool checkoutCommit(const QString& oid);
 
     /** @brief Reset commit (reset --hard) */
-    bool resetHard(const QString &oid);
+    bool resetHard(const QString& oid);
 
     /** @brief Reset commit (reset --mixed) */
-    bool resetMixed(const QString &oid);
+    bool resetMixed(const QString& oid);
 
     /** @brief Revert commit */
-    bool revertCommit(const QString &oid);
+    bool revertCommit(const QString& oid);
 
     /** @brief Amend last commit */
-    bool amendCommit(const QString &message);
+    bool amendCommit(const QString& message);
 
     /* Synchronization */
 
     /** @brief Push changes */
-    bool push(const QString &remote = "origin", const QString &branch = "");
+    bool push(const QString& remote = "origin", const QString& branch = "");
 
     /** @brief Pull changes */
-    bool pull(const QString &remote = "origin", const QString &branch = "");
+    bool pull(const QString& remote = "origin", const QString& branch = "");
 
     /** @brief Fetch changes */
-    bool fetch(const QString &remote = "origin");
+    bool fetch(const QString& remote = "origin");
 
     /* Merge */
 
     /** @brief Merge branch */
-    bool merge(const QString &branchName);
+    bool merge(const QString& branchName);
 
     /** @brief Check if there are conflicts */
     bool hasConflicts() const;
@@ -110,13 +112,13 @@ public:
     /* Staging */
 
     /** @brief Stage file */
-    bool stageFile(const QString &filePath);
+    bool stageFile(const QString& filePath);
 
     /** @brief Unstage file */
-    bool unstageFile(const QString &filePath);
+    bool unstageFile(const QString& filePath);
 
     /** @brief Get diff for file */
-    QString fileDiff(const QString &filePath) const;
+    QString fileDiff(const QString& filePath) const;
 
     /** @brief Get diff for staged changes */
     QString stagedDiff() const;
@@ -124,13 +126,13 @@ public:
     /* Repository */
 
     /** @brief Clone repository */
-    bool clone(const QString &url, const QString &path);
+    bool clone(const QString& url, const QString& path);
 
     /** @brief Initialize repository */
-    bool init(const QString &path);
+    bool init(const QString& path);
 
     /** @brief Find git repository root by searching upwards */
-    static QString findGitRepositoryRoot(const QString &path);
+    static QString findGitRepositoryRoot(const QString& path);
 
     /* Blame */
 
@@ -139,7 +141,7 @@ public:
      * @param relativeFilePath Path relative to repository root
      * @return Vector of blame info for each line
      */
-    QVector<BlameLineInfo> blameFile(const QString &relativeFilePath) const;
+    QVector<BlameLineInfo> blameFile(const QString& relativeFilePath) const;
 
     /* Additional */
 
@@ -147,7 +149,7 @@ public:
     QString status() const;
 
     /** @brief Save stash */
-    bool stashSave(const QString &message = "");
+    bool stashSave(const QString& message = "");
 
     /** @brief Apply stash */
     bool stashApply(int index = 0);
@@ -166,30 +168,5 @@ signals:
     void repositoryChanged();
 
 private:
-    git_repository *m_repo = nullptr;
-    QString m_repoPath;
-    mutable QString m_lastError;
-
-    /** @brief Set error message */
-    void setError(const QString &error) const;
-
-    /** @brief Get username from config */
-    QString userName() const;
-
-    /** @brief Get user email from config */
-    QString userEmail() const;
-
-    /** @brief Create signature */
-    git_signature *createSignature() const;
-};
-
-class GitNotifier : public QObject
-{
-    Q_OBJECT
-public:
-    static GitNotifier *instance();
-signals:
-    void repositoryChanged();
-private:
-    explicit GitNotifier(QObject *parent = nullptr) : QObject(parent) {}
+    std::unique_ptr<GitInternal::Repository> m_repository;
 };

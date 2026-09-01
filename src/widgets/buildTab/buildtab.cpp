@@ -25,9 +25,9 @@ BuildTab::BuildTab(const ProjectInfo &projInfo, QWidget* parent)
     auto* btnLayout = new QVBoxLayout();
     btnLayout->setContentsMargins(10, 10, 10, 10);
 
-    auto* buildBtn = new QPushButton("Build", this);
-    auto* stopBtn = new QPushButton("Stop", this);
-    auto* clearBtn = new QPushButton("Clear", this);
+    auto* buildBtn = new QPushButton(tr("Build"), this);
+    auto* stopBtn = new QPushButton(tr("Stop"), this);
+    auto* clearBtn = new QPushButton(tr("Clear"), this);
 
     btnLayout->addWidget(buildBtn);
     btnLayout->addWidget(stopBtn);

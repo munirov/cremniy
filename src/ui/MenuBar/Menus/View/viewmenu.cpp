@@ -60,5 +60,7 @@ void ViewMenu::setupConnections(IDEWindow* ideWind){
     connect(m_tabWidth4, &QAction::triggered, ideWind, [ideWind]() { ideWind->on_SetTabWidth(4); });
     connect(m_tabWidth8, &QAction::triggered, ideWind, [ideWind]() { ideWind->on_SetTabWidth(8); });
     connect(m_terminal, &QAction::triggered, ideWind, &IDEWindow::on_Toggle_Terminal);
+    connect(ideWind, &IDEWindow::terminalVisibilityChanged,
+            m_terminal, &QAction::setChecked);
     connect(m_fileTree, &QAction::triggered, ideWind, &IDEWindow::on_Toggle_FileTree);
 }

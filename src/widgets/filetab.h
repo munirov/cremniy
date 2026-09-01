@@ -21,6 +21,7 @@ public:
     bool isPinned() const { return m_pinned; }
     void setPinned(bool pinned);
     ToolsTabWidget* toolsTabWidget() const { return m_tooltabWidget; }
+    bool gitBlameEnabled() const;
 
 public slots:
     void removeStar();
@@ -30,6 +31,7 @@ public slots:
     void setWordWrapSlot(bool checked);
     void setTabReplaceSlot(bool checked);
     void setTabWidthSlot(int width);
+    void setGitBlameSlot(bool checked);
 
 signals:
     void removeStarSignal(FileTab* tab);
@@ -40,6 +42,8 @@ signals:
     void setWordWrapSignal(bool checked);
     void setTabReplaceSignal(bool checked);
     void setTabWidthSignal(int width);
+    void setGitBlameSignal(bool checked);
+    void gitBlameEnabledChanged(bool enabled);
 
     void statusBarInfoChanged(const QString& info);
 

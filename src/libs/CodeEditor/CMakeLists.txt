@@ -16,12 +16,12 @@ add_library(CodeEditor STATIC
     include/core/LineIndex.h
     include/core/UTF8Decoder.h
     include/widgets/CustomCodeEditor.h
+    include/widgets/EditorBlameLineInfo.h
     include/widgets/EditorEditOperations.h
     include/widgets/EditorLanguageSupport.h
     include/widgets/EditorTypingBehaviors.h
     include/widgets/LineNumberArea.h
     include/widgets/BlameTooltip.h
-    include/widgets/BlameLineInfo.h
     include/languages/LanguageDefinition.h
     include/languages/LanguageRegistry.h
     include/languages/LanguageRegistration.h

@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
+<img src="docs/assets/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
 
 <br>
 <h3>Cremniy</h3>
@@ -41,9 +41,9 @@ You constantly **switch** between different windows, and the tools are **not lin
 - 🔗 All tools are connected
 - 💻 Unified workflow
 
-![out](https://github.com/user-attachments/assets/f5e9c520-fb31-45cc-ab11-17eff66d7069)
+<img src="docs/assets/features.gif" alt="Features" width="1280">
 
-## Features
+## Features ✨
 
 ### Available now
 
@@ -58,16 +58,33 @@ You constantly **switch** between different windows, and the tools are **not lin
 - 🐛 **Debugger** — step through execution, inspect registers and memory
 - 🧠 **Memory visualization** — visual maps of memory layout and allocation
 
-## Build
+## Contributing 👋
+
+Contributions are **welcome and encouraged**.
+
+Whether it's a bug fix, a new feature, or an improvement to documentation — feel free to open an issue or submit a pull request.
+
+All tasks can be found in [**GitHub Projects**](https://github.com/orgs/munirov/projects/2/views/1).
+
+All contributors are credited in [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) and mentioned in videos on the [YouTube channel](https://www.youtube.com/@igmunv).
+
+For guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+> [!WARNING]
+> If you would like to take on a task, please leave a comment on the corresponding [Issue](https://github.com/munirov/cremniy/issues). This helps prevent duplicate work.
+>
+> Additionally, once you submit a Pull Request, reference the corresponding [Issue](https://github.com/munirov/cremniy/issues) in the PR description using `Closes #ISSUE_NUMBER`.
+
+## Build 🛠️
 
 ### Prerequisites
 
 | Dependency | Minimum version |
 |---|---|
-| **CMake** | 3.16 |
-| **Qt** | 6.8.2 |
+| **[CMake](https://cmake.org/download/)** | 3.16 |
+| **[Qt](https://www.qt.io/development/download-qt-installer-oss)** | 6.8.2 |
 | **[libgit2](https://libgit2.org/)** | 1.x |
-| **C++ compiler** | C++17 support |
+| **C++ compiler** | C++17 compliant |
 
 <details>
 <summary><b>🪟 Windows</b></summary>
@@ -83,14 +100,20 @@ pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86
 </details>
 
 <details>
-<summary><b>🐧 Linux (Ubuntu / Debian)</b></summary>
+<summary><b>🐧 Linux (Debian-based / Fedora)</b></summary>
 
+For Debian-based distributions:
 ```bash
 sudo apt update
-sudo apt install cmake g++ qt6-base-dev libgit2-dev
+sudo apt install cmake g++ qt6-base-dev qt6-svg-dev qt6-tools-dev-tools libgit2-dev zlib1g-dev libssl-dev libpcre2-dev libhttp-parser-dev
+```
+For Fedora:
+```bash
+sudo dnf update --refresh
+sudo dnf install cmake gcc-c++ qt6-qtbase-devel qt6-qtsvg-devel qt6-qttools-devel libgit2-devel zlib-devel openssl-devel pcre2-devel http-parser-devel
 ```
 
-> [!NOTE]
+> ℹ️ **NOTE:** 
 > If `qt6-base-dev` is unavailable in your distribution's repositories, use the [official Qt installer](https://www.qt.io/download-qt-installer-oss) instead.
 
 </details>
@@ -143,18 +166,6 @@ cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
-## Contributing
-
-Contributions are **welcome and encouraged**.
-
-Whether it's a bug fix, a new feature, or an improvement to documentation — feel free to open an issue or submit a pull request.
-
-Current tasks are [in the ROADMAP](https://github.com/munirov/cremniy/blob/main/ROADMAP.md)
-
-All contributors are credited in [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) and mentioned in videos on the [YouTube channel](https://www.youtube.com/@igmunv).
-
-For guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## License
+## License 📖
 
 Distributed under the terms described in [LICENSE](LICENSE).

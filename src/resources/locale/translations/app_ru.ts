@@ -232,32 +232,32 @@
     <message>
         <location filename="../../../dialogs/configurebuild.cpp" line="13"/>
         <source>Configure Build</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройка сборки</translation>
     </message>
     <message>
         <location filename="../../../dialogs/configurebuild.cpp" line="20"/>
         <source>Build</source>
-        <translation type="unfinished">Сборка</translation>
+        <translation>Сборка</translation>
     </message>
     <message>
         <location filename="../../../dialogs/configurebuild.cpp" line="30"/>
         <source>Build Command</source>
-        <translation type="unfinished"></translation>
+        <translation>Команда сборки</translation>
     </message>
     <message>
         <location filename="../../../dialogs/configurebuild.cpp" line="33"/>
         <source>e.g. cmake --build . (executed in the project root directory)</source>
-        <translation type="unfinished"></translation>
+        <translation>Например: cmake --build . (выполняется в корневом каталоге проекта)</translation>
     </message>
     <message>
         <location filename="../../../dialogs/configurebuild.cpp" line="48"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <location filename="../../../dialogs/configurebuild.cpp" line="49"/>
         <source>Apply</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить</translation>
     </message>
 </context>
 <context>
@@ -1283,36 +1283,42 @@ Do you want to reload it and lose your unsaved changes?</source>
     </message>
     <message>
         <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="452"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="72"/>
+        <source>Build &apos;%1&apos;</source>
+        <translation>Сборка &apos;%1&apos;</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="279"/>
         <source>Unpin</source>
         <translation>Открепить</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="452"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="279"/>
         <source>Pin</source>
         <translation>Закрепить</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="481"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="308"/>
         <source>Save File</source>
         <translation>Сохранить файл</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="481"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="308"/>
         <source>Do you want to save this file?</source>
         <translation>Вы хотите сохранить этот файл?</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="482"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="309"/>
         <source>Yes</source>
         <translation>Да</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="483"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="310"/>
         <source>No</source>
         <translation>Нет</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="484"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="311"/>
         <source>Cancel</source>
         <translation>Отменить</translation>
     </message>

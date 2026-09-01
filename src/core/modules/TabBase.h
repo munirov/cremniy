@@ -3,7 +3,25 @@
 
 #include "core/file/FileDataBuffer.h"
 #include "core/file/filecontext.h"
+#include <QDateTime>
+#include <QString>
+#include <QVector>
 #include <QWidget>
+
+/**
+ * @brief Git blame data transported through the common tab interface.
+ *
+ * Modules receive value objects and do not depend on the Git implementation.
+ */
+struct TabGitBlameLineInfo {
+    QString authorName;
+    QString authorEmail;
+    QDateTime commitDate;
+    QString shortOid;
+    QString fullOid;
+    QString commitSummary;
+    bool isUncommitted = false;
+};
 
 class TabBase : public QWidget {
     Q_OBJECT
@@ -168,7 +186,32 @@ public slots:
      */
     virtual void setGitBlameSlot(bool checked) { Q_UNUSED(checked); }
 
+    /** @brief Return whether this module currently displays Git blame data. */
+    virtual bool gitBlameEnabled() const { return false; }
+
+    /** @brief Deliver Git blame data through the common module boundary. */
+    virtual void setGitBlameData(const QString& filePath,
+                                 const QVector<TabGitBlameLineInfo>& lines) {
+        Q_UNUSED(filePath);
+        Q_UNUSED(lines);
+    }
+
+    /** @brief Notify the tab that a Git blame request failed. */
+    virtual void setGitBlameError(const QString& filePath, const QString& error) {
+        Q_UNUSED(filePath);
+        Q_UNUSED(error);
+    }
+
+    /** @brief Ask the tab to refresh data supplied by the Git integration. */
+    virtual void refreshGitBlame() {}
+
 signals:
+    /** @brief Request Git blame without accessing the Git component directly. */
+    void gitBlameRequested(const QString& filePath);
+
+    /** @brief Notify the application shell that the module's blame state changed. */
+    void gitBlameEnabledChanged(bool enabled);
+
     /**
      * @brief Status bar information changed
      *

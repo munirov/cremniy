@@ -11,7 +11,7 @@
 #include <QTextLayout>
 #include <QVector>
 #include <QCache>
-#include "widgets/BlameLineInfo.h"
+#include "EditorBlameLineInfo.h"
 
 class FileDataBuffer;
 class LineIndex;
@@ -87,7 +87,7 @@ public:
     void setGitBlameEnabled(bool enabled);
     void setGitBlameColor(const QString &color);
     void setGitBlamePadding(int padding);
-    void setBlameData(const QVector<BlameLineInfo>& blameData);
+    void setBlameData(const QVector<EditorBlameLineInfo>& blameData);
 
 signals:
     void contentsChanged();
@@ -293,7 +293,7 @@ private:
     bool m_gitBlameEnabled;
     QString m_gitBlameColor;
     int m_gitBlamePadding;
-    QVector<BlameLineInfo> m_blameData;
+    QVector<EditorBlameLineInfo> m_blameData;
     QRect m_lastBlameRect;
     mutable QHash<qint64, int> m_wrapCountCache;
     mutable int m_wrapCacheWidth;

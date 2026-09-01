@@ -1,6 +1,5 @@
 #include "gitmenu.h"
-#include "core/settings/appsettings.h"
-#include "Modules/Tabs/CodeEditor/codeeditorsettings.h"
+#include "core/git/gitblameservice.h"
 #include "ui/MenuBar/menufactory.h"
 #include <QApplication>
 #include <QFileDialog>
@@ -8,6 +7,7 @@
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QDateTime>
 #include <QFileInfo>
 #include <QDir>
@@ -89,7 +89,6 @@ GitMenu::GitMenu() : BaseMenu(tr("Git"))
     addSeparator();
     m_toggleBlame = addAction(tr("Inline Git Blame"));
     m_toggleBlame->setCheckable(true);
-    m_toggleBlame->setChecked(CodeEditorSettings::gitBlameEnabled());
 }
 
 void GitMenu::setupConnections(IDEWindow* ideWind)
@@ -100,7 +99,7 @@ void GitMenu::setupConnections(IDEWindow* ideWind)
 
     // автообнаружение репозитория у открытой папки проекта
     const QString projectPath = ideWind->property("projectPath").toString();
-    const QString repoPath = findGitRepositoryRoot(projectPath);
+    const QString repoPath = GitManager::findGitRepositoryRoot(projectPath);
     if (!repoPath.isEmpty()) {
         m_git->open(repoPath);
     }
@@ -154,15 +153,23 @@ void GitMenu::setupConnections(IDEWindow* ideWind)
     connect(m_stashList, &QAction::triggered, this, &GitMenu::onStashList);
     connect(m_showLogGraph, &QAction::triggered, this, &GitMenu::onShowLogGraph);
 
-    connect(m_toggleBlame, &QAction::toggled, this, [](bool checked) {
-        CodeEditorSettings::setGitBlameEnabled(checked);
+    auto *blameService = GitBlameService::instance();
+    connect(m_toggleBlame, &QAction::toggled,
+            ideWind, &IDEWindow::on_SetGitBlame);
+    connect(ideWind, &IDEWindow::gitBlameEnabledChanged,
+            m_toggleBlame, [this](bool enabled) {
+                const QSignalBlocker blocker(m_toggleBlame);
+                m_toggleBlame->setChecked(enabled);
+            });
+    const QPointer<IDEWindow> window = ideWind;
+    QTimer::singleShot(0, m_toggleBlame, [this, window] {
+        if (!window)
+            return;
+        const QSignalBlocker blocker(m_toggleBlame);
+        m_toggleBlame->setChecked(window->gitBlameEnabled());
     });
-
-    connect(SettingsNotifier::instance(), &SettingsNotifier::settingsChanged,
-            this, [this](const QString &key) {
-        if (key == CodeEditorSettings::keyGitBlameEnabled())
-            m_toggleBlame->setChecked(CodeEditorSettings::gitBlameEnabled());
-    });
+    connect(m_git, &GitManager::repositoryChanged,
+            blameService, &GitBlameService::repositoryChanged);
 }
 
 // Вспомогательные методы
@@ -197,7 +204,7 @@ void GitMenu::onCheckoutBranch()
     if (branch.isEmpty()) return;
 
     if (m_git->checkoutBranch(branch)) {
-        showInfo(tr("Success"), tr("Переключились на ветку: ") + branch);
+        showInfo(tr("Success"), tr("Переключились на ветку: %1").arg(branch));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -214,7 +221,7 @@ void GitMenu::onCreateBranch()
     if (branch.isEmpty()) return;
 
     if (m_git->createBranch(branch)) {
-        showInfo(tr("Success"), tr("Branch created: ") + branch);
+        showInfo(tr("Success"), tr("Branch created: %1").arg(branch));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -231,7 +238,7 @@ void GitMenu::onDeleteBranch()
     if (branch.isEmpty()) return;
 
     if (m_git->deleteBranch(branch)) {
-        showInfo(tr("Success"), tr("Удалена ветка: ") + branch);
+        showInfo(tr("Success"), tr("Удалена ветка: %1").arg(branch));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -251,7 +258,7 @@ void GitMenu::onRenameBranch()
     if (newName.isEmpty()) return;
 
     if (m_git->renameBranch(oldName, newName)) {
-        showInfo(tr("Success"), tr("Ветка переименована: ") + oldName + " -> " + newName);
+        showInfo(tr("Success"), tr("Ветка переименована: %1 -> %2").arg(oldName, newName));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -270,9 +277,9 @@ void GitMenu::onListBranches()
     QString text;
     for (const QString &b : branches) {
         if (b == current) {
-            text += "* " + b + " (current)\n";
+            text += tr("* %1 (current)\n").arg(b);
         } else {
-            text += "  " + b + "\n";
+            text += tr("  %1\n").arg(b);
         }
     }
 
@@ -315,7 +322,7 @@ void GitMenu::onShowHistory()
     for (const QString &oid : history) {
         const QString msg = m_git->commitMessage(oid);
         const QString author = m_git->commitAuthor(oid);
-        text += oid.left(7) + " | " + author + " | " + msg.left(60) + "\n";
+        text += tr("%1 | %2 | %3\n").arg(oid.left(7), author, msg.left(60));
     }
 
     // показываем в диалоге
@@ -347,7 +354,7 @@ void GitMenu::onCheckoutCommit()
     if (oid.isEmpty()) return;
 
     if (m_git->checkoutCommit(oid)) {
-        showInfo(tr("Success"), tr("Переключились на коммит: ") + oid);
+        showInfo(tr("Success"), tr("Переключились на коммит: %1").arg(oid));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -361,7 +368,7 @@ void GitMenu::onRepoWatchTimeout()
     if (projectPath.isEmpty()) return;
 
     const bool currentlyOpen = m_git->isOpen();
-    const QString repoPath = findGitRepositoryRoot(projectPath);
+    const QString repoPath = GitManager::findGitRepositoryRoot(projectPath);
 
     if (!currentlyOpen && !repoPath.isEmpty()) {
         m_git->open(repoPath);
@@ -539,7 +546,7 @@ void GitMenu::onStageFile()
     if (file.isEmpty()) return;
 
     if (m_git->stageFile(file)) {
-        showInfo(tr("Success"), tr("Файл добавлен в индекс: ") + file);
+        showInfo(tr("Success"), tr("Файл добавлен в индекс: %1").arg(file));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -556,7 +563,7 @@ void GitMenu::onUnstageFile()
     if (file.isEmpty()) return;
 
     if (m_git->unstageFile(file)) {
-        showInfo(tr("Success"), tr("Файл убран из индекса: ") + file);
+        showInfo(tr("Success"), tr("Файл убран из индекса: %1").arg(file));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -579,7 +586,7 @@ void GitMenu::onShowDiff()
     }
 
     QDialog dlg;
-    dlg.setWindowTitle(tr("Diff: ") + file);
+    dlg.setWindowTitle(tr("Diff: %1").arg(file));
     dlg.resize(700, 500);
 
     QVBoxLayout *layout = new QVBoxLayout(&dlg);
@@ -636,7 +643,7 @@ void GitMenu::onCloneRepo()
     if (path.isEmpty()) return;
 
     if (m_git->clone(url, path)) {
-        showInfo(tr("Success"), tr("Репозиторий клонирован в: ") + path);
+        showInfo(tr("Success"), tr("Репозиторий клонирован в: %1").arg(path));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -648,7 +655,7 @@ void GitMenu::onInitRepo()
     if (path.isEmpty()) return;
 
     if (m_git->init(path)) {
-        showInfo(tr("Success"), tr("Репозиторий инициализирован в: ") + path);
+        showInfo(tr("Success"), tr("Репозиторий инициализирован в: %1").arg(path));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -661,7 +668,7 @@ void GitMenu::onOpenRepo()
     if (path.isEmpty()) return;
 
     if (m_git->open(path)) {
-        showInfo(tr("Success"), tr("Репозиторий открыт: ") + path);
+        showInfo(tr("Success"), tr("Репозиторий открыт: %1").arg(path));
     } else {
         showError(tr("Error"), m_git->lastError());
     }
@@ -764,7 +771,7 @@ void GitMenu::onStashList()
 
     QString text;
     for (int i = 0; i < stashes.size(); i++) {
-        text += QString::number(i) + ": " + stashes[i] + "\n";
+        text += tr("%1: %2\n").arg(i).arg(stashes[i]);
     }
 
     showInfo(tr("Stash list"), text);
@@ -799,14 +806,4 @@ void GitMenu::onShowLogGraph()
     layout->addWidget(closeBtn);
 
     dlg.exec();
-}
-
-QString GitMenu::findGitRepositoryRoot(const QString &path)
-{
-    return GitManager::findGitRepositoryRoot(path);
-}
-
-bool GitMenu::isGitRepository(const QString &path)
-{
-    return !findGitRepositoryRoot(path).isEmpty();
 }

@@ -24,9 +24,17 @@ FileTab::FileTab(QWidget* parent, QString path)
     connect(this, &FileTab::setWordWrapSignal, m_tooltabWidget, &ToolsTabWidget::setWordWrapSlot);
     connect(this, &FileTab::setTabReplaceSignal, m_tooltabWidget, &ToolsTabWidget::setTabReplaceSlot);
     connect(this, &FileTab::setTabWidthSignal, m_tooltabWidget, &ToolsTabWidget::setTabWidthSlot);
+    connect(this, &FileTab::setGitBlameSignal, m_tooltabWidget, &ToolsTabWidget::setGitBlameSlot);
+    connect(m_tooltabWidget, &ToolsTabWidget::gitBlameEnabledChanged,
+            this, &FileTab::gitBlameEnabledChanged);
 
     connect(this, &FileTab::openTabModule, m_tooltabWidget, &ToolsTabWidget::openTabModule);
 
+}
+
+bool FileTab::gitBlameEnabled() const
+{
+    return m_tooltabWidget->gitBlameEnabled();
 }
 
 void FileTab::setPinned(bool pinned){
@@ -63,4 +71,9 @@ void FileTab::setTabReplaceSlot(bool checked){
 
 void FileTab::setTabWidthSlot(int width){
     emit setTabWidthSignal(width);
+}
+
+void FileTab::setGitBlameSlot(bool checked)
+{
+    emit setGitBlameSignal(checked);
 }

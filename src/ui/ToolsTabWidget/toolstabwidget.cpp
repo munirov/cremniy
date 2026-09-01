@@ -5,10 +5,31 @@
 #include <qfileinfo.h>
 
 #include "core/file/FileDataBuffer.h"
+#include "core/git/gitblameservice.h"
 #include "ui/ToolsTabWidget/toolstabwidget.h"
 #include "core/modules/ModuleManager.h"
 #include "core/modules/TabBase.h"
 #include "Modules/Tabs/CodeEditor/codeeditortab.h"
+
+namespace {
+
+QVector<TabGitBlameLineInfo> toTabBlameLines(const QVector<BlameLineInfo>& lines)
+{
+    QVector<TabGitBlameLineInfo> result;
+    result.reserve(lines.size());
+    for (const BlameLineInfo& line : lines) {
+        result.append({line.authorName,
+                       line.authorEmail,
+                       line.commitDate,
+                       line.shortOid,
+                       line.fullOid,
+                       line.commitSummary,
+                       line.isUncommitted});
+    }
+    return result;
+}
+
+} // namespace
 
 ToolsTabWidget::ToolsTabWidget(QWidget *parent, QString path)
     : QTabWidget(parent)
@@ -76,6 +97,16 @@ CodeEditorTab* ToolsTabWidget::codeEditorTab(bool activate)
     return nullptr;
 }
 
+bool ToolsTabWidget::gitBlameEnabled() const
+{
+    for (int index = 0; index < count(); ++index) {
+        const auto* tab = qobject_cast<const TabBase*>(widget(index));
+        if (tab && tab->gitBlameEnabled())
+            return true;
+    }
+    return false;
+}
+
 void ToolsTabWidget::updateCloseButtons()
 {
     for (int index = 0; index < count(); ++index) {
@@ -108,6 +139,7 @@ void ToolsTabWidget::createTab(const ModuleDescription<TabBase>& desc, bool isAl
     TabBase* tab = desc.creator();
     if (!tab) return;
 
+    connectGitIntegration(tab);
     tab->setFile(m_filePath);
     tab->setFileDataBuffer(m_sharedBuffer);
 
@@ -127,6 +159,9 @@ void ToolsTabWidget::createTab(const ModuleDescription<TabBase>& desc, bool isAl
     connect(this, &ToolsTabWidget::setWordWrapSignal, tab, &TabBase::setWordWrapSlot);
     connect(this, &ToolsTabWidget::setTabReplaceSignal, tab, &TabBase::setTabReplaceSlot);
     connect(this, &ToolsTabWidget::setTabWidthSignal, tab, &TabBase::setTabWidthSlot);
+    connect(this, &ToolsTabWidget::setGitBlameSignal, tab, &TabBase::setGitBlameSlot);
+    connect(tab, &TabBase::gitBlameEnabledChanged,
+            this, &ToolsTabWidget::gitBlameEnabledChanged);
 
     int insertIndex = count();
 
@@ -144,6 +179,24 @@ void ToolsTabWidget::createTab(const ModuleDescription<TabBase>& desc, bool isAl
 
     insertTab(insertIndex, tab, tab->icon(), desc.name());
     updateCloseButtons();
+}
+
+void ToolsTabWidget::connectGitIntegration(TabBase* tab)
+{
+    GitBlameService* service = GitBlameService::instance();
+
+    connect(tab, &TabBase::gitBlameRequested,
+            service, &GitBlameService::requestBlame);
+    connect(service, &GitBlameService::blameReady,
+            tab, [tab](const QString& filePath, const QVector<BlameLineInfo>& lines) {
+                tab->setGitBlameData(filePath, toTabBlameLines(lines));
+            });
+    connect(service, &GitBlameService::blameFailed,
+            tab, [tab](const QString& filePath, const QString& error) {
+                tab->setGitBlameError(filePath, error);
+            });
+    connect(service, &GitBlameService::repositoryChanged,
+            tab, &TabBase::refreshGitBlame);
 }
 
 void ToolsTabWidget::refreshDataAllTabs(){
@@ -255,6 +308,11 @@ void ToolsTabWidget::setTabReplaceSlot(bool checked){
 void ToolsTabWidget::setTabWidthSlot(int width){
     qDebug("signal: tab width");
     emit setTabWidthSignal(width);
+}
+
+void ToolsTabWidget::setGitBlameSlot(bool checked)
+{
+    emit setGitBlameSignal(checked);
 }
 
 void ToolsTabWidget::openTabModule(ModuleDescription<TabBase> desc){

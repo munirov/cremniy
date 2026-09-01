@@ -18,6 +18,9 @@ bool gitBlameEnabled()
 
 void setGitBlameEnabled(bool enabled)
 {
+    if (gitBlameEnabled() == enabled)
+        return;
+
     AppSettings::setValue(keyGitBlameEnabled(), enabled);
     emit SettingsNotifier::instance()->settingsChanged(keyGitBlameEnabled());
 }

@@ -2,7 +2,7 @@
 #define BLAMETOOLTIP_H
 
 #include <QWidget>
-#include "widgets/BlameLineInfo.h"
+#include "EditorBlameLineInfo.h"
 
 /**
  * @brief A beautiful, semi-transparent tooltip for Git Blame information.
@@ -13,7 +13,7 @@ class BlameTooltip : public QWidget {
 public:
     explicit BlameTooltip(QWidget* parent = nullptr);
 
-    void setBlameInfo(const BlameLineInfo& info);
+    void setBlameInfo(const EditorBlameLineInfo& info);
     void showAt(const QPoint& globalPos);
     QString currentCommitHash() const { return m_info.fullOid; }
 
@@ -22,7 +22,7 @@ protected:
     void showEvent(QShowEvent* event) override;
 
 private:
-    BlameLineInfo m_info;
+    EditorBlameLineInfo m_info;
 
     QString formatAuthor() const;
     QString formatDate() const;

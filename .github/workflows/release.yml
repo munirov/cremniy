@@ -188,15 +188,57 @@ jobs:
             -Path package/* `
             -DestinationPath cremniy-windows-${{ github.ref_name }}.zip
 
+      - name: Install create-dmg
+        if: runner.os == 'macOS'
+        run: brew install create-dmg
+
+      - name: Deploy Qt
+        if: runner.os == 'macOS'
+        run: |
+          macdeployqt \
+            build/cremniy.app \
+            -verbose=2
+
+      - name: Verify macOS bundle
+        if: runner.os == 'macOS'
+        run: |
+          echo "=== Frameworks ==="
+          find build/cremniy.app/Contents/Frameworks \
+            -maxdepth 2 \
+            -type f \
+            -print
+
+          echo "=== Dependencies ==="
+          otool -L build/cremniy.app/Contents/MacOS/cremniy
+
+          echo "=== RPATH ==="
+          otool -l build/cremniy.app/Contents/MacOS/cremniy | grep -A3 LC_RPATH
+
+      - name: Compile Asset Catalog
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p car_output
+      
       - name: Package (macOS)
         if: runner.os == 'macOS'
         run: |
           mkdir -p package
-          cp -r build/cremniy.app package/
-          macdeployqt package/cremniy.app
-          cd package
-          tar -czf ../cremniy-macos-${{ github.ref_name }}.tar.gz cremniy.app
+          cp -a build/cremniy.app package/Cremniy.app
 
+          codesign --force --deep -s - package/Cremniy.app
+
+          create-dmg \
+            --volname "Cremniy" \
+            --background "src/resources/macos/background-dmg.png" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "Cremniy.app" 175 190 \
+            --hide-extension "Cremniy.app" \
+            --app-drop-link 425 190 \
+            "cremniy-macos-${{ github.ref_name }}.dmg" \
+            "package/"
+          
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
@@ -204,7 +246,7 @@ jobs:
           path: |
             cremniy-linux-${{ github.ref_name }}.AppImage
             cremniy-windows-${{ github.ref_name }}.zip
-            cremniy-macos-${{ github.ref_name }}.tar.gz
+            cremniy-macos-${{ github.ref_name }}.dmg
           if-no-files-found: error
 
   build-rpm:
@@ -295,6 +337,7 @@ jobs:
             artifacts/**/*.tar.gz
             artifacts/**/*.zip
             artifacts/**/*.AppImage
+            artifacts/**/*.dmg
             artifacts/**/*.rpm
           draft: false
           prerelease: false

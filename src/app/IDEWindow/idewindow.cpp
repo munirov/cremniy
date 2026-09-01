@@ -9,6 +9,7 @@
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
 #include "widgets/search/searchpanel.h"
+#include "widgets/terminal/terminalpanel.h"
 #include <QShortcut>
 #include <qtimer.h>
 
@@ -46,10 +47,7 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
 
     m_verticalSplitter = new QSplitter(Qt::Vertical, m_mainWidget);
 
-    // Terminal is initialized lazily on demand (see on_Toggle_Terminal)
-    // m_terminal = new TerminalWidget(this, ProjectPath);
-    // m_terminal->setVisible(false);
-    m_terminal = nullptr;
+    m_terminalPanel = nullptr;
 
     m_leftSidebar = new QWidget(this);
     auto const leftLayout = new QVBoxLayout(m_leftSidebar);
@@ -115,6 +113,9 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     connect(this, &IDEWindow::setWordWrapSignal, m_filesTabWidget, &FilesTabWidget::setWordWrapSlot);
     connect(this, &IDEWindow::setTabReplaceSignal, m_filesTabWidget, &FilesTabWidget::setTabReplaceSlot);
     connect(this, &IDEWindow::setTabWidthSignal, m_filesTabWidget, &FilesTabWidget::setTabWidthSlot);
+    connect(this, &IDEWindow::setGitBlameSignal, m_filesTabWidget, &FilesTabWidget::setGitBlameSlot);
+    connect(m_filesTabWidget, &FilesTabWidget::gitBlameEnabledChanged,
+            this, &IDEWindow::gitBlameEnabledChanged);
     connect(this, &IDEWindow::openTabModule, m_filesTabWidget, &FilesTabWidget::openTabModule);
 
     connect(m_filesTreeView, &FileTreePanel::openFileRequested, this, [this](const QString& filePath, const QString& fileName) {
@@ -159,6 +160,11 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
 
 IDEWindow::~IDEWindow() = default;
 
+bool IDEWindow::gitBlameEnabled() const
+{
+    return m_filesTabWidget && m_filesTabWidget->gitBlameEnabled();
+}
+
 void IDEWindow::configurateBuild(){
 
     if (m_projectInfo.buildCommand.trimmed().isEmpty()){
@@ -189,21 +195,37 @@ void IDEWindow::on_openBuildConfigurate(){
 
 
 void IDEWindow::on_Toggle_Terminal(bool checked) {
-    if (checked && !m_terminal) {
-        m_terminal = new TerminalWidget(this, m_projectPath);
-        m_verticalSplitter->addWidget(m_terminal);
+    if (checked && !m_terminalPanel) {
+        auto *panel = new TerminalPanel(m_projectPath, this);
+        m_terminalPanel = panel;
+        m_verticalSplitter->addWidget(panel);
         m_verticalSplitter->setCollapsible(1, true);
         m_verticalSplitter->setSizes({800, 200});
+
+        connect(panel, &TerminalPanel::closeRequested, this, [this, panel] {
+            if (m_terminalPanel != panel)
+                return;
+
+            m_terminalPanel = nullptr;
+            panel->hide();
+            panel->deleteLater();
+            emit terminalVisibilityChanged(false);
+
+            if (auto *tab = currentFileTab())
+                tab->setFocus(Qt::ShortcutFocusReason);
+        });
     }
 
-    if (!m_terminal) {
+    if (!m_terminalPanel) {
+        emit terminalVisibilityChanged(false);
         return;
     }
 
-    m_terminal->setVisible(checked);
+    m_terminalPanel->setVisible(checked);
+    emit terminalVisibilityChanged(checked);
 
     if (checked) {
-        m_terminal->setFocus();
+        m_terminalPanel->focusActiveTerminal();
     }
 }
 
@@ -217,6 +239,11 @@ void IDEWindow::on_SetTabReplace(bool checked) {
 
 void IDEWindow::on_SetTabWidth(int width) {
     emit setTabWidthSignal(width);
+}
+
+void IDEWindow::on_SetGitBlame(bool enabled)
+{
+    emit setGitBlameSignal(enabled);
 }
 
 void IDEWindow::on_Toggle_FileTree(bool checked) const {

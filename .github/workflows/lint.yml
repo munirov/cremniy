@@ -5,10 +5,16 @@ on:
     branches:
       - main
       - dev
+    paths:
+      - 'src/**'
+      - '.github/workflows/lint.yml'
   push:
     branches:
       - main
       - dev
+    paths:
+      - 'src/**'
+      - '.github/workflows/lint.yml'
 
 jobs:
   cpp-linter:

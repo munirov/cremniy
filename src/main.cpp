@@ -27,7 +27,10 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName("Munirov");
     QCoreApplication::setApplicationName("Cremniy");
+
+#if !defined(Q_OS_MAC)
     a.setWindowIcon(QIcon(":/icons/icon.svg"));
+#endif
 
     // - - Fonts - -
     LanguageManager::instance().loadUserDefaultLocale();

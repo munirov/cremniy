@@ -2,18 +2,19 @@
 name: Task
 about: A new task that needs to be completed
 title: ''
-labels: task
+labels: ''
 assignees: ''
+type: Task
 
 ---
 
-## Описание
-Краткая формулировка задачи
+## 📝 Description
+A brief task description
 
-## Результат
-Описание того, что должно получиться. Можно прикрепить скриншот или ссылку на уже существующую реализацию или пример
+## 🎯 Expected Result
+A description of the intended outcome. You can attach a screenshot or a link to an existing implementation or example.
 
-## Шаги реализации
-- [ ] Сделать первое
-- [ ] Сделать второе
-- [ ] Сделать третье
+## 🛠️ Implementation Steps
+- [ ] Complete step one
+- [ ] Complete step two
+- [ ] Complete step three

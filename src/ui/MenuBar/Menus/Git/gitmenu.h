@@ -92,12 +92,6 @@ private:
     /** @brief Request text input */
     QString inputDialog(const QString &title, const QString &label);
 
-    /** @brief Find git repository root (searches .git in all parent directories) */
-    static QString findGitRepositoryRoot(const QString &path);
-
-    /** @brief Check if path is a git repository */
-    static bool isGitRepository(const QString &path);
-
     // Slots for actions
     void onCheckoutBranch();
     void onCreateBranch();

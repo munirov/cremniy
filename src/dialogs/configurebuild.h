@@ -7,6 +7,7 @@
 #include "project_info_manager.h"
 
 class ConfigureBuild : public QDialog {
+    Q_OBJECT
 
     public:
         ConfigureBuild(ProjectInfo &projInfo, QWidget *parent);

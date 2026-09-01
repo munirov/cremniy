@@ -10,8 +10,9 @@
 #include <qsplitter.h>
 #include <qstatusbar.h>
 #include <QLabel>
-#include "widgets/terminal/terminalwidget.h"
 #include "project_info_manager.h"
+
+class TerminalPanel;
 
 class SearchPanel;
 class QShortcut;
@@ -22,6 +23,7 @@ class IDEWindow : public QMainWindow {
 public:
     explicit IDEWindow(const QString &ProjectPath, QWidget *parent = nullptr);
     ~IDEWindow() override;
+    bool gitBlameEnabled() const;
 
 private:
     FileTab* currentFileTab() const;
@@ -42,14 +44,14 @@ private:
     QSplitter* m_mainSplitter;
 
     // - - General Widgets - -
-    FilesTabWidget* m_filesTabWidget;
+    FilesTabWidget* m_filesTabWidget = nullptr;
 
     // - - Sidebar Widgets - -
     QWidget* m_leftSidebar;
     FileTreePanel* m_filesTreeView;
 
     // - - Terminal Widget - -
-    TerminalWidget *m_terminal;
+    TerminalPanel *m_terminalPanel;
     SearchPanel* m_searchPanel;
     QShortcut* m_closeSearchShortcut;
     QString m_projectPath;
@@ -117,6 +119,9 @@ public slots:
      */
     void on_SetTabWidth(int width);
 
+    /** @brief Route the Git blame command to modules through TabBase. */
+    void on_SetGitBlame(bool enabled);
+
     /**
      * @brief Отображение дерева файлов
     */
@@ -125,10 +130,13 @@ public slots:
 signals:
     void saveFileSignal();
     void CloseProject();
+    void terminalVisibilityChanged(bool visible);
 
     void setWordWrapSignal(bool checked);
     void setTabReplaceSignal(bool checked);
     void setTabWidthSignal(int width);
+    void setGitBlameSignal(bool enabled);
+    void gitBlameEnabledChanged(bool enabled);
 
     void openTabModule(ModuleDescription<TabBase> desc);
 };
