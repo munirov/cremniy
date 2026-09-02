@@ -122,6 +122,7 @@ DisassemblerSettingsPage::DisassemblerSettingsPage(QWidget* parent)
     m_backendCombo = new QComboBox(backendGroup);
     m_backendCombo->addItem(tr("objdump"), static_cast<int>(DisassemblerSettings::Backend::Objdump));
     m_backendCombo->addItem(tr("radare2"), static_cast<int>(DisassemblerSettings::Backend::Radare2));
+    m_backendCombo->addItem(tr("Capstone"), static_cast<int>(DisassemblerSettings::Backend::Capstone));
     backendForm->addRow(tr("Disassembler backend"), m_backendCombo);
     m_syntaxCombo = new QComboBox(backendGroup);
     m_syntaxCombo->addItem(tr("Intel"), static_cast<int>(DisassemblerSettings::Syntax::Intel));
