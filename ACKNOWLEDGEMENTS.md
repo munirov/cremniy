@@ -64,6 +64,8 @@ People who contributed their time and code to Cremniy.
 
 [@zaedalbal](https://github.com/zaedalbal)
 
+[@abdullohraupov](https://github.com/abdullohraupov)
+
 ## 💸 Donators
 
 People who financially supported the development of Cremniy.

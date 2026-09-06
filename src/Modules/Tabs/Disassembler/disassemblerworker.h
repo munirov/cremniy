@@ -58,6 +58,7 @@ signals:
 private:
     std::atomic<bool> m_cancelled{false};
     friend class Radare2Backend;
+    friend class CapstoneBackend;
 
     QVector<DisasmSection> parseSections(const QByteArray &output, const QHash<QString, DisasmSection> &sectionMap = {});
     static QString detectArch(const QString &filePath);

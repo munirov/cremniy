@@ -1,6 +1,7 @@
 #include "disassemblerworker.h"
-#include "disassemblersettings.h"
+#include "disasm/backends/capstonebackend.h"
 #include "disasm/backends/radare2backend.h"
+#include "disassemblersettings.h"
 
 #include <QProcess>
 #include <QProcessEnvironment>
@@ -105,6 +106,42 @@ void DisassemblerWorker::disassemble(const QString &filePath, const QString &arc
     m_cancelled = false;
 
     // ── backend selection ─────────────────────────────────────────────────
+    if (DisassemblerSettings::backend() == DisassemblerSettings::Backend::Capstone) {
+        emit logLine("[disasm] backend   : Capstone");
+        emit logLine("[disasm] file      : " + filePath);
+
+        CapstoneBackend::Options opt;
+        opt.asmSyntax = static_cast<int>(DisassemblerSettings::asmSyntax());
+
+        emit logLine(QString("[disasm] syntax    : %1").arg(opt.asmSyntax == 1 ? "att" : "intel"));
+
+        auto [sections, strings, error] = CapstoneBackend::disassembleFile(filePath, opt, &m_cancelled);
+
+        if (!error.isEmpty()) {
+            emit errorOccurred(error);
+            emit finished();
+            return;
+        }
+
+        if (!strings.isEmpty())
+            emit stringsFound(strings);
+
+        emit logLine(QString("[disasm] sections parsed: %1").arg(sections.size()));
+        for (const auto &s : sections)
+            emit logLine(QString("[disasm]   section '%1': %2 instructions")
+                             .arg(s.name).arg(s.instructions.size()));
+
+        const int total = sections.size();
+        for (int i = 0; i < total; ++i) {
+            if (m_cancelled) break;
+            emit sectionFound(sections[i]);
+            emit progressUpdated(total == 0 ? 100 : (i + 1) * 100 / total);
+        }
+
+        emit finished();
+        return;
+    }
+
     if (DisassemblerSettings::backend() == DisassemblerSettings::Backend::Radare2) {
         QString r2 = DisassemblerSettings::radare2Path();
         if (r2.isEmpty())
