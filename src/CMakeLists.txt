@@ -155,6 +155,15 @@ qt_add_executable(${PROJECT_NAME}
     core/file/FileDataBuffer.cpp
     core/file/FileDataBuffer.h
     core/file/filemanager.cpp
+    core/file/filemanager.cpp
+    core/file/filemanager.h
+
+    core/file/filesynccontroller.cpp
+    core/file/filesynccontroller.h
+    core/file/filesyncdecision.cpp
+    core/file/filesyncdecision.h
+    core/file/filesyncmonitor.cpp
+    core/file/filesyncmonitor.h
     core/file/filemanager.h
 
     core/project/projects_history_manager.cpp

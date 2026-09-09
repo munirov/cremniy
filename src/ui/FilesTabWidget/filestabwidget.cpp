@@ -19,6 +19,10 @@
 #include <QPushButton>
 #include "Modules/Tabs/CodeEditor/codeeditortab.h"
 #include "buildTab/buildtab.h"
+#include "core/file/FileDataBuffer.h"
+#include "core/file/filesynccontroller.h"
+#include "core/file/filesyncdecision.h"
+#include "core/file/filesyncmonitor.h"
 
 namespace {
 
@@ -43,6 +47,107 @@ FilesTabWidget::FilesTabWidget(QWidget *parent) {
     connect(tabBar(), &QTabBar::tabMoved, this, &FilesTabWidget::onTabMoved);
     tabBar()->installEventFilter(this);
     QCoreApplication::instance()->installEventFilter(this);
+
+    m_syncController = new FileSyncController(this);
+
+    connect(
+        m_syncController,
+        &FileSyncController::reloadRequested,
+        this,
+        [this](const QString& filePath) {
+            FileTab* tab = findTabByPath(filePath);
+            if (tab) {
+                reloadTabFromDisk(tab);
+            }
+        }
+    );
+
+    connect(
+        m_syncController,
+        &FileSyncController::keepCurrentRequested,
+        this,
+        [this](const QString& filePath) {
+            FileTab* tab = findTabByPath(filePath);
+            if (!tab || !tab->toolsTabWidget()) {
+                return;
+            }
+
+            auto* buffer = tab->toolsTabWidget()->sharedBuffer();
+            if (m_externalFileDialogActive || !buffer) {
+                return;
+            }
+
+            m_externalFileDialogActive = true;
+            QMessageBox question(
+                QMessageBox::Question,
+                tr("File changed on disk"),
+                tr("\"%1\" has been changed on disk.\n"
+                   "Do you want to reload it and lose your unsaved changes?")
+                    .arg(QFileInfo(tab->filePath).fileName()),
+                QMessageBox::NoButton,
+                this
+            );
+
+            const auto reloadBtn = question.addButton(tr("Reload"), QMessageBox::YesRole);
+            question.addButton(tr("Keep my changes"), QMessageBox::NoRole);
+            question.exec();
+            m_externalFileDialogActive = false;
+
+            if (question.clickedButton() == reloadBtn) {
+                reloadTabFromDisk(tab);
+            }
+        }
+    );
+
+    connect(
+        m_syncController,
+        &FileSyncController::closeRequested,
+        this,
+        [this](const QString& filePath) {
+            FileTab* tab = findTabByPath(filePath);
+            if (!tab || !tab->toolsTabWidget()) {
+                return;
+            }
+
+            if (m_externalFileDialogActive) {
+                return;
+            }
+
+            m_externalFileDialogActive = true;
+            QMessageBox question(
+                QMessageBox::Warning,
+                tr("File deleted on disk"),
+                tr("\"%1\" was deleted or renamed outside the editor.")
+                    .arg(QFileInfo(tab->filePath).fileName()),
+                QMessageBox::NoButton,
+                this
+            );
+
+            const auto keepOpenBtn = question.addButton(tr("Keep open"), QMessageBox::YesRole);
+            const auto closeTabBtn = question.addButton(tr("Close tab"), QMessageBox::DestructiveRole);
+            question.exec();
+            m_externalFileDialogActive = false;
+
+            const auto reply = question.clickedButton();
+            if (reply == closeTabBtn) {
+                closeTab(indexOf(tab));
+            } else if (reply == keepOpenBtn) {
+                tab->toolsTabWidget()->setupStar();
+            }
+        }
+    );
+
+    connect(
+        m_syncController,
+        &FileSyncController::markDirtyRequested,
+        this,
+        [this](const QString& filePath) {
+            FileTab* tab = findTabByPath(filePath);
+            if (tab && tab->toolsTabWidget()) {
+                tab->toolsTabWidget()->setupStar();
+            }
+        }
+    );
 
     connect(this, &FilesTabWidget::openTabModule,
             this, [this](ModuleDescription<TabBase> desc){
@@ -110,6 +215,86 @@ void FilesTabWidget::openFile(QString filePath, QString tabTitle) {
             this, &FilesTabWidget::gitBlameEnabledChanged);
     emit gitBlameEnabledChanged(filetab->gitBlameEnabled());
 
+    startFileSync(filetab);
+
+}
+
+/* - - Sync with disk (external changes) - - */
+
+/* Watch the freshly opened file so external modifications can be detected */
+void FilesTabWidget::startFileSync(FileTab *tab) {
+    if (!tab || tab->filePath.isEmpty()) {
+        return;
+    }
+
+    auto* tools = tab->toolsTabWidget();
+    if (!tools || !tools->sharedBuffer()) {
+        return;
+    }
+
+    const QString normalizedPath = comparablePath(tab->filePath);
+    m_syncController->attachFile(normalizedPath, tools->sharedBuffer()->isModified());
+
+    connect(
+        tools->sharedBuffer(),
+        &FileDataBuffer::savedToFile,
+        m_syncController,
+        &FileSyncController::refreshBaseline
+    );
+
+    connect(
+        tools->sharedBuffer(),
+        &FileDataBuffer::dataChanged,
+        m_syncController,
+        [this, normalizedPath, buffer = tools->sharedBuffer()]() {
+            if (m_syncController && buffer) {
+                m_syncController->updateFileState(normalizedPath, buffer->isModified());
+            }
+        }
+    );
+}
+
+void FilesTabWidget::stopFileSync(const QString& filePath) {
+    if (!m_syncController)
+        return;
+
+    m_syncController->detachFile(filePath);
+}
+
+FileTab* FilesTabWidget::findTabByPath(const QString& filePath) const {
+    for (int i = 0; i < count(); ++i) {
+        FileTab *tab = qobject_cast<FileTab *>(widget(i));
+        if (tab && samePath(tab->filePath, filePath)) {
+            return tab;
+        }
+    }
+    return nullptr;
+}
+
+void FilesTabWidget::reloadTabFromDisk(FileTab *tab) {
+    if (!tab || !tab->toolsTabWidget()) {
+        return;
+    }
+
+    if (!tab->toolsTabWidget()->reloadFromDisk()) {
+        /* The file disappeared while syncing: fall back to deletion flow */
+        onFileDisappeared(tab->filePath);
+        return;
+    }
+
+    emit searchDocumentsChanged();
+}
+
+void FilesTabWidget::onFileChangedOnDisk(const QString& filePath) {
+    if (m_syncController) {
+        m_syncController->handleFileChanged(filePath);
+    }
+}
+
+void FilesTabWidget::onFileDisappeared(const QString& filePath) {
+    if (m_syncController) {
+        m_syncController->handleFileDisappeared(filePath);
+    }
 }
 
 bool FilesTabWidget::gitBlameEnabled() const
@@ -329,8 +514,10 @@ void FilesTabWidget::closeTab(int index) {
     }
 
     removeTab(index);
-    if (tab)
+    if (tab) {
+        stopFileSync(comparablePath(tab->filePath));
         tab->deleteLater();
+    }
     if (count() == 0)
         emit statusBarInfoChanged(QString());
     emit searchDocumentsChanged();

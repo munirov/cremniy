@@ -117,25 +117,7 @@
     <message>
         <location filename="../../../ui/MenuBar/Menus/Build/buildmenu.cpp" line="13"/>
         <source>Configurate</source>
-        <translation>Настроить</translation>
-    </message>
-</context>
-<context>
-    <name>BuildTab</name>
-    <message>
-        <location filename="../../../widgets/buildTab/buildtab.cpp" line="28"/>
-        <source>Build</source>
-        <translation>Сборка</translation>
-    </message>
-    <message>
-        <location filename="../../../widgets/buildTab/buildtab.cpp" line="29"/>
-        <source>Stop</source>
-        <translation>Остановить</translation>
-    </message>
-    <message>
-        <location filename="../../../widgets/buildTab/buildtab.cpp" line="30"/>
-        <source>Clear</source>
-        <translation>Очистить</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1258,6 +1240,49 @@ Check the Log panel for details.</source>
 <context>
     <name>FilesTabWidget</name>
     <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="208"/>
+        <source>File changed on disk</source>
+        <translation>Файл изменён на диске</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="209"/>
+        <source>&quot;%1&quot; has been changed on disk.
+Do you want to reload it and lose your unsaved changes?</source>
+        <translation>&quot;%1&quot; был изменён на диске.
+Перезагрузить файл и потерять несохранённые изменения?</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="216"/>
+        <source>Reload</source>
+        <translation>Перезагрузить</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="217"/>
+        <source>Keep my changes</source>
+        <translation>Оставить мои изменения</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="259"/>
+        <source>File deleted on disk</source>
+        <translation>Файл удалён на диске</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="260"/>
+        <source>&quot;%1&quot; was deleted or renamed outside the editor.</source>
+        <translation>&quot;%1&quot; был удалён или переименован вне редактора.</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="266"/>
+        <source>Keep open</source>
+        <translation>Оставить открытым</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="267"/>
+        <source>Close tab</source>
+        <translation>Закрыть вкладку</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="452"/>
         <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="72"/>
         <source>Build &apos;%1&apos;</source>
         <translation>Сборка &apos;%1&apos;</translation>

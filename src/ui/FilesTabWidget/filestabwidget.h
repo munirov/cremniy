@@ -7,6 +7,8 @@
 #include "project_info_manager.h"
 #include "widgets/filetab.h"
 
+class FileSyncController;
+
 class FilesTabWidget : public QTabWidget {
     Q_OBJECT
 public:
@@ -37,13 +39,23 @@ public slots:
     void setWordWrapSlot(bool checked);
     void setTabReplaceSlot(bool checked);
     void setTabWidthSlot(int width);
+
+    void onFileChangedOnDisk(const QString& filePath);
+    void onFileDisappeared(const QString& filePath);
+
     void setGitBlameSlot(bool checked);
   
 private:
     void switchTab(int page);
     void setPinnedTabText(int index, FileTab *tab);
     int pinnedCount() const;
+    void startFileSync(FileTab *tab);
+    void stopFileSync(const QString& filePath);
+    FileTab* findTabByPath(const QString& filePath) const;
+    void reloadTabFromDisk(FileTab *tab);
     bool m_adjustingTabMove = false;
+    FileSyncController* m_syncController = nullptr;
+    bool m_externalFileDialogActive = false;
 
 signals:
     void searchDocumentsChanged();
