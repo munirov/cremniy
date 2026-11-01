@@ -138,8 +138,8 @@ qt_add_executable(${PROJECT_NAME}
     widgets/terminal/terminalwidget.h
     widgets/terminal/terminalpanel.cpp
     widgets/terminal/terminalpanel.h
-    widgets/search/searchpanel.cpp
-    widgets/search/searchpanel.h
+    ui/FindPanel/findpanel.cpp
+    ui/FindPanel/findpanel.h
 
     # Resources
     resources/cremniy_res.qrc
@@ -160,8 +160,9 @@ qt_add_executable(${PROJECT_NAME}
     core/project/projects_history_manager.cpp
     core/project/projects_history_manager.h
 
-    core/search/searchengine.cpp
-    core/search/searchengine.h
+    core/FindEngine/findengine.cpp
+    core/FindEngine/findengine.h
+    core/FindEngine/findtypes.h
 
     core/settings/settingspage.h
 

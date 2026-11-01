@@ -1,4 +1,4 @@
-#include "searchengine.h"
+#include "findengine.h"
 
 #include <QDir>
 #include <QCoreApplication>
@@ -15,7 +15,7 @@ namespace {
 
 QString searchTr(const char* sourceText)
 {
-    return QCoreApplication::translate("SearchEngine", sourceText);
+    return QCoreApplication::translate("FindEngine", sourceText);
 }
 
 QString normalizedPath(const QString& path)
@@ -92,7 +92,8 @@ QRegularExpression createExpression(const SearchOptions& options, QString* error
 
     QRegularExpression expression(pattern, patternOptions);
     if (!expression.isValid() && error)
-        *error = searchTr("Invalid regular expression: %1").arg(expression.errorString());
+        *error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "Invalid regular expression: %1"))
+                     .arg(expression.errorString());
     return expression;
 }
 
@@ -186,7 +187,7 @@ void appendMatches(const SearchDocument& document,
             continue;
 
         if (match.capturedLength() == 0) {
-            report->error = searchTr("The expression must not match empty text.");
+            report->error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The expression must not match empty text."));
             return;
         }
 
@@ -224,7 +225,7 @@ void appendMatches(const SearchDocument& document,
 
 } // namespace
 
-SearchReport SearchEngine::searchDocuments(const QVector<SearchDocument>& documents,
+SearchReport FindEngine::searchDocuments(const QVector<SearchDocument>& documents,
                                            const SearchOptions& options)
 {
     SearchReport report;
@@ -243,7 +244,7 @@ SearchReport SearchEngine::searchDocuments(const QVector<SearchDocument>& docume
     return report;
 }
 
-SearchReport SearchEngine::searchProject(const QString& projectPath,
+SearchReport FindEngine::searchProject(const QString& projectPath,
                                          const QVector<SearchDocument>& openDocuments,
                                          const SearchOptions& options)
 {
@@ -308,13 +309,13 @@ SearchReport SearchEngine::searchProject(const QString& projectPath,
     return report;
 }
 
-ReplacementResult SearchEngine::replaceAll(const QByteArray& contents, const SearchOptions& options)
+ReplacementResult FindEngine::replaceAll(const QByteArray& contents, const SearchOptions& options)
 {
     ReplacementResult result;
     bool validUtf8 = false;
     QString text = decodedUtf8(contents, &validUtf8);
     if (!validUtf8) {
-        result.error = searchTr("The file is not valid UTF-8 text.");
+        result.error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The file is not valid UTF-8 text."));
         return result;
     }
 
@@ -330,7 +331,7 @@ ReplacementResult SearchEngine::replaceAll(const QByteArray& contents, const Sea
     while (iterator.hasNext()) {
         const QRegularExpressionMatch match = iterator.next();
         if (match.capturedLength() == 0) {
-            result.error = searchTr("The expression must not match empty text.");
+            result.error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The expression must not match empty text."));
             return result;
         }
         matches.append(match);
@@ -348,7 +349,7 @@ ReplacementResult SearchEngine::replaceAll(const QByteArray& contents, const Sea
     return result;
 }
 
-ReplacementResult SearchEngine::replaceMatch(const QByteArray& contents,
+ReplacementResult FindEngine::replaceMatch(const QByteArray& contents,
                                              const SearchMatch& match,
                                              const SearchOptions& options)
 {
@@ -356,7 +357,7 @@ ReplacementResult SearchEngine::replaceMatch(const QByteArray& contents,
     bool validUtf8 = false;
     QString text = decodedUtf8(contents, &validUtf8);
     if (!validUtf8) {
-        result.error = searchTr("The file is not valid UTF-8 text.");
+        result.error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The file is not valid UTF-8 text."));
         return result;
     }
 
@@ -369,7 +370,7 @@ ReplacementResult SearchEngine::replaceMatch(const QByteArray& contents,
 
     const QRegularExpressionMatch current = expression.match(text, match.textOffset);
     if (!current.hasMatch() || current.capturedStart() != match.textOffset || current.capturedLength() != match.length) {
-        result.error = searchTr("The result changed. Search again before replacing it.");
+        result.error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The result changed. Search again before replacing it."));
         return result;
     }
 

@@ -1,5 +1,7 @@
 #include "filestabwidget.h"
 
+#include "core/file/FileDataBuffer.h"
+#include "Modules/Tabs/CodeEditor/codeeditortab.h"
 #include <qabstractbutton.h>
 #include <QApplication>
 #include <QCoreApplication>
@@ -17,7 +19,6 @@
 #include <qboxlayout.h>
 #include <qfileinfo.h>
 #include <QPushButton>
-#include "Modules/Tabs/CodeEditor/codeeditortab.h"
 #include "buildTab/buildtab.h"
 
 namespace {
@@ -171,8 +172,7 @@ bool FilesTabWidget::openSearchMatch(const SearchMatch& match)
     auto* tab = qobject_cast<FileTab*>(currentWidget());
     if (!tab || !tab->toolsTabWidget())
         return false;
-    CodeEditorTab* editor = tab->toolsTabWidget()->codeEditorTab(true);
-    return editor && editor->revealSearchMatch(match.line, match.column, match.length);
+    return tab->toolsTabWidget()->revealSearchMatch(match.line, match.column, match.length);
 }
 
 QString FilesTabWidget::selectedSearchText() const

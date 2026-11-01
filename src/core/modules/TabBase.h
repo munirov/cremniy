@@ -66,6 +66,15 @@ public:
      */
     virtual QIcon icon() const = 0;
 
+    /** @brief Reveal and select a search match in this module. */
+    virtual bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length)
+    {
+        Q_UNUSED(oneBasedLine);
+        Q_UNUSED(zeroBasedColumn);
+        Q_UNUSED(length);
+        return false;
+    }
+
     /**
      * @brief Получить значение индикатора изменений
      */
