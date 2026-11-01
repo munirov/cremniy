@@ -2836,6 +2836,31 @@ Check the Log panel for details.</source>
     </message>
 </context>
 <context>
+    <name>FindEngine</name>
+    <message>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="95"/>
+        <source>Invalid regular expression: %1</source>
+        <translation>Некорректное регулярное выражение: %1</translation>
+    </message>
+    <message>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="190"/>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="334"/>
+        <source>The expression must not match empty text.</source>
+        <translation>Выражение не должно соответствовать пустому тексту.</translation>
+    </message>
+    <message>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="318"/>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="360"/>
+        <source>The file is not valid UTF-8 text.</source>
+        <translation>Файл не содержит корректный текст UTF-8.</translation>
+    </message>
+    <message>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="373"/>
+        <source>The result changed. Search again before replacing it.</source>
+        <translation>Результат изменился. Повторите поиск перед заменой.</translation>
+    </message>
+</context>
+<context>
     <name>FindPanel</name>
     <message>
         <location filename="../../../ui/FindPanel/findpanel.cpp" line="38"/>

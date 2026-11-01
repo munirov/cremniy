@@ -92,7 +92,8 @@ QRegularExpression createExpression(const SearchOptions& options, QString* error
 
     QRegularExpression expression(pattern, patternOptions);
     if (!expression.isValid() && error)
-        *error = searchTr("Invalid regular expression: %1").arg(expression.errorString());
+        *error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "Invalid regular expression: %1"))
+                     .arg(expression.errorString());
     return expression;
 }
 
@@ -186,7 +187,7 @@ void appendMatches(const SearchDocument& document,
             continue;
 
         if (match.capturedLength() == 0) {
-            report->error = searchTr("The expression must not match empty text.");
+            report->error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The expression must not match empty text."));
             return;
         }
 
@@ -314,7 +315,7 @@ ReplacementResult FindEngine::replaceAll(const QByteArray& contents, const Searc
     bool validUtf8 = false;
     QString text = decodedUtf8(contents, &validUtf8);
     if (!validUtf8) {
-        result.error = searchTr("The file is not valid UTF-8 text.");
+        result.error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The file is not valid UTF-8 text."));
         return result;
     }
 
@@ -330,7 +331,7 @@ ReplacementResult FindEngine::replaceAll(const QByteArray& contents, const Searc
     while (iterator.hasNext()) {
         const QRegularExpressionMatch match = iterator.next();
         if (match.capturedLength() == 0) {
-            result.error = searchTr("The expression must not match empty text.");
+            result.error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The expression must not match empty text."));
             return result;
         }
         matches.append(match);
@@ -356,7 +357,7 @@ ReplacementResult FindEngine::replaceMatch(const QByteArray& contents,
     bool validUtf8 = false;
     QString text = decodedUtf8(contents, &validUtf8);
     if (!validUtf8) {
-        result.error = searchTr("The file is not valid UTF-8 text.");
+        result.error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The file is not valid UTF-8 text."));
         return result;
     }
 
@@ -369,7 +370,7 @@ ReplacementResult FindEngine::replaceMatch(const QByteArray& contents,
 
     const QRegularExpressionMatch current = expression.match(text, match.textOffset);
     if (!current.hasMatch() || current.capturedStart() != match.textOffset || current.capturedLength() != match.length) {
-        result.error = searchTr("The result changed. Search again before replacing it.");
+        result.error = searchTr(QT_TRANSLATE_NOOP("FindEngine", "The result changed. Search again before replacing it."));
         return result;
     }
 
