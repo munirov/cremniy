@@ -1,14 +1,9 @@
-#include "searchpanel.h"
-
-#include "core/settings/appsettings.h"
-#include "ui/FilesTabWidget/filestabwidget.h"
+#include "findpanel.h"
 
 #include <QComboBox>
 #include <QDir>
 #include <QEvent>
-#include <QFile>
 #include <QFileInfo>
-#include <QFutureWatcher>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -18,14 +13,12 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QSaveFile>
 #include <QShortcut>
 #include <QStackedWidget>
 #include <QTimer>
 #include <QToolButton>
 #include <QTreeWidget>
 #include <QVBoxLayout>
-#include <QtConcurrent/QtConcurrentRun>
 
 namespace {
 
@@ -35,21 +28,20 @@ QString scopeName(SearchScope scope)
 {
     switch (scope) {
     case SearchScope::CurrentFile:
-        return SearchPanel::tr("Current file");
+        return FindPanel::tr("Current file");
     case SearchScope::OpenFiles:
-        return SearchPanel::tr("Open files");
+        return FindPanel::tr("Open files");
     case SearchScope::Project:
-        return SearchPanel::tr("Entire project");
+        return FindPanel::tr("Entire project");
     }
     return {};
 }
 
 } // namespace
 
-SearchPanel::SearchPanel(const QString& projectPath, FilesTabWidget* filesTabWidget, QWidget* parent)
+FindPanel::FindPanel(const QString& projectPath, QWidget* parent)
     : QWidget(parent)
     , m_projectPath(QDir::cleanPath(projectPath))
-    , m_filesTabWidget(filesTabWidget)
 {
     setObjectName(QStringLiteral("searchPanel"));
     setMinimumWidth(340);
@@ -59,9 +51,11 @@ SearchPanel::SearchPanel(const QString& projectPath, FilesTabWidget* filesTabWid
     m_searchTimer = new QTimer(this);
     m_searchTimer->setSingleShot(true);
     m_searchTimer->setInterval(220);
-    connect(m_searchTimer, &QTimer::timeout, this, &SearchPanel::performSearch);
+    connect(m_searchTimer, &QTimer::timeout, this, [this] {
+        emit searchRequested(currentOptions());
+    });
 
-    connect(m_searchEdit, &QLineEdit::textChanged, this, &SearchPanel::scheduleSearch);
+    connect(m_searchEdit, &QLineEdit::textChanged, this, &FindPanel::scheduleSearch);
     connect(m_replaceEdit, &QLineEdit::textChanged, this, [this] {
         if (m_regexButton->isChecked())
             scheduleSearch();
@@ -71,27 +65,22 @@ SearchPanel::SearchPanel(const QString& projectPath, FilesTabWidget* filesTabWid
         m_filterRow->setVisible(scope == SearchScope::Project);
         scheduleSearch();
     });
-    connect(m_matchCaseButton, &QToolButton::toggled, this, &SearchPanel::scheduleSearch);
-    connect(m_wholeWordButton, &QToolButton::toggled, this, &SearchPanel::scheduleSearch);
-    connect(m_regexButton, &QToolButton::toggled, this, &SearchPanel::scheduleSearch);
-    connect(m_includeEdit, &QLineEdit::textChanged, this, &SearchPanel::scheduleSearch);
-    connect(m_excludeEdit, &QLineEdit::textChanged, this, &SearchPanel::scheduleSearch);
-    connect(m_replaceToggle, &QToolButton::toggled, this, &SearchPanel::setReplaceMode);
+    connect(m_matchCaseButton, &QToolButton::toggled, this, &FindPanel::scheduleSearch);
+    connect(m_wholeWordButton, &QToolButton::toggled, this, &FindPanel::scheduleSearch);
+    connect(m_regexButton, &QToolButton::toggled, this, &FindPanel::scheduleSearch);
+    connect(m_includeEdit, &QLineEdit::textChanged, this, &FindPanel::scheduleSearch);
+    connect(m_excludeEdit, &QLineEdit::textChanged, this, &FindPanel::scheduleSearch);
+    connect(m_replaceToggle, &QToolButton::toggled, this, &FindPanel::setReplaceMode);
     connect(m_previousButton, &QPushButton::clicked, this, [this] { selectAdjacentResult(false); });
     connect(m_nextButton, &QPushButton::clicked, this, [this] { selectAdjacentResult(true); });
-    connect(m_replaceButton, &QPushButton::clicked, this, &SearchPanel::replaceCurrentResult);
-    connect(m_replaceAllButton, &QPushButton::clicked, this, &SearchPanel::replaceAllResults);
+    connect(m_replaceButton, &QPushButton::clicked, this, &FindPanel::replaceCurrentResult);
+    connect(m_replaceAllButton, &QPushButton::clicked, this, &FindPanel::replaceAllResults);
     connect(m_resultsTree, &QTreeWidget::itemActivated, this, [this](QTreeWidgetItem*, int) {
         activateCurrentResult();
     });
     connect(m_resultsTree, &QTreeWidget::itemSelectionChanged, this, [this] {
         m_replaceButton->setEnabled(m_replaceMode && selectedMatchIndex() >= 0);
     });
-    connect(m_filesTabWidget, &FilesTabWidget::searchDocumentsChanged, this, [this] {
-        if (isVisible())
-            scheduleSearch();
-    });
-
     auto* nextShortcut = new QShortcut(QKeySequence(Qt::Key_F3), this);
     nextShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     connect(nextShortcut, &QShortcut::activated, this, [this] { selectAdjacentResult(true); });
@@ -106,7 +95,7 @@ SearchPanel::SearchPanel(const QString& projectPath, FilesTabWidget* filesTabWid
     showEmptyState(tr("Search this project"), tr("Enter text above to find matches."));
 }
 
-void SearchPanel::buildUi()
+void FindPanel::buildUi()
 {
     auto* rootLayout = new QVBoxLayout(this);
     rootLayout->setContentsMargins(10, 8, 10, 8);
@@ -163,7 +152,7 @@ void SearchPanel::buildUi()
     closeButton->setAccessibleName(tr("Close search"));
     closeButton->setObjectName(QStringLiteral("searchCloseButton"));
     closeButton->setMinimumSize(32, 30);
-    connect(closeButton, &QToolButton::clicked, this, &SearchPanel::closeRequested);
+    connect(closeButton, &QToolButton::clicked, this, &FindPanel::closeRequested);
 
     searchRow->addWidget(m_replaceToggle);
     searchRow->addWidget(searchLabel);
@@ -275,7 +264,7 @@ void SearchPanel::buildUi()
     setReplaceMode(false);
 }
 
-void SearchPanel::open(SearchScope scope, bool replaceMode, const QString& initialQuery)
+void FindPanel::open(SearchScope scope, bool replaceMode, const QString& initialQuery)
 {
     const int scopeIndex = m_scopeCombo->findData(static_cast<int>(scope));
     if (scopeIndex >= 0)
@@ -291,17 +280,22 @@ void SearchPanel::open(SearchScope scope, bool replaceMode, const QString& initi
     scheduleSearch();
 }
 
-void SearchPanel::nextResult()
+void FindPanel::nextResult()
 {
     selectAdjacentResult(true);
 }
 
-void SearchPanel::previousResult()
+void FindPanel::previousResult()
 {
     selectAdjacentResult(false);
 }
 
-bool SearchPanel::eventFilter(QObject* watched, QEvent* event)
+void FindPanel::refresh()
+{
+    scheduleSearch();
+}
+
+bool FindPanel::eventFilter(QObject* watched, QEvent* event)
 {
     Q_UNUSED(watched);
     if (event->type() == QEvent::KeyPress) {
@@ -314,13 +308,13 @@ bool SearchPanel::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
-void SearchPanel::scheduleSearch()
+void FindPanel::scheduleSearch()
 {
-    ++m_searchGeneration;
+    emit searchInvalidated();
     m_searchTimer->start();
 }
 
-SearchOptions SearchPanel::currentOptions() const
+SearchOptions FindPanel::currentOptions() const
 {
     SearchOptions options;
     options.query = m_searchEdit->text();
@@ -331,50 +325,10 @@ SearchOptions SearchPanel::currentOptions() const
     options.regularExpression = m_regexButton->isChecked();
     options.includePattern = m_includeEdit->text();
     options.excludePattern = m_excludeEdit->text();
-    options.excludedPatterns = AppSettings::excludedPatterns();
     return options;
 }
 
-void SearchPanel::performSearch()
-{
-    const SearchOptions options = currentOptions();
-    const int generation = ++m_searchGeneration;
-    if (options.query.isEmpty()) {
-        m_report = {};
-        setSearching(false);
-        showEmptyState(tr("Enter text to search"), tr("Results appear as you type."));
-        return;
-    }
-
-    const SearchScope documentScope = options.scope == SearchScope::CurrentFile
-        ? SearchScope::CurrentFile
-        : SearchScope::OpenFiles;
-    const QVector<SearchDocument> documents = m_filesTabWidget->searchDocuments(documentScope);
-    setSearching(true);
-
-    auto* watcher = new QFutureWatcher<SearchReport>(this);
-    connect(watcher, &QFutureWatcher<SearchReport>::finished, this, [this, watcher, generation] {
-        const SearchReport report = watcher->result();
-        watcher->deleteLater();
-        if (generation != m_searchGeneration)
-            return;
-        setSearching(false);
-        showReport(report);
-    });
-
-    if (options.scope == SearchScope::Project) {
-        const QString projectPath = m_projectPath;
-        watcher->setFuture(QtConcurrent::run([projectPath, documents, options] {
-            return SearchEngine::searchProject(projectPath, documents, options);
-        }));
-    } else {
-        watcher->setFuture(QtConcurrent::run([documents, options] {
-            return SearchEngine::searchDocuments(documents, options);
-        }));
-    }
-}
-
-void SearchPanel::setReplaceMode(bool enabled)
+void FindPanel::setReplaceMode(bool enabled)
 {
     m_replaceMode = enabled;
     m_replaceRow->setVisible(enabled);
@@ -383,7 +337,7 @@ void SearchPanel::setReplaceMode(bool enabled)
     m_replaceAllButton->setEnabled(enabled && !m_report.matches.isEmpty() && !m_report.truncated);
 }
 
-void SearchPanel::setSearching(bool searching)
+void FindPanel::setSearching(bool searching)
 {
     m_statusLabel->setProperty("statusState", searching ? "busy" : "normal");
     m_statusLabel->style()->unpolish(m_statusLabel);
@@ -396,7 +350,7 @@ void SearchPanel::setSearching(bool searching)
     m_replaceAllButton->setEnabled(!searching && m_replaceMode && !m_report.matches.isEmpty() && !m_report.truncated);
 }
 
-void SearchPanel::showReport(const SearchReport& report)
+void FindPanel::showReport(const SearchReport& report)
 {
     m_report = report;
     m_resultsTree->clear();
@@ -475,7 +429,13 @@ void SearchPanel::showReport(const SearchReport& report)
     emit statusMessage(status);
 }
 
-void SearchPanel::showEmptyState(const QString& title, const QString& detail)
+void FindPanel::setReport(const SearchReport& report)
+{
+    setSearching(false);
+    showReport(report);
+}
+
+void FindPanel::showEmptyState(const QString& title, const QString& detail)
 {
     m_emptyTitle->setText(title);
     m_emptyDetail->setText(detail);
@@ -487,7 +447,7 @@ void SearchPanel::showEmptyState(const QString& title, const QString& detail)
     m_replaceAllButton->setEnabled(false);
 }
 
-int SearchPanel::selectedMatchIndex() const
+int FindPanel::selectedMatchIndex() const
 {
     QTreeWidgetItem* item = m_resultsTree->currentItem();
     if (!item)
@@ -497,15 +457,15 @@ int SearchPanel::selectedMatchIndex() const
     return ok && index >= 0 && index < m_report.matches.size() ? index : -1;
 }
 
-void SearchPanel::activateCurrentResult()
+void FindPanel::activateCurrentResult()
 {
     const int index = selectedMatchIndex();
     if (index < 0)
         return;
-    m_filesTabWidget->openSearchMatch(m_report.matches.at(index));
+    emit resultActivated(m_report.matches.at(index));
 }
 
-void SearchPanel::selectAdjacentResult(bool forward)
+void FindPanel::selectAdjacentResult(bool forward)
 {
     if (m_report.matches.isEmpty())
         return;
@@ -530,69 +490,16 @@ void SearchPanel::selectAdjacentResult(bool forward)
     }
 }
 
-QByteArray SearchPanel::readDocument(const QString& filePath, bool* ok) const
-{
-    const QByteArray openContents = m_filesTabWidget->documentContents(filePath, ok);
-    if (*ok)
-        return openContents;
-
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        *ok = false;
-        return {};
-    }
-    *ok = true;
-    return file.readAll();
-}
-
-bool SearchPanel::writeDocument(const QString& filePath, const QByteArray& contents, QString* error)
-{
-    if (m_filesTabWidget->replaceOpenDocument(filePath, contents))
-        return true;
-
-    QSaveFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly)) {
-        *error = file.errorString();
-        return false;
-    }
-    if (file.write(contents) != contents.size() || !file.commit()) {
-        *error = file.errorString();
-        return false;
-    }
-    return true;
-}
-
-void SearchPanel::replaceCurrentResult()
+void FindPanel::replaceCurrentResult()
 {
     const int index = selectedMatchIndex();
     if (index < 0)
         return;
 
-    const SearchMatch match = m_report.matches.at(index);
-    bool ok = false;
-    const QByteArray contents = readDocument(match.filePath, &ok);
-    if (!ok) {
-        QMessageBox::warning(this, tr("Unable to replace"), tr("Unable to read %1.").arg(displayPath(match.filePath)));
-        return;
-    }
-
-    const ReplacementResult replacement = SearchEngine::replaceMatch(contents, match, currentOptions());
-    if (!replacement.error.isEmpty()) {
-        QMessageBox::warning(this, tr("Unable to replace"), replacement.error);
-        scheduleSearch();
-        return;
-    }
-
-    QString error;
-    if (!writeDocument(match.filePath, replacement.contents, &error)) {
-        QMessageBox::warning(this, tr("Unable to replace"), tr("Unable to write %1: %2").arg(displayPath(match.filePath), error));
-        return;
-    }
-    emit statusMessage(tr("Replaced one match in %1.").arg(displayPath(match.filePath)));
-    scheduleSearch();
+    emit replaceRequested(m_report.matches.at(index), currentOptions());
 }
 
-void SearchPanel::replaceAllResults()
+void FindPanel::replaceAllResults()
 {
     if (m_report.matches.isEmpty())
         return;
@@ -613,44 +520,10 @@ void SearchPanel::replaceAllResults()
     if (confirmation.clickedButton() != replaceButton)
         return;
 
-    int replaced = 0;
-    QStringList errors;
-    const SearchOptions options = currentOptions();
-    for (const QString& filePath : std::as_const(filePaths)) {
-        bool ok = false;
-        const QByteArray contents = readDocument(filePath, &ok);
-        if (!ok) {
-            errors.append(tr("Unable to read %1").arg(displayPath(filePath)));
-            continue;
-        }
-
-        const ReplacementResult replacement = SearchEngine::replaceAll(contents, options);
-        if (!replacement.error.isEmpty()) {
-            errors.append(tr("%1: %2").arg(displayPath(filePath), replacement.error));
-            continue;
-        }
-        if (replacement.replacements == 0)
-            continue;
-
-        QString error;
-        if (!writeDocument(filePath, replacement.contents, &error)) {
-            errors.append(tr("Unable to write %1: %2").arg(displayPath(filePath), error));
-            continue;
-        }
-        replaced += replacement.replacements;
-    }
-
-    if (!errors.isEmpty()) {
-        QMessageBox::warning(this,
-                             tr("Some files were not changed"),
-                             tr("Replaced %n match(es).\n\n%1", nullptr, replaced).arg(errors.join(QLatin1Char('\n'))));
-    } else {
-        emit statusMessage(tr("Replaced %n match(es).", nullptr, replaced));
-    }
-    scheduleSearch();
+    emit replaceAllRequested(m_report, currentOptions());
 }
 
-QString SearchPanel::displayPath(const QString& filePath) const
+QString FindPanel::displayPath(const QString& filePath) const
 {
     QString relative = QDir(m_projectPath).relativeFilePath(filePath);
     return relative.startsWith(QStringLiteral("..")) ? QFileInfo(filePath).fileName() : relative.replace('\\', '/');

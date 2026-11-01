@@ -2836,230 +2836,230 @@ Check the Log panel for details.</source>
     </message>
 </context>
 <context>
-    <name>SearchPanel</name>
+    <name>FindPanel</name>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="38"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="38"/>
         <source>Current file</source>
         <translation>Текущий файл</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="40"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="40"/>
         <source>Open files</source>
         <translation>Открытые файлы</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="42"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="42"/>
         <source>Entire project</source>
         <translation>Весь проект</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="106"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="106"/>
         <source>Search this project</source>
         <translation>Поиск по проекту</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="106"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="106"/>
         <source>Enter text above to find matches.</source>
         <translation>Введите текст выше, чтобы найти совпадения.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="121"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="121"/>
         <source>Show replace controls (Ctrl+H)</source>
         <translation>Показать элементы замены (Ctrl+H)</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="122"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="122"/>
         <source>Show replace controls</source>
         <translation>Показать элементы замены</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="125"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="125"/>
         <source>&amp;Search</source>
         <translation>&amp;Поиск</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="130"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="130"/>
         <source>Text or regular expression</source>
         <translation>Текст или регулярное выражение</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="131"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="131"/>
         <source>Search text</source>
         <translation>Текст для поиска</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="139"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="139"/>
         <source>Search scope</source>
         <translation>Область поиска</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="151"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="151"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="151"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="151"/>
         <source>Match case</source>
         <translation>Учитывать регистр</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="152"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="152"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="152"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="152"/>
         <source>Match whole word</source>
         <translation>Слово целиком</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="153"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="153"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="153"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="153"/>
         <source>Use regular expression</source>
         <translation>Использовать регулярное выражение</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="155"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="155"/>
         <source>Previous</source>
         <translation>Предыдущий</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="156"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="156"/>
         <source>Previous result (Shift+F3)</source>
         <translation>Предыдущий результат (Shift+F3)</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="157"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="157"/>
         <source>Next</source>
         <translation>Следующий</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="158"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="158"/>
         <source>Next result (F3)</source>
         <translation>Следующий результат (F3)</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="162"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="162"/>
         <source>Close search (Esc)</source>
         <translation>Закрыть поиск (Esc)</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="163"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="163"/>
         <source>Close search</source>
         <translation>Закрыть поиск</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="196"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="196"/>
         <source>&amp;Replace</source>
         <translation>&amp;Заменить</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="200"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="201"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="200"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="201"/>
         <source>Replacement text</source>
         <translation>Текст замены</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="203"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="203"/>
         <source>Replace result</source>
         <translation>Заменить результат</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="204"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="610"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="204"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="610"/>
         <source>Replace all</source>
         <translation>Заменить все</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="221"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="221"/>
         <source>&amp;Include</source>
         <translation>&amp;Включить</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="224"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="224"/>
         <source>For example: *.cpp, src/*</source>
         <translation>Например: *.cpp, src/*</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="225"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="225"/>
         <source>Files to include</source>
         <translation>Включаемые файлы</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="227"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="227"/>
         <source>E&amp;xclude</source>
         <translation>И&amp;сключить</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="230"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="230"/>
         <source>For example: build, *.min.js</source>
         <translation>Например: build, *.min.js</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="231"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="231"/>
         <source>Files to exclude</source>
         <translation>Исключаемые файлы</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="241"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="241"/>
         <source>Result</source>
         <translation>Результат</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="241"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="241"/>
         <source>Location</source>
         <translation>Расположение</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="246"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="246"/>
         <source>Search results</source>
         <translation>Результаты поиска</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="270"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="270"/>
         <source>Search status</source>
         <translation>Состояние поиска</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="345"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="345"/>
         <source>Enter text to search</source>
         <translation>Введите текст для поиска</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="345"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="345"/>
         <source>Results appear as you type.</source>
         <translation>Результаты появятся по мере ввода.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="392"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="392"/>
         <source>Searching…</source>
         <translation>Поиск…</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="408"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="408"/>
         <source>Unable to search</source>
         <translation>Не удалось выполнить поиск</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="420"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="420"/>
         <source>Open a text file or choose another scope.</source>
         <translation>Откройте текстовый файл или выберите другую область поиска.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="421"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="421"/>
         <source>Try another query or adjust the file filters.</source>
         <translation>Измените запрос или фильтры файлов.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="422"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="422"/>
         <source>No matches found</source>
         <translation>Совпадений не найдено</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="441"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="441"/>
         <source>Empty line</source>
         <translation>Пустая строка</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="442"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="442"/>
         <source>Line %1, column %2</source>
         <translation>Строка %1, столбец %2</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../../widgets/search/searchpanel.cpp" line="447"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="458"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="447"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="458"/>
         <source>%n match(es)</source>
         <translation>
             <numerusform>%n совпадение</numerusform>
@@ -3068,7 +3068,7 @@ Check the Log panel for details.</source>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../../../widgets/search/searchpanel.cpp" line="459"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="459"/>
         <source> in %n file(s)</source>
         <translation>
             <numerusform> в %n файле</numerusform>
@@ -3077,7 +3077,7 @@ Check the Log panel for details.</source>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../../../widgets/search/searchpanel.cpp" line="461"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="461"/>
         <source> · %n binary, unreadable, or large file(s) skipped</source>
         <translation>
             <numerusform> · пропущен %n бинарный, нечитаемый или большой файл</numerusform>
@@ -3086,40 +3086,40 @@ Check the Log panel for details.</source>
         </translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="463"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="463"/>
         <source> · Result limit reached</source>
         <translation> · Достигнут лимит результатов</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="575"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="581"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="588"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="575"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="581"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="588"/>
         <source>Unable to replace</source>
         <translation>Не удалось заменить</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="575"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="575"/>
         <source>Unable to read %1.</source>
         <translation>Не удалось прочитать %1.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="588"/>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="637"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="588"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="637"/>
         <source>Unable to write %1: %2</source>
         <translation>Не удалось записать %1: %2</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="591"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="591"/>
         <source>Replaced one match in %1.</source>
         <translation>Одно совпадение заменено в %1.</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="605"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="605"/>
         <source>Replace all matches</source>
         <translation>Заменить все совпадения</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../../widgets/search/searchpanel.cpp" line="606"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="606"/>
         <source>Replace %n match(es)</source>
         <translation>
             <numerusform>Заменить %n совпадение</numerusform>
@@ -3128,7 +3128,7 @@ Check the Log panel for details.</source>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../../../widgets/search/searchpanel.cpp" line="607"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="607"/>
         <source> in %n file(s)?</source>
         <translation>
             <numerusform> в %n файле?</numerusform>
@@ -3137,32 +3137,32 @@ Check the Log panel for details.</source>
         </translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="611"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="611"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="623"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="623"/>
         <source>Unable to read %1</source>
         <translation>Не удалось прочитать %1</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="629"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="629"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="645"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="645"/>
         <source>Some files were not changed</source>
         <translation>Некоторые файлы не изменены</translation>
     </message>
     <message>
-        <location filename="../../../widgets/search/searchpanel.cpp" line="473"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="473"/>
         <source>Refine the search before replacing all matches.</source>
         <translation>Уточните поиск перед заменой всех совпадений.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../../widgets/search/searchpanel.cpp" line="646"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="646"/>
         <source>Replaced %n match(es).
 
 %1</source>
@@ -3179,7 +3179,7 @@ Check the Log panel for details.</source>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../../../widgets/search/searchpanel.cpp" line="648"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="648"/>
         <source>Replaced %n match(es).</source>
         <translation>
             <numerusform>Заменено %n совпадение.</numerusform>
@@ -3417,6 +3417,61 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
         <location filename="../../../ui/MenuBar/Menus/View/viewmenu.cpp" line="43"/>
         <source>File Tree</source>
         <translation>Каталог файлов</translation>
+    </message>
+</context>
+<context>
+    <name>IDEWindow</name>
+    <message>
+        <source>Unable to replace</source>
+        <translation>Не удалось заменить</translation>
+    </message>
+    <message>
+        <source>Unable to read %1.</source>
+        <translation>Не удалось прочитать %1.</translation>
+    </message>
+    <message>
+        <source>Unable to write %1: %2</source>
+        <translation>Не удалось записать %1: %2</translation>
+    </message>
+    <message>
+        <source>Replaced one match in %1.</source>
+        <translation>Одно совпадение заменено в %1.</translation>
+    </message>
+    <message>
+        <source>Unable to read %1</source>
+        <translation>Не удалось прочитать %1</translation>
+    </message>
+    <message>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <source>Some files were not changed</source>
+        <translation>Некоторые файлы не изменены</translation>
+    </message>
+    <message numerus="yes">
+        <source>Replaced %n match(es).
+
+%1</source>
+        <translation>
+            <numerusform>Заменено %n совпадение.
+
+%1</numerusform>
+            <numerusform>Заменено %n совпадения.
+
+%1</numerusform>
+            <numerusform>Заменено %n совпадений.
+
+%1</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Replaced %n match(es).</source>
+        <translation>
+            <numerusform>Заменено %n совпадение.</numerusform>
+            <numerusform>Заменено %n совпадения.</numerusform>
+            <numerusform>Заменено %n совпадений.</numerusform>
+        </translation>
     </message>
 </context>
 </TS>

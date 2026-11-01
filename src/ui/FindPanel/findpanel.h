@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/search/searchengine.h"
+#include "core/FindEngine/findtypes.h"
 
 #include <QWidget>
 
@@ -14,28 +14,33 @@ class QTimer;
 class QToolButton;
 class QTreeWidget;
 class QTreeWidgetItem;
-class FilesTabWidget;
-
-class SearchPanel final : public QWidget {
+class FindPanel final : public QWidget {
     Q_OBJECT
 
 public:
-    explicit SearchPanel(const QString& projectPath, FilesTabWidget* filesTabWidget, QWidget* parent = nullptr);
+    explicit FindPanel(const QString& projectPath, QWidget* parent = nullptr);
 
     void open(SearchScope scope, bool replaceMode, const QString& initialQuery = {});
     void nextResult();
     void previousResult();
+    void refresh();
+    void setReport(const SearchReport& report);
+    void setSearching(bool searching);
 
 signals:
     void closeRequested();
     void statusMessage(const QString& message);
+    void searchInvalidated();
+    void searchRequested(const SearchOptions& options);
+    void resultActivated(const SearchMatch& match);
+    void replaceRequested(const SearchMatch& match, const SearchOptions& options);
+    void replaceAllRequested(const SearchReport& report, const SearchOptions& options);
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
     void scheduleSearch();
-    void performSearch();
     void activateCurrentResult();
     void replaceCurrentResult();
     void replaceAllResults();
@@ -44,17 +49,13 @@ private:
     SearchOptions currentOptions() const;
     void buildUi();
     void setReplaceMode(bool enabled);
-    void setSearching(bool searching);
     void showReport(const SearchReport& report);
     void showEmptyState(const QString& title, const QString& detail = {});
     void selectAdjacentResult(bool forward);
     int selectedMatchIndex() const;
-    bool writeDocument(const QString& filePath, const QByteArray& contents, QString* error);
-    QByteArray readDocument(const QString& filePath, bool* ok) const;
     QString displayPath(const QString& filePath) const;
 
     QString m_projectPath;
-    FilesTabWidget* m_filesTabWidget = nullptr;
     QLineEdit* m_searchEdit = nullptr;
     QLineEdit* m_replaceEdit = nullptr;
     QComboBox* m_scopeCombo = nullptr;
@@ -77,6 +78,5 @@ private:
     QStackedWidget* m_resultsStack = nullptr;
     QTimer* m_searchTimer = nullptr;
     SearchReport m_report;
-    int m_searchGeneration = 0;
     bool m_replaceMode = false;
 };

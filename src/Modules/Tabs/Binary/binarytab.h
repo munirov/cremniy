@@ -35,6 +35,7 @@ public:
     explicit BinaryTab(QWidget *parent = nullptr);
 
     QIcon icon() const override { return QIcon(":/icons/binary.svg"); };
+    bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length) override;
 
     void setFileDataBuffer(FileDataBuffer* newFileDataBuffer) override;
 

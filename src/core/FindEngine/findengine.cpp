@@ -1,4 +1,4 @@
-#include "searchengine.h"
+#include "findengine.h"
 
 #include <QDir>
 #include <QCoreApplication>
@@ -15,7 +15,7 @@ namespace {
 
 QString searchTr(const char* sourceText)
 {
-    return QCoreApplication::translate("SearchEngine", sourceText);
+    return QCoreApplication::translate("FindEngine", sourceText);
 }
 
 QString normalizedPath(const QString& path)
@@ -224,7 +224,7 @@ void appendMatches(const SearchDocument& document,
 
 } // namespace
 
-SearchReport SearchEngine::searchDocuments(const QVector<SearchDocument>& documents,
+SearchReport FindEngine::searchDocuments(const QVector<SearchDocument>& documents,
                                            const SearchOptions& options)
 {
     SearchReport report;
@@ -243,7 +243,7 @@ SearchReport SearchEngine::searchDocuments(const QVector<SearchDocument>& docume
     return report;
 }
 
-SearchReport SearchEngine::searchProject(const QString& projectPath,
+SearchReport FindEngine::searchProject(const QString& projectPath,
                                          const QVector<SearchDocument>& openDocuments,
                                          const SearchOptions& options)
 {
@@ -308,7 +308,7 @@ SearchReport SearchEngine::searchProject(const QString& projectPath,
     return report;
 }
 
-ReplacementResult SearchEngine::replaceAll(const QByteArray& contents, const SearchOptions& options)
+ReplacementResult FindEngine::replaceAll(const QByteArray& contents, const SearchOptions& options)
 {
     ReplacementResult result;
     bool validUtf8 = false;
@@ -348,7 +348,7 @@ ReplacementResult SearchEngine::replaceAll(const QByteArray& contents, const Sea
     return result;
 }
 
-ReplacementResult SearchEngine::replaceMatch(const QByteArray& contents,
+ReplacementResult FindEngine::replaceMatch(const QByteArray& contents,
                                              const SearchMatch& match,
                                              const SearchOptions& options)
 {
