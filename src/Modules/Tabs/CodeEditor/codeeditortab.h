@@ -28,6 +28,7 @@ private:
     */
     bool forceSetData = false;
     bool m_largeFileMode = false;
+    bool m_gitBlameEnabled = false;
     bool m_updatingSelection = false;
     QShortcut* m_goToLineShortcut = nullptr;
     QString m_currentLang = "Plain Text";
@@ -39,8 +40,9 @@ public:
     explicit CodeEditorTab(QWidget *parent = nullptr);
 
     QIcon icon() const override { return QIcon(":/icons/code.svg"); };
+    bool gitBlameEnabled() const override { return m_gitBlameEnabled; }
     QString selectedSearchText() const;
-    bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length);
+    bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length) override;
 
     void setFileDataBuffer(FileDataBuffer* newFileDataBuffer) override;
 
@@ -68,7 +70,14 @@ public slots:
     void setWordWrapSlot(bool checked) override;
     void setTabReplaceSlot(bool checked) override;
     void setTabWidthSlot(int width) override;
+    void setGitBlameSlot(bool checked) override;
+    void setGitBlameData(const QString &filePath,
+                         const QVector<TabGitBlameLineInfo> &lines) override;
+    void setGitBlameError(const QString &filePath, const QString &error) override;
+    void refreshGitBlame() override;
 
+private slots:
+    void requestBlameUpdate();
 };
 
 #endif // CODEEDITORTAB_H

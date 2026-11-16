@@ -1,7 +1,10 @@
 #include "codeeditortab.h"
 #include "utils/utils.h"
 #include "libs/CodeEditor/include/widgets/CustomCodeEditor.h"
+#include "libs/CodeEditor/include/languages/LanguageRegistry.h"
 #include "core/modules/ModuleManager.h"
+#include "core/settings/appsettings.h"
+#include "codeeditorsettings.h"
 
 #include <QBoxLayout>
 #include <QFileInfo>
@@ -94,6 +97,24 @@ CodeEditorTab::CodeEditorTab(QWidget* parent)
     m_goToLineShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_G), this);
 
     connect(m_goToLineShortcut, &QShortcut::activated, this, &CodeEditorTab::openGoToLineDialog);
+
+    m_gitBlameEnabled = CodeEditorSettings::gitBlameEnabled();
+    m_codeEditorWidget->setGitBlameEnabled(m_gitBlameEnabled);
+    m_codeEditorWidget->setGitBlameColor(CodeEditorSettings::gitBlameColor());
+    m_codeEditorWidget->setGitBlamePadding(CodeEditorSettings::gitBlamePadding());
+
+    connect(SettingsNotifier::instance(), &SettingsNotifier::settingsChanged,
+            this, [this](const QString &key) {
+        // Модуль сам знает свои ключи и сам решает, что изменилось;
+        // ядро лишь сообщает «такой-то ключ поменялся».
+        if (key == CodeEditorSettings::keyGitBlameEnabled()) {
+            setGitBlameSlot(CodeEditorSettings::gitBlameEnabled());
+        } else if (key == CodeEditorSettings::keyGitBlameColor()) {
+            m_codeEditorWidget->setGitBlameColor(CodeEditorSettings::gitBlameColor());
+        } else if (key == CodeEditorSettings::keyGitBlamePadding()) {
+            m_codeEditorWidget->setGitBlamePadding(CodeEditorSettings::gitBlamePadding());
+        }
+    });
 }
 
 void CodeEditorTab::setFileDataBuffer(FileDataBuffer* newFileDataBuffer) {
@@ -137,44 +158,86 @@ void CodeEditorTab::setFile(QString filepath)
     m_fileContext = new FileContext(filepath);
     m_codeEditorWidget->setFileExt(CustomCodeEditor::syntaxKeyForPath(filepath));
     m_currentLang = detectLanguage(filepath);
+
+    requestBlameUpdate();
+}
+
+void CodeEditorTab::requestBlameUpdate()
+{
+    if (!m_fileContext || !m_codeEditorWidget->isGitBlameEnabled() || m_largeFileMode) {
+        m_codeEditorWidget->setBlameData({});
+        return;
+    }
+
+    emit gitBlameRequested(m_fileContext->filePath());
+}
+
+void CodeEditorTab::setGitBlameData(const QString &filePath,
+                                    const QVector<TabGitBlameLineInfo> &lines)
+{
+    if (!m_fileContext
+        || QFileInfo(m_fileContext->filePath()).absoluteFilePath() != filePath
+        || !m_codeEditorWidget->isGitBlameEnabled())
+        return;
+
+    QVector<EditorBlameLineInfo> editorLines;
+    editorLines.reserve(lines.size());
+    for (const TabGitBlameLineInfo &line : lines) {
+        editorLines.append({line.authorName,
+                            line.authorEmail,
+                            line.commitDate,
+                            line.shortOid,
+                            line.fullOid,
+                            line.commitSummary,
+                            line.isUncommitted});
+    }
+    m_codeEditorWidget->setBlameData(editorLines);
+}
+
+void CodeEditorTab::setGitBlameError(const QString &filePath, const QString &error)
+{
+    Q_UNUSED(error);
+    if (m_fileContext
+        && QFileInfo(m_fileContext->filePath()).absoluteFilePath() == filePath)
+        m_codeEditorWidget->setBlameData({});
+}
+
+void CodeEditorTab::setGitBlameSlot(bool checked)
+{
+    if (m_gitBlameEnabled == checked)
+        return;
+
+    m_gitBlameEnabled = checked;
+    if (CodeEditorSettings::gitBlameEnabled() != checked)
+        CodeEditorSettings::setGitBlameEnabled(checked);
+
+    const bool effectiveEnabled = checked && !m_largeFileMode;
+    m_codeEditorWidget->setGitBlameEnabled(effectiveEnabled);
+    if (effectiveEnabled) {
+        requestBlameUpdate();
+    } else {
+        m_codeEditorWidget->setBlameData({});
+    }
+    emit gitBlameEnabledChanged(checked);
+}
+
+void CodeEditorTab::refreshGitBlame()
+{
+    requestBlameUpdate();
 }
 
 QString CodeEditorTab::detectLanguage(const QString& filePath)
 {
-    QFileInfo fi(filePath);
-    QString ext = fi.suffix().toLower();
-    QString baseName = fi.fileName().toLower();
+    // Single source of truth: LanguageRegistry. See docs/adding_a_language.md.
+    const QFileInfo fi(filePath);
+    const LanguageDefinition& language = LanguageRegistry::instance().resolveForFile(fi.fileName());
+    if (&language != &LanguageRegistry::plainTextLanguage())
+        return language.displayName;
 
-    static const QHash<QString, QString> extMap = {
-        {"c", "C"}, {"h", "C"},
-        {"cpp", "C++"}, {"cxx", "C++"}, {"cc", "C++"}, {"hpp", "C++"}, {"hxx", "C++"},
-        {"py", "Python"},
-        {"rs", "Rust"},
-        {"asm", "Assembly"}, {"s", "Assembly"},
-        {"js", "JavaScript"},
-        {"ts", "TypeScript"},
-        {"java", "Java"},
-        {"go", "Go"},
-        {"cmake", "CMake"},
-        {"mk", "Makefile"}, {"make", "Makefile"},
-        {"sh", "Shell"}, {"bash", "Shell"}, {"zsh", "Shell"},
-        {"json", "JSON"}, {"xml", "XML"}, {"html", "HTML"}, {"css", "CSS"},
-    };
-
-    if (extMap.contains(ext))
-        return extMap.value(ext);
-
-    if (ext.isEmpty()) {
-        if (baseName == "makefile" || baseName == "gnumakefile")
-            return "Makefile";
-        if (baseName == "cmakelists.txt")
-            return "CMake";
-        if (baseName == "dockerfile")
-            return "Dockerfile";
-        return "Plain Text";
-    }
-
-    return ext.toUpper();
+    // Unknown extension: fall back to the extension itself (uppercased) so the
+    // status bar still shows something useful, matching the previous behavior.
+    const QString ext = fi.suffix();
+    return ext.isEmpty() ? QStringLiteral("Plain Text") : ext.toUpper();
 }
 
 void CodeEditorTab::setTabData()
@@ -198,12 +261,15 @@ void CodeEditorTab::setTabData()
             if (m_largeFileMode) {
                 m_codeEditorWidget->setWordWrapEnabled(false);
                 m_codeEditorWidget->setSyntaxHighlighter(nullptr);
+                m_codeEditorWidget->setGitBlameEnabled(false);
             } else {
                 m_codeEditorWidget->setWordWrapEnabled(true);
                 m_codeEditorWidget->setFileExt(CustomCodeEditor::syntaxKeyForPath(m_fileContext->filePath()));
+                m_codeEditorWidget->setGitBlameEnabled(m_gitBlameEnabled);
             }
         }
         m_codeEditorWidget->setBuffer(m_dataBuffer);
+        requestBlameUpdate();
         forceSetData = false;
     }
 
@@ -245,6 +311,7 @@ void CodeEditorTab::saveTabData()
     if (!m_dataBuffer->saveToFile(m_fileContext->filePath()))
         return;
 
+    requestBlameUpdate();
     setModifyIndicator(false);
     emit dataEqual();
     emit refreshDataAllTabsSignal();

@@ -64,3 +64,29 @@ Registration occurs automatically when the application starts via `static initia
 - It is forbidden to use includes like `../../` or `include/`
 - All dependencies are connected **through CMake**
 - ToolTab is the **only** interaction point with the tabs
+
+## Module settings pages
+
+Modules may add a settings page without modifying `SettingsDialog`. Modules that
+do not need settings simply do not register one. A page inherits `SettingsPage`
+and implements this lifecycle: `load()` reads saved values, `validate()` checks
+pending input without saving, and `apply()` persists it after the user accepts.
+
+Register the page from the module's source file:
+
+```cpp
+SettingsRegistry::instance().registerModulePage("example", {
+    "modules.example",
+    "modules",
+    []() { return QObject::tr("Modules"); },
+    300,
+    []() { return QCoreApplication::translate("ExampleModule", "Example"); },
+    100,
+    {},
+    [](QWidget* parent) { return new ExampleSettingsPage(parent); }
+});
+```
+
+Keep `pageId` and the module owner ID stable and independent of translations.
+Do not write settings from widget signals: writing only in `apply()` ensures
+that Cancel leaves persisted settings unchanged.

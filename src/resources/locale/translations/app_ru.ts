@@ -110,129 +110,303 @@
     <name>BuildMenu</name>
     <message>
         <location filename="../../../ui/MenuBar/Menus/Build/buildmenu.cpp" line="11"/>
+        <location filename="../../../ui/MenuBar/Menus/Build/buildmenu.cpp" line="12"/>
         <source>Build</source>
         <translation>Сборка</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/MenuBar/Menus/Build/buildmenu.cpp" line="13"/>
+        <source>Configurate</source>
+        <translation>Настроить</translation>
+    </message>
+</context>
+<context>
+    <name>BuildTab</name>
+    <message>
+        <location filename="../../../widgets/buildTab/buildtab.cpp" line="28"/>
+        <source>Build</source>
+        <translation>Сборка</translation>
+    </message>
+    <message>
+        <location filename="../../../widgets/buildTab/buildtab.cpp" line="29"/>
+        <source>Stop</source>
+        <translation>Остановить</translation>
+    </message>
+    <message>
+        <location filename="../../../widgets/buildTab/buildtab.cpp" line="30"/>
+        <source>Clear</source>
+        <translation>Очистить</translation>
     </message>
 </context>
 <context>
     <name>ClickableLineEdit</name>
     <message>
-        <location filename="../../../widgets/clickablelineedit.h" line="17"/>
+        <location filename="../../../widgets/clickablelineedit.h" line="25"/>
         <source>Choose Directory</source>
         <translation>Выбрать директорию</translation>
     </message>
 </context>
 <context>
+    <name>CodeEditorSettingsPage</name>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="51"/>
+        <source>Enable Git Blame</source>
+        <translation>Включить Git Blame</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="59"/>
+        <source>Default (Gray)</source>
+        <translation>По умолчанию (Серый)</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="60"/>
+        <source>Red</source>
+        <translation>Красный</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="61"/>
+        <source>Green</source>
+        <translation>Зелёный</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="62"/>
+        <source>Blue</source>
+        <translation>Синий</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="63"/>
+        <source>Custom...</source>
+        <translation>Пользовательский...</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="64"/>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="73"/>
+        <source>Reset</source>
+        <translation>Сбросить</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="68"/>
+        <source>Blame Color</source>
+        <translation>Цвет Blame</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="72"/>
+        <source> chars</source>
+        <translation> симв.</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="77"/>
+        <source>Blame Padding</source>
+        <translation>Отступ Blame</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="80"/>
+        <source>Show the author and relative date for the current line at the end of the code.</source>
+        <translation>Показывать автора и относительную дату для текущей строки в конце кода.</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="106"/>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="138"/>
+        <source>Custom (%1)</source>
+        <translation>Пользовательский (%1)</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="130"/>
+        <source>Select Blame Color</source>
+        <translation>Выберите цвет Blame</translation>
+    </message>
+</context>
+<context>
     <name>CodeEditorTab</name>
     <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="41"/>
-        <source>Find:</source>
-        <translation>Поиск:</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="43"/>
-        <source>Search in file</source>
-        <translation>Искать в файле</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="45"/>
-        <source>Replace with</source>
-        <translation>Заменить на</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="46"/>
-        <source>Prev</source>
-        <translation>Предыдущий</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="47"/>
-        <source>Next</source>
-        <translation>Следующий</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="48"/>
-        <source>Replace</source>
-        <translation>Заменить</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="49"/>
-        <source>Replace All</source>
-        <translation>Заменить все</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="50"/>
-        <source>Match case</source>
-        <translation>Учитывать регистр</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="77"/>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="42"/>
         <source>Binary file detected</source>
         <translation>Обнаружен исполняемый файл.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="86"/>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="51"/>
         <source>Open anyway</source>
         <translation>Открыть в любом случае</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="207"/>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="147"/>
         <source>Go to line</source>
         <translation>Перейти к строке</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="208"/>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="148"/>
         <source>Line number:</source>
         <translation>Номер строки:</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="18"/>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="25"/>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditortab.cpp" line="20"/>
         <source>Code</source>
         <translation>Редактор кода</translation>
     </message>
 </context>
 <context>
+    <name>ConfigureBuild</name>
+    <message>
+        <location filename="../../../dialogs/configurebuild.cpp" line="13"/>
+        <source>Configure Build</source>
+        <translation>Настройка сборки</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/configurebuild.cpp" line="20"/>
+        <source>Build</source>
+        <translation>Сборка</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/configurebuild.cpp" line="30"/>
+        <source>Build Command</source>
+        <translation>Команда сборки</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/configurebuild.cpp" line="33"/>
+        <source>e.g. cmake --build . (executed in the project root directory)</source>
+        <translation>Например: cmake --build . (выполняется в корневом каталоге проекта)</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/configurebuild.cpp" line="48"/>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/configurebuild.cpp" line="49"/>
+        <source>Apply</source>
+        <translation>Применить</translation>
+    </message>
+</context>
+<context>
+    <name>CreateProjectPage</name>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="33"/>
+        <source>New Project</source>
+        <translation type="unfinished">Создать проект</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="43"/>
+        <source>Project Name</source>
+        <translation>Движок</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="53"/>
+        <source>Language</source>
+        <translation type="unfinished">Язык</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="59"/>
+        <source>Location</source>
+        <translation type="unfinished">Расположение</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="62"/>
+        <source>Click to choose directory...</source>
+        <translation>Производительность</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="65"/>
+        <source>Choose Location</source>
+        <translation>Выберите расположение</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="88"/>
+        <source>Back</source>
+        <translation type="unfinished">Назад</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="89"/>
+        <source>Create Project</source>
+        <translation>Проверить инструменты</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="106"/>
+        <source>Please enter a project name</source>
+        <translation>Выберите исполняемый файл radare2 (r2)</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="111"/>
+        <source>Please choose a valid directory</source>
+        <translation>%1: ОК (%2)</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="119"/>
+        <source>A folder with this name already exists</source>
+        <translation>%1: ОШИБКА (%2)</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/CreateProjectPage/create_project_page.cpp" line="124"/>
+        <source>Failed to create project directory</source>
+        <translation>Шаблоны исключений не должны повторяться.</translation>
+    </message>
+</context>
+<context>
     <name>CustomCodeEditor</name>
     <message>
-        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1422"/>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="3580"/>
+        <source>Uncommitted changes</source>
+        <translation type="unfinished">Незакоммиченные изменения</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="3584"/>
+        <source>%1 days ago</source>
+        <translation type="unfinished">%1 дн. назад</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1432"/>
         <source>Undo</source>
         <translation>Отменить</translation>
     </message>
     <message>
-        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1423"/>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1433"/>
         <source>Redo</source>
         <translation>Вернуть</translation>
     </message>
     <message>
-        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1425"/>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1435"/>
         <source>Cut</source>
         <translation>Вырезать</translation>
     </message>
     <message>
-        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1426"/>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1436"/>
         <source>Copy</source>
         <translation>Скопировать</translation>
     </message>
     <message>
-        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1427"/>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1437"/>
         <source>Paste</source>
         <translation>Вставить</translation>
     </message>
     <message>
-        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1428"/>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1438"/>
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1430"/>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="1440"/>
         <source>Select All</source>
         <translation>Выделить все</translation>
     </message>
-</context>
-<context>
-    <name>Data Converter</name>
     <message>
-        <source>Data Converter</source>
-        <translation type="vanished">Конвертор данных</translation>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="3583"/>
+        <source>today</source>
+        <translation>Перезапустите IDE после изменения языка.</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="3585"/>
+        <source>%1 weeks ago</source>
+        <translation>Выберите язык приложения.</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="3586"/>
+        <source>%1 months ago</source>
+        <translation>Перезапустите IDE, чтобы язык применился везде.</translation>
+    </message>
+    <message>
+        <location filename="../../../libs/CodeEditor/src/widgets/CustomCodeEditor.cpp" line="3587"/>
+        <source>%1 years ago</source>
+        <translation>Рабочее пространство</translation>
     </message>
 </context>
 <context>
@@ -356,183 +530,366 @@
     </message>
 </context>
 <context>
+    <name>DisassemblerSettingsPage</name>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="120"/>
+        <source>Backend</source>
+        <translation>Приложение</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="123"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="266"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="270"/>
+        <source>objdump</source>
+        <translation type="unfinished">objdump</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="124"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="172"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="267"/>
+        <source>radare2</source>
+        <translation type="unfinished">radare2</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="125"/>
+        <source>Disassembler backend</source>
+        <translation type="unfinished">Модуль дизассеблера</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="127"/>
+        <source>Intel</source>
+        <translation type="unfinished">Intel</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="128"/>
+        <source>AT&amp;T</source>
+        <translation type="unfinished">AT&amp;T</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="129"/>
+        <source>Assembly syntax</source>
+        <translation type="unfinished">Синтаксис ассемблера</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="132"/>
+        <source>Performance</source>
+        <translation>Модули</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="137"/>
+        <source>Maximum number of instructions per section (keeps UI responsive)</source>
+        <translation type="unfinished">Максимальное количество инструкций на секцию (для поддержания отзывчивости интерфейса)</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="138"/>
+        <source>Instruction limit/section</source>
+        <translation type="unfinished">Лимит инструкций на секцию</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="141"/>
+        <source>External Tools</source>
+        <translation>Внешние инструменты</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="144"/>
+        <source>objdump path</source>
+        <translation type="unfinished">objdump путь</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="149"/>
+        <source>Leave empty to use PATH lookup</source>
+        <translation type="unfinished">Оставьте поле пустым, чтобы использовать поиск по пути PATH.</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="150"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="161"/>
+        <source>Browse…</source>
+        <translation type="unfinished">Обзор…</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="155"/>
+        <source>radare2 path</source>
+        <translation type="unfinished">radare2 путь</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="160"/>
+        <source>Path to r2 (radare2) executable</source>
+        <translation type="unfinished">Путь к исполняемому файлу r2 (radare2).</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="167"/>
+        <source>Dependency: file(1)</source>
+        <translation type="unfinished">Зависимость: файл(1)</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="168"/>
+        <source>Test Tools</source>
+        <translation>Проверить инструменты</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="175"/>
+        <source>None (fast)</source>
+        <translation type="unfinished">Без (быстро)</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="176"/>
+        <source>aa (basic)</source>
+        <translation type="unfinished">aa (основная)</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="177"/>
+        <source>aaa (full)</source>
+        <translation type="unfinished">aaa (полная)</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="178"/>
+        <source>Analysis</source>
+        <translation type="unfinished">Анализ</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="180"/>
+        <source>Optional r2 commands before JSON queries (one per line). Example:
+e asm.syntax=intel
+e asm.bits=64</source>
+        <translation type="unfinished">Дополнительные команды r2, выполняемые перед JSON-запросами (по одной на строку). Пример:
+e asm.syntax=intel
+e asm.bits=64</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="182"/>
+        <source>Pre-commands</source>
+        <translation type="unfinished">Предварительные команды</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="237"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="242"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="246"/>
+        <source>found</source>
+        <translation type="unfinished">Найден</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="237"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="242"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="246"/>
+        <source>missing</source>
+        <translation type="unfinished">Отсутсвует</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="238"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="243"/>
+        <source>Not found in PATH and no valid path set</source>
+        <translation type="unfinished">Не найдено в PATH, и не указан действительный путь.</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="251"/>
+        <source>Select objdump executable</source>
+        <translation type="unfinished">Выберите исполняемый файл objdump</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="258"/>
+        <source>Select radare2 (r2) executable</source>
+        <translation type="unfinished">Выберите исполняемый файл radare2 (r2).</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="272"/>
+        <source>%1: OK (%2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="273"/>
+        <source>%1: FAIL (%2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="273"/>
+        <source>not found</source>
+        <translation type="unfinished">Не найден</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="275"/>
+        <source>Tool check</source>
+        <translation type="unfinished">Проверка инструмента</translation>
+    </message>
+</context>
+<context>
     <name>DisassemblerTab</name>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="35"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="31"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="36"/>
         <source>Disassembler</source>
         <translation>Дизассемблер</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="370"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="371"/>
         <source>Disassemble</source>
         <translation>Дизассемблировать</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="374"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="375"/>
         <source>Cancel</source>
         <translation>Закончить</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="381"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="382"/>
         <source>Section:</source>
         <translation>Раздел:</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="393"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="394"/>
         <source>Search address / mnemonic / operands…</source>
         <translation>Поиск адресса / мнемоника / операнды…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="400"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="401"/>
         <source>Log</source>
         <translation>Лог</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="405"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="406"/>
         <source>Toggle diagnostic log panel</source>
         <translation>Переключить панель диагностического журнала</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="445"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="446"/>
         <source>Functions</source>
         <translation>Функции</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="449"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="450"/>
         <source>Filter…</source>
         <translation>Фильтер…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="545"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="546"/>
         <source>Copy address</source>
         <translation>Скопировать адресс</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="549"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="550"/>
         <source>Copy bytes</source>
         <translation>Скопировать байты</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="558"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="559"/>
         <source>Hex patch here…</source>
         <translation>Hex patch here…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="560"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="577"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="594"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="612"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="619"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="623"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="561"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="578"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="595"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="613"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="620"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="624"/>
         <source>Patch</source>
         <translation>Патч</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="560"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="594"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="561"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="595"/>
         <source>No file offset mapping for this instruction.</source>
         <translation>Невозможно определить смещение в файле для данной инструкции.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="567"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="568"/>
         <source>Hex patch</source>
         <translation>HEX патч</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="568"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="569"/>
         <source>Hex bytes to write at %1:</source>
         <translation>HEX байты для записи %1:</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="577"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="612"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="661"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="578"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="613"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="664"/>
         <source>Invalid hex bytes.</source>
         <translation>Недопустимые HEX байты.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="592"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="593"/>
         <source>Patch bytes…</source>
         <translation>Патч байты…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="602"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="603"/>
         <source>Patch bytes</source>
         <translation>Патч байты</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="603"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="604"/>
         <source>Hex bytes (same length):</source>
         <translation>Шестнадцатеричные байты (той же длины):</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="619"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="620"/>
         <source>Current bytes are invalid.</source>
         <translation>Текущие байты недействительны.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="623"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="624"/>
         <source>Byte length must match (%1 bytes).</source>
         <translation>Длина в байтах должна совпадать (%1 байт).</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="647"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="650"/>
         <source>Hex patch string…</source>
         <translation>Строка патча в шестнадцатеричном формате…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="651"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="654"/>
         <source>Hex patch string</source>
         <translation>Строка патча в шестнадцатеричном формате</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="652"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="655"/>
         <source>Hex bytes to write at string addr 0x%1:</source>
         <translation>Шестнадцатеричные байты для записи по строковому адресу 0x%1:</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="661"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="667"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="671"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="677"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="664"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="670"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="674"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="680"/>
         <source>String patch</source>
         <translation>Текстовый патч</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="667"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="670"/>
         <source>Failed to open file for writing.</source>
         <translation>Не удалось открыть файл для записи.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="671"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="699"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="674"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="702"/>
         <source>Failed to seek to 0x%1.</source>
         <translation>Не удалось выполнить поиск по адресу 0x%1.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="677"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="680"/>
         <source>Failed to write all bytes.</source>
         <translation>Не удалось записать все байты.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="688"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="691"/>
         <source>Show string bytes…</source>
         <translation>Показать байты строки…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="695"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="699"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="720"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="698"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="702"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="723"/>
         <source>String bytes</source>
         <translation>Строка байтов</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="695"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="698"/>
         <source>Failed to open file.</source>
         <translation>Не удалось открыть файл.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="721"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="724"/>
         <source>addr: 0x%1
 len: %2 (+1 null)
 
@@ -550,111 +907,85 @@ hex:
 ascii:</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1286"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1289"/>
         <source>%1 lines shown</source>
         <translation>%1 строк показано</translation>
     </message>
     <message>
-        <source>addr: 0x%1
-len: %2 (+1 null)
-
-hex:
-    %3
-
-ascii:
-    %4</source>
-        <translation type="obsolete">адресс: 0x%1
-длина: %2 (+1 null)
-
-HEX:
-    %3
-
-ascii:
-    %4</translation>
-    </message>
-    <message>
-        <source>No disassemblable sections found.
-    Make sure the file is a supported binary (ELF, PE, Mach-O…)
-Check the Log panel for details.</source>
-        <translation type="obsolete">Не найдено секций для дизассемблирования.
-    Убедитесь, что файл является поддерживаемым бинарным форматом (ELF, PE, Mach-O…).
-Подробности см. в панели журнала.</translation>
-    </message>
-    <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="752"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="755"/>
         <source>Diagnostic Log</source>
         <translation>Журнал диагностики</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="755"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="758"/>
         <source>Clear</source>
         <translation>Очистить</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="779"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="782"/>
         <source>Press &quot;Disassemble&quot; to analyse the file</source>
         <translation>Нажмите &quot;Дизасемблер&quot; чтобы проанализировать файл</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="780"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="868"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="783"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="871"/>
         <source>Backend: %1</source>
         <translation>Бэкенд: %1</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="781"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="867"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="784"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="870"/>
         <source>radare2</source>
         <translation>radare2</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="781"/>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="867"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="784"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="870"/>
         <source>objdump</source>
         <translation>objdump</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="882"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="885"/>
         <source>No file path set</source>
         <translation>Путь к файлу не указан</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="893"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="896"/>
         <source>Select radare2 (r2) executable</source>
         <translation>Выберите исполняемый файл radare2 (r2).</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="897"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="900"/>
         <source>radare2 is not configured — set it in Settings</source>
         <translation>radare2 не настроен — установите его в настройках.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="923"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="926"/>
         <source>Running radare2…</source>
         <translation>Запуск radare2…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="924"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="927"/>
         <source>Running objdump…</source>
         <translation>Запуск objdump…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="937"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="940"/>
         <source>Disassembling…</source>
         <translation>Дизасемблирование…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1000"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1003"/>
         <source>%1 section(s) · %2 instructions loaded…</source>
         <translation>%1 раздел(ы) · %2 инструкции загружены…</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1110"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1113"/>
         <source>Address %1 is not visible in current view</source>
         <translation>Адрес %1 не отображается в текущем представлении.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1123"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1126"/>
         <source>No disassemblable sections found.
 Make sure the file is a supported binary (ELF, PE, Mach-O…)
 Check the Log panel for details.</source>
@@ -663,27 +994,27 @@ Check the Log panel for details.</source>
 Подробности см. в панели журнала.</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1133"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1136"/>
         <source>%1 section(s) · %2 instructions</source>
         <translation>%1 раздел(ы) · %2 инструкций</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1148"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1151"/>
         <source>objdump error — see Log panel for details</source>
         <translation>objdump ошибка — Подробности см. в панели «Журнал».</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1149"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1152"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1176"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1179"/>
         <source>All sections</source>
         <translation>Все разделы</translation>
     </message>
     <message>
-        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1281"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblertab.cpp" line="1284"/>
         <source>No results for &quot;%1&quot;</source>
         <translation>Результаты поиска по &quot;%1&quot; отсутствуют.</translation>
     </message>
@@ -714,23 +1045,27 @@ Check the Log panel for details.</source>
         <translation>Редактировать</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Edit/editmenu.cpp" line="12"/>
+        <location filename="../../../ui/MenuBar/Menus/Edit/editmenu.cpp" line="20"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
+        <location filename="../../../ui/MenuBar/Menus/Edit/editmenu.cpp" line="12"/>
         <source>Find</source>
         <translation>Найти</translation>
     </message>
     <message>
+        <location filename="../../../ui/MenuBar/Menus/Edit/editmenu.cpp" line="14"/>
         <source>Replace</source>
         <translation>Заменить</translation>
     </message>
     <message>
+        <location filename="../../../ui/MenuBar/Menus/Edit/editmenu.cpp" line="16"/>
         <source>Find in Open Files</source>
         <translation>Найти в открытых файлах</translation>
     </message>
     <message>
+        <location filename="../../../ui/MenuBar/Menus/Edit/editmenu.cpp" line="18"/>
         <source>Find in Project</source>
         <translation>Найти в проекте</translation>
     </message>
@@ -825,10 +1160,6 @@ Check the Log panel for details.</source>
         <source>Failed to create file: %1</source>
         <translation></translation>
     </message>
-    <message>
-        <source>Failed to create file!</source>
-        <translation type="vanished">Не удалось создать файл!</translation>
-    </message>
 </context>
 <context>
     <name>FileMenu</name>
@@ -861,1506 +1192,1046 @@ Check the Log panel for details.</source>
 <context>
     <name>FileTreePanel</name>
     <message>
-        <location filename="../../../widgets/filetreepanel.cpp" line="79"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="84"/>
         <source>Create File</source>
         <translation>Создать файл</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreepanel.cpp" line="80"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="85"/>
         <source>Create Folder</source>
         <translation>Создать папку</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreepanel.cpp" line="81"/>
-        <location filename="../../../widgets/filetreepanel.cpp" line="131"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="86"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="141"/>
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreepanel.cpp" line="82"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="87"/>
         <source>Rename</source>
         <translation>Переименовать</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreepanel.cpp" line="83"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="88"/>
         <source>Open</source>
         <translation>Открыть</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreepanel.cpp" line="129"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="139"/>
         <source>Are you sure you want to delete the file &quot;%1&quot;?</source>
         <translation>Вы действительно хотите удалить файл &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreepanel.cpp" line="132"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="142"/>
         <source>Yes</source>
         <translation>Да</translation>
     </message>
     <message>
-        <location filename="../../../widgets/filetreepanel.cpp" line="133"/>
+        <location filename="../../../widgets/filetreepanel.cpp" line="143"/>
         <source>No</source>
         <translation>Нет</translation>
     </message>
 </context>
 <context>
-    <name>FileTreeView</name>
+    <name>FilesSettingsPage</name>
     <message>
-        <source>Error</source>
-        <translation type="vanished">Ошибка</translation>
+        <location filename="../../../dialogs/pages/filessettingspage.cpp" line="38"/>
+        <source>One pattern per line. Examples: node_modules, .git, *.log, dist/</source>
+        <translation type="unfinished">Один шаблон на строку. Примеры: node_modules, .git, *.log, dist/</translation>
     </message>
     <message>
-        <source>Cannot move a folder into itself.</source>
-        <translation type="vanished">Невозможно переместить папку внутрь себя.</translation>
+        <location filename="../../../dialogs/pages/filessettingspage.cpp" line="44"/>
+        <source>node_modules
+.git
+*.log</source>
+        <translation type="unfinished">node_modules
+.git
+*.log</translation>
     </message>
     <message>
-        <source>Are you sure you want to move &apos;%1&apos; into &apos;%2&apos;?</source>
-        <translation type="vanished">Вы действительно хотите перенести &apos;%1&apos; внутрь &apos;%2&apos;?</translation>
-    </message>
-    <message>
-        <source>Confirm move</source>
-        <translation type="vanished">Подтвердите перемещение</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation type="vanished">Да</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation type="vanished">Нет</translation>
-    </message>
-    <message>
-        <source>Failed to move the file.</source>
-        <translation type="vanished">Не удалось переместить файл</translation>
-    </message>
-    <message>
-        <source>Undo Failed</source>
-        <translation type="vanished">Невозможно отменить</translation>
-    </message>
-    <message>
-        <source>Could not move the file back.</source>
-        <translation type="vanished">Не удалось переместить файл обратно.</translation>
-    </message>
-    <message>
-        <source>The file no longer exists at the moved location.</source>
-        <translation type="vanished">Файл больше не существует по новому пути.</translation>
+        <location filename="../../../dialogs/pages/filessettingspage.cpp" line="62"/>
+        <source>Excluded patterns must not be repeated.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>FilesTabWidget</name>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="181"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="72"/>
+        <source>Build &apos;%1&apos;</source>
+        <translation>Сборка &apos;%1&apos;</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="279"/>
         <source>Unpin</source>
         <translation>Открепить</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="181"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="279"/>
         <source>Pin</source>
         <translation>Закрепить</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="210"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="308"/>
         <source>Save File</source>
         <translation>Сохранить файл</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="210"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="308"/>
         <source>Do you want to save this file?</source>
         <translation>Вы хотите сохранить этот файл?</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="211"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="309"/>
         <source>Yes</source>
         <translation>Да</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="212"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="310"/>
         <source>No</source>
         <translation>Нет</translation>
     </message>
     <message>
-        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="213"/>
+        <location filename="../../../ui/FilesTabWidget/filestabwidget.cpp" line="311"/>
         <source>Cancel</source>
         <translation>Отменить</translation>
     </message>
 </context>
 <context>
+    <name>GeneralSettingsPage</name>
+    <message>
+        <location filename="../../../dialogs/pages/generalsettingspage.cpp" line="46"/>
+        <source>Language</source>
+        <translation type="unfinished">Язык</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/pages/generalsettingspage.cpp" line="49"/>
+        <source>Restart the IDE after changing the language.</source>
+        <translation>Перезапустите IDE после изменения языка.</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/pages/generalsettingspage.cpp" line="67"/>
+        <source>Choose an application language.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/pages/generalsettingspage.cpp" line="80"/>
+        <source>Information</source>
+        <translation type="unfinished">Информация</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/pages/generalsettingspage.cpp" line="80"/>
+        <source>Restart the IDE to apply the language everywhere.</source>
+        <translation>Перезапустите IDE, чтобы применить язык во всём интерфейсе.</translation>
+    </message>
+</context>
+<context>
     <name>GitManager</name>
     <message>
-        <source>Не удалось открыть репозиторий</source>
-        <translation type="vanished">Не удалось открыть репозиторий</translation>
-    </message>
-    <message>
-        <source>Репозиторий не открыт</source>
-        <translation type="vanished">Репозиторий не открыт</translation>
-    </message>
-    <message>
-        <source>Ветка не найдена: </source>
-        <translation type="vanished">Ветка не найдена: </translation>
-    </message>
-    <message>
-        <source>Ошибка checkout</source>
-        <translation type="vanished">Ошибка переключения</translation>
-    </message>
-    <message>
-        <source>Ошибка установки HEAD</source>
-        <translation type="vanished">Ошибка установки HEAD</translation>
-    </message>
-    <message>
-        <source>Не удалось получить HEAD</source>
-        <translation type="vanished">Не удалось получить HEAD</translation>
-    </message>
-    <message>
-        <source>Не удалось найти коммит HEAD</source>
-        <translation type="vanished">Не удалось найти коммит HEAD</translation>
-    </message>
-    <message>
-        <source>Не удалось создать ветку</source>
-        <translation type="vanished">Не удалось создать ветку</translation>
-    </message>
-    <message>
-        <source>Не удалось удалить ветку</source>
-        <translation type="vanished">Не удалось удалить ветку</translation>
-    </message>
-    <message>
-        <source>Не удалось переименовать ветку</source>
-        <translation type="vanished">Не удалось переименовать ветку</translation>
-    </message>
-    <message>
-        <source>Не удалось получить индекс</source>
-        <translation type="vanished">Не удалось получить индекс</translation>
-    </message>
-    <message>
-        <source>Не удалось записать tree</source>
-        <translation type="vanished">Не удалось записать дерево</translation>
-    </message>
-    <message>
-        <source>Не удалось найти tree</source>
-        <translation type="vanished">Не удалось найти дерево</translation>
-    </message>
-    <message>
-        <source>Не удалось создать коммит</source>
-        <translation type="vanished">Не удалось создать коммит</translation>
-    </message>
-    <message>
-        <source>Неверный OID коммита</source>
-        <translation type="vanished">Неверный хеш коммита</translation>
-    </message>
-    <message>
-        <source>Коммит не найден</source>
-        <translation type="vanished">Коммит не найден</translation>
-    </message>
-    <message>
-        <source>Ошибка reset</source>
-        <translation type="vanished">Ошибка сброса</translation>
-    </message>
-    <message>
-        <source>Ошибка revert</source>
-        <translation type="vanished">Ошибка отмены</translation>
-    </message>
-    <message>
-        <source>Не удалось найти HEAD коммит</source>
-        <translation type="vanished">Не удалось найти HEAD коммит</translation>
-    </message>
-    <message>
-        <source>Не удалось получить tree коммита</source>
-        <translation type="vanished">Не удалось получить дерево коммита</translation>
-    </message>
-    <message>
-        <source>Ошибка amend</source>
-        <translation type="vanished">Ошибка изменения коммита</translation>
-    </message>
-    <message>
-        <source>Remote не найден: </source>
-        <translation type="vanished">Удалённый репозиторий не найден: </translation>
-    </message>
-    <message>
-        <source>Не указана ветка для пуша</source>
-        <translation type="vanished">Не указана ветка для отправки</translation>
-    </message>
-    <message>
-        <source>Ошибка push</source>
-        <translation type="vanished">Ошибка отправки</translation>
-    </message>
-    <message>
-        <source>Не указана ветка</source>
-        <translation type="vanished">Не указана ветка</translation>
-    </message>
-    <message>
-        <source>Ошибка fetch</source>
-        <translation type="vanished">Ошибка получения</translation>
-    </message>
-    <message>
-        <source>Не удалось найти: </source>
-        <translation type="vanished">Не удалось найти: </translation>
-    </message>
-    <message>
-        <source>Не удалось найти коммит для слияния</source>
-        <translation type="vanished">Не удалось найти коммит для слияния</translation>
-    </message>
-    <message>
-        <source>Ошибка слияния</source>
-        <translation type="vanished">Ошибка слияния</translation>
-    </message>
-    <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="748"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="752"/>
         <source>Merge branch &apos;</source>
         <translation></translation>
     </message>
     <message>
-        <source>Не удалось добавить файл</source>
-        <translation type="vanished">Не удалось добавить файл</translation>
-    </message>
-    <message>
-        <source>Не удалось записать индекс</source>
-        <translation type="vanished">Не удалось записать индекс</translation>
-    </message>
-    <message>
-        <source>Не удалось удалить файл из индекса</source>
-        <translation type="vanished">Не удалось удалить файл из индекса</translation>
-    </message>
-    <message>
-        <source>Ошибка клонирования</source>
-        <translation type="vanished">Ошибка клонирования</translation>
-    </message>
-    <message>
-        <source>Ошибка инициализации</source>
-        <translation type="vanished">Ошибка инициализации</translation>
-    </message>
-    <message>
-        <source>На ветке </source>
-        <translation type="vanished">На ветке </translation>
-    </message>
-    <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="27"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="31"/>
         <source>Failed to open repository</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="108"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="149"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="186"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="214"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="246"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="382"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="420"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="453"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="486"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="519"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="592"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="638"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="659"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="688"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="810"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="844"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="1014"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="1037"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="1055"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="112"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="153"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="190"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="218"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="250"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="386"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="424"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="457"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="490"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="523"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="596"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="642"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="663"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="692"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="814"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="848"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1111"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1134"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1152"/>
         <source>Repository not open</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="117"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="194"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="222"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="121"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="198"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="226"/>
         <source>Branch not found: </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="129"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="406"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="133"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="410"/>
         <source>Checkout error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="138"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="142"/>
         <source>HEAD setup error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="157"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="527"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="161"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="531"/>
         <source>Failed to get HEAD</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="164"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="534"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="168"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="538"/>
         <source>Failed to find HEAD commit</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="174"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="178"/>
         <source>Failed to create branch</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="203"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="207"/>
         <source>Failed to delete branch</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="232"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="236"/>
         <source>Failed to rename branch</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="254"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="817"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="851"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="258"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="821"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="855"/>
         <source>Failed to get index</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="263"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="267"/>
         <source>Failed to write tree</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="271"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="275"/>
         <source>Failed to find tree</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="313"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="317"/>
         <source>Failed to create commit</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="388"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="426"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="459"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="492"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="392"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="430"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="463"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="496"/>
         <source>Invalid commit OID</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="395"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="499"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="399"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="503"/>
         <source>Commit not found</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="433"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="466"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="437"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="470"/>
         <source>Object not found</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="442"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="475"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="446"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="479"/>
         <source>Reset error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="508"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="512"/>
         <source>Revert error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="551"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="555"/>
         <source>Failed to get commit tree</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="579"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="583"/>
         <source>Amend error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="600"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="666"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="604"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="670"/>
         <source>Remote not found: </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="608"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="612"/>
         <source>Push branch not specified</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="628"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="632"/>
         <source>Push error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="648"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="652"/>
         <source>Branch not specified</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="676"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="680"/>
         <source>Fetch error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="697"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="701"/>
         <source>Failed to find: </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="704"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="708"/>
         <source>Failed to find commit for merge</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="717"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="721"/>
         <source>Merge error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="825"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="829"/>
         <source>Failed to add file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="833"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="867"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="837"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="871"/>
         <source>Failed to write index</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="859"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="863"/>
         <source>Failed to remove file from index</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="934"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="938"/>
         <source>Clone error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="952"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="956"/>
         <source>Init error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="983"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1005"/>
+        <source>Blame error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../core/git/gitmanager.cpp" line="1033"/>
+        <source>You</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../../core/git/gitmanager.cpp" line="1034"/>
+        <source>Uncommitted changes</source>
+        <translation type="unfinished">Незакоммиченные изменения</translation>
+    </message>
+    <message>
+        <location filename="../../../core/git/gitmanager.cpp" line="1080"/>
         <source>On branch </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="998"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1095"/>
         <source>new:</source>
         <translation>новый:</translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="999"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="1003"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1096"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1100"/>
         <source>modified:</source>
         <translation>изменён:</translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="1000"/>
-        <location filename="../../../core/git/gitmanager.cpp" line="1004"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1097"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1101"/>
         <source>deleted:</source>
         <translation>удалён:</translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="1001"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1098"/>
         <source>renamed:</source>
         <translation>переименован:</translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="1002"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1099"/>
         <source>untracked:</source>
         <translation>неотслеживаемый:</translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="1026"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1123"/>
         <source>Stash save error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="1044"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1141"/>
         <source>Stash apply error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="1062"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1159"/>
         <source>Stash delete error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../core/git/gitmanager.cpp" line="1206"/>
+        <location filename="../../../core/git/gitmanager.cpp" line="1303"/>
         <source>Failed to create signature</source>
         <translation></translation>
-    </message>
-    <message>
-        <source>Ошибка stash save</source>
-        <translation type="vanished">Ошибка сохранения stash</translation>
-    </message>
-    <message>
-        <source>Ошибка stash apply</source>
-        <translation type="vanished">Ошибка применения stash</translation>
-    </message>
-    <message>
-        <source>Ошибка stash drop</source>
-        <translation type="vanished">Ошибка удаления stash</translation>
-    </message>
-    <message>
-        <source>Не удалось создать подпись</source>
-        <translation type="vanished">Не удалось создать подпись</translation>
     </message>
 </context>
 <context>
     <name>GitMenu</name>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="21"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="23"/>
         <source>Git</source>
         <translation>Git</translation>
     </message>
     <message>
-        <source>Ветки</source>
-        <translation type="vanished">Ветки</translation>
-    </message>
-    <message>
-        <source>Переключиться на ветку</source>
-        <translation type="vanished">Переключиться на ветку</translation>
-    </message>
-    <message>
-        <source>Создать ветку</source>
-        <translation type="vanished">Создать ветку</translation>
-    </message>
-    <message>
-        <source>Удалить ветку</source>
-        <translation type="vanished">Удалить ветку</translation>
-    </message>
-    <message>
-        <source>Переименовать ветку</source>
-        <translation type="vanished">Переименовать ветку</translation>
-    </message>
-    <message>
-        <source>Список веток</source>
-        <translation type="vanished">Список веток</translation>
-    </message>
-    <message>
-        <source>Коммиты</source>
-        <translation type="vanished">Коммиты</translation>
-    </message>
-    <message>
-        <source>Создать коммит</source>
-        <translation type="vanished">Создать коммит</translation>
-    </message>
-    <message>
-        <source>История коммитов</source>
-        <translation type="vanished">История коммитов</translation>
-    </message>
-    <message>
-        <source>Переключиться на коммит</source>
-        <translation type="vanished">Переключиться на коммит</translation>
-    </message>
-    <message>
-        <source>Сбросить (hard)</source>
-        <translation type="vanished">Сбросить (hard)</translation>
-    </message>
-    <message>
-        <source>Сбросить (mixed)</source>
-        <translation type="vanished">Сбросить (mixed)</translation>
-    </message>
-    <message>
-        <source>Отменить коммит (revert)</source>
-        <translation type="vanished">Отменить коммит (revert)</translation>
-    </message>
-    <message>
-        <source>Изменить последний коммит</source>
-        <translation type="vanished">Изменить последний коммит</translation>
-    </message>
-    <message>
-        <source>Синхронизация</source>
-        <translation type="vanished">Синхронизация</translation>
-    </message>
-    <message>
-        <source>Отправить (push)</source>
-        <translation type="vanished">Отправить (push)</translation>
-    </message>
-    <message>
-        <source>Получить (pull)</source>
-        <translation type="vanished">Получить (pull)</translation>
-    </message>
-    <message>
-        <source>Получить без слияния (fetch)</source>
-        <translation type="vanished">Получить без слияния (fetch)</translation>
-    </message>
-    <message>
-        <source>Слияние</source>
-        <translation type="vanished">Слияние</translation>
-    </message>
-    <message>
-        <source>Слить ветку</source>
-        <translation type="vanished">Слить ветку</translation>
-    </message>
-    <message>
-        <source>Показать конфликты</source>
-        <translation type="vanished">Показать конфликты</translation>
-    </message>
-    <message>
-        <source>Индексация</source>
-        <translation type="vanished">Индексация</translation>
-    </message>
-    <message>
-        <source>Добавить файл (stage)</source>
-        <translation type="vanished">Добавить файл (stage)</translation>
-    </message>
-    <message>
-        <source>Убрать из индекса (unstage)</source>
-        <translation type="vanished">Убрать из индекса (unstage)</translation>
-    </message>
-    <message>
-        <source>Показать изменения (diff)</source>
-        <translation type="vanished">Показать изменения (diff)</translation>
-    </message>
-    <message>
-        <source>Показать staged diff</source>
-        <translation type="vanished">Показать staged diff</translation>
-    </message>
-    <message>
-        <source>Репозиторий</source>
-        <translation type="vanished">Репозиторий</translation>
-    </message>
-    <message>
-        <source>Клонировать репозиторий</source>
-        <translation type="vanished">Клонировать репозиторий</translation>
-    </message>
-    <message>
-        <source>Инициализировать репозиторий</source>
-        <translation type="vanished">Инициализировать репозиторий</translation>
-    </message>
-    <message>
-        <source>Открыть репозиторий</source>
-        <translation type="vanished">Открыть репозиторий</translation>
-    </message>
-    <message>
-        <source>Дополнительно</source>
-        <translation type="vanished">Дополнительно</translation>
-    </message>
-    <message>
-        <source>Статус</source>
-        <translation type="vanished">Статус</translation>
-    </message>
-    <message>
-        <source>Сохранить stash</source>
-        <translation type="vanished">Сохранить stash</translation>
-    </message>
-    <message>
-        <source>Применить stash</source>
-        <translation type="vanished">Применить stash</translation>
-    </message>
-    <message>
-        <source>Удалить stash</source>
-        <translation type="vanished">Удалить stash</translation>
-    </message>
-    <message>
-        <source>Список stash</source>
-        <translation type="vanished">Список stash</translation>
-    </message>
-    <message>
-        <source>Лог с графом веток</source>
-        <translation type="vanished">Лог с графом веток</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="24"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="262"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="26"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="279"/>
         <source>Branches</source>
         <translation>Ветки</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="26"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="179"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="28"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="196"/>
         <source>Checkout Branch</source>
         <translation>Переключиться на ветку</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="27"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="196"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="29"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="213"/>
         <source>Create Branch</source>
         <translation>Создать ветку</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="28"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="213"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="30"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="230"/>
         <source>Delete Branch</source>
         <translation>Удалить ветку</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="29"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="230"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="233"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="31"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="247"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="250"/>
         <source>Rename Branch</source>
         <translation>Переименовать ветку</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="31"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="33"/>
         <source>List Branches</source>
         <translation>Список веток</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="34"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="36"/>
         <source>Commits</source>
         <translation>Коммиты</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="36"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="274"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="38"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="291"/>
         <source>Create Commit</source>
         <translation>Создать коммит</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="37"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="306"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="39"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="323"/>
         <source>Commit History</source>
         <translation>История коммитов</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="39"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="329"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="41"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="346"/>
         <source>Checkout Commit</source>
         <translation>Переключиться на коммит</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="40"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="363"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="369"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="42"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="380"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="386"/>
         <source>Reset (hard)</source>
         <translation>Сбросить (hard)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="41"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="386"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="43"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="403"/>
         <source>Reset (mixed)</source>
         <translation>Сбросить (mixed)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="42"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="403"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="44"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="420"/>
         <source>Revert Commit</source>
         <translation>Отменить коммит (revert)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="44"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="420"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="46"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="437"/>
         <source>Amend Commit</source>
         <translation>Изменить последний коммит</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="47"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="49"/>
         <source>Sync</source>
         <translation>Синхронизация</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="49"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="51"/>
         <source>Push</source>
         <translation>Отправить (push)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="50"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="52"/>
         <source>Pull</source>
         <translation>Получить (pull)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="51"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="53"/>
         <source>Fetch</source>
         <translation>Получить без слияния (fetch)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="54"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="483"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="56"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="500"/>
         <source>Merge</source>
         <translation>Слияние</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="56"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="58"/>
         <source>Merge Branch</source>
         <translation>Слить ветку</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="57"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="59"/>
         <source>Show Conflicts</source>
         <translation>Показать конфликты</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="60"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="62"/>
         <source>Staging</source>
         <translation>Индексация</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="62"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="521"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="64"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="538"/>
         <source>Stage File</source>
         <translation>Добавить файл (stage)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="63"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="538"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="65"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="555"/>
         <source>Unstage File</source>
         <translation>Убрать из индекса (unstage)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="65"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="555"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="67"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="572"/>
         <source>Show Diff</source>
         <translation>Показать изменения (diff)</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="66"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="68"/>
         <source>Show Staged Diff</source>
         <translation>Показать staged изменения</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="69"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="71"/>
         <source>Repository</source>
         <translation>Репозиторий</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="71"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="615"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="73"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="632"/>
         <source>Clone Repository</source>
         <translation>Клонировать репозиторий</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="72"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="74"/>
         <source>Init Repository</source>
         <translation>Инициализировать репозиторий</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="73"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="75"/>
         <source>Open Repository</source>
         <translation>Открыть репозиторий</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="76"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="78"/>
         <source>Extra</source>
         <translation>Дополнительно</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="78"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="664"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="80"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="681"/>
         <source>Status</source>
         <translation>Статус</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="80"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="692"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="82"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="709"/>
         <source>Save Stash</source>
         <translation>Сохранить stash</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="81"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="708"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="83"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="725"/>
         <source>Apply Stash</source>
         <translation>Применить stash</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="82"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="725"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="84"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="742"/>
         <source>Delete Stash</source>
         <translation>Удалить stash</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="83"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="85"/>
         <source>Stash List</source>
         <translation>Список stash</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="85"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="770"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="87"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="787"/>
         <source>Log Graph</source>
         <translation>Лог с графом веток</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="175"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="185"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="90"/>
+        <source>Inline Git Blame</source>
+        <translation>Показывать Git Blame</translation>
+    </message>
+    <message>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="192"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="202"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="209"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="219"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="226"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="239"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="246"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="270"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="280"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="236"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="243"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="256"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="263"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="287"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="325"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="335"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="359"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="375"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="382"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="297"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="304"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="342"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="352"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="376"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="392"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="399"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="409"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="416"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="426"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="435"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="442"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="449"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="456"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="463"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="470"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="479"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="493"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="500"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="433"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="443"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="452"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="459"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="466"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="473"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="480"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="487"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="496"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="510"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="517"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="527"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="534"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="544"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="551"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="584"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="624"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="636"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="649"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="658"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="688"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="697"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="704"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="561"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="568"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="601"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="641"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="653"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="666"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="675"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="705"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="714"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="721"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="731"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="738"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="759"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="748"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="755"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="776"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="175"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="192"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="209"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="226"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="246"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="270"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="243"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="263"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="287"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="325"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="359"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="382"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="304"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="342"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="376"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="399"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="416"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="435"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="449"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="463"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="479"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="500"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="433"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="452"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="466"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="480"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="496"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="517"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="534"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="551"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="584"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="658"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="688"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="704"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="568"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="601"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="675"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="705"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="721"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="738"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="759"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="755"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="776"/>
         <source>Repository not open</source>
         <translation>Репозиторий не открыт</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="179"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="196"/>
         <source>Enter branch name:</source>
         <translation>Введите имя ветки:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="183"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="200"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="217"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="237"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="278"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="333"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="373"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="234"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="254"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="295"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="350"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="390"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="407"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="424"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="440"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="454"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="468"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="490"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="525"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="441"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="457"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="471"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="485"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="507"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="542"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="622"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="634"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="647"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="695"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="559"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="639"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="651"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="664"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="712"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="729"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="746"/>
         <source>Success</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="196"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="213"/>
         <source>Enter new branch name:</source>
         <translation>Введите имя новой ветки:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="200"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="217"/>
         <source>Branch created: </source>
         <translation>Создана ветка: </translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="213"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="230"/>
         <source>Enter branch name to delete:</source>
         <translation>Введите имя ветки для удаления:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="230"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="247"/>
         <source>Current branch name:</source>
         <translation>Текущее имя ветки:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="233"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="250"/>
         <source>New branch name:</source>
         <translation>Новое имя ветки:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="274"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="291"/>
         <source>Enter commit message:</source>
         <translation>Введите сообщение коммита:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="278"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="295"/>
         <source>Commit created</source>
         <translation>Коммит создан</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="293"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="310"/>
         <source>History</source>
         <translation>История</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="293"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="765"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="310"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="782"/>
         <source>No commits</source>
         <translation>Нет коммитов</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="315"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="574"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="604"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="678"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="780"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="332"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="591"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="621"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="695"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="797"/>
         <source>Close</source>
         <translation>Закрыть</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="329"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="346"/>
         <source>Enter commit hash:</source>
         <translation>Введите хеш коммита:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="364"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="381"/>
         <source>This will delete all uncommitted changes. Continue?</source>
         <translation>Это удалит все незакоммиченные изменения. Продолжить?</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="369"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="386"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="403"/>
         <source>Enter commit hash to reset:</source>
         <translation>Введите хеш коммита для сброса:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="373"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="390"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="407"/>
         <source>Reset completed</source>
         <translation>Сброс выполнен</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="403"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="420"/>
         <source>Enter commit hash to revert:</source>
         <translation>Введите хеш коммита для отмены:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="407"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="424"/>
         <source>Commit reverted</source>
         <translation>Коммит отменён</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="420"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="437"/>
         <source>New message:</source>
         <translation>Новое сообщение:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="424"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="441"/>
         <source>Last commit amended</source>
         <translation>Последний коммит изменён</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="440"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="457"/>
         <source>Changes pushed</source>
         <translation>Изменения отправлены</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="454"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="471"/>
         <source>Changes pulled</source>
         <translation>Изменения получены</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="468"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="485"/>
         <source>Changes fetched</source>
         <translation>Изменения получены без слияния</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="483"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="500"/>
         <source>Enter branch name to merge:</source>
         <translation>Введите имя ветки для слияния:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="488"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="506"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="505"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="523"/>
         <source>Conflicts</source>
         <translation>Конфликты</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="488"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="505"/>
         <source>Conflicts detected. Resolve them and make a commit.</source>
         <translation>Обнаружены конфликты. Разрешите их и сделайте коммит.</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="490"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="507"/>
         <source>Merge completed</source>
         <translation>Слияние выполнено</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="506"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="523"/>
         <source>No conflicts</source>
         <translation>Конфликтов нет</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="508"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="525"/>
         <source>Conflict files</source>
         <translation>Конфликтные файлы</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="521"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="538"/>
         <source>Enter file path (relative to repo root):</source>
         <translation>Введите путь к файлу (относительно корня репозитория):</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="538"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="555"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="572"/>
         <source>Enter file path:</source>
         <translation>Введите путь к файлу:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="560"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="664"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="577"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="681"/>
         <source>No changes</source>
         <translation>Нет изменений</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="590"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="595"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="607"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="612"/>
         <source>Staged Diff</source>
         <translation>Staged изменения</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="590"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="607"/>
         <source>No staged changes</source>
         <translation>Нет staged изменений</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="615"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="632"/>
         <source>Repository URL:</source>
         <translation>URL репозитория:</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="618"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="635"/>
         <source>Select folder to clone into</source>
         <translation>Выберите папку для клонирования</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="630"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="647"/>
         <source>Select folder to initialize</source>
         <translation>Выберите папку для инициализации</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="643"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="660"/>
         <source>Select repository folder</source>
         <translation>Выберите папку с репозиторием</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="669"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="686"/>
         <source>Repository status</source>
         <translation>Статус репозитория</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="692"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="709"/>
         <source>Message (optional):</source>
         <translation>Сообщение (необязательно):</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="695"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="712"/>
         <source>Changes saved to stash</source>
         <translation>Изменения сохранены в stash</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="708"/>
         <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="725"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="742"/>
         <source>Stash index (0 - latest):</source>
         <translation>Индекс stash (0 - последний):</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="712"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="729"/>
         <source>Stash applied</source>
         <translation>Stash применён</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="729"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="746"/>
         <source>Stash deleted</source>
         <translation>Stash удалён</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="744"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="761"/>
         <source>No stash saved</source>
         <translation>Нет сохранённых stash</translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="765"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="782"/>
         <source>Log</source>
         <translation>Лог</translation>
     </message>
     <message>
-        <source>Ошибка</source>
-        <translation type="vanished">Ошибка</translation>
-    </message>
-    <message>
-        <source>Репозиторий не открыт</source>
-        <translation type="vanished">Репозиторий не открыт</translation>
-    </message>
-    <message>
-        <source>Введите имя ветки:</source>
-        <translation type="vanished">Введите имя ветки:</translation>
-    </message>
-    <message>
-        <source>Успех</source>
-        <translation type="vanished">Успех</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="183"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="200"/>
         <source>Переключились на ветку: </source>
         <translation>Переключились на ветку: </translation>
     </message>
     <message>
-        <source>Введите имя новой ветки:</source>
-        <translation type="vanished">Введите имя новой ветки:</translation>
-    </message>
-    <message>
-        <source>Создана ветка: </source>
-        <translation type="vanished">Создана ветка: </translation>
-    </message>
-    <message>
-        <source>Введите имя ветки для удаления:</source>
-        <translation type="vanished">Введите имя ветки для удаления:</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="217"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="234"/>
         <source>Удалена ветка: </source>
         <translation>Удалена ветка: </translation>
     </message>
     <message>
-        <source>Текущее имя ветки:</source>
-        <translation type="vanished">Текущее имя ветки:</translation>
-    </message>
-    <message>
-        <source>Новое имя ветки:</source>
-        <translation type="vanished">Новое имя ветки:</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="237"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="254"/>
         <source>Ветка переименована: </source>
         <translation>Ветка переименована: </translation>
     </message>
     <message>
-        <source>Введите сообщение коммита:</source>
-        <translation type="vanished">Введите сообщение коммита:</translation>
-    </message>
-    <message>
-        <source>Коммит создан</source>
-        <translation type="vanished">Коммит создан</translation>
-    </message>
-    <message>
-        <source>Нет коммитов</source>
-        <translation type="vanished">Нет коммитов</translation>
-    </message>
-    <message>
-        <source>Закрыть</source>
-        <translation type="vanished">Закрыть</translation>
-    </message>
-    <message>
-        <source>Введите хеш коммита:</source>
-        <translation type="vanished">Введите хеш коммита:</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="333"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="350"/>
         <source>Переключились на коммит: </source>
         <translation>Переключились на коммит: </translation>
     </message>
     <message>
-        <source>Сброс (hard)</source>
-        <translation type="vanished">Сброс (hard)</translation>
-    </message>
-    <message>
-        <source>Это удалит все незакоммиченные изменения. Продолжить?</source>
-        <translation type="vanished">Это удалит все незакоммиченные изменения. Продолжить?</translation>
-    </message>
-    <message>
-        <source>Введите хеш коммита для сброса:</source>
-        <translation type="vanished">Введите хеш коммита для сброса:</translation>
-    </message>
-    <message>
-        <source>Сброс выполнен</source>
-        <translation type="vanished">Сброс выполнен</translation>
-    </message>
-    <message>
-        <source>Введите хеш коммита для отмены:</source>
-        <translation type="vanished">Введите хеш коммита для отмены:</translation>
-    </message>
-    <message>
-        <source>Коммит отменён</source>
-        <translation type="vanished">Коммит отменён</translation>
-    </message>
-    <message>
-        <source>Новое сообщение:</source>
-        <translation type="vanished">Новое сообщение:</translation>
-    </message>
-    <message>
-        <source>Последний коммит изменён</source>
-        <translation type="vanished">Последний коммит изменён</translation>
-    </message>
-    <message>
-        <source>Изменения отправлены</source>
-        <translation type="vanished">Изменения отправлены</translation>
-    </message>
-    <message>
-        <source>Изменения получены</source>
-        <translation type="vanished">Изменения получены</translation>
-    </message>
-    <message>
-        <source>Изменения получены без слияния</source>
-        <translation type="vanished">Изменения получены без слияния</translation>
-    </message>
-    <message>
-        <source>Введите имя ветки для слияния:</source>
-        <translation type="vanished">Введите имя ветки для слияния:</translation>
-    </message>
-    <message>
-        <source>Обнаружены конфликты. Разрешите их и сделайте коммит.</source>
-        <translation type="vanished">Обнаружены конфликты. Разрешите их и сделайте коммит.</translation>
-    </message>
-    <message>
-        <source>Слияние выполнено</source>
-        <translation type="vanished">Слияние выполнено</translation>
-    </message>
-    <message>
-        <source>Конфликтов нет</source>
-        <translation type="vanished">Конфликтов нет</translation>
-    </message>
-    <message>
-        <source>Конфликтные файлы</source>
-        <translation type="vanished">Конфликтные файлы</translation>
-    </message>
-    <message>
-        <source>Введите путь к файлу (относительно корня репозитория):</source>
-        <translation type="vanished">Введите путь к файлу (относительно корня репозитория):</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="525"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="542"/>
         <source>Файл добавлен в индекс: </source>
         <translation>Файл добавлен в индекс: </translation>
     </message>
     <message>
-        <source>Введите путь к файлу:</source>
-        <translation type="vanished">Введите путь к файлу:</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="542"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="559"/>
         <source>Файл убран из индекса: </source>
         <translation>Файл убран из индекса: </translation>
     </message>
     <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="560"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="577"/>
         <source>Diff</source>
         <translation>Изменения</translation>
     </message>
     <message>
-        <source>Нет изменений</source>
-        <translation type="vanished">Нет изменений</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="565"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="582"/>
         <source>Diff: </source>
         <translation>Изменения: </translation>
     </message>
     <message>
-        <source>Staged diff</source>
-        <translation type="vanished">Staged изменения</translation>
-    </message>
-    <message>
-        <source>Нет staged изменений</source>
-        <translation type="vanished">Нет staged изменений</translation>
-    </message>
-    <message>
-        <source>URL репозитория:</source>
-        <translation type="vanished">URL репозитория:</translation>
-    </message>
-    <message>
-        <source>Выберите папку для клонирования</source>
-        <translation type="vanished">Выберите папку для клонирования</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="622"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="639"/>
         <source>Репозиторий клонирован в: </source>
         <translation>Репозиторий клонирован в: </translation>
     </message>
     <message>
-        <source>Выберите папку для инициализации</source>
-        <translation type="vanished">Выберите папку для инициализации</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="634"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="651"/>
         <source>Репозиторий инициализирован в: </source>
         <translation>Репозиторий инициализирован в: </translation>
     </message>
     <message>
-        <source>Выберите папку с репозиторием</source>
-        <translation type="vanished">Выберите папку с репозиторием</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="647"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="664"/>
         <source>Репозиторий открыт: </source>
         <translation>Репозиторий открыт: </translation>
     </message>
     <message>
-        <source>Статус репозитория</source>
-        <translation type="vanished">Статус репозитория</translation>
-    </message>
-    <message>
-        <source>Сообщение (необязательно):</source>
-        <translation type="vanished">Сообщение (необязательно):</translation>
-    </message>
-    <message>
-        <source>Изменения сохранены в stash</source>
-        <translation type="vanished">Изменения сохранены в stash</translation>
-    </message>
-    <message>
-        <source>Индекс stash (0 - последний):</source>
-        <translation type="vanished">Индекс stash (0 - последний):</translation>
-    </message>
-    <message>
-        <source>Stash применён</source>
-        <translation type="vanished">Stash применён</translation>
-    </message>
-    <message>
-        <source>Stash удалён</source>
-        <translation type="vanished">Stash удалён</translation>
-    </message>
-    <message>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="744"/>
-        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="753"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="761"/>
+        <location filename="../../../ui/MenuBar/Menus/Git/gitmenu.cpp" line="770"/>
         <source>Stash list</source>
         <translation>Список stash</translation>
-    </message>
-    <message>
-        <source>Нет сохранённых stash</source>
-        <translation type="vanished">Нет сохранённых stash</translation>
-    </message>
-    <message>
-        <source>Лог</source>
-        <translation type="vanished">Лог</translation>
     </message>
 </context>
 <context>
@@ -2502,37 +2373,6 @@ Check the Log panel for details.</source>
     </message>
 </context>
 <context>
-    <name>IDEWindow</name>
-    <message>
-        <source>Open</source>
-        <translation type="vanished">Открыть</translation>
-    </message>
-    <message>
-        <source>Rename</source>
-        <translation type="vanished">Переименовать</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation type="vanished">Удалить</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the folder &quot;%1&quot;?</source>
-        <translation type="vanished">Вы действительно хотите удалить данную папку &quot;%1&quot;?</translation>
-    </message>
-    <message>
-        <source>Create File</source>
-        <translation type="vanished">Создать файл</translation>
-    </message>
-    <message>
-        <source>Create Folder</source>
-        <translation type="vanished">Создать папку</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the file &quot;%1&quot;?</source>
-        <translation type="vanished">вы действительно хотите удалить файл &quot;%1&quot;?</translation>
-    </message>
-</context>
-<context>
     <name>KeyboardScanCodesRef</name>
     <message>
         <location filename="../../../Modules/References/KeyboardScancodes/keyboardscancodesref.cpp" line="32"/>
@@ -2613,28 +2453,6 @@ Check the Log panel for details.</source>
         <translation>Скан-коды клавиатуры</translation>
     </message>
     <message>
-        <source>Справка</source>
-        <translation type="vanished">Справка</translation>
-    </message>
-    <message>
-        <source>Reference</source>
-        <translation type="vanished">Справка</translation>
-    </message>
-    <message>
-        <source>• The table shows the reference make codes for IBM PC/AT Scan Code Set 1 (hex).
-• The capture field displays the currently pressed key and native codes from Qt.
-• The corresponding key is highlighted on the visual keyboard.
-• The native scan code depends on the platform and may differ from Set 1.</source>
-        <translation type="vanished">• Таблица показывает эталонные make-коды IBM PC/AT Scan Code Set 1 (hex).
-• Поле захвата отображает текущую нажатую клавишу и native-коды из Qt.
-• На визуальной клавиатуре подсвечивается соответствующая клавиша
-• Native scan code зависит от платформы и может отличаться от Set 1.</translation>
-    </message>
-    <message>
-        <source>Focus: Click in the area below and press the button.</source>
-        <translation type="vanished">Фокус: Щелкните в области ниже и нажмите кнопку.</translation>
-    </message>
-    <message>
         <location filename="../../../Modules/References/KeyboardScancodes/keyboardscancodesref.cpp" line="164"/>
         <source>Last Key</source>
         <translation></translation>
@@ -2670,14 +2488,6 @@ Check the Log panel for details.</source>
         <translation>Модификаторы:</translation>
     </message>
     <message>
-        <source>Waiting for a key press</source>
-        <translation type="vanished">Ожидание нажатия на клавишу</translation>
-    </message>
-    <message>
-        <source>Last key: %1</source>
-        <translation type="vanished">Последняя клавиша: %1</translation>
-    </message>
-    <message>
         <location filename="../../../Modules/References/KeyboardScancodes/keyboardscancodesref.cpp" line="201"/>
         <source>Key</source>
         <translation>Клавиша</translation>
@@ -2691,6 +2501,19 @@ Check the Log panel for details.</source>
         <location filename="../../../Modules/References/KeyboardScancodes/keyboardscancodesref.cpp" line="201"/>
         <source>Notes</source>
         <translation>Заметки</translation>
+    </message>
+</context>
+<context>
+    <name>ProjectCard</name>
+    <message>
+        <location filename="../../../app/WelcomeWindow/ProjectCard/project_card.cpp" line="69"/>
+        <source>Open</source>
+        <translation type="unfinished">Открыть</translation>
+    </message>
+    <message>
+        <location filename="../../../app/WelcomeWindow/ProjectCard/project_card.cpp" line="74"/>
+        <source>Remove</source>
+        <translation>Удалить</translation>
     </message>
 </context>
 <context>
@@ -2718,17 +2541,17 @@ Check the Log panel for details.</source>
         <translation>Цель находится за пределами текущего документа.</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1905"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1939"/>
         <source>Select All</source>
         <translation>Выделить все</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1906"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1940"/>
         <source>Copy</source>
         <translation>Скопировать</translation>
     </message>
     <message>
-        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1907"/>
+        <location filename="../../../libs/HexEditor/src/qhexview.cpp" line="1941"/>
         <source>Paste</source>
         <translation>Вставить</translation>
     </message>
@@ -2762,27 +2585,27 @@ Check the Log panel for details.</source>
         <translation>Не удалось разобрать radare2 JSON (iSj): %1</translation>
     </message>
     <message>
-        <location filename="../../../core/settings/appsettings.cpp" line="161"/>
+        <location filename="../../../core/settings/appsettings.cpp" line="73"/>
         <source>Empty file path</source>
         <translation>Пустой путь файла</translation>
     </message>
     <message>
-        <location filename="../../../core/settings/appsettings.cpp" line="170"/>
+        <location filename="../../../core/settings/appsettings.cpp" line="93"/>
         <source>Failed to write INI file</source>
         <translation>Не удалось записать INI-файл.</translation>
     </message>
     <message>
-        <location filename="../../../core/settings/appsettings.cpp" line="180"/>
+        <location filename="../../../core/settings/appsettings.cpp" line="103"/>
         <source>File does not exist</source>
         <translation>Файл не существует</translation>
     </message>
     <message>
-        <location filename="../../../core/settings/appsettings.cpp" line="186"/>
+        <location filename="../../../core/settings/appsettings.cpp" line="109"/>
         <source>Failed to read INI file</source>
         <translation>Не удалось прочитать INI-файл.</translation>
     </message>
     <message>
-        <location filename="../../../core/settings/appsettings.cpp" line="208"/>
+        <location filename="../../../core/settings/appsettings.cpp" line="134"/>
         <source>Failed to apply settings</source>
         <translation>Не удалось применить настройки</translation>
     </message>
@@ -2790,15 +2613,6 @@ Check the Log panel for details.</source>
         <location filename="../../../Modules/Windows/ReverseCalculator/reversecalculatordialog.cpp" line="40"/>
         <source>Copy</source>
         <translation>Скопировать</translation>
-    </message>
-    <message>
-        <source>unnamed</source>
-        <translation type="vanished">Без названия</translation>
-    </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="73"/>
-        <source>Untitled</source>
-        <translation></translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodeengine.cpp" line="64"/>
@@ -2829,36 +2643,69 @@ Check the Log panel for details.</source>
         <translation type="unfinished">std::array&lt;std::uint8_t, %1&gt; shellcode = {  // %1 bytes
 </translation>
     </message>
+    <message>
+        <location filename="../../../main.cpp" line="118"/>
+        <source>Update available</source>
+        <translation>Доступно обновление</translation>
+    </message>
+    <message>
+        <location filename="../../../main.cpp" line="119"/>
+        <source>A new version of Cremniy is available: %1.</source>
+        <translation>Доступна новая версия Cremniy: %1.</translation>
+    </message>
+    <message>
+        <location filename="../../../main.cpp" line="125"/>
+        <source>Open release page</source>
+        <translation>Открыть страницу релиза</translation>
+    </message>
+    <message>
+        <location filename="../../../main.cpp" line="129"/>
+        <source>Later</source>
+        <translation>Позже</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/pages/filessettingspage.cpp" line="14"/>
+        <source>Workspace</source>
+        <translation>Рабочее пространство</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/pages/filessettingspage.cpp" line="19"/>
+        <source>Files</source>
+        <translation type="unfinished">Файлы</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/pages/generalsettingspage.cpp" line="16"/>
+        <source>Application</source>
+        <translation>Приложение</translation>
+    </message>
+    <message>
+        <location filename="../../../dialogs/pages/generalsettingspage.cpp" line="21"/>
+        <source>General</source>
+        <translation type="unfinished">Общие</translation>
+    </message>
+    <message>
+        <location filename="../../../Modules/Tabs/CodeEditor/codeeditorsettingspage.cpp" line="20"/>
+        <location filename="../../../Modules/Tabs/Disassembler/disassemblersettingspage.cpp" line="26"/>
+        <source>Modules</source>
+        <translation>Модули</translation>
+    </message>
 </context>
 <context>
-    <name>QWidgetTextControl</name>
+    <name>RecentProjectsPage</name>
     <message>
-        <source>&amp;Undo</source>
-        <translation type="vanished">&amp;Отменить</translation>
+        <location filename="../../../app/WelcomeWindow/RecentProjectsPage/recent_projects_page.cpp" line="53"/>
+        <source>Open...</source>
+        <translation type="unfinished">Обзор...</translation>
     </message>
     <message>
-        <source>&amp;Redo</source>
-        <translation type="vanished">&amp;Вернуть</translation>
+        <location filename="../../../app/WelcomeWindow/RecentProjectsPage/recent_projects_page.cpp" line="54"/>
+        <source>New Project</source>
+        <translation type="unfinished">Создать проект</translation>
     </message>
     <message>
-        <source>Cu&amp;t</source>
-        <translation type="vanished">Вы&amp;резать</translation>
-    </message>
-    <message>
-        <source>&amp;Copy</source>
-        <translation type="vanished">&amp;Копировать</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation type="vanished">&amp;Вставить</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation type="vanished">Удалить</translation>
-    </message>
-    <message>
-        <source>Select All</source>
-        <translation type="vanished">Выбрать всё</translation>
+        <location filename="../../../app/WelcomeWindow/RecentProjectsPage/recent_projects_page.cpp" line="61"/>
+        <source>Open Project</source>
+        <translation type="unfinished">Открыть проект</translation>
     </message>
 </context>
 <context>
@@ -2989,324 +2836,460 @@ Check the Log panel for details.</source>
     </message>
 </context>
 <context>
+    <name>FindEngine</name>
+    <message>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="95"/>
+        <source>Invalid regular expression: %1</source>
+        <translation>Некорректное регулярное выражение: %1</translation>
+    </message>
+    <message>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="190"/>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="334"/>
+        <source>The expression must not match empty text.</source>
+        <translation>Выражение не должно соответствовать пустому тексту.</translation>
+    </message>
+    <message>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="318"/>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="360"/>
+        <source>The file is not valid UTF-8 text.</source>
+        <translation>Файл не содержит корректный текст UTF-8.</translation>
+    </message>
+    <message>
+        <location filename="../../../core/FindEngine/findengine.cpp" line="373"/>
+        <source>The result changed. Search again before replacing it.</source>
+        <translation>Результат изменился. Повторите поиск перед заменой.</translation>
+    </message>
+</context>
+<context>
+    <name>FindPanel</name>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="38"/>
+        <source>Current file</source>
+        <translation>Текущий файл</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="40"/>
+        <source>Open files</source>
+        <translation>Открытые файлы</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="42"/>
+        <source>Entire project</source>
+        <translation>Весь проект</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="106"/>
+        <source>Search this project</source>
+        <translation>Поиск по проекту</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="106"/>
+        <source>Enter text above to find matches.</source>
+        <translation>Введите текст выше, чтобы найти совпадения.</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="121"/>
+        <source>Show replace controls (Ctrl+H)</source>
+        <translation>Показать элементы замены (Ctrl+H)</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="122"/>
+        <source>Show replace controls</source>
+        <translation>Показать элементы замены</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="125"/>
+        <source>&amp;Search</source>
+        <translation>&amp;Поиск</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="130"/>
+        <source>Text or regular expression</source>
+        <translation>Текст или регулярное выражение</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="131"/>
+        <source>Search text</source>
+        <translation>Текст для поиска</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="139"/>
+        <source>Search scope</source>
+        <translation>Область поиска</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="151"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="151"/>
+        <source>Match case</source>
+        <translation>Учитывать регистр</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="152"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="152"/>
+        <source>Match whole word</source>
+        <translation>Слово целиком</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="153"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="153"/>
+        <source>Use regular expression</source>
+        <translation>Использовать регулярное выражение</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="155"/>
+        <source>Previous</source>
+        <translation>Предыдущий</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="156"/>
+        <source>Previous result (Shift+F3)</source>
+        <translation>Предыдущий результат (Shift+F3)</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="157"/>
+        <source>Next</source>
+        <translation>Следующий</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="158"/>
+        <source>Next result (F3)</source>
+        <translation>Следующий результат (F3)</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="162"/>
+        <source>Close search (Esc)</source>
+        <translation>Закрыть поиск (Esc)</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="163"/>
+        <source>Close search</source>
+        <translation>Закрыть поиск</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="196"/>
+        <source>&amp;Replace</source>
+        <translation>&amp;Заменить</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="200"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="201"/>
+        <source>Replacement text</source>
+        <translation>Текст замены</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="203"/>
+        <source>Replace result</source>
+        <translation>Заменить результат</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="204"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="610"/>
+        <source>Replace all</source>
+        <translation>Заменить все</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="221"/>
+        <source>&amp;Include</source>
+        <translation>&amp;Включить</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="224"/>
+        <source>For example: *.cpp, src/*</source>
+        <translation>Например: *.cpp, src/*</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="225"/>
+        <source>Files to include</source>
+        <translation>Включаемые файлы</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="227"/>
+        <source>E&amp;xclude</source>
+        <translation>И&amp;сключить</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="230"/>
+        <source>For example: build, *.min.js</source>
+        <translation>Например: build, *.min.js</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="231"/>
+        <source>Files to exclude</source>
+        <translation>Исключаемые файлы</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="241"/>
+        <source>Result</source>
+        <translation>Результат</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="241"/>
+        <source>Location</source>
+        <translation>Расположение</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="246"/>
+        <source>Search results</source>
+        <translation>Результаты поиска</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="270"/>
+        <source>Search status</source>
+        <translation>Состояние поиска</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="345"/>
+        <source>Enter text to search</source>
+        <translation>Введите текст для поиска</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="345"/>
+        <source>Results appear as you type.</source>
+        <translation>Результаты появятся по мере ввода.</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="392"/>
+        <source>Searching…</source>
+        <translation>Поиск…</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="408"/>
+        <source>Unable to search</source>
+        <translation>Не удалось выполнить поиск</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="420"/>
+        <source>Open a text file or choose another scope.</source>
+        <translation>Откройте текстовый файл или выберите другую область поиска.</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="421"/>
+        <source>Try another query or adjust the file filters.</source>
+        <translation>Измените запрос или фильтры файлов.</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="422"/>
+        <source>No matches found</source>
+        <translation>Совпадений не найдено</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="441"/>
+        <source>Empty line</source>
+        <translation>Пустая строка</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="442"/>
+        <source>Line %1, column %2</source>
+        <translation>Строка %1, столбец %2</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="447"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="458"/>
+        <source>%n match(es)</source>
+        <translation>
+            <numerusform>%n совпадение</numerusform>
+            <numerusform>%n совпадения</numerusform>
+            <numerusform>%n совпадений</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="459"/>
+        <source> in %n file(s)</source>
+        <translation>
+            <numerusform> в %n файле</numerusform>
+            <numerusform> в %n файлах</numerusform>
+            <numerusform> в %n файлах</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="461"/>
+        <source> · %n binary, unreadable, or large file(s) skipped</source>
+        <translation>
+            <numerusform> · пропущен %n бинарный, нечитаемый или большой файл</numerusform>
+            <numerusform> · пропущено %n бинарных, нечитаемых или больших файла</numerusform>
+            <numerusform> · пропущено %n бинарных, нечитаемых или больших файлов</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="463"/>
+        <source> · Result limit reached</source>
+        <translation> · Достигнут лимит результатов</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="575"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="581"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="588"/>
+        <source>Unable to replace</source>
+        <translation>Не удалось заменить</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="575"/>
+        <source>Unable to read %1.</source>
+        <translation>Не удалось прочитать %1.</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="588"/>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="637"/>
+        <source>Unable to write %1: %2</source>
+        <translation>Не удалось записать %1: %2</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="591"/>
+        <source>Replaced one match in %1.</source>
+        <translation>Одно совпадение заменено в %1.</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="605"/>
+        <source>Replace all matches</source>
+        <translation>Заменить все совпадения</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="606"/>
+        <source>Replace %n match(es)</source>
+        <translation>
+            <numerusform>Заменить %n совпадение</numerusform>
+            <numerusform>Заменить %n совпадения</numerusform>
+            <numerusform>Заменить %n совпадений</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="607"/>
+        <source> in %n file(s)?</source>
+        <translation>
+            <numerusform> в %n файле?</numerusform>
+            <numerusform> в %n файлах?</numerusform>
+            <numerusform> в %n файлах?</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="611"/>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="623"/>
+        <source>Unable to read %1</source>
+        <translation>Не удалось прочитать %1</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="629"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="645"/>
+        <source>Some files were not changed</source>
+        <translation>Некоторые файлы не изменены</translation>
+    </message>
+    <message>
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="473"/>
+        <source>Refine the search before replacing all matches.</source>
+        <translation>Уточните поиск перед заменой всех совпадений.</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="646"/>
+        <source>Replaced %n match(es).
+
+%1</source>
+        <translation>
+            <numerusform>Заменено %n совпадение.
+
+%1</numerusform>
+            <numerusform>Заменено %n совпадения.
+
+%1</numerusform>
+            <numerusform>Заменено %n совпадений.
+
+%1</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../../../ui/FindPanel/findpanel.cpp" line="648"/>
+        <source>Replaced %n match(es).</source>
+        <translation>
+            <numerusform>Заменено %n совпадение.</numerusform>
+            <numerusform>Заменено %n совпадения.</numerusform>
+            <numerusform>Заменено %n совпадений.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="52"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="59"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="72"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="63"/>
-        <source>objdump</source>
-        <translation>objdump</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="64"/>
-        <source>radare2</source>
-        <translation>radare2</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="65"/>
-        <source>Disassembler backend</source>
-        <translation>Модуль дизассеблера</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="72"/>
-        <source>Maximum number of instructions per section (keeps UI responsive)</source>
-        <translation>Максимальное количество инструкций на секцию (для поддержания отзывчивости интерфейса)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="73"/>
-        <source>Instruction limit/section</source>
-        <translation>Лимит инструкций на секцию</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="76"/>
-        <source>Intel</source>
-        <translation>Intel</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="77"/>
-        <source>AT&amp;T</source>
-        <translation>AT&amp;T</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="78"/>
-        <source>Assembly syntax</source>
-        <translation>Синтаксис ассемблера</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="87"/>
-        <source>Leave empty to use PATH lookup</source>
-        <translation>Оставьте поле пустым, чтобы использовать поиск по пути PATH.</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="92"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="113"/>
-        <source>Browse…</source>
-        <translation>Обзор…</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="97"/>
-        <source>objdump path</source>
-        <translation>objdump путь</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="108"/>
-        <source>Path to r2 (radare2) executable</source>
-        <translation>Путь к исполняемому файлу r2 (radare2).</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="118"/>
-        <source>radare2 path</source>
-        <translation>radare2 путь</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="132"/>
-        <source>Dependency: file(1)</source>
-        <translation>Зависимость: файл(1)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="138"/>
-        <source>None (fast)</source>
-        <translation>Без (быстро)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="139"/>
-        <source>aa (basic)</source>
-        <translation>aa (основная)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="140"/>
-        <source>aaa (full)</source>
-        <translation>aaa (полная)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="141"/>
-        <source>radare2 analysis</source>
-        <translation>radare2 анализ</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="144"/>
-        <source>Optional r2 commands before JSON queries (one per line). Example:
-e asm.syntax=intel
-e asm.bits=64</source>
-        <translation>Дополнительные команды r2, выполняемые перед JSON-запросами (по одной на строку). Пример:
-e asm.syntax=intel
-e asm.bits=64</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="155"/>
-        <source>Choose:</source>
-        <translation>Выберите</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="160"/>
-        <source>Language</source>
-        <translation>Язык</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="171"/>
-        <source>Excluded Files / Folders</source>
-        <translation>Исключить файлы / директории</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="175"/>
-        <source>One pattern per line. Examples: node_modules, .git, *.log, dist/</source>
-        <translation>Один шаблон на строку. Примеры: node_modules, .git, *.log, dist/</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="181"/>
-        <source>node_modules
-.git
-*.log</source>
-        <translation>node_modules
-.git
-*.log</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="437"/>
-        <source>Information</source>
-        <translation>Информация</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="437"/>
-        <source>Please restart IDE to apply the settings.</source>
-        <translation>Для применения настроек перезапустите IDE.</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="236"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="208"/>
         <source>Settings exported to:
 %1</source>
         <translation>Настройки экспортированы в:
 %1</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="258"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="224"/>
         <source>Settings imported from:
 %1</source>
         <translation>Настройки импортированы из
 %1</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="148"/>
-        <source>radare2 pre-commands</source>
-        <translation>radare2 предварительные команды</translation>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="87"/>
+        <source>Categories</source>
+        <translation>КАТЕГОРИИ</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="188"/>
-        <source>Test</source>
-        <translation>Тест</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="190"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="126"/>
         <source>Import…</source>
         <translation>Импорт…</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="191"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="127"/>
         <source>Export…</source>
         <translation>Экспорт…</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="195"/>
-        <source>OK</source>
-        <translation>Ок</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="196"/>
-        <source>Cancel</source>
-        <translation>Отмена</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="226"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="199"/>
         <source>Export settings</source>
         <translation>Экспорт настроек</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="228"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="245"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="199"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="213"/>
         <source>INI files (*.ini)</source>
         <translation>INI файлы (*.ini)</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="233"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="205"/>
         <source>Export failed</source>
         <translation>Экспорт не удался</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="233"/>
-        <source>Failed to export settings</source>
-        <translation>Не удалось экспортировать настройки.</translation>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="232"/>
+        <source>Invalid settings</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="236"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="208"/>
         <source>Export</source>
         <translation>Экспорт</translation>
     </message>
     <message>
-        <source>Settings exported to:
-    %1</source>
-        <translation type="vanished">Settings exported to:
-    %1</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="243"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="213"/>
         <source>Import settings</source>
         <translation>Импортировать настройки</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="250"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="219"/>
         <source>Import failed</source>
         <translation>Импорт не удался</translation>
     </message>
     <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="250"/>
-        <source>Failed to import settings</source>
-        <translation>Не удалось импортировать настройки.</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="258"/>
+        <location filename="../../../dialogs/settingsdialog.cpp" line="224"/>
         <source>Import</source>
         <translation>Импорт</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="300"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="301"/>
-        <source>Active backend</source>
-        <translation>Активный бэкенд</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="300"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="301"/>
-        <source>Inactive backend (still configurable)</source>
-        <translation>Неактивный бэкенд (можно настроить)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="311"/>
-        <source>Select objdump executable</source>
-        <translation>Выберите исполняемый файл objdump</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="319"/>
-        <source>Select radare2 (r2) executable</source>
-        <translation>Укажите путь к исполняемому файлу radare2 (r2)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="348"/>
-        <source>objdump: OK (%1)</source>
-        <translation>objdump: Ок (%1)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="349"/>
-        <source>objdump: FAIL (%1)</source>
-        <translation>objdump: Ошибка (%1)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="349"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="359"/>
-        <source>not found</source>
-        <translation>Не найден</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="358"/>
-        <source>radare2: OK (%1)</source>
-        <translation>radare2: Ок (%1)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="359"/>
-        <source>radare2: FAIL (%1)</source>
-        <translation>radare2: Ошибка (%1)</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="366"/>
-        <source>Tool check</source>
-        <translation>Проверка инструмента</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="413"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="421"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="429"/>
-        <source>found</source>
-        <translation>Найден</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="413"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="421"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="429"/>
-        <source>missing</source>
-        <translation>Отсутсвует</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="414"/>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="422"/>
-        <source>Not found in PATH and no valid path set</source>
-        <translation>Не найдено в PATH, и не указан действительный путь.</translation>
-    </message>
-    <message>
-        <location filename="../../../dialogs/settingsdialog.cpp" line="430"/>
-        <source>The objdump backend uses &apos;file -b &lt;path&gt;&apos; for arch detection</source>
-        <translation>В бэкенде objdump для определения архитектуры используется команда `&apos;file -b &lt;path&gt;`.</translation>
     </message>
 </context>
 <context>
@@ -3360,10 +3343,6 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
         <translation></translation>
     </message>
     <message>
-        <source>Output style:</source>
-        <translation type="vanished">Стиль вывода:</translation>
-    </message>
-    <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="133"/>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="186"/>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="198"/>
@@ -3383,34 +3362,10 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
         <translation>Очистить</translation>
     </message>
     <message>
-        <source>; Enter x86/x64 assembly here...</source>
-        <translation type="vanished">; Введите код на языке ассемблера x86/x64...</translation>
-    </message>
-    <message>
-        <source>// Shellcode output will appear here...</source>
-        <translation type="vanished">// Вывод машинного кода появится здесь...</translation>
-    </message>
-    <message>
-        <source>Ready. Make sure nasm and ndisasm are in PATH.</source>
-        <translation type="vanished">Готово. Убедитесь, что nasm и ndisasm добавлены в PATH.</translation>
-    </message>
-    <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="187"/>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="252"/>
         <source>Ready.</source>
         <translation>Готово.</translation>
-    </message>
-    <message>
-        <source>Failed to create temp file.</source>
-        <translation type="vanished">Не удалось создать временный файл</translation>
-    </message>
-    <message>
-        <source>nasm not found. Ensure it is installed and in PATH.</source>
-        <translation type="vanished">nasm не найден. Убедитесь, что он установлен и добавлен в переменную PATH.</translation>
-    </message>
-    <message>
-        <source>Failed to read nasm output.</source>
-        <translation type="vanished">Не удалось прочитать вывод nasm.</translation>
     </message>
     <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="207"/>
@@ -3433,37 +3388,9 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
         <translation>Скопировать в буфер обмена</translation>
     </message>
     <message>
-        <source>unsigned char shellcode[] = {  // %1 bytes
-</source>
-        <translation type="vanished">unsigned char shellcode[] = {  // %1 bytes
-    </translation>
-    </message>
-    <message>
-        <source>std::array&lt;std::uint8_t, %1&gt; shellcode = {  // %1 bytes
-</source>
-        <translation type="vanished">std::array&lt;std::uint8_t, %1&gt; shellcode = {  // %1 bytes
-</translation>
-    </message>
-    <message>
         <location filename="../../../Modules/Windows/ShellCodeGenerator/shellcodegeneratordialog.cpp" line="86"/>
         <source>Missing dependencies</source>
         <translation>Отсутствующие зависимости</translation>
-    </message>
-    <message>
-        <source>The following tools were not found on your system:
-
- - %1
-
-Please install them or add their location to PATH.
-
-Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
-        <translation type="vanished">Следующие инструменты не найдены в вашей системе:
-
-    - %1
-
-Пожалуйста, установите их или добавьте их местоположение в PATH.
-
-    Скачать: https://www.nasm.us/pub/nasm/releasebuilds/</translation>
     </message>
 </context>
 <context>
@@ -3518,227 +3445,58 @@ Download: https://www.nasm.us/pub/nasm/releasebuilds/</source>
     </message>
 </context>
 <context>
-    <name>WelcomeForm</name>
+    <name>IDEWindow</name>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="199"/>
-        <source>Open</source>
-        <translation>Открыть</translation>
-    </message>
-    <message>
-        <source>Open...</source>
-        <translation type="vanished">Обзор...</translation>
+        <source>Unable to replace</source>
+        <translation>Не удалось заменить</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="314"/>
-        <source>Create</source>
-        <translation>Создать</translation>
+        <source>Unable to read %1.</source>
+        <translation>Не удалось прочитать %1.</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="257"/>
-        <source>Project Name:</source>
-        <translation>Имя проекта:</translation>
+        <source>Unable to write %1: %2</source>
+        <translation>Не удалось записать %1: %2</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="172"/>
-        <source>Projects</source>
-        <translation></translation>
+        <source>Replaced one match in %1.</source>
+        <translation>Одно совпадение заменено в %1.</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="173"/>
-        <source>Settings</source>
-        <translation>Настройки</translation>
+        <source>Unable to read %1</source>
+        <translation>Не удалось прочитать %1</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="174"/>
-        <source>Docs</source>
-        <translation></translation>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
     </message>
     <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="198"/>
-        <source>New Project</source>
-        <translation>Создать проект</translation>
+        <source>Some files were not changed</source>
+        <translation>Некоторые файлы не изменены</translation>
     </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="269"/>
-        <source>Language:</source>
-        <translation>Язык:</translation>
-    </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="279"/>
-        <source>Location:</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Path:</source>
-        <translation type="vanished">Путь:</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation type="vanished">Назад</translation>
-    </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="288"/>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="542"/>
-        <source>Choose Directory</source>
-        <translation>Выбрать директорию</translation>
-    </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="315"/>
-        <source>Cancel</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="597"/>
-        <source>Please enter project name</source>
-        <translation>Пожалуйста введите имя проекта</translation>
-    </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="606"/>
-        <source>Directory is invalid</source>
-        <translation>Каталог недействителен</translation>
-    </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="617"/>
-        <source>Directory is exists!</source>
-        <translation>Каталог существует.!</translation>
-    </message>
-    <message>
-        <location filename="../../../app/WelcomeWindow/welcomeform.cpp" line="623"/>
-        <source>Failed to create project directory!</source>
-        <translation>Не удалось создать каталог проекта!</translation>
-    </message>
-</context>
-<context>
-    <name>binary</name>
-    <message>
-        <source>Binary</source>
-        <translation type="vanished">Машинный код</translation>
-    </message>
-</context>
-<context>
-    <name>code</name>
-    <message>
-        <source>Code</source>
-        <translation type="vanished">Редактор кода</translation>
-    </message>
-</context>
-<context>
-    <name>disassembler</name>
-    <message>
-        <source>Disassembler</source>
-        <translation type="vanished">Дизассемблер</translation>
-    </message>
-</context>
-<context>
-    <name>SearchEngine</name>
-    <message>
-        <source>Invalid regular expression: %1</source>
-        <translation>Некорректное регулярное выражение: %1</translation>
-    </message>
-    <message>
-        <source>The expression must not match empty text.</source>
-        <translation>Выражение не должно совпадать с пустым текстом.</translation>
-    </message>
-    <message>
-        <source>The file is not valid UTF-8 text.</source>
-        <translation>Файл не является корректным текстом UTF-8.</translation>
-    </message>
-    <message>
-        <source>The result changed. Search again before replacing it.</source>
-        <translation>Результат изменился. Повторите поиск перед заменой.</translation>
-    </message>
-</context>
-<context>
-    <name>SearchPanel</name>
-    <message><source>Current file</source><translation>Текущий файл</translation></message>
-    <message><source>Open files</source><translation>Открытые файлы</translation></message>
-    <message><source>Entire project</source><translation>Весь проект</translation></message>
-    <message><source>Search this project</source><translation>Поиск по проекту</translation></message>
-    <message><source>Enter text above to find matches.</source><translation>Введите текст выше, чтобы найти совпадения.</translation></message>
-    <message><source>Show replace controls (Ctrl+H)</source><translation>Показать элементы замены (Ctrl+H)</translation></message>
-    <message><source>Show replace controls</source><translation>Показать элементы замены</translation></message>
-    <message><source>&amp;Search</source><translation>&amp;Поиск</translation></message>
-    <message><source>Text or regular expression</source><translation>Текст или регулярное выражение</translation></message>
-    <message><source>Search text</source><translation>Текст для поиска</translation></message>
-    <message><source>Search scope</source><translation>Область поиска</translation></message>
-    <message><source>Match case</source><translation>Учитывать регистр</translation></message>
-    <message><source>Match whole word</source><translation>Слово целиком</translation></message>
-    <message><source>Use regular expression</source><translation>Использовать регулярное выражение</translation></message>
-    <message><source>Previous</source><translation>Предыдущий</translation></message>
-    <message><source>Previous result (Shift+F3)</source><translation>Предыдущий результат (Shift+F3)</translation></message>
-    <message><source>Next</source><translation>Следующий</translation></message>
-    <message><source>Next result (F3)</source><translation>Следующий результат (F3)</translation></message>
-    <message><source>Close search (Esc)</source><translation>Закрыть поиск (Esc)</translation></message>
-    <message><source>Close search</source><translation>Закрыть поиск</translation></message>
-    <message><source>&amp;Replace</source><translation>&amp;Заменить</translation></message>
-    <message><source>Replacement text</source><translation>Текст замены</translation></message>
-    <message><source>Replace result</source><translation>Заменить результат</translation></message>
-    <message><source>Replace all</source><translation>Заменить все</translation></message>
-    <message><source>&amp;Include</source><translation>&amp;Включить</translation></message>
-    <message><source>For example: *.cpp, src/*</source><translation>Например: *.cpp, src/*</translation></message>
-    <message><source>Files to include</source><translation>Включаемые файлы</translation></message>
-    <message><source>E&amp;xclude</source><translation>И&amp;сключить</translation></message>
-    <message><source>For example: build, *.min.js</source><translation>Например: build, *.min.js</translation></message>
-    <message><source>Files to exclude</source><translation>Исключаемые файлы</translation></message>
-    <message><source>Result</source><translation>Результат</translation></message>
-    <message><source>Location</source><translation>Расположение</translation></message>
-    <message><source>Search results</source><translation>Результаты поиска</translation></message>
-    <message><source>Search status</source><translation>Состояние поиска</translation></message>
-    <message><source>Enter text to search</source><translation>Введите текст для поиска</translation></message>
-    <message><source>Results appear as you type.</source><translation>Результаты появятся по мере ввода.</translation></message>
-    <message><source>Searching…</source><translation>Поиск…</translation></message>
-    <message><source>Unable to search</source><translation>Не удалось выполнить поиск</translation></message>
-    <message><source>Open a text file or choose another scope.</source><translation>Откройте текстовый файл или выберите другую область поиска.</translation></message>
-    <message><source>Try another query or adjust the file filters.</source><translation>Измените запрос или фильтры файлов.</translation></message>
-    <message><source>No matches found</source><translation>Совпадений не найдено</translation></message>
-    <message><source>Empty line</source><translation>Пустая строка</translation></message>
-    <message><source>Line %1, column %2</source><translation>Строка %1, столбец %2</translation></message>
-    <message numerus="yes">
-        <source>%n match(es)</source>
-        <translation><numerusform>%n совпадение</numerusform><numerusform>%n совпадения</numerusform><numerusform>%n совпадений</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source xml:space="preserve"> in %n file(s)</source>
-        <translation><numerusform xml:space="preserve"> в %n файле</numerusform><numerusform xml:space="preserve"> в %n файлах</numerusform><numerusform xml:space="preserve"> в %n файлах</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source xml:space="preserve"> · %n binary, unreadable, or large file(s) skipped</source>
-        <translation><numerusform xml:space="preserve"> · пропущен %n бинарный, нечитаемый или большой файл</numerusform><numerusform xml:space="preserve"> · пропущено %n бинарных, нечитаемых или больших файла</numerusform><numerusform xml:space="preserve"> · пропущено %n бинарных, нечитаемых или больших файлов</numerusform></translation>
-    </message>
-    <message><source xml:space="preserve"> · Result limit reached</source><translation xml:space="preserve"> · Достигнут лимит результатов</translation></message>
-    <message><source>Unable to replace</source><translation>Не удалось заменить</translation></message>
-    <message><source>Unable to read %1.</source><translation>Не удалось прочитать %1.</translation></message>
-    <message><source>Unable to write %1: %2</source><translation>Не удалось записать %1: %2</translation></message>
-    <message><source>Replaced one match in %1.</source><translation>Одно совпадение заменено в %1.</translation></message>
-    <message><source>Replace all matches</source><translation>Заменить все совпадения</translation></message>
-    <message numerus="yes">
-        <source>Replace %n match(es)</source>
-        <translation><numerusform>Заменить %n совпадение</numerusform><numerusform>Заменить %n совпадения</numerusform><numerusform>Заменить %n совпадений</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source xml:space="preserve"> in %n file(s)?</source>
-        <translation><numerusform xml:space="preserve"> в %n файле?</numerusform><numerusform xml:space="preserve"> в %n файлах?</numerusform><numerusform xml:space="preserve"> в %n файлах?</numerusform></translation>
-    </message>
-    <message><source>Cancel</source><translation>Отмена</translation></message>
-    <message><source>Unable to read %1</source><translation>Не удалось прочитать %1</translation></message>
-    <message><source>%1: %2</source><translation>%1: %2</translation></message>
-    <message><source>Some files were not changed</source><translation>Некоторые файлы не изменены</translation></message>
-    <message><source>Refine the search before replacing all matches.</source><translation>Уточните поиск перед заменой всех совпадений.</translation></message>
     <message numerus="yes">
         <source>Replaced %n match(es).
 
 %1</source>
-        <translation><numerusform>Заменено %n совпадение.
+        <translation>
+            <numerusform>Заменено %n совпадение.
 
-%1</numerusform><numerusform>Заменено %n совпадения.
+%1</numerusform>
+            <numerusform>Заменено %n совпадения.
 
-%1</numerusform><numerusform>Заменено %n совпадений.
+%1</numerusform>
+            <numerusform>Заменено %n совпадений.
 
-%1</numerusform></translation>
+%1</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>Replaced %n match(es).</source>
-        <translation><numerusform>Заменено %n совпадение.</numerusform><numerusform>Заменено %n совпадения.</numerusform><numerusform>Заменено %n совпадений.</numerusform></translation>
+        <translation>
+            <numerusform>Заменено %n совпадение.</numerusform>
+            <numerusform>Заменено %n совпадения.</numerusform>
+            <numerusform>Заменено %n совпадений.</numerusform>
+        </translation>
     </message>
 </context>
 </TS>

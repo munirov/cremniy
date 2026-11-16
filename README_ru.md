@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
+<img src="docs/assets/cremniy_icon_stroke.svg" width="250" alt="Cremniy logo">
 
 <br>
 <h3>Cremniy</h3>
@@ -41,7 +41,7 @@
 - 🔗 Всё связано между собой
 - 💻 Единый workflow
 
-<img src="docs/features.gif" alt="Features" width="1280">
+<img src="docs/assets/features.gif" alt="Features" width="1280">
 
 ## Возможности ✨
 

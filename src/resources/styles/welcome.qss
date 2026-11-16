@@ -58,6 +58,10 @@ QScrollBar::sub-line:vertical {
     background: #6a0dad;
 }
 
+#ProjectCardBadge[language="Rust"] {
+    background: #ce422b;
+}
+
 #ProjectCardBadge[language="Custom"] {
     background: #2e7d32;
 }

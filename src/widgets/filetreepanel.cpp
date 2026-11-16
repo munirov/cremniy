@@ -8,6 +8,8 @@
 
 #include <QItemSelectionModel>
 #include <QMenu>
+#include <QShortcut>
+#include <QKeySequence>
 
 #include "exclusionfilterproxymodel.h"
 #include "core/icons/iconprovider.h"
@@ -103,6 +105,11 @@ void FileTreePanel::setupConnections() {
         m_treeView->edit(m_treeView->currentIndex());
     });
     connect(m_delete, &QAction::triggered, this, &FileTreePanel::remove);
+
+    /* - - Delete shortcut - - */
+    auto* deleteShortcut = new QShortcut(QKeySequence(Qt::Key_Delete), m_treeView);
+    deleteShortcut->setContext(Qt::WidgetShortcut);
+    connect(deleteShortcut, &QShortcut::activated, this, &FileTreePanel::remove);
 }
 
 QString FileTreePanel::currentPath() const {

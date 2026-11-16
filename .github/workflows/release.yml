@@ -1,24 +1,46 @@
 name: Build and Release
 
 on:
+
   push:
     tags:
       - 'v*.*.*'
+      
   workflow_dispatch:
+
+env:
+  RELEASE_VERSION: ${{ github.ref_name || 'manual' }}
 
 permissions:
   contents: read
 
 jobs:
+
+
+
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-22.04, windows-latest, macos-latest]
 
     steps:
+
+      - name: configure Pagefile
+        if: runner.os == 'Windows'
+        uses: al-cheb/configure-pagefile-action@v1.5
+        with:
+          minimum-size: 8GB
+          disk-root: "D:"
+
+      - name: Set up Swap Space
+        if: runner.os == 'Linux'
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 8
+    
       - name: Checkout code
         uses: actions/checkout@v6
 
@@ -151,7 +173,7 @@ jobs:
             --icon-file cremniy.png \
             --plugin qt \
             --output appimage
-          mv Cremniy-*.AppImage cremniy-linux-${{ github.ref_name }}.AppImage || mv cremniy-*.AppImage cremniy-linux-${{ github.ref_name }}.AppImage
+          mv Cremniy-*.AppImage cremniy-linux-${{ env.RELEASE_VERSION }}.AppImage || mv cremniy-*.AppImage cremniy-linux-${{ env.RELEASE_VERSION }}.AppImage
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
@@ -186,7 +208,7 @@ jobs:
       
           Compress-Archive `
             -Path package/* `
-            -DestinationPath cremniy-windows-${{ github.ref_name }}.zip
+            -DestinationPath cremniy-windows-${{ env.RELEASE_VERSION }}.zip
 
       - name: Install create-dmg
         if: runner.os == 'macOS'
@@ -236,18 +258,20 @@ jobs:
             --icon "Cremniy.app" 175 190 \
             --hide-extension "Cremniy.app" \
             --app-drop-link 425 190 \
-            "cremniy-macos-${{ github.ref_name }}.dmg" \
+            "cremniy-macos-${{ env.RELEASE_VERSION }}.dmg" \
             "package/"
           
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: cremniy-${{ runner.os }}-${{ github.ref_name }}
+          name: cremniy-${{ runner.os }}-${{ env.RELEASE_VERSION }}
           path: |
-            cremniy-linux-${{ github.ref_name }}.AppImage
-            cremniy-windows-${{ github.ref_name }}.zip
-            cremniy-macos-${{ github.ref_name }}.dmg
+            cremniy-linux-${{ env.RELEASE_VERSION }}.AppImage
+            cremniy-windows-${{ env.RELEASE_VERSION }}.zip
+            cremniy-macos-${{ env.RELEASE_VERSION }}.dmg
           if-no-files-found: error
+
+
 
   build-rpm:
     name: Build RPM (Fedora)
@@ -309,9 +333,11 @@ jobs:
       - name: Upload RPM artifact
         uses: actions/upload-artifact@v7
         with:
-          name: cremniy-rpm-${{ github.ref_name }}
+          name: cremniy-rpm-${{ env.RELEASE_VERSION }}
           path: dist/*.rpm
           if-no-files-found: error
+
+
 
   release:
     name: Create Release
@@ -319,7 +345,7 @@ jobs:
       - build
       - build-rpm
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && github.event_name != 'workflow_dispatch'
     permissions:
       contents: write
 

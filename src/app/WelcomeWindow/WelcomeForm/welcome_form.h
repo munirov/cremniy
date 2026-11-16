@@ -25,7 +25,6 @@ class WelcomeForm : public QWidget {
 public:
     explicit WelcomeForm(QWidget* parent = nullptr);
     ~WelcomeForm() override = default;
-
     void openProject(const QString& path, const QString& language = {});
 
 private:

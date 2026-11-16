@@ -1,6 +1,30 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(cremniy VERSION 0.3.1 LANGUAGES CXX)
+find_package(Git QUIET)
+
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_TAG
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+
+    if(GIT_TAG MATCHES "^v([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
+        set(PROJECT_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
+    endif()
+endif()
+
+if(NOT PROJECT_VERSION)
+    set(PROJECT_VERSION "0.0.0")
+endif()
+
+project(cremniy VERSION ${PROJECT_VERSION} LANGUAGES C CXX)
+
+message(STATUS "Cremniy version: ${PROJECT_VERSION}")
+
+include(CTest)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -9,7 +33,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.8.2 REQUIRED COMPONENTS Core Widgets Gui Concurrent LinguistTools Test Svg)
+find_package(Qt6 6.8.2 REQUIRED COMPONENTS Core Widgets Gui Concurrent LinguistTools Test Svg Network)
 
 # libgit2 ships a CMake package on some platforms and only a pkg-config file or
 # plain headers/libraries on others. Support all three layouts so developers do
@@ -99,6 +123,10 @@ qt_add_executable(${PROJECT_NAME}
     dialogs/filecreatedialog.h
     dialogs/settingsdialog.cpp
     dialogs/settingsdialog.h
+    dialogs/pages/generalsettingspage.cpp
+    dialogs/pages/generalsettingspage.h
+    dialogs/pages/filessettingspage.cpp
+    dialogs/pages/filessettingspage.h
 
     # Widgets
     widgets/clickablelineedit.h
@@ -108,8 +136,10 @@ qt_add_executable(${PROJECT_NAME}
     widgets/filetreepanel.h
     widgets/terminal/terminalwidget.cpp
     widgets/terminal/terminalwidget.h
-    widgets/search/searchpanel.cpp
-    widgets/search/searchpanel.h
+    widgets/terminal/terminalpanel.cpp
+    widgets/terminal/terminalpanel.h
+    ui/FindPanel/findpanel.cpp
+    ui/FindPanel/findpanel.h
 
     # Resources
     resources/cremniy_res.qrc
@@ -130,11 +160,14 @@ qt_add_executable(${PROJECT_NAME}
     core/project/projects_history_manager.cpp
     core/project/projects_history_manager.h
 
-    core/search/searchengine.cpp
-    core/search/searchengine.h
+    core/FindEngine/findengine.cpp
+    core/FindEngine/findengine.h
+    core/FindEngine/findtypes.h
 
-    core/settings/appsettings.cpp
-    core/settings/appsettings.h
+    core/settings/settingspage.h
+
+    core/update/updatechecker.cpp
+    core/update/updatechecker.h
 
     core/icons/iconprovider.cpp
     core/icons/iconprovider.h
@@ -148,10 +181,6 @@ qt_add_executable(${PROJECT_NAME}
     core/modules/WindowBase.h
     core/modules/ReferenceBase.h
 
-    # Git
-    core/git/gitmanager.cpp
-    core/git/gitmanager.h
-
     # UI
     ui/FilesTabWidget/filestabwidget.cpp
     ui/FilesTabWidget/filestabwidget.h
@@ -162,6 +191,16 @@ qt_add_executable(${PROJECT_NAME}
     ui/MenuBar/menubarbuilder.h ui/MenuBar/menubarbuilder.cpp
     ui/MenuBar/menufactory.h ui/MenuBar/menufactory.cpp
     ui/MenuBar/basemenu.h
+    dialogs/configurebuild.h dialogs/configurebuild.cpp
+    core/project/project_info_manager.h core/project/project_info_manager.cpp
+
+    core/buildman/buildmanager.cpp
+    core/buildman/buildmanager.cpp
+    widgets/logView/logview.h widgets/logView/logview.cpp
+
+
+    widgets/buildTab/buildtab.cpp widgets/buildTab/buildtab.h
+
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -192,11 +231,20 @@ qt_add_resources(${PROJECT_NAME} "phoicons"
 )
 
 # - - Libs - -
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core/settings/ ${CMAKE_BINARY_DIR}/core/settings/)
+target_link_libraries(${PROJECT_NAME} PRIVATE cremniy_settings_core)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core/git/ ${CMAKE_BINARY_DIR}/core/git/)
+target_link_libraries(${PROJECT_NAME} PRIVATE cremniy_git_core)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/CodeEditor/ ${CMAKE_BINARY_DIR}/libs/CodeEditor/)
 target_link_libraries(${PROJECT_NAME} PRIVATE CodeEditor)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/HexEditor/ ${CMAKE_BINARY_DIR}/libs/HexEditor/)
 target_link_libraries(${PROJECT_NAME} PRIVATE HexEditor)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/Terminal/ ${CMAKE_BINARY_DIR}/libs/Terminal/)
+target_link_libraries(${PROJECT_NAME} PRIVATE cremniy_terminal_core)
 
 # - - Modules - -
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Modules/References/)
@@ -206,17 +254,13 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Modules/Windows/)
 # - - Menus - -
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ui/MenuBar/Menus/)
 
-if(CREMNIY_LIBGIT2_INCLUDE_DIRS)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CREMNIY_LIBGIT2_INCLUDE_DIRS})
-endif()
-
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Gui
     Qt6::Concurrent
     Qt6::Svg
-    ${CREMNIY_LIBGIT2_TARGET}
+    Qt6::Network
 )
 
 if(NOT WIN32)

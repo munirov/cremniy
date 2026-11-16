@@ -55,7 +55,7 @@ rm -rf build
 %cmake_install
 
 install -Dm644 \
-    docs/cremniy_icon_stroke.svg \
+    docs/assets/cremniy_icon_stroke.svg \
     %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/cremniy.svg
 
 desktop-file-install \

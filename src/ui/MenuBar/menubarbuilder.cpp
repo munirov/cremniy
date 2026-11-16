@@ -8,6 +8,7 @@ MenuBarBuilder::MenuBarBuilder(QMenuBar* mBar, IDEWindow *ideWind) :
     qDebug() << menuFactory.availableMenus();
     for (const QString& menuID : menuFactory.availableMenus()){
         BaseMenu* menu = menuFactory.create(menuID);
+
         menu->setupConnections(ideWind);
         m_menuBar->addMenu(menu);
     }

@@ -1,237 +1,208 @@
 #include "settingsdialog.h"
 
-#include "core/settings/appsettings.h"
-
-#include <QComboBox>
+#include <QBoxLayout>
+#include <QColor>
+#include <QDialogButtonBox>
 #include <QFileDialog>
-#include <QFileInfo>
-#include <QFormLayout>
 #include <QFrame>
-#include <QHBoxLayout>
+#include <QHash>
+#include <QFont>
 #include <QLabel>
-#include <QLineEdit>
 #include <QMessageBox>
-#include <QPlainTextEdit>
-#include <QProcess>
+#include <QMouseEvent>
 #include <QPushButton>
-#include <QSignalBlocker>
-#include <QSpinBox>
-#include <QStandardPaths>
+#include <QScrollArea>
+#include <QStackedWidget>
+#include <QTreeWidget>
 
-#include "core/locale/LanguageManager.h"
+#include "core/settings/appsettings.h"
+#include "core/settings/settingspage.h"
+#include "core/settings/settingsregistry.h"
 
-static QString resolvedExecutable(const QString &userPath, const QString &exeName)
+namespace {
+class SettingsCategoriesTree : public QTreeWidget
 {
-    if (!userPath.trimmed().isEmpty())
-        return userPath.trimmed();
-    return QStandardPaths::findExecutable(exeName);
+public:
+    explicit SettingsCategoriesTree(QWidget* parent = nullptr)
+        : QTreeWidget(parent)
+    {
+    }
+
+protected:
+    void mousePressEvent(QMouseEvent* event) override
+    {
+        auto* item = itemAt(event->position().toPoint());
+        if (item && !item->parent() && item->childCount() > 0) {
+            item->setExpanded(!item->isExpanded());
+            event->accept();
+            return;
+        }
+        QTreeWidget::mousePressEvent(event);
+    }
+
+    void mouseDoubleClickEvent(QMouseEvent* event) override
+    {
+        auto* item = itemAt(event->position().toPoint());
+        if (item && !item->parent() && item->childCount() > 0) {
+            event->accept();
+            return;
+        }
+        QTreeWidget::mouseDoubleClickEvent(event);
+    }
+};
 }
 
-static bool isRunnableExecutable(const QString &path)
-{
-    if (path.trimmed().isEmpty())
-        return false;
-    const QFileInfo fi(path.trimmed());
-    return fi.exists() && fi.isFile() && fi.isExecutable();
-}
-
-static void setStatusLabel(QLabel *lbl, bool ok, const QString &text)
-{
-    // Text-only status to avoid adding icon resources.
-    // Use a monospace-friendly glyph; the color comes from QSS.
-    lbl->setText(ok ? QStringLiteral("✓ ") + text : QStringLiteral("✗ ") + text);
-    lbl->setProperty("statusState", ok ? "ok" : "missing");
-    lbl->style()->unpolish(lbl);
-    lbl->style()->polish(lbl);
-    lbl->update();
-}
-
-SettingsDialog::SettingsDialog(QWidget *parent)
+SettingsDialog::SettingsDialog(QWidget* parent)
     : QDialog(parent)
 {
     setObjectName("settingsDialog");
     setWindowTitle(tr("Settings"));
     setModal(true);
-    setMinimumSize(760, 520);
+    setMinimumSize(780, 560);
     setSizeGripEnabled(true);
 
-    auto *root = new QVBoxLayout(this);
+    auto* root = new QVBoxLayout(this);
+    root->setContentsMargins(0, 0, 0, 0);
+    root->setSpacing(0);
 
-    auto *form = new QFormLayout();
-    form->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    auto* header = new QWidget(this);
+    header->setObjectName("settingsHeader");
+    auto* headerLayout = new QVBoxLayout(header);
+    headerLayout->setContentsMargins(20, 18, 20, 14);
+    auto* title = new QLabel(tr("Settings"), header);
+    title->setObjectName("settingsDialogTitle");
+    headerLayout->addWidget(title);
+    root->addWidget(header);
 
-    m_backendCombo = new QComboBox(this);
-    m_backendCombo->addItem(tr("objdump"),  static_cast<int>(AppSettings::DisasmBackend::Objdump));
-    m_backendCombo->addItem(tr("radare2"),  static_cast<int>(AppSettings::DisasmBackend::Radare2));
-    form->addRow(tr("Disassembler backend"), m_backendCombo);
+    auto* contentWidget = new QWidget(this);
+    auto* content = new QHBoxLayout(contentWidget);
+    content->setContentsMargins(20, 0, 20, 0);
+    content->setSpacing(16);
+    auto* navigation = new QFrame(contentWidget);
+    navigation->setObjectName("settingsNavigation");
+    navigation->setFixedWidth(205);
+    auto* navigationLayout = new QVBoxLayout(navigation);
+    navigationLayout->setContentsMargins(0, 12, 12, 12);
+    navigationLayout->setSpacing(8);
+    auto* navigationTitle = new QLabel(tr("Categories"), navigation);
+    navigationTitle->setObjectName("settingsNavigationTitle");
+    m_categories = new SettingsCategoriesTree(navigation);
+    m_categories->setObjectName("settingsCategories");
+    m_categories->setHeaderHidden(true);
+    m_categories->setIndentation(12);
+    m_categories->setRootIsDecorated(true);
+    m_categories->setExpandsOnDoubleClick(false);
+    m_categories->setItemsExpandable(true);
+    navigationLayout->addWidget(navigationTitle);
+    navigationLayout->addWidget(m_categories, 1);
 
-    // Common disassembler options
-    {
-        m_insnLimit = new QSpinBox(this);
-        m_insnLimit->setRange(50, 200000);
-        m_insnLimit->setSingleStep(250);
-        m_insnLimit->setToolTip(tr("Maximum number of instructions per section (keeps UI responsive)"));
-        form->addRow(tr("Instruction limit/section"), m_insnLimit);
+    auto* pageArea = new QFrame(contentWidget);
+    pageArea->setObjectName("settingsPageArea");
+    auto* pageLayout = new QVBoxLayout(pageArea);
+    pageLayout->setContentsMargins(4, 14, 0, 12);
+    pageLayout->setSpacing(12);
+    m_pageTitle = new QLabel(pageArea);
+    m_pageTitle->setObjectName("settingsPageTitle");
+    m_pagesWidget = new QStackedWidget(pageArea);
+    pageLayout->addWidget(m_pageTitle);
+    auto* pageSeparator = new QFrame(pageArea);
+    pageSeparator->setObjectName("settingsPageSeparator");
+    pageSeparator->setFrameShape(QFrame::HLine);
+    pageLayout->addWidget(pageSeparator);
+    pageLayout->addWidget(m_pagesWidget, 1);
+    content->addWidget(navigation, 0);
+    content->addWidget(pageArea, 1);
+    root->addWidget(contentWidget, 1);
 
-        m_syntaxCombo = new QComboBox(this);
-        m_syntaxCombo->addItem(tr("Intel"), static_cast<int>(AppSettings::AsmSyntax::Intel));
-        m_syntaxCombo->addItem(tr("AT&T"),  static_cast<int>(AppSettings::AsmSyntax::Att));
-        form->addRow(tr("Assembly syntax"), m_syntaxCombo);
+    auto* footer = new QFrame(this);
+    footer->setObjectName("settingsFooter");
+    auto* footerLayout = new QHBoxLayout(footer);
+    footerLayout->setContentsMargins(20, 12, 20, 14);
+    auto* buttons = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+        footer
+    );
+    buttons->setObjectName("settingsButtonBox");
+    auto* importButton = new QPushButton(tr("Import…"), footer);
+    auto* exportButton = new QPushButton(tr("Export…"), footer);
+    auto* okButton = buttons->button(QDialogButtonBox::Ok);
+    importButton->setObjectName("settingsSecondaryButton");
+    exportButton->setObjectName("settingsSecondaryButton");
+    okButton->setObjectName("settingsAcceptButton");
+    okButton->setDefault(true);
+    footerLayout->addWidget(importButton);
+    footerLayout->addWidget(exportButton);
+    footerLayout->addStretch(1);
+    footerLayout->addWidget(buttons);
+    root->addWidget(footer);
+
+    connect(m_categories, &QTreeWidget::currentItemChanged, this, [this]() { showSelectedPage(); });
+    connect(importButton, &QPushButton::clicked, this, &SettingsDialog::onImportIni);
+    connect(exportButton, &QPushButton::clicked, this, &SettingsDialog::onExportIni);
+    connect(buttons, &QDialogButtonBox::accepted, this, &SettingsDialog::onAccept);
+    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+    loadPages();
+}
+
+void SettingsDialog::loadPages()
+{
+    QHash<QString, QTreeWidgetItem*> categories;
+    for (const auto& descriptor : SettingsRegistry::instance().pages()) {
+        auto* category = categories.value(descriptor.categoryId);
+        if (!category) {
+            category = new QTreeWidgetItem(m_categories, {descriptor.categoryTitle()});
+            category->setFlags(category->flags() & ~Qt::ItemIsSelectable);
+            QFont categoryFont = category->font(0);
+            categoryFont.setBold(true);
+            if (categoryFont.pointSizeF() > 1.0)
+                categoryFont.setPointSizeF(categoryFont.pointSizeF() - 1.0);
+            category->setFont(0, categoryFont);
+            category->setForeground(0, QColor(QStringLiteral("#9D9D9D")));
+            category->setExpanded(true);
+            categories.insert(descriptor.categoryId, category);
+        }
+
+        auto* page = descriptor.createPage(m_pagesWidget);
+        page->load();
+        m_pages.append(page);
+
+        auto* scroll = new QScrollArea(m_pagesWidget);
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+        scroll->setWidget(page);
+        const int pageIndex = m_pagesWidget->addWidget(scroll);
+
+        auto* item = new QTreeWidgetItem(category, {descriptor.pageTitle()});
+        item->setData(0, Qt::UserRole, pageIndex);
     }
 
-    // objdump path row
-    {
-        auto *row = new QWidget(this);
-        auto *rowLayout = new QHBoxLayout(row);
-        rowLayout->setContentsMargins(0, 0, 0, 0);
-        m_objdumpPath = new QLineEdit(row);
-        m_objdumpPath->setPlaceholderText(tr("Leave empty to use PATH lookup"));
-        m_objdumpStatus = new QLabel(row);
-        m_objdumpStatus->setObjectName("settingsStatusLabel");
-        m_objdumpStatus->setMinimumWidth(150);
-        m_objdumpStatus->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        auto *browse = new QPushButton(tr("Browse…"), row);
-        browse->setFixedWidth(90);
-        rowLayout->addWidget(m_objdumpPath, 1);
-        rowLayout->addWidget(m_objdumpStatus);
-        rowLayout->addWidget(browse);
-        form->addRow(tr("objdump path"), row);
-        connect(browse, &QPushButton::clicked, this, &SettingsDialog::onBrowseObjdump);
-        connect(m_objdumpPath, &QLineEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
+    m_categories->expandAll();
+    if (m_categories->topLevelItemCount() > 0) {
+        auto* firstCategory = m_categories->topLevelItem(0);
+        if (firstCategory->childCount() > 0)
+            m_categories->setCurrentItem(firstCategory->child(0));
     }
+}
 
-    // radare2 path row
-    {
-        auto *row = new QWidget(this);
-        auto *rowLayout = new QHBoxLayout(row);
-        rowLayout->setContentsMargins(0, 0, 0, 0);
-        m_radare2Path = new QLineEdit(row);
-        m_radare2Path->setPlaceholderText(tr("Path to r2 (radare2) executable"));
-        m_radare2Status = new QLabel(row);
-        m_radare2Status->setObjectName("settingsStatusLabel");
-        m_radare2Status->setMinimumWidth(150);
-        m_radare2Status->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        auto *browse = new QPushButton(tr("Browse…"), row);
-        browse->setFixedWidth(90);
-        rowLayout->addWidget(m_radare2Path, 1);
-        rowLayout->addWidget(m_radare2Status);
-        rowLayout->addWidget(browse);
-        form->addRow(tr("radare2 path"), row);
-        connect(browse, &QPushButton::clicked, this, &SettingsDialog::onBrowseRadare2);
-        connect(m_radare2Path, &QLineEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
-    }
-
-    // 'file' tool is used by objdump backend for arch detection.
-    {
-        auto *row = new QWidget(this);
-        auto *rowLayout = new QHBoxLayout(row);
-        rowLayout->setContentsMargins(0, 0, 0, 0);
-        m_fileStatus = new QLabel(row);
-        m_fileStatus->setObjectName("settingsStatusLabel");
-        m_fileStatus->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        rowLayout->addWidget(m_fileStatus, 1);
-        form->addRow(tr("Dependency: file(1)"), row);
-    }
-
-    // radare2 options
-    {
-        m_r2AnalysisCombo = new QComboBox(this);
-        m_r2AnalysisCombo->addItem(tr("None (fast)"), static_cast<int>(AppSettings::Radare2AnalysisLevel::None));
-        m_r2AnalysisCombo->addItem(tr("aa (basic)"),  static_cast<int>(AppSettings::Radare2AnalysisLevel::Aa));
-        m_r2AnalysisCombo->addItem(tr("aaa (full)"),  static_cast<int>(AppSettings::Radare2AnalysisLevel::Aaa));
-        form->addRow(tr("radare2 analysis"), m_r2AnalysisCombo);
-
-        m_r2PreCommands = new QPlainTextEdit(this);
-        m_r2PreCommands->setPlaceholderText(tr("Optional r2 commands before JSON queries (one per line). Example:\n"
-                                               "e asm.syntax=intel\n"
-                                               "e asm.bits=64"));
-        m_r2PreCommands->setFixedHeight(90);
-        form->addRow(tr("radare2 pre-commands"), m_r2PreCommands);
-    }
-
-
-    // LANGUAGE
-    m_languageCombo = new QComboBox(this);
-
-    m_languageCombo->setPlaceholderText(tr("Choose:"));
-    for (auto const & locale : LanguageManager::supportedLanguages())
-        m_languageCombo->addItem(QLocale(locale).nativeLanguageName(), QVariant::fromValue(locale));
-
-    m_languageCombo->setMinimumWidth(250);
-    form->addRow(tr("Language"), m_languageCombo);
-
-    root->addLayout(form);
-
-    // ── Excluded Files section ──
-    {
-        auto *separator = new QFrame(this);
-        separator->setFrameShape(QFrame::HLine);
-        separator->setFrameShadow(QFrame::Sunken);
-        root->addWidget(separator);
-
-        auto *lbl = new QLabel(tr("Excluded Files / Folders"), this);
-        lbl->setObjectName("settingsSectionTitle");
-        root->addWidget(lbl);
-
-        auto *hint = new QLabel(tr("One pattern per line. Examples: node_modules, .git, *.log, dist/"), this);
-        hint->setObjectName("settingsHintLabel");
-        hint->setWordWrap(true);
-        root->addWidget(hint);
-
-        m_excludedPatterns = new QPlainTextEdit(this);
-        m_excludedPatterns->setPlaceholderText(tr("node_modules\n.git\n*.log"));
-        m_excludedPatterns->setFixedHeight(90);
-        root->addWidget(m_excludedPatterns);
-    }
-
-    // buttons
-    auto *btnRow = new QHBoxLayout();
-    m_testBtn = new QPushButton(tr("Test"), this);
-    btnRow->addWidget(m_testBtn);
-    m_importBtn = new QPushButton(tr("Import…"), this);
-    m_exportBtn = new QPushButton(tr("Export…"), this);
-    btnRow->addWidget(m_importBtn);
-    btnRow->addWidget(m_exportBtn);
-    btnRow->addStretch(1);
-    m_okBtn = new QPushButton(tr("OK"), this);
-    m_cancelBtn = new QPushButton(tr("Cancel"), this);
-    m_okBtn->setDefault(true);
-    btnRow->addWidget(m_okBtn);
-    btnRow->addWidget(m_cancelBtn);
-    root->addLayout(btnRow);
-
-    connect(m_testBtn,   &QPushButton::clicked, this, &SettingsDialog::onTestTools);
-    connect(m_exportBtn, &QPushButton::clicked, this, &SettingsDialog::onExportIni);
-    connect(m_importBtn, &QPushButton::clicked, this, &SettingsDialog::onImportIni);
-    connect(m_okBtn,     &QPushButton::clicked, this, &SettingsDialog::onAccept);
-    connect(m_cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
-    connect(m_backendCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &SettingsDialog::onBackendChanged);
-    connect(m_insnLimit, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::updateDependencyStatus);
-    connect(m_syntaxCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
-    connect(m_r2AnalysisCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::updateDependencyStatus);
-    connect(m_r2PreCommands, &QPlainTextEdit::textChanged, this, &SettingsDialog::updateDependencyStatus);
-    connect(m_languageCombo, &QComboBox::currentTextChanged, this, [this] {
-        onLanguageSwitched(m_languageCombo->currentData().toString());
-    });
-
-    loadFromSettings();
-    updateUiEnabledState();
-    updateDependencyStatus();
+void SettingsDialog::showSelectedPage()
+{
+    auto* item = m_categories->currentItem();
+    if (!item || !item->parent())
+        return;
+    m_pagesWidget->setCurrentIndex(item->data(0, Qt::UserRole).toInt());
+    m_pageTitle->setText(item->text(0));
 }
 
 void SettingsDialog::onExportIni()
 {
-    const QString file = QFileDialog::getSaveFileName(
-        this,
-        tr("Export settings"),
-        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/cremniy-settings.ini",
-        tr("INI files (*.ini)"));
-    if (file.isEmpty()) return;
+    const QString file = QFileDialog::getSaveFileName(this, tr("Export settings"), QString(), tr("INI files (*.ini)"));
+    if (file.isEmpty())
+        return;
 
-    QString err;
-    if (!AppSettings::exportToIni(file, &err)) {
-        QMessageBox::warning(this, tr("Export failed"), err.isEmpty() ? tr("Failed to export settings") : err);
+    QString error;
+    if (!AppSettings::exportToIni(file, &error)) {
+        QMessageBox::warning(this, tr("Export failed"), error);
         return;
     }
     QMessageBox::information(this, tr("Export"), tr("Settings exported to:\n%1").arg(file));
@@ -239,206 +210,30 @@ void SettingsDialog::onExportIni()
 
 void SettingsDialog::onImportIni()
 {
-    const QString file = QFileDialog::getOpenFileName(
-        this,
-        tr("Import settings"),
-        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-        tr("INI files (*.ini)"));
-    if (file.isEmpty()) return;
+    const QString file = QFileDialog::getOpenFileName(this, tr("Import settings"), QString(), tr("INI files (*.ini)"));
+    if (file.isEmpty())
+        return;
 
-    QString err;
-    if (!AppSettings::importFromIni(file, &err)) {
-        QMessageBox::warning(this, tr("Import failed"), err.isEmpty() ? tr("Failed to import settings") : err);
+    QString error;
+    if (!AppSettings::importFromIni(file, &error)) {
+        QMessageBox::warning(this, tr("Import failed"), error);
         return;
     }
-
-    loadFromSettings();
-    updateUiEnabledState();
-    updateDependencyStatus();
-    // emit GlobalWidgetsManager::instance().actionTriggered("settingsChanged");
+    for (auto* page : m_pages)
+        page->load();
     QMessageBox::information(this, tr("Import"), tr("Settings imported from:\n%1").arg(file));
-}
-
-void SettingsDialog::loadFromSettings()
-{
-    const auto backend = AppSettings::disasmBackend();
-    const int want = static_cast<int>(backend);
-    int idx = m_backendCombo->findData(want);
-    if (idx < 0) idx = 0;
-    m_backendCombo->setCurrentIndex(idx);
-
-    m_objdumpPath->setText(AppSettings::objdumpPath());
-    m_radare2Path->setText(AppSettings::radare2Path());
-
-    m_insnLimit->setValue(AppSettings::disasmInsnLimitPerSection());
-
-    {
-        const int want = static_cast<int>(AppSettings::asmSyntax());
-        const int idx = m_syntaxCombo->findData(want);
-        m_syntaxCombo->setCurrentIndex(idx < 0 ? 0 : idx);
-    }
-
-    {
-        const int want = static_cast<int>(AppSettings::radare2AnalysisLevel());
-        const int idx = m_r2AnalysisCombo->findData(want);
-        m_r2AnalysisCombo->setCurrentIndex(idx < 0 ? 0 : idx);
-    }
-
-    m_r2PreCommands->setPlainText(AppSettings::radare2PreCommands().replace(';', '\n'));
-
-    m_excludedPatterns->setPlainText(AppSettings::excludedPatterns().join('\n'));
-
-    const QString locale = AppSettings::getSettingsJson().value("language").toString();
-    const int languageIndex = m_languageCombo->findData(locale);
-    const QSignalBlocker blocker(m_languageCombo);
-    m_languageCombo->setCurrentIndex(languageIndex >= 0 ? languageIndex : 0);
-}
-
-void SettingsDialog::updateUiEnabledState()
-{
-    const bool useRadare2 =
-        (m_backendCombo->currentData().toInt() == static_cast<int>(AppSettings::DisasmBackend::Radare2));
-
-    // Keep both configurable, but emphasize the active one.
-    m_radare2Path->setEnabled(true);
-    m_objdumpPath->setEnabled(true);
-
-    m_radare2Path->setToolTip(useRadare2 ? tr("Active backend") : tr("Inactive backend (still configurable)"));
-    m_objdumpPath->setToolTip(useRadare2 ? tr("Inactive backend (still configurable)") : tr("Active backend"));
-
-    // r2-specific options enabled only when radare2 is selected
-    m_r2AnalysisCombo->setEnabled(useRadare2);
-    m_r2PreCommands->setEnabled(useRadare2);
-}
-
-void SettingsDialog::onBrowseObjdump()
-{
-    const QString cur = m_objdumpPath->text().trimmed();
-    const QString file = QFileDialog::getOpenFileName(this, tr("Select objdump executable"), cur);
-    if (!file.isEmpty())
-        m_objdumpPath->setText(file);
-}
-
-void SettingsDialog::onBrowseRadare2()
-{
-    const QString cur = m_radare2Path->text().trimmed();
-    const QString file = QFileDialog::getOpenFileName(this, tr("Select radare2 (r2) executable"), cur);
-    if (!file.isEmpty())
-        m_radare2Path->setText(file);
-}
-
-static bool runVersionCheck(const QString &exe, const QStringList &args, QString *out, QString *err)
-{
-    QProcess p;
-    p.start(exe, args);
-    if (!p.waitForStarted(2000))
-        return false;
-    if (!p.waitForFinished(4000))
-        return false;
-    if (out) *out = QString::fromUtf8(p.readAllStandardOutput()).trimmed();
-    if (err) *err = QString::fromUtf8(p.readAllStandardError()).trimmed();
-    return p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0;
-}
-
-void SettingsDialog::onTestTools()
-{
-    const QString objdumpExe = resolvedExecutable(m_objdumpPath->text(), "objdump");
-    const QString r2Exe      = resolvedExecutable(m_radare2Path->text(), "r2");
-
-    QStringList lines;
-
-    // objdump
-    {
-        QString out, err;
-        const bool ok = !objdumpExe.isEmpty() && runVersionCheck(objdumpExe, {"--version"}, &out, &err);
-        lines << (ok ? tr("objdump: OK (%1)").arg(objdumpExe)
-                     : tr("objdump: FAIL (%1)").arg(objdumpExe.isEmpty() ? tr("not found") : objdumpExe));
-        if (!ok && !err.isEmpty())
-            lines << "  " + err;
-    }
-
-    // r2
-    {
-        QString out, err;
-        const bool ok = !r2Exe.isEmpty() && runVersionCheck(r2Exe, {"-v"}, &out, &err);
-        lines << (ok ? tr("radare2: OK (%1)").arg(r2Exe)
-                     : tr("radare2: FAIL (%1)").arg(r2Exe.isEmpty() ? tr("not found") : r2Exe));
-        if (ok && !out.isEmpty())
-            lines << "  " + out.split('\n').value(0);
-        if (!ok && !err.isEmpty())
-            lines << "  " + err;
-    }
-
-    QMessageBox::information(this, tr("Tool check"), lines.join('\n'));
-    updateDependencyStatus();
 }
 
 void SettingsDialog::onAccept()
 {
-    const int backendInt = m_backendCombo->currentData().toInt();
-    const auto backend = (backendInt == static_cast<int>(AppSettings::DisasmBackend::Radare2))
-        ? AppSettings::DisasmBackend::Radare2
-        : AppSettings::DisasmBackend::Objdump;
-
-    AppSettings::setDisasmBackend(backend);
-    AppSettings::setObjdumpPath(m_objdumpPath->text());
-    AppSettings::setRadare2Path(m_radare2Path->text());
-
-    AppSettings::setDisasmInsnLimitPerSection(m_insnLimit->value());
-    AppSettings::setAsmSyntax(static_cast<AppSettings::AsmSyntax>(m_syntaxCombo->currentData().toInt()));
-    AppSettings::setRadare2AnalysisLevel(static_cast<AppSettings::Radare2AnalysisLevel>(m_r2AnalysisCombo->currentData().toInt()));
-
-    const QString pre = m_r2PreCommands->toPlainText()
-                            .split('\n', Qt::SkipEmptyParts)
-                            .join(';');
-    AppSettings::setRadare2PreCommands(pre);
-
-    // Excluded patterns
-    {
-        const QStringList patterns = m_excludedPatterns->toPlainText()
-                                         .split('\n', Qt::SkipEmptyParts);
-        AppSettings::setExcludedPatterns(patterns);
+    for (const auto* page : m_pages) {
+        QString error;
+        if (!page->validate(&error)) {
+            QMessageBox::warning(this, tr("Invalid settings"), error);
+            return;
+        }
     }
-
-    // emit GlobalWidgetsManager::instance().actionTriggered("settingsChanged");
+    for (auto* page : m_pages)
+        page->apply();
     accept();
-}
-
-void SettingsDialog::onBackendChanged(int)
-{
-    updateUiEnabledState();
-    updateDependencyStatus();
-}
-
-void SettingsDialog::updateDependencyStatus()
-{
-    // objdump
-    {
-        const QString resolved = resolvedExecutable(m_objdumpPath->text(), "objdump");
-        const bool ok = isRunnableExecutable(resolved);
-        setStatusLabel(m_objdumpStatus, ok, ok ? tr("found") : tr("missing"));
-        m_objdumpStatus->setToolTip(ok ? resolved : tr("Not found in PATH and no valid path set"));
-    }
-
-    // radare2
-    {
-        const QString resolved = resolvedExecutable(m_radare2Path->text(), "r2");
-        const bool ok = isRunnableExecutable(resolved);
-        setStatusLabel(m_radare2Status, ok, ok ? tr("found") : tr("missing"));
-        m_radare2Status->setToolTip(ok ? resolved : tr("Not found in PATH and no valid path set"));
-    }
-
-    // file(1) dependency
-    {
-        const QString fileExe = QStandardPaths::findExecutable("file");
-        const bool ok = isRunnableExecutable(fileExe);
-        setStatusLabel(m_fileStatus, ok, ok ? tr("found") : tr("missing"));
-        m_fileStatus->setToolTip(ok ? fileExe : tr("The objdump backend uses 'file -b <path>' for arch detection"));
-    }
-}
-
-void SettingsDialog::onLanguageSwitched(const QString &locale) {
-    qDebug() << locale;
-    LanguageManager::instance().setLocale(locale);
-    QMessageBox::information(this, tr("Information"), tr("Please restart IDE to apply the settings."), QMessageBox::Ok);
 }

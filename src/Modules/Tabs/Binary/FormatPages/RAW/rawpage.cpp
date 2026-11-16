@@ -47,8 +47,6 @@ RAWPage::RAWPage(QWidget *parent)
     connect(m_hexViewWidget->hexCursor(), &QHexCursor::positionChanged,
             this, [this](){
                 if (m_hexViewWidget->hexCursor()->getSelectFromFormatPage()) {
-                    m_hexViewWidget->hexCursor()->setSelectFromFormatPage(false);
-                    m_hexViewWidget->setSelectFromFormatPage(false);
                     return;
                 }
 

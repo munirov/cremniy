@@ -1,16 +1,25 @@
 #include "idewindow.h"
-#include "dialogs/filecreatedialog.h"
+#include "core/FindEngine/findengine.h"
+#include "core/settings/appsettings.h"
 #include "QFileSystemModel"
 #include "QMessageBox"
 #include <qheaderview.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
-#include "core/icons/iconprovider.h"
 #include <QApplication>
+#include "dialogs/configurebuild.h"
 #include "dialogs/settingsdialog.h"
 #include "ui/MenuBar/menubarbuilder.h"
-#include "widgets/search/searchpanel.h"
+#include "ui/FindPanel/findpanel.h"
+#include "widgets/terminal/terminalpanel.h"
+#include <QFile>
+#include <QFileInfo>
+#include <QFutureWatcher>
 #include <QShortcut>
+#include <QSaveFile>
+#include <QSet>
+#include <qtimer.h>
+#include <QtConcurrent/QtConcurrentRun>
 
 IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     : QMainWindow(parent), m_projectPath(ProjectPath) {
@@ -18,11 +27,20 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     // - - Window Settings - -
     this->setWindowState(Qt::WindowMaximized);
     this->setWindowTitle("Cremniy");
+    setMinimumSize(800, 600);
 
     // - - Menu Bar - -
     auto const menu = menuBar();
     MenuBarBuilder menuBarBuilder(menu, this);
     menu->setNativeMenuBar(false);
+
+    // - - Get Project Info - -
+    if (!ProjectInfoManager::loadProjectInfo(ProjectPath, m_projectInfo)){
+        QString dirName = QDir(ProjectPath).dirName();
+        m_projectInfo.name = dirName;
+        m_projectInfo.path = ProjectPath;
+        ProjectInfoManager::saveProjectInfo(m_projectInfo);
+    }
 
     // - - Widgets - -
     m_statusBar = statusBar();
@@ -37,10 +55,7 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
 
     m_verticalSplitter = new QSplitter(Qt::Vertical, m_mainWidget);
 
-    // Terminal is initialized lazily on demand (see on_Toggle_Terminal)
-    // m_terminal = new TerminalWidget(this, ProjectPath);
-    // m_terminal->setVisible(false);
-    m_terminal = nullptr;
+    m_terminalPanel = nullptr;
 
     m_leftSidebar = new QWidget(this);
     auto const leftLayout = new QVBoxLayout(m_leftSidebar);
@@ -58,7 +73,7 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
 
     m_mainSplitter->addWidget(m_leftSidebar);
     m_mainSplitter->addWidget(m_filesTabWidget);
-    m_searchPanel = new SearchPanel(ProjectPath, m_filesTabWidget, m_mainSplitter);
+    m_searchPanel = new FindPanel(ProjectPath, m_mainSplitter);
     m_mainSplitter->addWidget(m_searchPanel);
     m_searchPanel->hide();
     m_mainSplitter->setSizes({200, 1000, 0});
@@ -106,6 +121,9 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
     connect(this, &IDEWindow::setWordWrapSignal, m_filesTabWidget, &FilesTabWidget::setWordWrapSlot);
     connect(this, &IDEWindow::setTabReplaceSignal, m_filesTabWidget, &FilesTabWidget::setTabReplaceSlot);
     connect(this, &IDEWindow::setTabWidthSignal, m_filesTabWidget, &FilesTabWidget::setTabWidthSlot);
+    connect(this, &IDEWindow::setGitBlameSignal, m_filesTabWidget, &FilesTabWidget::setGitBlameSlot);
+    connect(m_filesTabWidget, &FilesTabWidget::gitBlameEnabledChanged,
+            this, &IDEWindow::gitBlameEnabledChanged);
     connect(this, &IDEWindow::openTabModule, m_filesTabWidget, &FilesTabWidget::openTabModule);
 
     connect(m_filesTreeView, &FileTreePanel::openFileRequested, this, [this](const QString& filePath, const QString& fileName) {
@@ -120,7 +138,7 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
         if (auto* tab = currentFileTab())
             tab->setFocus(Qt::ShortcutFocusReason);
     };
-    connect(m_searchPanel, &SearchPanel::closeRequested, this, closeSearch);
+    connect(m_searchPanel, &FindPanel::closeRequested, this, closeSearch);
     connect(m_closeSearchShortcut, &QShortcut::activated, this, closeSearch);
 
     auto* nextSearchResult = new QShortcut(QKeySequence(Qt::Key_F3), this);
@@ -139,29 +157,249 @@ IDEWindow::IDEWindow(const QString &ProjectPath, QWidget *parent)
         else
             on_Find();
     });
-    connect(m_searchPanel, &SearchPanel::statusMessage, this, [this](const QString& message) {
+    connect(m_searchPanel, &FindPanel::statusMessage, this, [this](const QString& message) {
         m_statusLabel->setText(message);
     });
+    connect(m_searchPanel, &FindPanel::searchRequested,
+            this, &IDEWindow::startFind);
+    connect(m_searchPanel, &FindPanel::searchInvalidated,
+            this, [this] { ++m_findGeneration; });
+    connect(m_searchPanel, &FindPanel::resultActivated,
+            this, &IDEWindow::activateFindResult);
+    connect(m_searchPanel, &FindPanel::replaceRequested,
+            this, &IDEWindow::replaceFindMatch);
+    connect(m_searchPanel, &FindPanel::replaceAllRequested,
+            this, &IDEWindow::replaceAllFindMatches);
+    connect(m_filesTabWidget, &FilesTabWidget::searchDocumentsChanged,
+            this, [this] {
+                if (m_searchPanel->isVisible())
+                    m_searchPanel->refresh();
+            });
+
+    // - - Configure Build - -
+    QTimer::singleShot(0, this, &IDEWindow::configurateBuild);
+
 }
 
 IDEWindow::~IDEWindow() = default;
 
-void IDEWindow::on_Toggle_Terminal(bool checked) {
-    if (checked && !m_terminal) {
-        m_terminal = new TerminalWidget(this, m_projectPath);
-        m_verticalSplitter->addWidget(m_terminal);
-        m_verticalSplitter->setCollapsible(1, true);
-        m_verticalSplitter->setSizes({800, 200});
-    }
+bool IDEWindow::gitBlameEnabled() const
+{
+    return m_filesTabWidget && m_filesTabWidget->gitBlameEnabled();
+}
 
-    if (!m_terminal) {
+void IDEWindow::startFind(const SearchOptions& options)
+{
+    const int generation = ++m_findGeneration;
+    if (options.query.isEmpty()) {
+        m_searchPanel->setReport({});
         return;
     }
 
-    m_terminal->setVisible(checked);
+    SearchOptions effectiveOptions = options;
+    effectiveOptions.excludedPatterns = AppSettings::excludedPatterns();
+    const SearchScope documentScope = options.scope == SearchScope::CurrentFile
+        ? SearchScope::CurrentFile
+        : SearchScope::OpenFiles;
+    const QVector<SearchDocument> documents = m_filesTabWidget->searchDocuments(documentScope);
+    m_searchPanel->setSearching(true);
+
+    auto* watcher = new QFutureWatcher<SearchReport>(this);
+    connect(watcher, &QFutureWatcher<SearchReport>::finished, this, [this, watcher, generation] {
+        const SearchReport report = watcher->result();
+        watcher->deleteLater();
+        if (generation != m_findGeneration)
+            return;
+        m_searchPanel->setReport(report);
+    });
+
+    if (options.scope == SearchScope::Project) {
+        const QString projectPath = m_projectPath;
+        watcher->setFuture(QtConcurrent::run([projectPath, documents, effectiveOptions] {
+            return FindEngine::searchProject(projectPath, documents, effectiveOptions);
+        }));
+    } else {
+        watcher->setFuture(QtConcurrent::run([documents, effectiveOptions] {
+            return FindEngine::searchDocuments(documents, effectiveOptions);
+        }));
+    }
+}
+
+void IDEWindow::activateFindResult(const SearchMatch& match)
+{
+    m_filesTabWidget->openSearchMatch(match);
+}
+
+QByteArray IDEWindow::readFindDocument(const QString& filePath, bool* found) const
+{
+    const QByteArray openContents = m_filesTabWidget->documentContents(filePath, found);
+    if (*found)
+        return openContents;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        *found = false;
+        return {};
+    }
+    *found = true;
+    return file.readAll();
+}
+
+bool IDEWindow::writeFindDocument(const QString& filePath, const QByteArray& contents, QString* error)
+{
+    if (m_filesTabWidget->replaceOpenDocument(filePath, contents))
+        return true;
+
+    QSaveFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        *error = file.errorString();
+        return false;
+    }
+    if (file.write(contents) != contents.size() || !file.commit()) {
+        *error = file.errorString();
+        return false;
+    }
+    return true;
+}
+
+QString IDEWindow::displayFindPath(const QString& filePath) const
+{
+    QString relativePath = QDir(m_projectPath).relativeFilePath(filePath);
+    return relativePath.startsWith(QStringLiteral(".."))
+        ? QFileInfo(filePath).fileName()
+        : relativePath.replace('\\', '/');
+}
+
+void IDEWindow::replaceFindMatch(const SearchMatch& match, const SearchOptions& options)
+{
+    bool found = false;
+    const QByteArray contents = readFindDocument(match.filePath, &found);
+    if (!found) {
+        QMessageBox::warning(this, tr("Unable to replace"),
+                             tr("Unable to read %1.").arg(displayFindPath(match.filePath)));
+        return;
+    }
+
+    const ReplacementResult replacement = FindEngine::replaceMatch(contents, match, options);
+    if (!replacement.error.isEmpty()) {
+        QMessageBox::warning(this, tr("Unable to replace"), replacement.error);
+        m_searchPanel->refresh();
+        return;
+    }
+
+    QString error;
+    if (!writeFindDocument(match.filePath, replacement.contents, &error)) {
+        QMessageBox::warning(this, tr("Unable to replace"),
+                             tr("Unable to write %1: %2").arg(displayFindPath(match.filePath), error));
+        return;
+    }
+    m_statusLabel->setText(tr("Replaced one match in %1.").arg(displayFindPath(match.filePath)));
+    m_searchPanel->refresh();
+}
+
+void IDEWindow::replaceAllFindMatches(const SearchReport& report, const SearchOptions& options)
+{
+    QSet<QString> filePaths;
+    for (const SearchMatch& match : report.matches)
+        filePaths.insert(match.filePath);
+
+    int replaced = 0;
+    QStringList errors;
+    for (const QString& filePath : std::as_const(filePaths)) {
+        bool found = false;
+        const QByteArray contents = readFindDocument(filePath, &found);
+        if (!found) {
+            errors.append(tr("Unable to read %1").arg(displayFindPath(filePath)));
+            continue;
+        }
+
+        const ReplacementResult replacement = FindEngine::replaceAll(contents, options);
+        if (!replacement.error.isEmpty()) {
+            errors.append(tr("%1: %2").arg(displayFindPath(filePath), replacement.error));
+            continue;
+        }
+        if (replacement.replacements == 0)
+            continue;
+
+        QString error;
+        if (!writeFindDocument(filePath, replacement.contents, &error)) {
+            errors.append(tr("Unable to write %1: %2").arg(displayFindPath(filePath), error));
+            continue;
+        }
+        replaced += replacement.replacements;
+    }
+
+    if (!errors.isEmpty()) {
+        QMessageBox::warning(this,
+                             tr("Some files were not changed"),
+                             tr("Replaced %n match(es).\n\n%1", nullptr, replaced).arg(errors.join(QLatin1Char('\n'))));
+    } else {
+        m_statusLabel->setText(tr("Replaced %n match(es).", nullptr, replaced));
+    }
+    m_searchPanel->refresh();
+}
+
+void IDEWindow::configurateBuild(){
+
+    if (m_projectInfo.buildCommand.trimmed().isEmpty()){
+        openBuildConfigurate();
+    }
+
+}
+
+
+void IDEWindow::openBuildConfigurate(){
+
+    ConfigureBuild confBuildDialog(m_projectInfo, this);
+    if (confBuildDialog.exec() == QDialog::Accepted) {
+        ProjectInfoManager::saveProjectInfo(m_projectInfo);
+    }
+
+}
+
+
+void IDEWindow::on_Build(){
+    m_filesTabWidget->createBuildTab(m_projectInfo);
+}
+
+
+void IDEWindow::on_openBuildConfigurate(){
+    openBuildConfigurate();
+}
+
+
+void IDEWindow::on_Toggle_Terminal(bool checked) {
+    if (checked && !m_terminalPanel) {
+        auto *panel = new TerminalPanel(m_projectPath, this);
+        m_terminalPanel = panel;
+        m_verticalSplitter->addWidget(panel);
+        m_verticalSplitter->setCollapsible(1, true);
+        m_verticalSplitter->setSizes({800, 200});
+
+        connect(panel, &TerminalPanel::closeRequested, this, [this, panel] {
+            if (m_terminalPanel != panel)
+                return;
+
+            m_terminalPanel = nullptr;
+            panel->hide();
+            panel->deleteLater();
+            emit terminalVisibilityChanged(false);
+
+            if (auto *tab = currentFileTab())
+                tab->setFocus(Qt::ShortcutFocusReason);
+        });
+    }
+
+    if (!m_terminalPanel) {
+        emit terminalVisibilityChanged(false);
+        return;
+    }
+
+    m_terminalPanel->setVisible(checked);
+    emit terminalVisibilityChanged(checked);
 
     if (checked) {
-        m_terminal->setFocus();
+        m_terminalPanel->focusActiveTerminal();
     }
 }
 
@@ -175,6 +413,11 @@ void IDEWindow::on_SetTabReplace(bool checked) {
 
 void IDEWindow::on_SetTabWidth(int width) {
     emit setTabWidthSignal(width);
+}
+
+void IDEWindow::on_SetGitBlame(bool enabled)
+{
+    emit setGitBlameSignal(enabled);
 }
 
 void IDEWindow::on_Toggle_FileTree(bool checked) const {

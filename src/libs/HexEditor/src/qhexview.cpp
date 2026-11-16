@@ -419,15 +419,27 @@ void QHexView::invertByteOrder() {
 }
 
 void QHexView::undo() {
+    if(this->hexCursor()) {
+        this->hexCursor()->setSelectFromFormatPage(false);
+        this->setSelectFromFormatPage(false);
+    }
     if(m_hexdocument)
         m_hexdocument->undo();
 }
 void QHexView::redo() {
+    if(this->hexCursor()) {
+        this->hexCursor()->setSelectFromFormatPage(false);
+        this->setSelectFromFormatPage(false);
+    }
     if(m_hexdocument)
         m_hexdocument->redo();
 }
 
 void QHexView::cut(bool hex) {
+    if(this->hexCursor()) {
+        this->hexCursor()->setSelectFromFormatPage(false);
+        this->setSelectFromFormatPage(false);
+    }
     this->copy(hex);
     if(m_readonly)
         return;
@@ -565,6 +577,11 @@ void QHexView::paste(bool hex) {
     if(m_readonly)
         return;
 
+    if(this->hexCursor()) {
+        this->hexCursor()->setSelectFromFormatPage(false);
+        this->setSelectFromFormatPage(false);
+    }
+
     QClipboard* c = qApp->clipboard();
     QByteArray pastedata = c->text().toUtf8();
     if(pastedata.isEmpty())
@@ -591,14 +608,22 @@ void QHexView::clearChanges() {
 }
 
 void QHexView::selectAll() {
-    m_hexcursor->move(0);
-    m_hexcursor->select(m_hexdocument->length());
+    if(this->hexCursor()) {
+        this->hexCursor()->setSelectFromFormatPage(false);
+        this->setSelectFromFormatPage(false);
+        m_hexcursor->move(0);
+        m_hexcursor->select(m_hexdocument->length());
+    }
 }
 
 void QHexView::removeSelection() {
     if(!m_hexcursor->hasSelection()) {
         return;
     }
+
+    this->hexCursor()->setSelectFromFormatPage(false);
+    this->setSelectFromFormatPage(false);
+
     if(!m_readonly){
         m_hexdocument->remove(
             m_hexcursor->selectionStartOffset(),
@@ -1826,7 +1851,9 @@ void QHexView::focusOutEvent(QFocusEvent* e) {
 }
 
 void QHexView::mousePressEvent(QMouseEvent* e) {
-    hexCursor()->setSelectFromFormatPage(false);
+    this->hexCursor()->setSelectFromFormatPage(false);
+    this->setSelectFromFormatPage(false);
+
     QAbstractScrollArea::mousePressEvent(e);
     if(!m_hexdocument || e->button() != Qt::LeftButton)
         return;
@@ -1855,7 +1882,9 @@ void QHexView::mousePressEvent(QMouseEvent* e) {
 }
 
 void QHexView::mouseMoveEvent(QMouseEvent* e) {
-    hexCursor()->setSelectFromFormatPage(false);
+    this->hexCursor()->setSelectFromFormatPage(false);
+    this->setSelectFromFormatPage(false);
+
     qDebug() << "QHexView::mouseMoveEvent(QMouseEvent* e)";
     QAbstractScrollArea::mouseMoveEvent(e);
     if(!this->hexCursor())
@@ -1898,6 +1927,8 @@ void QHexView::contextMenuEvent(QContextMenuEvent* e) {
     if(pos.isValid() && (area == QHexArea::Hex || area == QHexArea::Ascii)) {
         m_currentarea = area;
         if(!m_hexcursor->isSelected(pos.line, pos.column)) {
+            this->hexCursor()->setSelectFromFormatPage(false);
+            this->setSelectFromFormatPage(false);
             m_hexcursor->move(pos);
             m_hexcursor->selectSize(1);
         }
@@ -1960,6 +1991,9 @@ void QHexView::keyPressEvent(QKeyEvent* e) {
     bool handled = false;
 
     if(this->hexCursor()) {
+        this->hexCursor()->setSelectFromFormatPage(false);
+        this->setSelectFromFormatPage(false);
+
         handled = this->keyPressMove(e);
         if(!handled)
             handled = this->keyPressAction(e);

@@ -72,6 +72,9 @@ void WelcomeForm::openProject(const QString& path, const QString& language)
 
     auto* mw = new IDEWindow(path, nullptr);
     mw->setAttribute(Qt::WA_DeleteOnClose);
+
+    if (this->screen()) mw->setScreen(this->screen());
+    mw->setGeometry(this->geometry());
     mw->setWindowState(Qt::WindowMaximized);
 
     connect(mw, &IDEWindow::CloseProject, this, [this]() {

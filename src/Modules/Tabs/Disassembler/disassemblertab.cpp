@@ -1,4 +1,5 @@
 #include "disassemblertab.h"
+#include "disassemblersettings.h"
 #include "disassemblerworker.h"
 
 #include <QBoxLayout>
@@ -552,7 +553,7 @@ void DisassemblerTab::setupUi()
         }
 
         // Safe patching: only for radare2 backend where address is an offset we can write to.
-        const bool canPatchAtLine = (AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2);
+        const bool canPatchAtLine = (DisassemblerSettings::backend() == DisassemblerSettings::Backend::Radare2);
         if (canPatchAtLine) {
             menu.addSeparator();
             menu.addAction(tr("Hex patch here…"), [this, li]() {
@@ -780,7 +781,7 @@ void DisassemblerTab::setupUi()
 
     showPlaceholder(tr("Press \"Disassemble\" to analyse the file"));
     m_statusLabel->setText(tr("Backend: %1").arg(
-        AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2 ? tr("radare2") : tr("objdump")));
+        DisassemblerSettings::backend() == DisassemblerSettings::Backend::Radare2 ? tr("radare2") : tr("objdump")));
 
     // ── Connections ───────────────────────────────────────────────────────────
     connect(m_runBtn,       &QPushButton::clicked,
@@ -866,7 +867,7 @@ void DisassemblerTab::showInstructionHelpAt(const QPoint &pos, bool forceByCurso
 void DisassemblerTab::updateBackendUiHint()
 {
     if (m_running) return;
-    const QString backend = (AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2) ? tr("radare2") : tr("objdump");
+    const QString backend = (DisassemblerSettings::backend() == DisassemblerSettings::Backend::Radare2) ? tr("radare2") : tr("objdump");
     m_statusLabel->setText(tr("Backend: %1").arg(backend));
 }
 
@@ -884,8 +885,8 @@ void DisassemblerTab::startDisassembly()
     if (m_fileContext->filePath().isEmpty()) { showPlaceholder(tr("No file path set")); return; }
 
     // If radare2 backend is selected, ensure r2 is available. If not, prompt for path.
-    if (AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2) {
-        QString r2 = AppSettings::radare2Path();
+    if (DisassemblerSettings::backend() == DisassemblerSettings::Backend::Radare2) {
+        QString r2 = DisassemblerSettings::radare2Path();
         if (r2.isEmpty())
             r2 = QStandardPaths::findExecutable("r2");
 
@@ -899,7 +900,7 @@ void DisassemblerTab::startDisassembly()
                 showPlaceholder(tr("radare2 is not configured — set it in Settings"));
                 return;
             }
-            AppSettings::setRadare2Path(picked);
+            DisassemblerSettings::setRadare2Path(picked);
         }
     }
 
@@ -921,7 +922,7 @@ void DisassemblerTab::startDisassembly()
     m_progressBar->setValue(0);
     m_progressBar->setVisible(true);
     m_statusLabel->setText(
-        AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2
+        DisassemblerSettings::backend() == DisassemblerSettings::Backend::Radare2
             ? tr("Running radare2…")
             : tr("Running objdump…"));
 
@@ -933,7 +934,7 @@ void DisassemblerTab::startDisassembly()
     appendLog("=== Disassembly started: " +
               QDateTime::currentDateTime().toString("hh:mm:ss") + " ===");
     appendLog(QString("[disasm] backend: %1")
-                  .arg(AppSettings::disasmBackend() == AppSettings::DisasmBackend::Radare2 ? "radare2" : "objdump"));
+                  .arg(DisassemblerSettings::backend() == DisassemblerSettings::Backend::Radare2 ? "radare2" : "objdump"));
 
     setRunningState(true);
     showPlaceholder(tr("Disassembling…"));

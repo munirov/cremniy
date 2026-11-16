@@ -1,6 +1,10 @@
 target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/disassemblertab.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/disassemblertab.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/disassemblersettings.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/disassemblersettings.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/disassemblersettingspage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/disassemblersettingspage.h
     ${CMAKE_CURRENT_SOURCE_DIR}/disassemblerworker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/disassemblerworker.h
     ${CMAKE_CURRENT_SOURCE_DIR}/disasm/disasmsyntaxdelegate.cpp

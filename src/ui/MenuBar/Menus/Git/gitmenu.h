@@ -81,6 +81,7 @@ private:
     QAction *m_stashDrop;
     QAction *m_stashList;
     QAction *m_showLogGraph;
+    QAction *m_toggleBlame;
 
     /** @brief Show error message */
     void showError(const QString &title, const QString &message);
@@ -90,12 +91,6 @@ private:
 
     /** @brief Request text input */
     QString inputDialog(const QString &title, const QString &label);
-
-    /** @brief Find git repository root (searches .git in all parent directories) */
-    static QString findGitRepositoryRoot(const QString &path);
-
-    /** @brief Check if path is a git repository */
-    static bool isGitRepository(const QString &path);
 
     // Slots for actions
     void onCheckoutBranch();

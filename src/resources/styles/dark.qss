@@ -337,12 +337,95 @@ QWidget#searchPanel QTreeWidget#searchResultsTree {
     border-radius: 3px;
 }
 
-QDialog#settingsDialog QLabel#settingsSectionTitle {
-    font-weight: bold;
+QDialog#settingsDialog QLabel#settingsDialogTitle {
+    color: #F0F0F0;
+    font-size: 20px;
+    font-weight: 600;
 }
 
 QDialog#settingsDialog QLabel#settingsHintLabel {
-    color: gray;
+    color: #A8A8A8;
+}
+
+QDialog#settingsDialog QFrame#settingsFooter {
+    background: #252526;
+}
+
+QDialog#settingsDialog QWidget#settingsHeader {
+    border-bottom: 1px solid #3C3C3C;
+}
+
+QDialog#settingsDialog QFrame#settingsNavigation {
+    border: none;
+    border-right: 1px solid #3C3C3C;
+}
+
+QDialog#settingsDialog QFrame#settingsPageArea {
+    border: none;
+}
+
+QDialog#settingsDialog QLabel#settingsNavigationTitle {
+    color: #C8C8C8;
+    font-size: 11px;
+    font-weight: bold;
+    padding-left: 8px;
+}
+
+QDialog#settingsDialog QLabel#settingsPageTitle {
+    color: #F0F0F0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+QDialog#settingsDialog QFrame#settingsPageSeparator,
+QDialog#settingsDialog QFrame#settingsFooter {
+    border: none;
+    border-top: 1px solid #3C3C3C;
+}
+
+QDialog#settingsDialog QTreeWidget#settingsCategories {
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+    show-decoration-selected: 0;
+}
+
+QDialog#settingsDialog QTreeWidget#settingsCategories::item {
+    border-radius: 4px;
+    padding: 7px 8px;
+}
+
+QDialog#settingsDialog QTreeWidget#settingsCategories::branch {
+    background: transparent;
+}
+
+QDialog#settingsDialog QTreeWidget#settingsCategories::item:selected {
+    background: #094771;
+    color: #FFFFFF;
+}
+
+QDialog#settingsDialog QTreeWidget#settingsCategories::item:hover:!selected {
+    background: #2A2D2E;
+}
+
+QDialog#settingsDialog QPushButton#settingsSecondaryButton {
+    color: #C8C8C8;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+QDialog#settingsDialog QPushButton#settingsSecondaryButton:hover {
+    background: #2A2D2E;
+    border-color: #3C3C3C;
+}
+
+QDialog#settingsDialog QPushButton#settingsAcceptButton {
+    min-width: 88px;
+}
+
+QDialog#settingsDialog QDialogButtonBox#settingsButtonBox {
+    background: transparent;
 }
 
 QDialog#settingsDialog QLabel#settingsStatusLabel[statusState="ok"] {

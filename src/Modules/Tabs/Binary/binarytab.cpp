@@ -92,6 +92,30 @@ void BinaryTab::setFileDataBuffer(FileDataBuffer* newFileDataBuffer) {
     }
 }
 
+bool BinaryTab::revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length)
+{
+    if (!m_dataBuffer || oneBasedLine < 1 || zeroBasedColumn < 0 || length <= 0)
+        return false;
+
+    const QByteArray data = m_dataBuffer->data();
+    const QString text = QString::fromUtf8(data);
+    int textOffset = 0;
+    for (int line = 1; line < oneBasedLine; ++line) {
+        const int newline = text.indexOf(QLatin1Char('\n'), textOffset);
+        if (newline < 0)
+            return false;
+        textOffset = newline + 1;
+    }
+    textOffset += zeroBasedColumn;
+    if (textOffset < 0 || textOffset >= text.size())
+        return false;
+
+    const qint64 byteOffset = text.left(textOffset).toUtf8().size();
+    const qint64 byteLength = text.mid(textOffset, length).toUtf8().size();
+    m_dataBuffer->setSelection(byteOffset, qMin<qint64>(byteLength, data.size() - byteOffset));
+    return true;
+}
+
 void BinaryTab::createPages(){
 
     auto& formatFactory = FormatPageFactory::instance();

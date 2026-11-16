@@ -11,7 +11,7 @@
 #include <QTextLayout>
 #include <QVector>
 #include <QCache>
-
+#include "EditorBlameLineInfo.h"
 
 class FileDataBuffer;
 class LineIndex;
@@ -21,6 +21,7 @@ class QStyleSyntaxHighlighter;
 class QSyntaxStyle;
 class QTextDocument;
 class LineNumberArea;
+class BlameTooltip;
 class QTimer;
 
 /**
@@ -81,6 +82,13 @@ public:
     int lineNumberAreaWidth() const;
     void lineNumberAreaPaintEvent(QPaintEvent* event);
 
+    // Git Blame support
+    bool isGitBlameEnabled() const;
+    void setGitBlameEnabled(bool enabled);
+    void setGitBlameColor(const QString &color);
+    void setGitBlamePadding(int padding);
+    void setBlameData(const QVector<EditorBlameLineInfo>& blameData);
+
 signals:
     void contentsChanged();
     void modificationChanged(bool modified);
@@ -100,6 +108,7 @@ protected:
     void wheelEvent(QWheelEvent* event) override;
     void focusInEvent(QFocusEvent* event) override;
     void focusOutEvent(QFocusEvent* event) override;
+    void leaveEvent(QEvent* event) override;
     void hideEvent(QHideEvent* event) override;
     void showEvent(QShowEvent* event) override;
     bool focusNextPrevChild(bool next) override;
@@ -135,13 +144,15 @@ private:
     UTF8Decoder* m_utf8Decoder;
     QStyleSyntaxHighlighter* m_highlighter;
     LineNumberArea* m_lineNumberArea;
-    
+    BlameTooltip* m_blameTooltip;
+
     // Cursor and selection
     qint64 m_cursorBytePos;
     qint64 m_selectionStart;
     qint64 m_selectionLength;
     bool m_updatingSelection;
     bool m_applyingBufferEdit;
+    bool m_externalSelection;
     
     // Rendering state
     qint64 m_firstVisibleLine;
@@ -164,6 +175,7 @@ private:
     void renderLineNumber(QPainter* painter, qint64 lineNum, const QRectF& rect);
     void renderLine(QPainter* painter, qint64 lineNum, const QString& text, const QRectF& rect, int segmentStartColumn, int segmentLength);
     void renderCursor(QPainter* painter);
+    void renderInlineBlame(QPainter* painter);
     void renderSelection(QPainter* painter);
     void renderSelectionMatches(QPainter* painter);
     qint64 lineFromBytePos(qint64 bytePos) const;
@@ -213,7 +225,6 @@ private:
     QPoint contentPointForBytePos(qint64 bytePos) const;
     void centerViewOnBytePos(qint64 bytePos);
     void clampCursorToBuffer();
-    void initSyntaxSupport();
     void rebuildHighlighterForCurrentExtension();
     QString normalizedFileExt(const QString& ext) const;
     QString lineCommentPrefix() const;
@@ -273,13 +284,17 @@ private:
     bool m_pendingTripleClick;
     QTextDocument* m_highlightDocument;
     QSyntaxStyle* m_syntaxStyle;
-    QHash<QString, QString> m_languageResourceByExt;
     QString m_languageResource;
     int m_savedVerticalScrollValue;
     int m_savedHorizontalScrollValue;
     qint64 m_savedCursorBytePos;
     bool m_restoreViewStatePending;
     bool m_wordWrapEnabled;
+    bool m_gitBlameEnabled;
+    QString m_gitBlameColor;
+    int m_gitBlamePadding;
+    QVector<EditorBlameLineInfo> m_blameData;
+    QRect m_lastBlameRect;
     mutable QHash<qint64, int> m_wrapCountCache;
     mutable int m_wrapCacheWidth;
     mutable bool m_layoutCacheValid;

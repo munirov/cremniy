@@ -1,6 +1,9 @@
 name: CI Build
 
 on:
+
+  workflow_dispatch:
+
   push:
     branches: [ main, dev ]
     paths:
@@ -26,6 +29,20 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     steps:
+
+      - name: configure Pagefile
+        if: runner.os == 'Windows'
+        uses: al-cheb/configure-pagefile-action@v1.5
+        with:
+          minimum-size: 8GB
+          disk-root: "D:"
+
+      - name: Set up Swap Space
+        if: runner.os == 'Linux'
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 8
+    
       - name: Checkout code
         uses: actions/checkout@v6
 

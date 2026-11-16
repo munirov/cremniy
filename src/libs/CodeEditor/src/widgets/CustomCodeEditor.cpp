@@ -4,7 +4,8 @@
 #include "widgets/EditorLanguageSupport.h"
 #include "widgets/EditorTypingBehaviors.h"
 #include "widgets/LineNumberArea.h"
-#include "highlighters/HighlighterFactory.h"
+#include "widgets/BlameTooltip.h"
+#include "languages/LanguageRegistry.h"
 #include "QSyntaxStyle.hpp"
 #include "QStyleSyntaxHighlighter.hpp"
 #include "FileDataBuffer.h"
@@ -23,6 +24,7 @@
 #include <QMimeData>
 #include <QMenu>
 #include <QKeyEvent>
+#include <QLocale>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPaintEvent>
@@ -221,11 +223,13 @@ CustomCodeEditor::CustomCodeEditor(QWidget* parent)
     , m_utf8Decoder(new UTF8Decoder())
     , m_highlighter(nullptr)
     , m_lineNumberArea(new LineNumberArea(this))
+    , m_blameTooltip(new BlameTooltip(this))
     , m_cursorBytePos(0)
     , m_selectionStart(0)
     , m_selectionLength(0)
     , m_updatingSelection(false)
     , m_applyingBufferEdit(false)
+    , m_externalSelection(false)
     , m_firstVisibleLine(0)
     , m_visibleLineCount(0)
     , m_scaleFactor(1.0)
@@ -248,6 +252,9 @@ CustomCodeEditor::CustomCodeEditor(QWidget* parent)
     , m_savedCursorBytePos(0)
     , m_restoreViewStatePending(false)
     , m_wordWrapEnabled(true)
+    , m_gitBlameEnabled(false)
+    , m_gitBlameColor("#6D6552")
+    , m_gitBlamePadding(6)
     , m_wrapCacheWidth(-1)
     , m_layoutCacheValid(false)
     , m_layoutCacheComputedLines(0)
@@ -259,11 +266,11 @@ CustomCodeEditor::CustomCodeEditor(QWidget* parent)
     , m_editGroupTimer(new QTimer(this))
     , m_currentEditGroupType(EditGroupNone)
 {
-    initSyntaxSupport();
     setFont(m_font);
     setFocusPolicy(Qt::StrongFocus);
     viewport()->setCursor(Qt::IBeamCursor);
     viewport()->setAutoFillBackground(true);
+    viewport()->setMouseTracking(true);
     m_editGroupTimer->setSingleShot(true);
     connect(m_editGroupTimer, &QTimer::timeout, this, [this]() { endEditGrouping(); });
     m_lineNumberArea->setFont(m_font);
@@ -295,6 +302,25 @@ bool CustomCodeEditor::event(QEvent* event)
 {
     if (event && event->type() == QEvent::ToolTip) {
         auto* helpEvent = static_cast<QHelpEvent*>(event);
+
+        if (m_gitBlameEnabled && !m_lastBlameRect.isNull() && m_lastBlameRect.contains(helpEvent->pos())) {
+            const qint64 cursorLine = lineFromBytePos(m_cursorBytePos);
+            if (cursorLine >= 0 && cursorLine < (qint64)m_blameData.size()) {
+                const EditorBlameLineInfo& info = m_blameData.at(static_cast<int>(cursorLine));
+                if (!info.authorName.isEmpty()) {
+                    if (m_blameTooltip->currentCommitHash() != info.fullOid || !m_blameTooltip->isVisible()) {
+                        m_blameTooltip->setBlameInfo(info);
+                        /* Position it statically above the blame area */
+                        QPoint p = viewport()->mapToGlobal(m_lastBlameRect.topLeft());
+                        m_blameTooltip->showAt(p);
+                    }
+                    return true;
+                }
+            }
+        }
+
+        m_blameTooltip->hide();
+
         if (m_buffer && m_lineIndex->lineCount() > 0) {
             const qint64 bytePos = bytePosFromPoint(helpEvent->pos());
             const qint64 lineNum = lineFromBytePos(bytePos);
@@ -361,93 +387,7 @@ bool CustomCodeEditor::event(QEvent* event)
 QString CustomCodeEditor::syntaxKeyForPath(const QString& filePath)
 {
     const QFileInfo info(filePath);
-    const QString fileName = info.fileName().toLower();
-    const QString suffix = info.suffix().toLower();
-
-    if (fileName == QStringLiteral("makefile") || fileName.endsWith(QStringLiteral(".mk")))
-        return QStringLiteral("make");
-    if (fileName == QStringLiteral("cmakelists.txt") || fileName == QStringLiteral("cmakecache.txt"))
-        return QStringLiteral("cmake");
-    if (fileName == QStringLiteral("dockerfile"))
-        return QStringLiteral("sh");
-    if (fileName.endsWith(QStringLiteral(".vcxproj")) || fileName.endsWith(QStringLiteral(".vcproj")) ||
-        fileName.endsWith(QStringLiteral(".csproj")) || fileName.endsWith(QStringLiteral(".fsproj")) ||
-        fileName.endsWith(QStringLiteral(".props")) || fileName.endsWith(QStringLiteral(".targets")) ||
-        fileName.endsWith(QStringLiteral(".filters")) || fileName.endsWith(QStringLiteral(".xml")) ||
-        fileName.endsWith(QStringLiteral(".xaml")) || fileName.endsWith(QStringLiteral(".svg")))
-        return QStringLiteral("xml");
-    if (fileName.endsWith(QStringLiteral(".sln")))
-        return QStringLiteral("sln");
-    if (fileName == QStringLiteral(".gitignore") || fileName == QStringLiteral(".dockerignore"))
-        return QStringLiteral("ini");
-    if (fileName == QStringLiteral(".env"))
-        return QStringLiteral("ini");
-    if (suffix == QStringLiteral("yml"))
-        return QStringLiteral("yaml");
-    if (suffix == QStringLiteral("bash") || suffix == QStringLiteral("zsh") || suffix == QStringLiteral("fish"))
-        return QStringLiteral("sh");
-    if (suffix == QStringLiteral("conf") || suffix == QStringLiteral("cfg") || suffix == QStringLiteral("properties"))
-        return QStringLiteral("ini");
-    if (suffix == QStringLiteral("mjs") || suffix == QStringLiteral("cjs") || suffix == QStringLiteral("jsx"))
-        return QStringLiteral("js");
-    if (suffix == QStringLiteral("tsx"))
-        return QStringLiteral("ts");
-    return suffix;
-}
-
-void CustomCodeEditor::initSyntaxSupport()
-{
-    // Reuse the old editor's language assets where they already exist, and
-    // fall back to rule-based highlighters for common formats that were not
-    // previously covered by QCodeEditor.
-    m_languageResourceByExt.insert(QStringLiteral("c"), QStringLiteral(":/languages/c.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("h"), QStringLiteral(":/languages/c.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("cpp"), QStringLiteral(":/languages/cpp.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("hpp"), QStringLiteral(":/languages/cpp.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("cc"), QStringLiteral(":/languages/cpp.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("cxx"), QStringLiteral(":/languages/cpp.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("asm"), QStringLiteral(":/languages/asm.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("s"), QStringLiteral(":/languages/asm.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("rs"), QStringLiteral(":/languages/rust.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("mk"), QStringLiteral(":/languages/gnumake.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("make"), QStringLiteral(":/languages/gnumake.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("txt"), QStringLiteral(":/languages/plain"));
-    m_languageResourceByExt.insert(QStringLiteral("cmake"), QStringLiteral(":/languages/cmake.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("py"), QStringLiteral(":/languages/python.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("lua"), QStringLiteral(":/languages/lua.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("glsl"), QStringLiteral(":/languages/glsl.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("vert"), QStringLiteral(":/languages/glsl.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("frag"), QStringLiteral(":/languages/glsl.xml"));
-    m_languageResourceByExt.insert(QStringLiteral("md"), QStringLiteral(":/languages/markdown"));
-    m_languageResourceByExt.insert(QStringLiteral("markdown"), QStringLiteral(":/languages/markdown"));
-    m_languageResourceByExt.insert(QStringLiteral("json"), QStringLiteral(":/languages/json"));
-    m_languageResourceByExt.insert(QStringLiteral("yaml"), QStringLiteral(":/languages/yaml"));
-    m_languageResourceByExt.insert(QStringLiteral("yml"), QStringLiteral(":/languages/yaml"));
-    m_languageResourceByExt.insert(QStringLiteral("toml"), QStringLiteral(":/languages/toml"));
-    m_languageResourceByExt.insert(QStringLiteral("ini"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("cfg"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("conf"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("properties"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("env"), QStringLiteral(":/languages/ini"));
-    m_languageResourceByExt.insert(QStringLiteral("sh"), QStringLiteral(":/languages/sh"));
-    m_languageResourceByExt.insert(QStringLiteral("bash"), QStringLiteral(":/languages/sh"));
-    m_languageResourceByExt.insert(QStringLiteral("zsh"), QStringLiteral(":/languages/sh"));
-    m_languageResourceByExt.insert(QStringLiteral("fish"), QStringLiteral(":/languages/sh"));
-    m_languageResourceByExt.insert(QStringLiteral("js"), QStringLiteral(":/languages/js"));
-    m_languageResourceByExt.insert(QStringLiteral("mjs"), QStringLiteral(":/languages/js"));
-    m_languageResourceByExt.insert(QStringLiteral("cjs"), QStringLiteral(":/languages/js"));
-    m_languageResourceByExt.insert(QStringLiteral("jsx"), QStringLiteral(":/languages/js"));
-    m_languageResourceByExt.insert(QStringLiteral("ts"), QStringLiteral(":/languages/ts"));
-    m_languageResourceByExt.insert(QStringLiteral("tsx"), QStringLiteral(":/languages/ts"));
-    m_languageResourceByExt.insert(QStringLiteral("java"), QStringLiteral(":/languages/java"));
-    m_languageResourceByExt.insert(QStringLiteral("cs"), QStringLiteral(":/languages/cs"));
-    m_languageResourceByExt.insert(QStringLiteral("go"), QStringLiteral(":/languages/go"));
-    m_languageResourceByExt.insert(QStringLiteral("php"), QStringLiteral(":/languages/php"));
-    m_languageResourceByExt.insert(QStringLiteral("sql"), QStringLiteral(":/languages/sql"));
-    m_languageResourceByExt.insert(QStringLiteral("xml"), QStringLiteral(":/languages/xml"));
-    m_languageResourceByExt.insert(QStringLiteral("xaml"), QStringLiteral(":/languages/xml"));
-    m_languageResourceByExt.insert(QStringLiteral("svg"), QStringLiteral(":/languages/xml"));
-    m_languageResourceByExt.insert(QStringLiteral("sln"), QStringLiteral(":/languages/sln"));
+    return EditorLanguageSupport::syntaxKeyForFileName(info.fileName());
 }
 
 QString CustomCodeEditor::normalizedFileExt(const QString& ext) const
@@ -457,10 +397,10 @@ QString CustomCodeEditor::normalizedFileExt(const QString& ext) const
 
 void CustomCodeEditor::rebuildHighlighterForCurrentExtension()
 {
-    const QString ext = normalizedFileExt(m_fileExt);
-    const QString resource = EditorLanguageSupport::languageResourceForExtension(ext);
-    m_languageResource = resource;
-    setSyntaxHighlighter(HighlighterFactory::create(resource, ext, m_highlightDocument));
+    const QString languageId = normalizedFileExt(m_fileExt);
+    const LanguageDefinition& language = LanguageRegistry::instance().resolveForExtension(languageId);
+    m_languageResource = language.id;
+    setSyntaxHighlighter(language.createHighlighter ? language.createHighlighter(m_highlightDocument) : nullptr);
     applyEditorPalette();
 }
 
@@ -591,6 +531,7 @@ void CustomCodeEditor::setBuffer(FileDataBuffer* buffer)
     qint64 selectionPos = 0;
     qint64 selectionLength = 0;
     m_buffer->getSelection(selectionPos, selectionLength);
+    m_externalSelection = true;
     updateSelection(selectionPos, selectionLength);
     clampCursorToBuffer();
     updateScrollbars();
@@ -974,6 +915,38 @@ int CustomCodeEditor::lineNumberAreaWidth() const
     return m_lineNumberArea->calculateWidth();
 }
 
+bool CustomCodeEditor::isGitBlameEnabled() const
+{
+    return m_gitBlameEnabled;
+}
+
+void CustomCodeEditor::setGitBlameEnabled(bool enabled)
+{
+    if (m_gitBlameEnabled == enabled) return;
+    m_gitBlameEnabled = enabled;
+    updateLineNumberAreaWidth();
+    updateScrollbars();
+    viewport()->update();
+}
+
+void CustomCodeEditor::setGitBlameColor(const QString &color)
+{
+    m_gitBlameColor = color;
+    viewport()->update();
+}
+
+void CustomCodeEditor::setGitBlamePadding(int padding)
+{
+    m_gitBlamePadding = padding;
+    viewport()->update();
+}
+
+void CustomCodeEditor::setBlameData(const QVector<EditorBlameLineInfo>& blameData)
+{
+    m_blameData = blameData;
+    viewport()->update();
+}
+
 void CustomCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event)
 {
     QPainter painter(m_lineNumberArea);
@@ -1020,6 +993,8 @@ void CustomCodeEditor::paintEvent(QPaintEvent* event)
         renderSelection(&painter);
     if (hasFocus())
         renderCursor(&painter);
+
+    renderInlineBlame(&painter);
 }
 
 void CustomCodeEditor::resizeEvent(QResizeEvent* event)
@@ -1354,6 +1329,12 @@ void CustomCodeEditor::mousePressEvent(QMouseEvent* event)
 
 void CustomCodeEditor::mouseMoveEvent(QMouseEvent* event)
 {
+    if (m_blameTooltip->isVisible()) {
+        if (m_lastBlameRect.isNull() || !m_lastBlameRect.contains(event->pos())) {
+            m_blameTooltip->hide();
+        }
+    }
+
     if (!m_buffer || !m_mouseSelecting || !(event->buttons() & Qt::LeftButton)) {
         QAbstractScrollArea::mouseMoveEvent(event);
         return;
@@ -1519,6 +1500,12 @@ void CustomCodeEditor::focusOutEvent(QFocusEvent* event)
     viewport()->update();
 }
 
+void CustomCodeEditor::leaveEvent(QEvent* event)
+{
+    m_blameTooltip->hide();
+    QAbstractScrollArea::leaveEvent(event);
+}
+
 void CustomCodeEditor::hideEvent(QHideEvent* event)
 {
     saveViewState();
@@ -1603,11 +1590,13 @@ void CustomCodeEditor::onBufferSelectionChanged(qint64 pos, qint64 length)
     if (m_updatingSelection)
         return;
 
+    /* Selection originated in a sibling tool (e.g. Hex Editor): render it yellow */
+    m_externalSelection = true;
     updateSelection(pos, length);
 
-    // A zero-length external selection should only clear the selection state.
-    // Moving the caret to that position causes the first local edit to jump to
-    // the start of the file when another view echoes back an empty selection.
+    /* A zero-length external selection should only clear the selection state.
+     * Moving the caret to that position causes the first local edit to jump to
+     * the start of the file when another view echoes back an empty selection. */
     if (length > 0)
         m_cursorBytePos = clampToUtf8Boundary(pos + length);
 
@@ -2068,6 +2057,8 @@ void CustomCodeEditor::renderVisibleLines(QPainter* painter)
 
         visualIndex += segments.size();
     }
+
+    renderInlineBlame(painter);
 }
 
 void CustomCodeEditor::renderLineNumber(QPainter* painter, qint64 lineNum, const QRectF& rect)
@@ -3066,6 +3057,8 @@ void CustomCodeEditor::syncSelectionToBuffer()
     if (!m_buffer)
         return;
 
+    /* Local user-driven selection: clear the external flag before propagating */
+    m_externalSelection = false;
     m_updatingSelection = true;
     m_buffer->setSelection(hasSelection() ? m_selectionStart : m_cursorBytePos,
                            hasSelection() ? m_selectionLength : 0);
@@ -3547,6 +3540,88 @@ void CustomCodeEditor::renderCursor(QPainter* painter)
     painter->drawLine(x, y, x, y + lineHeight);
 }
 
+void CustomCodeEditor::renderInlineBlame(QPainter* painter)
+{
+    if (!m_gitBlameEnabled || !m_buffer || m_lineIndex->lineCount() == 0) {
+        m_lastBlameRect = QRect();
+        return;
+    }
+
+    const qint64 cursorLine = lineFromBytePos(m_cursorBytePos);
+    if (cursorLine < 0 || cursorLine >= (qint64)m_blameData.size()) {
+        m_lastBlameRect = QRect();
+        return;
+    }
+
+    const EditorBlameLineInfo& info = m_blameData.at(static_cast<int>(cursorLine));
+    if (info.authorName.isEmpty()) {
+        m_lastBlameRect = QRect();
+        return;
+    }
+
+    const auto& layout = cachedLineLayout(cursorLine);
+    const auto& segments = layout.segments;
+
+    int segmentIndex = segments.size() - 1;
+    const int lineHeight = qRound(m_fontMetrics.height());
+    const int scrollY = verticalScrollBar()->value();
+    const int scrollX = horizontalScrollBar()->value();
+
+    const int xEndOfText = lineNumberAreaWidth() + kTextLeftPadding + qRound(displayAdvanceForRange(cursorLine, segments[segmentIndex].startColumn, segments[segmentIndex].length)) - (m_wordWrapEnabled ? 0 : scrollX);
+    const int y = static_cast<int>(visualLineIndexForLogicalLine(cursorLine) + segmentIndex) * lineHeight - scrollY;
+
+    if (y < 0 || y > viewport()->height()) {
+        m_lastBlameRect = QRect();
+        return;
+    }
+
+    QString timeStr;
+    if (info.isUncommitted) {
+        timeStr = tr("Uncommitted changes");
+    } else {
+        qint64 secs = info.commitDate.secsTo(QDateTime::currentDateTime());
+        if (secs < 86400) timeStr = tr("today");
+        else if (secs < 86400 * 7) timeStr = tr("%1 days ago").arg(secs / 86400);
+        else if (secs < 86400 * 30) timeStr = tr("%1 weeks ago").arg(secs / (86400 * 7));
+        else if (secs < 86400 * 365) timeStr = tr("%1 months ago").arg(secs / (86400 * 30));
+        else timeStr = tr("%1 years ago").arg(secs / (86400 * 365));
+    }
+
+    QString text = info.isUncommitted ? timeStr : tr("%1, %2").arg(info.authorName, timeStr);
+
+    painter->save();
+    painter->setFont(m_font);
+
+    // indent for git blame
+    const int padding = qRound(m_fontMetrics.horizontalAdvance(QLatin1Char(' '))) * m_gitBlamePadding;
+    int xStart = xEndOfText + padding;
+
+    // color for git blame
+    painter->setPen(QColor(m_gitBlameColor));
+    painter->setRenderHint(QPainter::Antialiasing);
+    const qreal iconSize = m_fontMetrics.ascent() * 0.8;
+    const qreal iconY = y + (lineHeight - iconSize) / 2.0;
+
+    painter->drawEllipse(QRectF(xStart, iconY + iconSize * 0.6, iconSize * 0.3, iconSize * 0.3));
+    painter->drawLine(QLineF(xStart + iconSize * 0.15, iconY + iconSize * 0.2, xStart + iconSize * 0.15, iconY + iconSize * 0.6));
+    painter->drawLine(QLineF(xStart + iconSize * 0.15, iconY + iconSize * 0.4, xStart + iconSize * 0.4, iconY + iconSize * 0.2));
+    painter->drawEllipse(QRectF(xStart + iconSize * 0.3, iconY + iconSize * 0.1, iconSize * 0.3, iconSize * 0.3));
+
+    xStart += qRound(iconSize * 0.8);
+
+    const int textWidth = painter->fontMetrics().horizontalAdvance(text);
+    const QRect textRect(xStart, y, textWidth, lineHeight);
+
+    if (xStart + textWidth < viewport()->width()) {
+        painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, text);
+        m_lastBlameRect = QRect(xEndOfText + padding, y, (xStart + textWidth) - (xEndOfText + padding), lineHeight);
+    } else {
+        m_lastBlameRect = QRect();
+    }
+
+    painter->restore();
+}
+
 void CustomCodeEditor::renderSelection(QPainter* painter)
 {
     if (!m_buffer || !hasSelection())
@@ -3560,7 +3635,11 @@ void CustomCodeEditor::renderSelection(QPainter* painter)
     const int scrollY = verticalScrollBar()->value();
     const int scrollX = horizontalScrollBar()->value();
 
-    QColor selectionColor = palette().highlight().color();
+    /* External selections (originating in a sibling tool like the Hex Editor)
+     * are rendered in yellow to distinguish them from local selections. */
+    QColor selectionColor = m_externalSelection
+        ? QColor(255, 175, 50)
+        : palette().highlight().color();
     selectionColor.setAlpha(110);
 
     for (qint64 lineNum = startLine; lineNum <= endLine; ++lineNum) {

@@ -52,7 +52,7 @@ CreateProjectPage::CreateProjectPage(QWidget* parent)
 
     m_langLabel = new QLabel(tr("Language"));
     m_langCombo = new QComboBox();
-    m_langCombo->addItems({"C", "C++", "ASM", "C + ASM", "Custom"});
+    m_langCombo->addItems({"C", "C++", "ASM", "C + ASM", "Rust", "Custom"});
     grid->addWidget(m_langLabel, 1, 0);
     grid->addWidget(m_langCombo, 1, 1);
 
