@@ -166,6 +166,60 @@ cmake ..\src -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
+## 🐧 Linux Installation Guide (Fedora-based distributions)
+
+These instructions apply to systems using the **DNF / RPM** package manager.
+
+### 🛠 Step-by-Step Installation:
+
+1. **Download the RPM package** from the Assets section of the latest GitHub release.
+2. Open the **Terminal**.
+3. Navigate to the directory where the file was downloaded (e.g., the Downloads folder):
+   ```bash
+   cd ~/Downloads
+   ```
+4. Run the installation command:
+   ```bash
+   sudo dnf install ./cremniy-0.3.2-10.fc41.x86_64.rpm
+   ```
+   *Note: The `dnf` package manager will automatically install `cremniy` along with all required dependencies.*
+
+5. Done! Once the process is complete, you can launch the application.
+
+
+## 🍏 macOS Installation Guide (.dmg)
+
+### 📦 Installation:
+
+1. **Download the DMG file** from the Assets section of the latest GitHub release.
+2. Double-click the downloaded `.dmg` file to mount it.
+3. Drag the **Cremniy** icon and drop it directly onto the **Applications** folder shortcut.
+
+![Installation process](screenshots/macos-install.png)
+
+4. Once the copying is complete, you can find and launch **Cremniy** from your Applications folder or Launchpad.
+
+### 🛠 Troubleshooting: Post-Installation Guide (Quarantine Removal)
+
+If you encounter the following error upon launching the application for the first time:
+> *“App is damaged and can’t be opened”* or *“Apple cannot check it for malicious software”*
+
+This occurs because the macOS built-in security system (Gatekeeper) puts downloaded files into quarantine. To fix this, you need to clear the Apple file attributes:
+
+### 🛠 Step-by-Step Quarantine Removal Guide:
+
+1. Open the built-in **Terminal** app.
+   *(You can find it via Spotlight search by pressing `Cmd + Space` and typing "Terminal")*
+2. Paste the following command **directly into the Terminal window**:
+   ```bash
+   sudo xattr -cr /Applications/Cremniy.app
+   ```
+3. Press **Enter**.
+4. The Terminal will prompt you to enter your **Mac password** (administrator password).
+   *⚠️ Note: Characters or asterisks **will not be displayed** as you type your password. This is a standard macOS security feature. Just type your password blindly and press **Enter**.*
+
+Done! Restart the application. It should now open without any warnings.
+
 ## License 📖
 
 Distributed under the terms described in [LICENSE](LICENSE).
