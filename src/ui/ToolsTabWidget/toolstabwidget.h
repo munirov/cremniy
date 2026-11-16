@@ -31,6 +31,17 @@ public:
     CodeEditorTab* codeEditorTab(bool activate = false);
     bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length);
 
+    /**
+     * @brief Reload the shared buffer contents from the file on disk
+     *
+     * Re-reads the file into the shared buffer (discarding any in-editor
+     * state) and refreshes every tool tab. Used by the "sync with disk"
+     * workflow when a file was changed outside the editor.
+     *
+     * @return true on success, false if the file cannot be opened anymore
+     */
+    bool reloadFromDisk();
+
 private:
     void loadStyle(QString path, QString name);
     void createAlwaysTabs();
