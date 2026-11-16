@@ -3,7 +3,7 @@
 
 #include <QTabWidget>
 #include "core/modules/ModuleManager.h"
-#include "core/search/searchengine.h"
+#include "core/FindEngine/findtypes.h"
 #include "project_info_manager.h"
 #include "widgets/filetab.h"
 

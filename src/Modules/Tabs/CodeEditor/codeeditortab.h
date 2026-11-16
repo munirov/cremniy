@@ -42,7 +42,7 @@ public:
     QIcon icon() const override { return QIcon(":/icons/code.svg"); };
     bool gitBlameEnabled() const override { return m_gitBlameEnabled; }
     QString selectedSearchText() const;
-    bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length);
+    bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length) override;
 
     void setFileDataBuffer(FileDataBuffer* newFileDataBuffer) override;
 

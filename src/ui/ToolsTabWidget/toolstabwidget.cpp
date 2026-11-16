@@ -97,6 +97,18 @@ CodeEditorTab* ToolsTabWidget::codeEditorTab(bool activate)
     return nullptr;
 }
 
+bool ToolsTabWidget::revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length)
+{
+    for (int index = 0; index < count(); ++index) {
+        auto* tab = qobject_cast<TabBase*>(widget(index));
+        if (!tab || !tab->revealSearchMatch(oneBasedLine, zeroBasedColumn, length))
+            continue;
+        setCurrentIndex(index);
+        return true;
+    }
+    return false;
+}
+
 bool ToolsTabWidget::gitBlameEnabled() const
 {
     for (int index = 0; index < count(); ++index) {

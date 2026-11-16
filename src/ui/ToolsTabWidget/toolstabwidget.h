@@ -29,6 +29,7 @@ public:
     FileDataBuffer* sharedBuffer() const { return m_sharedBuffer; }
     bool gitBlameEnabled() const;
     CodeEditorTab* codeEditorTab(bool activate = false);
+    bool revealSearchMatch(int oneBasedLine, int zeroBasedColumn, int length);
 
 private:
     void loadStyle(QString path, QString name);
