@@ -20,6 +20,7 @@ static void notifyChanged(const QString &key)
 Backend backend()
 {
     const int v = AppSettings::value(keyBackend(), static_cast<int>(Backend::Objdump)).toInt();
+    if (v == static_cast<int>(Backend::Capstone)) return Backend::Capstone;
     if (v == static_cast<int>(Backend::Radare2)) return Backend::Radare2;
     return Backend::Objdump;
 }

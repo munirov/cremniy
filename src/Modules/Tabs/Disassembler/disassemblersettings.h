@@ -17,9 +17,10 @@
 namespace DisassemblerSettings {
 
 enum class Backend {
-    Objdump = 0,
-    Radare2 = 1,
-};
+    Objdump  = 0,
+    Radare2  = 1,
+    Capstone = 2,
+    };
 
 enum class AnalysisLevel {
     None = 0,   // r2 без анализа (быстро)
